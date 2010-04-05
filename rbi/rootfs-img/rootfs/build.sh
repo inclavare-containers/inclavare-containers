@@ -26,27 +26,48 @@ EOT
     exit
 }
 
-exist_output_dir() {
-    echo "$ERROR $output_dir exists, please design a new dir."
+info() {
+    echo "[INFO] $1"
+}
+
+error() {
+    echo "[ERROR] $1"
     exit -1
+}
+
+exist_output_dir() {
+    error "$output_dir exists, please design a new dir."
 }
 
 no_exist_input_dir() {
-    echo "$ERROR no this dir $source_code_dir."
-    exit -1
+    error "no this dir $source_code_dir."
 }
 
 no_kata_agent() {
-    echo "$ERROR no kata-agent file $kata_agent_bin."
-    exit -1
+    error "no kata-agent file $kata_agent_bin."
 }
 
 patch() {
     local patch_dir=$1
     local source_code_dir=$2
-    echo "$INFO patch from $patch_dir -> $source_code_dir/\
+    info " patch from $patch_dir -> $source_code_dir/\
                                     $ROOTFS_PATCHED_DIR"
     cp -rf $patch_dir/* $source_code_dir/$ROOTFS_PATCHED_DIR
+}
+
+machine_id() {
+    local file=$1
+    info "Substitute machine-id file.."
+    rm -f $file
+    touch $file
+    echo 6f43137764ba4b59b021088a772817cd > $file
+    chmod 0444 $file
+}
+
+clean_java_ca_cache() {
+    local cachefile=$1
+    info "Clean java CA cache..."
+    rm -f cachefile
 }
 
 run_build() {
@@ -55,12 +76,14 @@ run_build() {
     local kata_agent=$3
 
     kata_agent_abs=$(cd $(dirname $kata_agent); pwd)/kata-agent
-    
-    echo "$INFO Will run script $source_code_dir/$ROOTFS_BUILDER_SCRIPT"
+
+    info " Will run script $source_code_dir/$ROOTFS_BUILDER_SCRIPT"
     sudo USE_DOCKER=true AGENT_SOURCE_BIN=$kata_agent_abs $source_code_dir/$ROOTFS_BUILDER_SCRIPT $DISTRO
-    [ "$?" != "0" ] && echo "$ERROR rootfs build failed." && exit -1
+    [ "$?" != "0" ] && error "rootfs build failed." && exit -1
 
     mv $source_code_dir/$ROOTFS_DIR $output_dir
+    machine_id $output_dir/etc/machine-id
+    clean_java_ca_cache $output_dir/etc/pki/ca-trust/extracted/java/cacerts
 }
 
 report() {
@@ -86,7 +109,7 @@ main() {
         usage
     fi
 
-    echo "$INFO starting to build rootfs."
+    info " starting to build rootfs."
     source_code_dir=$1
     output_dir=$2
     patch_dir=$3
