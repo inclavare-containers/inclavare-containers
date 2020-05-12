@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package libenclave_proto;
+
+message AgentServiceRequest{
+    message Execute {
+        string argv = 1;
+        string envp = 2;
+    }
+
+    message Kill {
+        int32 sig = 1;
+    }
+
+    Execute exec = 1;
+    Kill kill = 2;
+}
+
+message AgentServiceResponse {
+    message Execute {
+        int32 exitCode = 1;
+        string error = 2;
+    }
+
+    Execute exec = 1;
+}
