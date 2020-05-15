@@ -1,3 +1,6 @@
+# rune announcement
+`rune` is a CLI tool for spawning and running enclaves in containers according to the OCI specificattion. The codebase of `rune` is a fork of [runc](https://github.com/opencontainers/runc), so `rune` can be used as `runc` if enclave is not configured or available.
+
 # runc
 
 [![Build Status](https://travis-ci.org/opencontainers/runc.svg?branch=master)](https://travis-ci.org/opencontainers/runc)
