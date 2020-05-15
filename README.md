@@ -44,7 +44,7 @@ In addition, you can write your own enclave runtime with any programming languag
 
 ## Using rune
 ### Run Occlum
-Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to run `Occlum` with `rune`.
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_occlum_with_rune.md) to run `Occlum` with `rune`.
 
 ### Run Docker
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_docker.md) to run `Docker` with `rune`.
