@@ -4,7 +4,7 @@ Enclave Runtime PAL API defines a common interface to interact between `rune` an
 ## pal_init()
 | **Description** | Initialize enclave runtime with specific attributes. |
 | :-: | :- |
-| **Prototype** | struct pal_attr_t {<br/>      const char \*args;<br/>      const char \*log_level;<br/>};<br/>int pal_init(char \*path, char \*argv[],<br/>             struct stdio_fds \*stdio,<br/>             int \*exit_code); |
+| **Prototype** | struct pal_attr_t {<br/>      const char \*args;<br/>      const char \*log_level;<br/>};<br/>int pal_init(const struct pal_attr_t *attr); |
 | **Parameters** | @args: the enclave runtime specific argument string.<br/>@log_level: the output log level of enclave runtime. |
 | **Return value** | 0: Success<br/>-ENOENT: Invalid instance path of enclave runtime<br/>Others: Enclave runtime specific error codes |
 | **Availability **| >=v1 |
