@@ -17,6 +17,7 @@ import (
 	dbus "github.com/godbus/dbus/v5"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/configs"
+	"github.com/opencontainers/runc/libcontainer/devices"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
 	libcontainerUtils "github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -339,6 +340,18 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 	}
 }
 
+// Determine whether the file is a character device
+func IsChrDev(device *configs.Device) (bool) {
+	dev, err := devices.DeviceFromPath(device.Path, "rw")
+	if err == nil {
+		if dev.Type == 'c' && dev.Major == 10 {
+			return true
+		}
+	}
+
+	return false
+}
+
 func createEnclaveDevices(devices []*configs.Device, etype string, fn func(dev configs.Device)) {
 	var configuredDevs []string
 
@@ -355,7 +368,9 @@ func createEnclaveDevices(devices []*configs.Device, etype string, fn func(dev c
 
 	// Create default enclave devices
 	for _, d := range exclusiveDevs {
-		fn(*d)
+		if IsChrDev(d) {
+			fn(*d)
+		}
 	}
 }
 
