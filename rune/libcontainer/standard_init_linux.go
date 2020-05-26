@@ -30,6 +30,7 @@ type linuxStandardInit struct {
 	logPipe       *os.File
 	logLevel      string
 	agentPipe     *os.File
+	runeletFd     int
 }
 
 func (l *linuxStandardInit) getSessionRingParams() (string, uint32, uint32) {
@@ -182,7 +183,7 @@ func (l *linuxStandardInit) Init() error {
 		if err != nil {
 			return err
 		}
-		return l.finalizeInit("/proc/self/exe", []string{"init-runelet", "enclave"})
+		return l.finalizeInit("", l.runeletFd, []string{"init-runelet", "enclave"})
 	}
 	// Check for the arg before waiting to make sure it exists and it is
 	// returned as a create time error.
@@ -210,10 +211,10 @@ func (l *linuxStandardInit) Init() error {
 	// since been resolved.
 	// https://github.com/torvalds/linux/blob/v4.9/fs/exec.c#L1290-L1318
 	unix.Close(l.fifoFd)
-	return l.finalizeInit(name, l.config.Args[0:])
+	return l.finalizeInit(name, -1, l.config.Args[0:])
 }
 
-func (l *linuxStandardInit) finalizeInit(entryName string, args []string) error {
+func (l *linuxStandardInit) finalizeInit(entryName string, fd int, args []string) error {
 	// Set seccomp as close to execve as possible, so as few syscalls take
 	// place afterward (reducing the amount of syscalls that users need to
 	// enable in their seccomp profiles).
@@ -222,7 +223,13 @@ func (l *linuxStandardInit) finalizeInit(entryName string, args []string) error 
 			return newSystemErrorWithCause(err, "init seccomp")
 		}
 	}
-	if err := syscall.Exec(entryName, args, os.Environ()); err != nil {
+	var err error
+	if fd != -1 {
+		err = fexecve(fd, args, os.Environ())
+	} else {
+		err = syscall.Exec(entryName, args, os.Environ())
+	}
+	if err != nil {
 		return newSystemErrorWithCause(err, "exec user process")
 	}
 	return nil

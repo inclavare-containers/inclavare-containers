@@ -27,6 +27,7 @@ type linuxSetnsInit struct {
 	logPipe       *os.File
 	logLevel      string
 	agentPipe     *os.File
+	runeletFd     int
 }
 
 func (l *linuxSetnsInit) getSessionRingName() string {
@@ -97,7 +98,7 @@ func (l *linuxSetnsInit) Init() error {
 		if err != nil {
 			return newSystemErrorWithCause(err, "libenclave bootstrap")
 		}
-		return system.Execv("/proc/self/exe", []string{"runelet", "enclave"}, os.Environ())
+		return fexecve(l.runeletFd, []string{"runelet", "enclave"}, os.Environ())
 	}
 	return system.Execv(l.config.Args[0], l.config.Args[0:], os.Environ())
 }

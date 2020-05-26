@@ -426,6 +426,19 @@ func (c *linuxContainer) deleteExecFifo() {
 	os.Remove(fifoName)
 }
 
+func (c *linuxContainer) includeRuneletFd(cmd *exec.Cmd) error {
+	const selfName = "/proc/self/exe"
+	runeletFd, err := unix.Open(selfName, unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return err
+	}
+
+	cmd.ExtraFiles = append(cmd.ExtraFiles, os.NewFile(uintptr(runeletFd), selfName))
+	cmd.Env = append(cmd.Env,
+	fmt.Sprintf("_LIBCONTAINER_RUNELETFD=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+	return nil
+}
+
 // includeExecFifo opens the container's execfifo as a pathfd, so that the
 // container cannot access the statedir (and the FIFO itself remains
 // un-opened). It then adds the FifoFd to the given exec.Cmd as an inherited
@@ -481,6 +494,10 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	cmd := c.commandTemplate(p, childInitPipe, childLogPipe, p.AgentPipe)
 	if !p.Init {
 		return c.newSetnsProcess(p, cmd, messageSockPair, logFilePair)
+	}
+
+	if err:= c.includeRuneletFd(cmd); err != nil {
+		return nil, newSystemErrorWithCause(err, "including execself in cmd.Exec setup")
 	}
 
 	// We only set up fifoFd if we're not doing a `runc exec`. The historic

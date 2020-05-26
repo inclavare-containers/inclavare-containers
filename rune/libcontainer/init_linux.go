@@ -2,6 +2,12 @@
 
 package libcontainer
 
+/*
+#include <stdlib.h>
+#include <unistd.h>
+*/
+import "C"
+
 import (
 	"encoding/json"
 	"fmt"
@@ -73,7 +79,7 @@ type initer interface {
 	Init() error
 }
 
-func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd int, logPipe *os.File, logLevel string, agentPipe *os.File) (initer, error) {
+func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd int, logPipe *os.File, logLevel string, agentPipe *os.File, runeletFd int) (initer, error) {
 	var config *initConfig
 	if err := json.NewDecoder(pipe).Decode(&config); err != nil {
 		return nil, err
@@ -90,6 +96,7 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 			logPipe:       logPipe,
 			logLevel:      logLevel,
 			agentPipe:     agentPipe,
+			runeletFd:     runeletFd,
 		}, nil
 	case initStandard:
 		return &linuxStandardInit{
@@ -101,6 +108,7 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 			logPipe:       logPipe,
 			logLevel:      logLevel,
 			agentPipe:     agentPipe,
+			runeletFd:     runeletFd,
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown init type %q", t)
@@ -537,6 +545,35 @@ func signalAllProcesses(m cgroups.Manager, s os.Signal) error {
 				}
 			}
 		}
+	}
+	return nil
+}
+
+func fexecve(fd int, argv []string, envp []string) error {
+	argc := len(argv) + 1
+	args := make([]*C.char, argc)
+	if argc > 1 {
+		for i, arg := range argv {
+			args[i] = C.CString(arg)
+			defer C.free(unsafe.Pointer(args[i]))
+		}
+	}
+
+	envc := len(envp) + 1
+	envs := make([]*C.char, envc)
+	if envc > 1 {
+		for i, env := range envp {
+			envs[i] = C.CString(env)
+			defer C.free(unsafe.Pointer(envs[i]))
+		}
+	}
+
+	var c_argv **C.char = (**C.char)(unsafe.Pointer(&args[0]))
+	var c_envp **C.char = (**C.char)(unsafe.Pointer(&envs[0]))
+	ret := C.fexecve(C.int(fd), c_argv, c_envp)
+	if ret < 0 {
+		/* TODO: errno */
+		return fmt.Errorf("fexecve() failed with %d", ret)
 	}
 	return nil
 }

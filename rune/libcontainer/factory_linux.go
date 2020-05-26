@@ -336,7 +336,7 @@ func (l *LinuxFactory) Type() string {
 // This is a low level implementation detail of the reexec and should not be consumed externally
 func (l *LinuxFactory) StartInitialization() (err error) {
 	var (
-		pipefd, fifofd int
+		pipefd, fifofd, runeletfd int
 		consoleSocket  *os.File
 		logPipe        *os.File
 		agentPipe      *os.File
@@ -346,6 +346,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		envLogPipe     = os.Getenv("_LIBCONTAINER_LOGPIPE")
 		envLogLevel    = os.Getenv("_LIBCONTAINER_LOGLEVEL")
 		envAgentPipe   = os.Getenv("_LIBCONTAINER_AGENTPIPE")
+		envRuneletFd   = os.Getenv("_LIBCONTAINER_RUNELETFD")
 	)
 
 	// Get the INITPIPE.
@@ -395,6 +396,13 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		defer agentPipe.Close()
 	}
 
+	runeletfd = -1
+	if envRuneletFd != "" {
+		if runeletfd, err = strconv.Atoi(envRuneletFd); err != nil {
+			return fmt.Errorf("unable to convert _LIBCONTAINER_RUNELETFD=%s to int: %s", envRuneletFd, err)
+		}
+	}
+
 	// clear the current process's environment to clean any libcontainer
 	// specific env vars.
 	os.Clearenv()
@@ -417,7 +425,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		}
 	}()
 
-	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe)
+	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe, runeletfd)
 	if err != nil {
 		return err
 	}
