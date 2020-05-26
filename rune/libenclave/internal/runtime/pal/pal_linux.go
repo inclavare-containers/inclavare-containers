@@ -137,7 +137,7 @@ func (pal *enclaveRuntimePal) Name() string {
 
 func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	api := &enclaveRuntimePalApiV1{}
-	return api.init(pal.init, args, "off")
+	return api.init(pal.init, args, logLevel)
 }
 
 func (pal *enclaveRuntimePal) Attest() (err error) {
