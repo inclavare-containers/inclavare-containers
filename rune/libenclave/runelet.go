@@ -226,6 +226,7 @@ func finalizeInitialization(fifoFd int) error {
 	// since been resolved.
 	// https://github.com/torvalds/linux/blob/v4.9/fs/exec.c#L1290-L1318
 	unix.Close(fifoFd)
+	unix.Close(fd)
 	return nil
 }
 
