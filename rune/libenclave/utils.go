@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"syscall"
 	"time"
 	"unsafe"
 )
@@ -47,24 +48,17 @@ func stageFd(env string, f interface{}) (err error) {
 		return fmt.Errorf("unsupported type of environment variable %s", env)
 	}
 
-	// We make full use of one important side effect of Dup(): The
-	// close-on-exec flag for the duplicate fd is off. Using fnctl()
-	// can also clear close-on-exec flag but it is too OS specific.
-	//
-	//   flags, err := unix.FcntlInt(uintptr(fd), syscall.F_GETFD, 0)
-	//   if flags & syscall.FD_CLOEXEC == syscall.FD_CLOEXEC {
-	//       flags &^= syscall.FD_CLOEXEC
-	//       unix.FcntlInt(uintptr(fd), syscall.F_SETFD, flags)
-	//   }
-	fd, err = unix.Dup(fd)
+	flags, err := unix.FcntlInt(uintptr(fd), syscall.F_GETFD, 0)
 	if err != nil {
 		return err
 	}
-	defer func() {
+	if flags&syscall.FD_CLOEXEC == syscall.FD_CLOEXEC {
+		flags &^= syscall.FD_CLOEXEC
+		_, err := unix.FcntlInt(uintptr(fd), syscall.F_SETFD, flags)
 		if err != nil {
-			unix.Close(fd)
+			return err
 		}
-	}()
+	}
 
 	err = os.Setenv(env, strconv.Itoa(fd))
 	if err != nil {
