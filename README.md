@@ -40,6 +40,11 @@ In addition, you can write your own enclave runtime with any programming languag
 
 `shim-rune` will be open source soon.
 
+### runectl
+`runectl` is a command line assit tool for inclavare-containers. Its usage includes:
+- Given the signature file of an Enclave, `runectl gen-token` can generate the correspondingg token file from Intel `aesmd` service.
+- `runectl attest` can allow users to challenge the enclave with the assist of Intel Attestatiion Service through remote attestation requests. This function will be available soon.
+
 ---
 
 ## Using rune
