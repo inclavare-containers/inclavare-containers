@@ -331,11 +331,17 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 		args = strings.Join(a, " ")
 	}
 
+	signer := filterOut(env, "ENCLAVE_RUNTIME_SIGNER")
+	if signer == "" {
+		signer = libcontainerUtils.SearchLabels(config.Labels, "enclave.runtime.signer")
+	}
+
 	if etype != "" {
 		config.Enclave = &configs.Enclave{
 			Type: etype,
 			Path: path,
 			Args: args,
+			Signer: signer,
 		}
 	}
 }

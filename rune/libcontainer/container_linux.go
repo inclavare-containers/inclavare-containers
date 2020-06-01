@@ -530,6 +530,13 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 			cmd.Env = append(cmd.Env,
 				fmt.Sprintf("_LIBCONTAINER_AGENTPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
 		}
+
+		if c.config.Enclave.Path != "" {
+			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_PATH=" + string(c.config.Enclave.Path))
+		}
+		if c.config.Enclave.Signer != "server" {
+			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS=" + string(c.config.Rootfs))
+		}
 	}
 
 	// NOTE: when running a container with no PID namespace and the parent process spawning the container is

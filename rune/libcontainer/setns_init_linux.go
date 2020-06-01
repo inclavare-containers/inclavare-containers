@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/runc/libcontainer/apparmor"
 	"github.com/opencontainers/runc/libcontainer/keys"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
@@ -97,7 +98,16 @@ func (l *linuxSetnsInit) Init() error {
 		if err != nil {
 			return newSystemErrorWithCause(err, "libenclave bootstrap")
 		}
-		return system.Execv("/proc/self/exe", []string{"runelet", "enclave"}, os.Environ())
+
+		exitCode, err := libenclave.StartInitialization()
+		if err != nil {
+			logrus.Fatal(err)
+			os.Exit(1)
+		}
+		logrus.Debugf("enclave exitCode: %d", exitCode)
+		os.Exit(int(exitCode))
+		// make compiler happy
+		return nil
 	}
 	return system.Execv(l.config.Args[0], l.config.Args[0:], os.Environ())
 }

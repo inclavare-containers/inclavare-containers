@@ -221,9 +221,13 @@ func (v *ConfigValidator) enclave(config *configs.Config) error {
 		return fmt.Errorf("enclave runtime path is not configured")
 	}
 
-	path, err := securejoin.SecureJoin(config.Rootfs, config.Enclave.Path)
-	if err != nil {
-		return err
+	path := config.Enclave.Path
+	if config.Enclave.Signer != "server" {
+		var err error
+		path, err = securejoin.SecureJoin(config.Rootfs, config.Enclave.Path)
+		if err != nil {
+			return err
+		}
 	}
 
 	if _, err := os.Stat(path); err != nil {

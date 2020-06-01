@@ -119,7 +119,6 @@ func main() {
 		eventsCommand,
 		execCommand,
 		initCommand,
-		enclaveCommand,
 		killCommand,
 		listCommand,
 		pauseCommand,
