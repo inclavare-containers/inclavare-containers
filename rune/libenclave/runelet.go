@@ -302,7 +302,13 @@ func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySig
 	logrus.Debug("awaiting for signal forwarder exiting ...")
 	<-sigForwarderExit
 	logrus.Debug("signal forwarder exited")
-	return resp.Exec.ExitCode, fmt.Errorf(resp.Exec.Error)
+
+	if resp.Exec.Error == "" {
+		err = nil
+	} else {
+		err = fmt.Errorf(resp.Exec.Error)
+	}
+	return resp.Exec.ExitCode, err
 }
 
 func forwardSignalToParent(conn io.Writer, notifySignal chan os.Signal, notifyExit <-chan struct{}) <-chan struct{} {
