@@ -9,7 +9,6 @@ import (
 	pb "github.com/opencontainers/runc/libenclave/proto"
 	"golang.org/x/sys/unix"
 	"io"
-	"net"
 	"os"
 	"strconv"
 	"syscall"
@@ -79,7 +78,7 @@ func unstageFd(env string) {
 	}
 }
 
-func protoBufRead(conn net.Conn, unmarshaled interface{}) error {
+func protoBufRead(conn io.Reader, unmarshaled interface{}) error {
 	var sz uint32
 	data := make([]byte, unsafe.Sizeof(sz))
 	_, err := conn.Read(data)

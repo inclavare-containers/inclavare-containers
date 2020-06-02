@@ -208,15 +208,9 @@ func handleRequest(conn net.Conn, id int) {
 func relaySignal(signalPipe *os.File, id int) {
 	defer signalPipe.Close()
 
-	conn, err := net.FileConn(signalPipe)
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
 	for {
 		req := &pb.AgentServiceRequest{}
-		if err := protoBufRead(conn, req); err != nil {
+		if err := protoBufRead(signalPipe, req); err != nil {
 			return
 		}
 
