@@ -125,11 +125,10 @@ func StartInitialization() (exitCode int32, err error) {
 	defer agentPipe.Close()
 	os.Unsetenv("_LIBENCLAVE_AGENTPIPE")
 
-	notifyExit := make(chan struct{})
 	notifySignal := make(chan os.Signal, signalBufferSize)
 
 	if fifoFd == -1 {
-		exitCode, err = remoteExec(agentPipe, config, notifySignal, notifyExit)
+		exitCode, err = remoteExec(agentPipe, config, notifySignal)
 		if err != nil {
 			return exitCode, err
 		}
@@ -138,6 +137,7 @@ func StartInitialization() (exitCode int32, err error) {
 		return exitCode, err
 	}
 
+	notifyExit := make(chan struct{})
 	sigForwarderExit := forwardSignal(rt, notifySignal, notifyExit)
 	agentExit := startAgentService(agentPipe, notifyExit)
 
@@ -230,7 +230,7 @@ func finalizeInitialization(fifoFd int) error {
 	return nil
 }
 
-func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySignal chan os.Signal, notifyExit <-chan struct{}) (exitCode int32, err error) {
+func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySignal chan os.Signal) (exitCode int32, err error) {
 	logrus.Debugf("preparing to remote exec %s", strings.Join(config.Cmd, " "))
 
 	c, err := net.FileConn(agentPipe)
@@ -289,6 +289,8 @@ func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySig
 	childSignalPipe.Close()
 
 	signal.Notify(notifySignal)
+
+	notifyExit := make(chan struct{})
 	sigForwarderExit := forwardSignalToParent(parentSignalPipe, notifySignal, notifyExit)
 
 	resp := &pb.AgentServiceResponse{}
@@ -296,6 +298,7 @@ func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySig
 		return 1, err
 	}
 
+	notifyExit <- struct{}{}
 	logrus.Debug("awaiting for signal forwarder exiting ...")
 	<-sigForwarderExit
 	logrus.Debug("signal forwarder exited")
