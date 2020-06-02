@@ -42,14 +42,14 @@ In addition, you can write your own enclave runtime with any programming languag
 
 ### runectl
 `runectl` is a command line assit tool for inclavare-containers. Its usage includes:
-- Given the signature file of an Enclave, `runectl gen-token` can generate the correspondingg token file from Intel `aesmd` service.
+- Given the signature file of an Enclave, `runectl gen-token` can generate the corresponding token file from Intel `aesmd` service.
 - `runectl attest` can allow users to challenge the enclave with the assist of Intel Attestatiion Service through remote attestation requests. This function will be available soon.
 
 ---
 
 ## Using rune
 ### Run Occlum
-Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_occlum_with_rune.md) to run `Occlum` with `rune`.
+Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to run `Occlum` with `rune`.
 
 ### Run Docker
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_docker.md) to run `Docker` with `rune`.
