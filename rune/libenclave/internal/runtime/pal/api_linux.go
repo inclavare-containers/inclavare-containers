@@ -3,6 +3,11 @@ package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave
 /*
 #include <stdlib.h>
 
+static int palGetVersion(void *sym)
+{
+	return ((int (*)(void))sym)();
+}
+
 static int palInitV1(void *sym, const char *args, const char *log_level)
 {
 	typedef struct {
@@ -65,7 +70,7 @@ func (pal *enclaveRuntimePalApiV1) get_version() uint32 {
 	logrus.Debugf("pal get_version() called")
 	sym := nsenter.SymAddrPalVersion()
 	if sym != nil {
-		return *(*uint32)(sym)
+		return uint32(C.palGetVersion(sym))
 	} else {
 		return palApiVersion
 	}

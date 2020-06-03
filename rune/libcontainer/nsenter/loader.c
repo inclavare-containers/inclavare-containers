@@ -28,15 +28,13 @@ struct pal_stdio_fds {
 	int stdin, stdout, stderr;
 };
 
-int *pal_version;
+
+int (*fptr_pal_get_version)(void);
 int (*fptr_pal_init)(const struct pal_attr_t *attr);
 int (*fptr_pal_exec)(const char *path, const char * const argv[],
 			const struct pal_stdio_fds *stdio, int *exit_code);
 int (*fptr_pal_kill)(int sig, int pid);
 int (*fptr_pal_destroy)(void);
-
-#define PAL_SO_PREFIX "liberpal-"
-#define PAL_SO_SUFFIX ".so"
 
 int is_enclave(void)
 {
@@ -49,8 +47,7 @@ int is_enclave(void)
 
 int load_enclave_runtime(void)
 {
-	const char *file, *basename, *suffix, *name;
-	int namelen;
+	const char *file;
 	const char *rootfs;
 	void *dl;
 
@@ -61,24 +58,6 @@ int load_enclave_runtime(void)
 	}
 	write_log(DEBUG, "_LIBCONTAINER_PAL_PATH = %s", file);
 
-	/* fetch basename */
-	basename = strrchr(file, '/');
-	if (basename)
-		basename += 1;  /* skip '/' */
-	else
-		basename = file;
-
-	/* check prefix and suffix */
-	if (strncmp(basename, PAL_SO_PREFIX, sizeof(PAL_SO_PREFIX) - 1) != 0)
-		return -ESRCH;
-	suffix = basename + strlen(basename) - sizeof(PAL_SO_SUFFIX) + 1;
-	if (strncmp(suffix, PAL_SO_SUFFIX, sizeof(PAL_SO_SUFFIX) - 1) != 0)
-		return -ESRCH;
-
-	/* pal name */
-	name = basename + sizeof(PAL_SO_PREFIX) - 1;
-	namelen = strlen(name) - sizeof(PAL_SO_SUFFIX) + 1;
-
 	/* dlopen */
 	rootfs = getenv("_LIBCONTAINER_PAL_ROOTFS");
 	if (rootfs && *rootfs != '\0') {
@@ -86,7 +65,7 @@ int load_enclave_runtime(void)
 		char ldpath[BUFSIZ];
 		const char *env_ldpath;
 
-		if (basename == file) {
+		if (*file != '/') {
 			write_log(DEBUG, "_LIBCONTAINER_PAL_PATH must be a absolute path");
 			return -ENOSPC;
 		}
@@ -116,17 +95,13 @@ int load_enclave_runtime(void)
 		return -ENOEXEC;
 	}
 
-	pal_version = dlsym(dl, "pal_version");
-	write_log(DEBUG, "dlsym(%s) = %p", "pal_version", pal_version);
-
 #define DLSYM(fn)								\
 	do {									\
-		char fname[64];							\
-		snprintf(fname, sizeof(fname), "%.*s_pal_%s", namelen, name, #fn); \
-		fptr_pal_ ## fn = dlsym(dl, fname);				\
-		write_log(DEBUG, "dlsym(%s) = %p", fname, fptr_pal_ ## fn);	\
+		fptr_pal_ ## fn = dlsym(dl, "pal_" #fn);				\
+		write_log(DEBUG, "dlsym(%s) = %p", "pal_" #fn, fptr_pal_ ## fn);	\
 	} while (0)
 
+	DLSYM(get_version);
 	DLSYM(init);
 	DLSYM(exec);
 	DLSYM(kill);
