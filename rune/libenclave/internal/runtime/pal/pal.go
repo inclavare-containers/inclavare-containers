@@ -5,7 +5,6 @@ import (
 )
 
 type enclaveRuntimePal struct {
-	name    string
 	version uint32
 }
 

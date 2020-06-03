@@ -17,7 +17,7 @@ struct pal_stdio_fds {
 	int stdin, stdout, stderr;
 };
 
-extern int *pal_version;
+extern int (*fptr_pal_get_version)(void);
 extern int (*fptr_pal_init)(const struct pal_attr_t *attr);
 extern int (*fptr_pal_exec)(const char *path, const char * const argv[],
 			const struct pal_stdio_fds *stdio, int *exit_code);
@@ -31,7 +31,7 @@ import (
 )
 
 func SymAddrPalVersion() unsafe.Pointer {
-	return unsafe.Pointer(C.pal_version)
+	return unsafe.Pointer(C.fptr_pal_get_version)
 }
 
 func SymAddrPalInit() unsafe.Pointer {

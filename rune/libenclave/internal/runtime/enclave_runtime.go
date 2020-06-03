@@ -10,7 +10,6 @@ import (
 )
 
 type EnclaveRuntime interface {
-	Name() string
 	Load(path string) error
 	Init(args string, logLevel string) error
 	Attest() error
@@ -43,9 +42,8 @@ func StartInitialization(config *configs.InitEnclaveConfig, logLevel string) (*E
 	if err != nil {
 		return nil, err
 	}
-	name := runtime.Name()
 
-	logrus.Infof("Initializing enclave runtime %s", name)
+	logrus.Infof("Initializing enclave runtime")
 	err = runtime.Init(config.Args, logLevel)
 	if err != nil {
 		return nil, err
@@ -58,13 +56,13 @@ func StartInitialization(config *configs.InitEnclaveConfig, logLevel string) (*E
 }
 
 func (rt *EnclaveRuntimeWrapper) LaunchAttestation() error {
-	logrus.Debugf("attesting enclave runtime %s", rt.runtime.Name())
+	logrus.Debugf("attesting enclave runtime")
 
 	return rt.runtime.Attest()
 }
 
 func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, stdio [3]*os.File) (int32, error) {
-	logrus.Debugf("enclave runtime %s executing payload with commandline %s", rt.runtime.Name(), cmd)
+	logrus.Debugf("enclave runtime %s executing payload with commandline", cmd)
 
 	// The executable may not exist in container at all according
 	// to the design of enclave runtime, such as Occlum, which uses
@@ -78,16 +76,16 @@ func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, std
 
 func (rt *EnclaveRuntimeWrapper) KillPayload(sig int, pid int) error {
 	if pid != -1 {
-		logrus.Debugf("enclave runtime %s killing payload %d with signal %d", rt.runtime.Name(), pid, sig)
+		logrus.Debugf("enclave runtime killing payload %d with signal %d", pid, sig)
 	} else {
-		logrus.Debugf("enclave runtime %s killing all payloads with signal %d", rt.runtime.Name(), sig)
+		logrus.Debugf("enclave runtime killing all payloads with signal %d", sig)
 	}
 
 	return rt.runtime.Kill(sig, pid)
 }
 
 func (rt *EnclaveRuntimeWrapper) DestroyInstance() error {
-	logrus.Debugf("Destroying enclave runtime %s", rt.runtime.Name())
+	logrus.Debugf("Destroying enclave runtime")
 
 	return rt.runtime.Destroy()
 }
