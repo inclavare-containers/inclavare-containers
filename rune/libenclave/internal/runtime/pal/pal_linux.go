@@ -9,26 +9,10 @@ import "C"
 import (
 	"fmt"
 	"os"
-	"path"
-	"strings"
 	"unsafe"
 )
 
-const (
-	palPrefix = "liberpal-"
-	palSuffix = ".so"
-)
-
 func (pal *enclaveRuntimePal) Load(palPath string) (err error) {
-	bp := path.Base(palPath)
-	if !strings.HasPrefix(bp, palPrefix) {
-		return fmt.Errorf("not found pal prefix pattern in pal %s\n", palPath)
-	}
-	if !strings.HasSuffix(bp, palSuffix) {
-		return fmt.Errorf("not found pal suffix pattern in pal %s\n", palPath)
-	}
-	palName := strings.TrimSuffix(strings.TrimPrefix(bp, palPrefix), palSuffix)
-
 	p := C.CString(palPath)
 	defer C.free(unsafe.Pointer(p))
 	handle := C.dlmopen(C.LM_ID_NEWLM, p, C.RTLD_LAZY)
@@ -42,7 +26,6 @@ func (pal *enclaveRuntimePal) Load(palPath string) (err error) {
 	}()
 
 	pal.handle = handle
-	pal.name = palName
 
 	if err = pal.getPalApiVersion(); err != nil {
 		return err
@@ -51,7 +34,7 @@ func (pal *enclaveRuntimePal) Load(palPath string) (err error) {
 }
 
 func (pal *enclaveRuntimePal) getPalApiVersion() error {
-	return pal.getSymbol("version",
+	return pal.getSymbol("pal_version",
 		func(sym unsafe.Pointer) error {
 			if sym == nil {
 				pal.version = 1
@@ -68,10 +51,10 @@ func (pal *enclaveRuntimePal) getPalApiVersion() error {
 }
 
 func (pal *enclaveRuntimePal) probeApi() (err error) {
-	err = pal.getSymbol("init",
+	err = pal.getSymbol("pal_init",
 		func(sym unsafe.Pointer) error {
 			if sym == nil {
-				return fmt.Errorf("unresolved api interface %s_pal_init", pal.name)
+				return fmt.Errorf("unresolved api interface pal_init")
 			}
 			pal.init = sym
 			return nil
@@ -81,10 +64,10 @@ func (pal *enclaveRuntimePal) probeApi() (err error) {
 		return err
 	}
 
-	err = pal.getSymbol("exec",
+	err = pal.getSymbol("pal_exec",
 		func(sym unsafe.Pointer) error {
 			if sym == nil {
-				return fmt.Errorf("unresolved api interface %s_pal_exec", pal.name)
+				return fmt.Errorf("unresolved api interface pal_exec")
 			}
 			pal.exec = sym
 			return nil
@@ -94,13 +77,13 @@ func (pal *enclaveRuntimePal) probeApi() (err error) {
 		return err
 	}
 
-	err = pal.getSymbol("kill",
+	err = pal.getSymbol("pal_kill",
 		func(sym unsafe.Pointer) error {
 			if sym == nil {
 				if pal.version == 1 {
 					return nil
 				}
-				return fmt.Errorf("unresolved api interface %s_pal_kill", pal.name)
+				return fmt.Errorf("unresolved api interface pal_kill")
 			}
 			pal.kill = sym
 			return nil
@@ -110,10 +93,10 @@ func (pal *enclaveRuntimePal) probeApi() (err error) {
 		return err
 	}
 
-	err = pal.getSymbol("destroy",
+	err = pal.getSymbol("pal_destroy",
 		func(sym unsafe.Pointer) error {
 			if sym == nil {
-				return fmt.Errorf("unresolved api interface %s_pal_destroy", pal.name)
+				return fmt.Errorf("unresolved api interface pal_destroy")
 			}
 			pal.destroy = sym
 			return nil
@@ -123,16 +106,11 @@ func (pal *enclaveRuntimePal) probeApi() (err error) {
 }
 
 func (pal *enclaveRuntimePal) getSymbol(apiName string, handler func(sym unsafe.Pointer) error) error {
-	symName := fmt.Sprintf("%s_pal_%s", pal.name, apiName)
-	sn := C.CString(symName)
-	defer C.free(unsafe.Pointer(sn))
+	an := C.CString(apiName)
+	defer C.free(unsafe.Pointer(an))
 
-	sym := C.dlsym(pal.handle, sn)
+	sym := C.dlsym(pal.handle, an)
 	return handler(sym)
-}
-
-func (pal *enclaveRuntimePal) Name() string {
-	return fmt.Sprintf("%s (API version %d)", pal.name, pal.version)
 }
 
 func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {

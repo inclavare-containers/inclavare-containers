@@ -7,7 +7,6 @@ import (
 
 type enclaveRuntimePal struct {
 	handle  unsafe.Pointer
-	name    string
 	version uint32
 	init    unsafe.Pointer
 	exec    unsafe.Pointer
