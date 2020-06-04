@@ -10,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	"io"
-	"net"
 	"os"
 	"os/signal"
 	"strconv"
@@ -233,30 +232,14 @@ func finalizeInitialization(fifoFd int) error {
 func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySignal chan os.Signal) (exitCode int32, err error) {
 	logrus.Debugf("preparing to remote exec %s", strings.Join(config.Cmd, " "))
 
-	c, err := net.FileConn(agentPipe)
-	if err != nil {
-		return 1, err
-	}
-	defer c.Close()
-	conn, ok := c.(*net.UnixConn)
-	if !ok {
-		return 1, fmt.Errorf("casting to UnixConn failed")
-	}
-
 	req := &pb.AgentServiceRequest{}
 	req.Exec = &pb.AgentServiceRequest_Execute{
 		Argv: strings.Join(config.Cmd, " "),
 		Envp: strings.Join(os.Environ(), " "),
 	}
-	if err = protoBufWrite(conn, req); err != nil {
+	if err = protoBufWrite(agentPipe, req); err != nil {
 		return 1, err
 	}
-
-	agentFile, err := conn.File()
-	if err != nil {
-		return 1, err
-	}
-	defer agentFile.Close()
 
 	// Send signal notification pipe.
 	childSignalPipe, parentSignalPipe, err := os.Pipe()
@@ -270,18 +253,18 @@ func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySig
 		parentSignalPipe.Close()
 	}()
 
-	if err = utils.SendFd(agentFile, childSignalPipe.Name(), childSignalPipe.Fd()); err != nil {
+	if err = utils.SendFd(agentPipe, childSignalPipe.Name(), childSignalPipe.Fd()); err != nil {
 		return 1, err
 	}
 
 	// Send stdio fds.
-	if err = utils.SendFd(agentFile, os.Stdin.Name(), os.Stdin.Fd()); err != nil {
+	if err = utils.SendFd(agentPipe, os.Stdin.Name(), os.Stdin.Fd()); err != nil {
 		return 1, err
 	}
-	if err = utils.SendFd(agentFile, os.Stdout.Name(), os.Stdout.Fd()); err != nil {
+	if err = utils.SendFd(agentPipe, os.Stdout.Name(), os.Stdout.Fd()); err != nil {
 		return 1, err
 	}
-	if err = utils.SendFd(agentFile, os.Stderr.Name(), os.Stderr.Fd()); err != nil {
+	if err = utils.SendFd(agentPipe, os.Stderr.Name(), os.Stderr.Fd()); err != nil {
 		return 1, err
 	}
 	// Close the child signal pipe in parent side **after** sending all stdio fds to
@@ -294,7 +277,7 @@ func remoteExec(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySig
 	sigForwarderExit := forwardSignalToParent(parentSignalPipe, notifySignal, notifyExit)
 
 	resp := &pb.AgentServiceResponse{}
-	if err = protoBufRead(conn, resp); err != nil {
+	if err = protoBufRead(agentPipe, resp); err != nil {
 		return 1, err
 	}
 
