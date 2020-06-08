@@ -1,1 +1,6 @@
 rune/.git
+build/
+.idea/
+_output/
+shim/bin/
+shim/.idea/

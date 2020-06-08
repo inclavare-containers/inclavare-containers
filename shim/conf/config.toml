@@ -1,0 +1,13 @@
+log_level = "debug" # "debug" "info" "warn" "error"
+
+sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
+
+[containerd]
+    socket = "/run/containerd/containerd.sock"
+
+[enclave_runtime]
+
+    [enclave_runtime.occlum]
+        build_image = "docker.io/occlum/occlum:0.12.0-ubuntu18.04"
+
+    [enclave_runtime.graphene]
