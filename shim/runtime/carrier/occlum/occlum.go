@@ -2,44 +2,48 @@ package occlum
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
+	"syscall"
 	"time"
 
+	"github.com/BurntSushi/toml"
+	shim_config "github.com/alibaba/inclavare-containers/shim/config"
+	"github.com/alibaba/inclavare-containers/shim/runtime/carrier"
+	carr_const "github.com/alibaba/inclavare-containers/shim/runtime/carrier/constants"
+	"github.com/alibaba/inclavare-containers/shim/runtime/config"
+	"github.com/alibaba/inclavare-containers/shim/runtime/utils"
+	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/cio"
+	"github.com/containerd/containerd/cmd/ctr/commands"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/oci"
 	"github.com/containerd/containerd/runtime/v2/task"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
-	"github.com/BurntSushi/toml"
-
-	"github.com/alibaba/inclavare-containers/shim/runtime/config"
-	shim_config "github.com/alibaba/inclavare-containers/shim/config"
-	"github.com/alibaba/inclavare-containers/shim/runtime/carrier"
-	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
-	carr_const "github.com/alibaba/inclavare-containers/shim/runtime/carrier/constants"
 )
 
 const (
-	defaultNamespace = "default"
-	//occlumEnclaveBuilderImage  = "docker.io/occlum/occlum:0.12.0-ubuntu18.04"
-	buildOcclumEnclaveFileName = "build_occulum_enclave.sh"
-	replaceOcclumImageScript   = "replace_occlum_image.sh"
-	//containerdAddress          = "/run/containerd/containerd.sock"
-	rootfsDirName  = "rootfs"
-	encalveDataDir = "data"
-	//sgxToolSign                = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
+	defaultNamespace         = "k8s.io"
+	replaceOcclumImageScript = "replace_occlum_image.sh"
+	carrierScriptFileName    = "carrier.sh"
+	startScriptFileName      = "start.sh"
+	rootfsDirName            = "rootfs"
+	enclaveDataDir           = "data"
 )
 
 var _ carrier.Carrier = &occlum{}
+
+type occlumBuildTask struct {
+	client    *containerd.Client
+	container *containerd.Container
+	task      *containerd.Task
+}
 
 type occlum struct {
 	context       context.Context
@@ -47,6 +51,7 @@ type occlum struct {
 	workDirectory string
 	entryPoints   []string
 	configPath    string
+	task          *occlumBuildTask
 	spec          *specs.Spec
 	shimConfig    *shim_config.Config
 }
@@ -64,6 +69,7 @@ func NewOcclumCarrier(ctx context.Context, bundle string) (carrier.Carrier, erro
 		context:    ctx,
 		bundle:     bundle,
 		shimConfig: &cfg,
+		task:       &occlumBuildTask{},
 	}, nil
 }
 
@@ -82,59 +88,55 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 	}
 
 	namespace, ok := namespaces.Namespace(c.context)
-	logrus.Debugf("BuildUnsignedEnclave: get namespace %s, containerdAddress: %s",
-		namespace, c.shimConfig.Containerd.Socket)
 	if !ok {
 		namespace = defaultNamespace
 	}
-
 	// Create a new client connected to the default socket path for containerd.
 	client, err := containerd.New(c.shimConfig.Containerd.Socket)
 	if err != nil {
 		return "", fmt.Errorf("failed to create containerd client. error: %++v", err)
+	} else {
+		c.task.client = client
 	}
-	defer client.Close()
-
 	logrus.Debugf("BuildUnsignedEnclave: get containerd client successfully")
 
-	// Create a new context with "k8s.io" namespace
-	ctx, cancle := context.WithTimeout(context.Background(), time.Minute*10)
-	defer cancle()
-	ctx = namespaces.WithNamespace(c.context, namespace)
-
 	if err = createNamespaceIfNotExist(client, namespace); err != nil {
+		logrus.Errorf("BuildUnsignedEnclave: create namespace %s failed. error: %++v", namespace, err)
 		return "", err
 	}
 
-	// pull the image to be used to build enclave.
+	// pull the image that used to build enclave.
 	occlumEnclaveBuilderImage := c.shimConfig.EnclaveRuntime.Occlum.BuildImage
-	image, err := client.Pull(ctx, occlumEnclaveBuilderImage, containerd.WithPullUnpack)
+	image, err := client.Pull(c.context, occlumEnclaveBuilderImage, containerd.WithPullUnpack)
 	if err != nil {
 		return "", fmt.Errorf("failed to pull image %s. error: %++v", occlumEnclaveBuilderImage, err)
 	}
-
 	logrus.Debugf("BuildUnsignedEnclave: pull image %s successfully", occlumEnclaveBuilderImage)
 
-	// Generate the containerID.
+	// Generate the containerId and snapshotId.
+	// FIXME debug
 	rand.Seed(time.Now().UnixNano())
 	containerId := fmt.Sprintf("occlum-enclave-builder-%s", strconv.FormatInt(rand.Int63(), 16))
 	snapshotId := fmt.Sprintf("occlum-enclave-builder-snapshot-%s", strconv.FormatInt(rand.Int63(), 16))
 
 	logrus.Debugf("BuildUnsignedEnclave: containerId: %s, snapshotId: %s", containerId, snapshotId)
 
-	if err := os.Mkdir(filepath.Join(req.Bundle, encalveDataDir), 0755); err != nil {
+	if err := os.Mkdir(filepath.Join(req.Bundle, enclaveDataDir), 0755); err != nil {
 		return "", err
 	}
 
-	// Create a shell script which is used to build occlum enclave.
-	buildEnclaveScript := filepath.Join(req.Bundle, encalveDataDir, buildOcclumEnclaveFileName)
-	if err := ioutil.WriteFile(buildEnclaveScript, []byte(fmt.Sprintf(carr_const.BuildOcclumEnclaveScript,
-		c.workDirectory, c.entryPoints[0], c.configPath)), os.ModePerm); err != nil {
-		return "", err
-	}
-
-	replaceImagesScript := filepath.Join(req.Bundle, encalveDataDir, replaceOcclumImageScript)
+	replaceImagesScript := filepath.Join(req.Bundle, enclaveDataDir, replaceOcclumImageScript)
 	if err := ioutil.WriteFile(replaceImagesScript, []byte(carr_const.ReplaceOcclumImageScript), os.ModePerm); err != nil {
+		return "", err
+	}
+
+	carrierScript := filepath.Join(req.Bundle, enclaveDataDir, carrierScriptFileName)
+	if err := ioutil.WriteFile(carrierScript, []byte(carr_const.CarrierScript), os.ModePerm); err != nil {
+		return "", err
+	}
+
+	startScript := filepath.Join(req.Bundle, enclaveDataDir, startScriptFileName)
+	if err := ioutil.WriteFile(startScript, []byte(carr_const.StartScript), os.ModePerm); err != nil {
 		return "", err
 	}
 
@@ -147,9 +149,9 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 		Options:     []string{"rbind", "rw"},
 	}
 	dataMount := specs.Mount{
-		Destination: filepath.Join("/", encalveDataDir),
+		Destination: filepath.Join("/", enclaveDataDir),
 		Type:        "bind",
-		Source:      filepath.Join(req.Bundle, encalveDataDir),
+		Source:      filepath.Join(req.Bundle, enclaveDataDir),
 		Options:     []string{"rbind", "rw"},
 	}
 
@@ -159,14 +161,12 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 	mounts = append(mounts, rootfsMount, dataMount)
 	// create a container
 	container, err := client.NewContainer(
-		ctx,
+		c.context,
 		containerId,
 		containerd.WithImage(image),
 		containerd.WithNewSnapshot(snapshotId, image),
 		containerd.WithNewSpec(oci.WithImageConfig(image),
-			oci.WithProcessArgs("/bin/bash", filepath.Join("/", encalveDataDir, buildOcclumEnclaveFileName)),
-			//FIXME debug
-			//oci.WithProcessArgs("sleep", "infinity"),
+			oci.WithProcessArgs("/bin/bash", filepath.Join("/", enclaveDataDir, startScriptFileName)),
 			oci.WithPrivileged,
 			oci.WithMounts(mounts),
 		),
@@ -174,40 +174,40 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 	if err != nil {
 		return "", fmt.Errorf("failed to create container by image %s. error: %++v",
 			occlumEnclaveBuilderImage, err)
+	} else {
+		c.task.container = &container
 	}
-	defer container.Delete(ctx, containerd.WithSnapshotCleanup)
 
 	// Create a task from the container.
-	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
+	t, err := container.NewTask(c.context, cio.NewCreator(cio.WithStdio))
 	if err != nil {
 		return "", err
+	} else {
+		c.task.task = &t
 	}
-	defer task.Delete(ctx)
 	logrus.Debugf("BuildUnsignedEnclave: create task successfully")
 
-	// Wait before calling start
-	exitStatusC, err := task.Wait(ctx)
-	if err != nil {
+	if err := t.Start(c.context); err != nil {
+		logrus.Errorf("BuildUnsignedEnclave: start task failed. error: %++v", err)
 		return "", err
 	}
 
-	// Call start() on the task to execute the building scripts.
-	if err := task.Start(ctx); err != nil {
+	cmd := []string{
+		"/bin/bash", filepath.Join("/", enclaveDataDir, carrierScriptFileName),
+		"--action", "buildUnsignedEnclave",
+		"--entry_point", c.entryPoints[0],
+		"--work_dir", c.workDirectory,
+		"--rootfs", filepath.Join("/", rootfsDirName),
+	}
+	if c.configPath != "" {
+		cmd = append(cmd, "--occlum_config_path", filepath.Join("/", rootfsDirName, c.configPath))
+	}
+	logrus.Debugf("BuildUnsignedEnclave: command: %v", cmd)
+	if err := c.execTask(cmd...); err != nil {
+		logrus.Errorf("BuildUnsignedEnclave: exec failed. error: %++v", err)
 		return "", err
 	}
-
-	// Wait for the process to fully exit and print out the exit status
-	status := <-exitStatusC
-	code, _, err := status.Result()
-	if err != nil {
-		return "", fmt.Errorf("container exited abnormaly with exit code %d. error: %++v", code, err)
-	} else if code != 0 {
-		return "", fmt.Errorf("container exited abnormaly with exit code %d", code)
-	}
-
-	enclavePath := filepath.Join(req.Bundle, rootfsDirName, c.workDirectory, ".occlum/build/lib/libocclum-libos.so")
-
-	logrus.Debugf("BuildUnsignedEnclave: exit code: %d. enclavePath: %s", code, enclavePath)
+	enclavePath := filepath.Join("/", rootfsDirName, c.workDirectory, ".occlum/build/lib/libocclum-libos.so")
 
 	return enclavePath, nil
 }
@@ -215,69 +215,107 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 // GenerateSigningMaterial impl Carrier.
 func (c *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carrier.CommonArgs) (
 	signingMaterial string, err error) {
-
-	signingMaterial = filepath.Join(req.Bundle, encalveDataDir, "enclave_sig.dat")
-	args.Config = filepath.Join(req.Bundle, encalveDataDir, "Enclave.xml")
-	sgxToolSign := c.shimConfig.SgxToolSign
-
-	logrus.Debugf("GenerateSigningMaterial cmmmand: %s gendata -enclave %s -config %s -out %s",
-		sgxToolSign, args.Enclave, args.Config, signingMaterial)
-
-	gendataArgs := []string{
-		"gendata",
-		"-enclave",
-		args.Enclave,
-		"-config",
-		args.Config,
-		"-out", signingMaterial,
+	signingMaterial = filepath.Join("/", rootfsDirName, c.workDirectory, "enclave_sig.dat")
+	args.Config = filepath.Join("/", rootfsDirName, c.workDirectory, "Enclave.xml")
+	cmd := []string{
+		"/bin/bash", filepath.Join("/", enclaveDataDir, carrierScriptFileName),
+		"--action", "generateSigningMaterial",
+		"--enclave_config_path", args.Config,
+		"--unsigned_encalve_path", args.Enclave,
+		"--unsigned_material_path", signingMaterial,
 	}
-	cmd := exec.Command(sgxToolSign, gendataArgs...)
-	if result, err := cmd.Output(); err != nil {
-		return "", fmt.Errorf("GenerateSigningMaterial: sgx_sign gendata failed. error: %v %s", err, string(result))
+	logrus.Debugf("GenerateSigningMaterial: sgx_sign gendata command: %v", cmd)
+	if err := c.execTask(cmd...); err != nil {
+		logrus.Errorf("GenerateSigningMaterial: sgx_sign gendata failed. error: %++v", err)
+		return "", err
 	}
-
+	logrus.Debugf("GenerateSigningMaterial: sgx_sign gendata successfully")
 	return signingMaterial, nil
 }
 
 // CascadeEnclaveSignature impl Carrier.
 func (c *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carrier.CascadeEnclaveSignatureArgs) (
 	signedEnclave string, err error) {
-
-	signedEnclave = filepath.Join(
-		req.Bundle,
-		rootfsDirName,
-		c.workDirectory,
-		".occlum/build/lib/libocclum-libos.signed.so")
-	sgxToolSign := c.shimConfig.SgxToolSign
-
-	logrus.Debugf("CascadeEnclaveSignature cmmmand: %s catsig -enclave %s -config %s -out %s -key %s -sig %s -unsigned %s",
-		sgxToolSign, args.Enclave, args.Config, signedEnclave, args.Key, args.Signature, args.SigningMaterial)
-
-	catsigArgs := []string{
-		"catsig",
-		"-enclave",
-		args.Enclave,
-		"-config",
-		args.Config,
-		"-out",
-		signedEnclave,
-		"-key",
-		args.Key,
-		"-sig",
-		args.Signature,
-		"-unsigned",
-		args.SigningMaterial,
+	var bufferSize int64 = 1024 * 4
+	signedEnclave = filepath.Join("/", rootfsDirName, c.workDirectory, ".occlum/build/lib/libocclum-libos.signed.so")
+	publicKey := filepath.Join("/", enclaveDataDir, "public_key.pem")
+	signature := filepath.Join("/", enclaveDataDir, "signature.dat")
+	if err := utils.CopyFile(args.Key, filepath.Join(req.Bundle, publicKey), bufferSize); err != nil {
+		logrus.Errorf("CascadeEnclaveSignature copy file %s to %s failed. err: %++v", args.Key, publicKey, err)
+		return "", err
 	}
-	cmd := exec.Command(sgxToolSign, catsigArgs...)
-	if result, err := cmd.Output(); err != nil {
-		return "", fmt.Errorf("CascadeEnclaveSignature: sgx_sign catsig failed. error: %v %s", err, string(result))
+	if err := utils.CopyFile(args.Signature, filepath.Join(req.Bundle, signature), bufferSize); err != nil {
+		logrus.Errorf("CascadeEnclaveSignature copy file %s to %s failed. err: %++v", args.Signature, signature, err)
+		return "", err
 	}
+	cmd := []string{
+		"/bin/bash", filepath.Join("/", enclaveDataDir, carrierScriptFileName),
+		"--action", "cascadeEnclaveSignature",
+		"--enclave_config_path", args.Config,
+		"--unsigned_encalve_path", args.Enclave,
+		"--unsigned_material_path", args.SigningMaterial,
+		"--signed_enclave_path", signedEnclave,
+		"--public_key_path", publicKey,
+		"--signature_path", signature,
+	}
+	logrus.Debugf("CascadeEnclaveSignature: sgx_sign catsig command: %v", cmd)
+	if err := c.execTask(cmd...); err != nil {
+		logrus.Errorf("CascadeEnclaveSignature: sgx_sign catsig failed. error: %++v", err)
+		return "", err
+	}
+	logrus.Debugf("CascadeEnclaveSignature: sgx_sign catsig successfully")
 	return signedEnclave, nil
 }
 
 // Cleanup impl Carrier.
 func (c *occlum) Cleanup() error {
-	//TODO
+	defer func() {
+		if c.task.client != nil {
+			c.task.client.Close()
+		}
+	}()
+	defer func() {
+		if c.task.container != nil {
+			container := *c.task.container
+			if err := container.Delete(c.context, containerd.WithSnapshotCleanup); err != nil {
+				logrus.Errorf("Cleanup: delete container %s failed. err: %++v", container.ID(), err)
+			}
+			logrus.Debugf("Cleanup: delete container %s successfully.", container.ID())
+		}
+	}()
+
+	if c.task.task == nil {
+		return nil
+	}
+	t := *c.task.task
+	if err := t.Kill(c.context, syscall.SIGTERM); err != nil {
+		logrus.Errorf("Cleanup: kill task %s failed. err: %++v", t.ID(), err)
+		return err
+	}
+	for {
+		status, err := t.Status(c.context)
+		if err != nil {
+			logrus.Errorf("Cleanup: get task %s status failed. error: %++v", t.ID(), err)
+			return err
+		}
+		if status.ExitStatus != 0 {
+			logrus.Errorf("Cleanup: task %s exit abnormally. exit code: %d, task status: %s", t.ID(),
+				status.ExitStatus, status.Status)
+			return fmt.Errorf("task  %s exit abnormally. exit code: %d, task status: %s",
+				t.ID(), status.ExitStatus, status.Status)
+		}
+		if status.Status != containerd.Stopped {
+			logrus.Debugf("Cleanup: task %s status: %s", t.ID(), status.Status)
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	if _, err := t.Delete(c.context); err != nil {
+		logrus.Errorf("Cleanup: delete task %s failed. error: %++v", t.ID(), err)
+		return err
+	}
+	logrus.Debugf("Cleanup: clean occlum container and task successfully")
 	return nil
 }
 
@@ -295,17 +333,14 @@ func (c *occlum) initBundleConfig() error {
 		carr_const.EnclaveTypeKeyName:        string(carr_const.IntelSGX),
 		carr_const.EnclaveRuntimeArgsKeyName: carr_const.DefaultEnclaveRuntimeArgs,
 	}
-
-	if occlumConfigPath, ok := config.GetEnv(spec, carr_const.OcclumConfigPathKeyName); ok {
+	occlumConfigPath, ok := config.GetEnv(spec, carr_const.OcclumConfigPathKeyName)
+	if ok {
 		c.configPath = occlumConfigPath
 	}
-
 	c.spec = spec
-
 	if err := config.UpdateEnvs(spec, envs, false); err != nil {
 		return err
 	}
-
 	return config.SaveSpec(configPath, spec)
 }
 
@@ -328,13 +363,6 @@ func createNamespaceIfNotExist(client *containerd.Client, namespace string) erro
 	return svc.Create(ctx, namespace, nil)
 }
 
-// generateID generates a random unique id.
-func generateID() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return hex.EncodeToString(b)
-}
-
 func setLogLevel(level string) {
 	switch level {
 	case "debug":
@@ -348,4 +376,51 @@ func setLogLevel(level string) {
 	default:
 		logrus.SetLevel(logrus.InfoLevel)
 	}
+}
+
+func (c *occlum) execTask(args ...string) error {
+	container := *c.task.container
+	t := *c.task.task
+	if container == nil || t == nil {
+		return fmt.Errorf("task is not exist")
+	}
+	spec, err := container.Spec(c.context)
+	if err != nil {
+		logrus.Errorf("execTask: get container spec failed. error: %++v", err)
+		return err
+	}
+	pspec := spec.Process
+	pspec.Terminal = false
+	pspec.Args = args
+
+	cioOpts := []cio.Opt{cio.WithStdio, cio.WithFIFODir("/run/containerd/fifo")}
+	ioCreator := cio.NewCreator(cioOpts...)
+	process, err := t.Exec(c.context, utils.GenerateID(), pspec, ioCreator)
+	if err != nil {
+		logrus.Errorf("execTask: exec process in task failed. error: %++v", err)
+		return err
+	}
+	defer process.Delete(c.context)
+	statusC, err := process.Wait(c.context)
+	if err != nil {
+		return err
+	}
+	sigc := commands.ForwardAllSignals(c.context, process)
+	defer commands.StopCatch(sigc)
+
+	if err := process.Start(c.context); err != nil {
+		logrus.Errorf("execTask: start process failed. error: %++v", err)
+		return err
+	}
+	status := <-statusC
+	code, _, err := status.Result()
+	if err != nil {
+		logrus.Errorf("execTask: exec process failed. error: %++v", err)
+		return err
+	}
+	if code != 0 {
+		return fmt.Errorf("process exit abnormaly. exitCode: %d, error: %++v", code, status.Error())
+	}
+	logrus.Debugf("execTask: exec successfully.")
+	return nil
 }

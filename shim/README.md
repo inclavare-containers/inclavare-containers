@@ -16,7 +16,7 @@ Carrier is a abstract framework to build an enclave for the specified enclave ru
 
 ## Build requirements
 
-Go 1.14.x or above.
+Go 1.13.x or above.
 
 ## How to build and install
 

@@ -305,11 +305,8 @@ func setOCIRuntime(ctx context.Context, r *taskAPI.CreateTaskRequest) (err error
 
 // Create a new initial process and container with the underlying OCI runtime
 func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *taskAPI.CreateTaskResponse, err error) {
-	logrus.Infof("xxxx debug 0 ==============")
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	logrus.Infof("xxxx debug 1 ==============")
 
 	err = setOCIRuntime(ctx, r)
 	if err != nil {
@@ -318,7 +315,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 
 	carr, err := s.carrierMain(r)
 	if err != nil {
-		logrus.Infof("xxxx debug 2 ==============")
 		return nil, err
 	}
 
@@ -328,7 +324,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	container, err := runc.NewContainer(ctx, s.platform, r)
 	if err != nil {
 		logrus.Errorf("rune Create NewContainer error: %++v", err)
-		logrus.Infof("xxxx debug 3 ==============")
 		return nil, err
 	}
 
@@ -381,7 +376,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		//	log.G(ctx).Infof("Attestation Failed!")
 		//}
 	}
-	logrus.Infof("xxxx debug 4 ==============")
 	return &taskAPI.CreateTaskResponse{
 		Pid: uint32(container.Pid()),
 	}, nil
@@ -389,35 +383,28 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 
 // Start a process
 func (s *service) Start(ctx context.Context, r *taskAPI.StartRequest) (*taskAPI.StartResponse, error) {
-	logrus.Infof("xxxx debug 5 ==============")
 	container, err := s.getContainer(r.ID)
 	if err != nil {
-		logrus.Infof("xxxx debug 6 ==============")
 		return nil, err
 	}
 
 	// hold the send lock so that the start events are sent before any exit events in the error case
 	s.eventSendMu.Lock()
 	p, err := container.Start(ctx, r)
-	logrus.Infof("xxxx debug 7 ==============")
 	if err != nil {
 		s.eventSendMu.Unlock()
-		logrus.Infof("xxxx debug 8 ==============. error: %++v", err)
 		return nil, errdefs.ToGRPC(err)
 	}
 	switch r.ExecID {
 	case "":
 		if err := s.ep.Add(container.ID, container.Cgroup()); err != nil {
-			logrus.Infof("xxxx debug 9 ==============")
 			logrus.WithError(err).Error("add cg to OOM monitor")
 		}
-		logrus.Infof("xxxx debug 10 ==============")
 		s.send(&eventstypes.TaskStart{
 			ContainerID: container.ID,
 			Pid:         uint32(p.Pid()),
 		})
 	default:
-		logrus.Infof("xxxx debug 11 ==============")
 		s.send(&eventstypes.TaskExecStarted{
 			ContainerID: container.ID,
 			ExecID:      r.ExecID,
@@ -425,7 +412,6 @@ func (s *service) Start(ctx context.Context, r *taskAPI.StartRequest) (*taskAPI.
 		})
 	}
 	s.eventSendMu.Unlock()
-	logrus.Infof("xxxx debug 12 ==============")
 	return &taskAPI.StartResponse{
 		Pid: uint32(p.Pid()),
 	}, nil
