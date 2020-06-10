@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"strconv"
@@ -95,6 +96,14 @@ func StartInitialization() (exitCode int32, err error) {
 			return 1, err
 		}
 	}
+
+	// If runelet run as detach mode, close logrus before initpipe closed.
+	envDetach := os.Getenv("_LIBENCLAVE_DETACHED")
+	detach, err := strconv.Atoi(envDetach)
+	if detach != 0 {
+		logrus.SetOutput(ioutil.Discard)
+	}
+	os.Unsetenv("_LIBENCLAVE_DETACHED")
 
 	// Close the init pipe to signal that we have completed our init.
 	// So `rune create` or the upper half part of `rune run` can return.

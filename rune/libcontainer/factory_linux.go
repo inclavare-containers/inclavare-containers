@@ -346,6 +346,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		envLogPipe     = os.Getenv("_LIBCONTAINER_LOGPIPE")
 		envLogLevel    = os.Getenv("_LIBCONTAINER_LOGLEVEL")
 		envAgentPipe   = os.Getenv("_LIBCONTAINER_AGENTPIPE")
+		envDetached    = os.Getenv("_LIBCONTAINER_DETACHED")
 	)
 
 	// Get the INITPIPE.
@@ -417,7 +418,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		}
 	}()
 
-	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe)
+	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe, envDetached)
 	if err != nil {
 		return err
 	}

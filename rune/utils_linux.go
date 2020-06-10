@@ -305,6 +305,11 @@ func (r *runner) run(config *specs.Process) (int, error) {
 	var (
 		detach = r.detach || (r.action == CT_ACT_CREATE)
 	)
+
+	if detach {
+		process.Detached = 1
+	}
+
 	// Setting up IO is a two stage process. We need to modify process to deal
 	// with detaching containers, and then we get a tty after the container has
 	// started.

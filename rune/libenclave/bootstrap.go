@@ -10,7 +10,7 @@ import (
 // environment variable must be staged and then recovered after re-exec. This
 // process is so called as libenclave bootstrapping, and the resulting process
 // is so called as runelet.
-func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd int, agentPipe *os.File) (err error) {
+func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd int, agentPipe *os.File, detached string) (err error) {
 	logrus.Debug("bootstrapping libenclave ...")
 
 	if err = stageFd("_LIBENCLAVE_INITPIPE", initPipe); err != nil {
@@ -60,5 +60,7 @@ func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd
 		}
 	}()
 
+	os.Setenv("_LIBENCLAVE_DETACHED", detached)
+	
 	return nil
 }
