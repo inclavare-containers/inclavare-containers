@@ -478,7 +478,7 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	}
 	logFilePair := filePair{parentLogPipe, childLogPipe}
 
-	cmd := c.commandTemplate(p, childInitPipe, childLogPipe, p.AgentPipe)
+	cmd := c.commandTemplate(p, childInitPipe, childLogPipe, p.AgentPipe, p.Detached)
 	if !p.Init {
 		return c.newSetnsProcess(p, cmd, messageSockPair, logFilePair)
 	}
@@ -494,7 +494,7 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	return c.newInitProcess(p, cmd, messageSockPair, logFilePair)
 }
 
-func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File) *exec.Cmd {
+func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File, detached int) *exec.Cmd {
 	cmd := exec.Command(c.initPath, c.initArgs[1:]...)
 	cmd.Args[0] = c.initArgs[0]
 	cmd.Stdin = p.Stdin
@@ -537,6 +537,9 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 		if c.config.Enclave.Signer != "server" {
 			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS=" + string(c.config.Rootfs))
 		}
+
+		cmd.Env = append(cmd.Env,
+				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", detached))
 	}
 
 	// NOTE: when running a container with no PID namespace and the parent process spawning the container is

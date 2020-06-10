@@ -81,6 +81,8 @@ type Process struct {
 
 	// Provide agent service hosted by main runelet for child runelet.
 	AgentPipe *os.File
+
+	Detached int
 }
 
 // Wait waits for the process to exit.

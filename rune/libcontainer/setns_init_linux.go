@@ -28,6 +28,7 @@ type linuxSetnsInit struct {
 	logPipe       *os.File
 	logLevel      string
 	agentPipe     *os.File
+	detached      string
 }
 
 func (l *linuxSetnsInit) getSessionRingName() string {
@@ -94,7 +95,7 @@ func (l *linuxSetnsInit) Init() error {
 		}
 	}
 	if l.config.Config.Enclave != nil {
-		err := libenclave.StartBootstrap(l.pipe, l.logPipe, l.logLevel, -1, l.agentPipe)
+		err := libenclave.StartBootstrap(l.pipe, l.logPipe, l.logLevel, -1, l.agentPipe, l.detached)
 		if err != nil {
 			return newSystemErrorWithCause(err, "libenclave bootstrap")
 		}
