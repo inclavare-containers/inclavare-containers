@@ -73,7 +73,7 @@ type initer interface {
 	Init() error
 }
 
-func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd int, logPipe *os.File, logLevel string, agentPipe *os.File) (initer, error) {
+func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd int, logPipe *os.File, logLevel string, agentPipe *os.File, detached bool) (initer, error) {
 	var config *initConfig
 	if err := json.NewDecoder(pipe).Decode(&config); err != nil {
 		return nil, err
@@ -90,6 +90,7 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 			logPipe:       logPipe,
 			logLevel:      logLevel,
 			agentPipe:     agentPipe,
+			detached:      detached,
 		}, nil
 	case initStandard:
 		return &linuxStandardInit{
@@ -101,6 +102,7 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 			logPipe:       logPipe,
 			logLevel:      logLevel,
 			agentPipe:     agentPipe,
+			detached:      detached,
 		}, nil
 	}
 	return nil, fmt.Errorf("unknown init type %q", t)

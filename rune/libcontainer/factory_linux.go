@@ -340,12 +340,14 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		consoleSocket  *os.File
 		logPipe        *os.File
 		agentPipe      *os.File
+		detached       = false
 		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
 		envFifoFd      = os.Getenv("_LIBCONTAINER_FIFOFD")
 		envConsole     = os.Getenv("_LIBCONTAINER_CONSOLE")
 		envLogPipe     = os.Getenv("_LIBCONTAINER_LOGPIPE")
 		envLogLevel    = os.Getenv("_LIBCONTAINER_LOGLEVEL")
 		envAgentPipe   = os.Getenv("_LIBCONTAINER_AGENTPIPE")
+		envDetached    = os.Getenv("_LIBCONTAINER_DETACHED")
 	)
 
 	// Get the INITPIPE.
@@ -395,6 +397,16 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		defer agentPipe.Close()
 	}
 
+	if envDetached != "" {
+		tmpDetached, err := strconv.Atoi(envDetached)
+		if err != nil {
+			return fmt.Errorf("unable to convert _LIBCONTAINER_DETACHED=%s to int: %s", envDetached, err)
+		}
+		if tmpDetached != 0 {
+			detached = true
+		}
+	}
+
 	// clear the current process's environment to clean any libcontainer
 	// specific env vars.
 	os.Clearenv()
@@ -417,7 +429,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		}
 	}()
 
-	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe)
+	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe, detached)
 	if err != nil {
 		return err
 	}

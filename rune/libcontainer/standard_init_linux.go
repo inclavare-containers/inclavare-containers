@@ -30,6 +30,7 @@ type linuxStandardInit struct {
 	logPipe       *os.File
 	logLevel      string
 	agentPipe     *os.File
+	detached      bool
 }
 
 func (l *linuxStandardInit) getSessionRingParams() (string, uint32, uint32) {
@@ -178,7 +179,7 @@ func (l *linuxStandardInit) Init() error {
 		return unix.Kill(unix.Getpid(), unix.SIGKILL)
 	}
 	if l.config.Config.Enclave != nil {
-		err := libenclave.StartBootstrap(l.pipe, l.logPipe, l.logLevel, l.fifoFd, l.agentPipe)
+		err := libenclave.StartBootstrap(l.pipe, l.logPipe, l.logLevel, l.fifoFd, l.agentPipe, l.detached)
 		if err != nil {
 			return err
 		}

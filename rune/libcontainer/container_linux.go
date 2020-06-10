@@ -478,7 +478,7 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	}
 	logFilePair := filePair{parentLogPipe, childLogPipe}
 
-	cmd := c.commandTemplate(p, childInitPipe, childLogPipe, p.AgentPipe)
+	cmd := c.commandTemplate(p, childInitPipe, childLogPipe, p.AgentPipe, p.Detached)
 	if !p.Init {
 		return c.newSetnsProcess(p, cmd, messageSockPair, logFilePair)
 	}
@@ -494,7 +494,7 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	return c.newInitProcess(p, cmd, messageSockPair, logFilePair)
 }
 
-func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File) *exec.Cmd {
+func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File, detached bool) *exec.Cmd {
 	cmd := exec.Command(c.initPath, c.initArgs[1:]...)
 	cmd.Args[0] = c.initArgs[0]
 	cmd.Stdin = p.Stdin
@@ -529,6 +529,14 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 			cmd.ExtraFiles = append(cmd.ExtraFiles, agentPipe)
 			cmd.Env = append(cmd.Env,
 				fmt.Sprintf("_LIBCONTAINER_AGENTPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+		}
+
+		if detached {
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", 1))
+		} else {
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", 0))
 		}
 	}
 
