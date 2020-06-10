@@ -11,7 +11,7 @@ type enclaveRuntimeEnv struct {
 	logLevel string
 	fifoFd int
 	agentPipe *os.File
-	detached string
+	detached bool
 }
 
 var enclaveEnv enclaveRuntimeEnv
@@ -25,7 +25,7 @@ func GetEnclaveRunetimeEnv() *enclaveRuntimeEnv {
 // environment variable must be staged and then recovered after re-exec. This
 // process is so called as libenclave bootstrapping, and the resulting process
 // is so called as runelet.
-func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd int, agentPipe *os.File, detached string) (err error) {
+func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd int, agentPipe *os.File, detached bool) (err error) {
 	logrus.Debug("bootstrapping libenclave ...")
 
 	enclaveEnv.initPipe = initPipe

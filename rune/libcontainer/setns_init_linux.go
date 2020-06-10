@@ -28,7 +28,7 @@ type linuxSetnsInit struct {
 	logPipe       *os.File
 	logLevel      string
 	agentPipe     *os.File
-	detached      string
+	detached      bool
 }
 
 func (l *linuxSetnsInit) getSessionRingName() string {

@@ -307,7 +307,7 @@ func (r *runner) run(config *specs.Process) (int, error) {
 	)
 
 	if detach {
-		process.Detached = 1
+		process.Detached = true
 	}
 
 	// Setting up IO is a two stage process. We need to modify process to deal

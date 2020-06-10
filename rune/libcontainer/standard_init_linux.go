@@ -31,7 +31,7 @@ type linuxStandardInit struct {
 	logPipe       *os.File
 	logLevel      string
 	agentPipe     *os.File
-	detached      string
+	detached      bool
 }
 
 func (l *linuxStandardInit) getSessionRingParams() (string, uint32, uint32) {

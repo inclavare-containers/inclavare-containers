@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 )
@@ -71,8 +70,7 @@ func StartInitialization() (exitCode int32, err error) {
 	}
 
 	// If runelet run as detach mode, close logrus before initpipe closed.
-	detach, err := strconv.Atoi(env.detached)
-	if detach != 0 {
+	if env.detached {
 		logrus.SetOutput(ioutil.Discard)
 	}
 
