@@ -31,9 +31,7 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 	var carr carrier.Carrier
 
 	defer func() {
-		if err != nil && carr != nil {
-			carr.Cleanup()
-		}
+		carr.Cleanup()
 	}()
 
 	found, carrierKind, err := getCarrierKind(req.Bundle)
@@ -98,8 +96,13 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 		/*publicKey, signature, err := remoteSign("https://10.0.8.126:8443/api/v1/signature", commonArgs.Enclave)
 		defer os.RemoveAll(path.Dir(publicKey))*/
 		//FIXME mock signature
-		publicKey, signature, err := mockSign(signingMaterial)
+		materialRealPath := signingMaterial
+		if carrierKind == rune.Occlum {
+			materialRealPath = filepath.Join(req.Bundle, signingMaterial)
+		}
+		publicKey, signature, err := mockSign(materialRealPath)
 		if err != nil {
+			logrus.Errorf("carrierMain: mock sign failed. error: %++v", err)
 			return carr, err
 		}
 		defer os.RemoveAll(path.Dir(publicKey))
@@ -115,12 +118,6 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 		return carr, err
 	}
 	logrus.Debugf("Finished carrier: %v, signedEnclave: %s", carr, signedEnclave)
-
-	//FIXME debug
-	//if carrierKind == rune.Occlum {
-	//	time.Sleep(time.Minute * 3)
-	//}
-
 	return carr, nil
 }
 

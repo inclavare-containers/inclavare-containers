@@ -47,6 +47,7 @@ github.com/containerd/containerd/api/types/task
 github.com/containerd/containerd/archive
 github.com/containerd/containerd/archive/compression
 github.com/containerd/containerd/cio
+github.com/containerd/containerd/cmd/ctr/commands
 github.com/containerd/containerd/containers
 github.com/containerd/containerd/content
 github.com/containerd/containerd/content/proxy
@@ -189,6 +190,8 @@ github.com/stretchr/testify/assert
 github.com/syndtr/gocapability/capability
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
+# github.com/urfave/cli v0.0.0-20171014202726-7bc6a0acffa5
+github.com/urfave/cli
 # go.opencensus.io v0.22.0
 go.opencensus.io
 go.opencensus.io/internal
