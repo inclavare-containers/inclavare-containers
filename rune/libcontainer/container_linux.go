@@ -494,7 +494,7 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	return c.newInitProcess(p, cmd, messageSockPair, logFilePair)
 }
 
-func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File, detached int) *exec.Cmd {
+func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File, detached bool) *exec.Cmd {
 	cmd := exec.Command(c.initPath, c.initArgs[1:]...)
 	cmd.Args[0] = c.initArgs[0]
 	cmd.Stdin = p.Stdin
@@ -538,8 +538,13 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS=" + string(c.config.Rootfs))
 		}
 
-		cmd.Env = append(cmd.Env,
-				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", detached))
+		if detached {
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", 1))
+		} else {
+			cmd.Env = append(cmd.Env,
+				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", 0))
+		}
 	}
 
 	// NOTE: when running a container with no PID namespace and the parent process spawning the container is
