@@ -3,6 +3,7 @@ package libenclave // import "github.com/opencontainers/runc/libenclave"
 import (
 	"github.com/sirupsen/logrus"
 	"os"
+	"strconv"
 )
 
 // `rune init` needs to execute self (/proc/self/exe) in container environment
@@ -33,8 +34,13 @@ func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd
 		}()
 	}
 
-	if err = stageFd("_LIBENCLAVE_LOGPIPE", logPipe); err != nil {
-		return err
+	envDetach := os.Getenv("_LIBENCLAVE_DETACH")
+
+	detach, err := strconv.Atoi(envDetach)
+	if err != nil || detach == 0 {
+		if err = stageFd("_LIBENCLAVE_LOGPIPE", logPipe); err != nil {
+			return err
+		}
 	}
 	defer func() {
 		if err != nil {

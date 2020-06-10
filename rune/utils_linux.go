@@ -305,6 +305,12 @@ func (r *runner) run(config *specs.Process) (int, error) {
 	var (
 		detach = r.detach || (r.action == CT_ACT_CREATE)
 	)
+
+	detachFlag := int(0)
+	if detach {
+		detachFlag = 1
+	}
+	process.Env = append(process.Env, fmt.Sprintf("_LIBENCLAVE_DETACH=%d", detachFlag))
 	// Setting up IO is a two stage process. We need to modify process to deal
 	// with detaching containers, and then we get a tty after the container has
 	// started.
