@@ -28,17 +28,15 @@ sudo make install
 
 `rune` will be installed to `/usr/local/sbin/rune` on your system.
 
+### shim-rune
+`shim-rune` resides in between `containerd` and `rune`, conducting enclave signing and management beyond the normal `shim` basis. `shim-rune` and `rune` can compose a basic enclave containerization stack for the cloud-native ecosystem.
+
 ### enclave runtime
 The backend of `rune` is a component called enclave runtime, which is responsible for loading and running protected applications inside enclaves. The interface between `rune` and enclave runtime is [Enclave Runtime PAL API](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/spec.md), which allows invoking enclave runtime through well-defined functions. The software for confidential computing may benefit from this interface to interact with OCI runtime.
 
 One typical class of enclave runtime implementations is based on library OSes. Currently, the default enclave runtime interacting with `rune` is [Occlum](https://github.com/occlum/occlum), a memory-safe, multi-process library OS for Intel SGX.
 
 In addition, you can write your own enclave runtime with any programming language and SDK (e.g, [Intel SGX SDK](https://github.com/intel/linux-sgx)) you prefer as long as it implements Enclave Runtime PAL API.
-
-### shim-rune
-`shim-rune` resides in between `containerd` and `rune`, conducting enclave signing and management beyond the normal `shim` basis. `shim-rune` and `rune` can compose a basic enclave containerization stack for the cloud-native ecosystem.
-
-`shim-rune` will be open source soon.
 
 ### runectl
 `runectl` is a command line assit tool for inclavare-containers. Its usage includes:
