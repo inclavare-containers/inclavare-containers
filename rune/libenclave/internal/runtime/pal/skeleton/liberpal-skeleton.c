@@ -1,16 +1,31 @@
-#include <stdio.h>
-#include <unistd.h>
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+// Copyright(c) 2016-18 Intel Corporation.
+
+#include <elf.h>
 #include <errno.h>
-#include <string.h>
+#include <fcntl.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include "defines.h"
+#include "sgx_call.h"
 
-#define BUFF_LEN	1024
-#define DEBUG_ARGS	"debug"
+#define PAGE_SIZE  4096
 
-static const unsigned int skeleton_pal_version = 1;
+#define SGX_REG_PAGE_FLAGS \
+	(SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X)
 
-static bool initialized = false;
-static bool debug = false;
+#define IMAGE		"encl.bin"
+#define SIGSTRUCT	"encl.ss"
+#define TOKEN		"encl.token"
 
 struct pal_attr_t {
 	const char *args;
@@ -21,82 +36,252 @@ struct pal_stdio_fds {
 	int stdin, stdout, stderr;
 };
 
-int skeleton_pal_init(struct pal_attr_t *attr)
-{
-	if (!attr->args)
-		return -ENOENT;
+static const unsigned int skeleton_pal_version = 1;
 
-	char *args = (char *)attr->args;
-	while ((args = strtok(args, " "))) {
-		if (!strcmp(args, DEBUG_ARGS))
-			debug = true;
-		args = NULL;
+static const uint64_t MAGIC = 0x1122334455667788ULL;
+static struct sgx_secs secs;
+static bool initialized = false;
+
+static bool encl_create(int dev_fd, unsigned long bin_size,
+			struct sgx_secs *secs)
+{
+	struct sgx_enclave_create ioc;
+	void *area;
+	int rc;
+
+	memset(secs, 0, sizeof(*secs));
+	secs->ssa_frame_size = 1;
+	secs->attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_DEBUG;
+	secs->xfrm = 7;
+
+	for (secs->size = PAGE_SIZE; secs->size < bin_size; )
+		secs->size <<= 1;
+
+	area = mmap(NULL, secs->size * 2, PROT_NONE, MAP_SHARED, dev_fd, 0);
+	if (area == MAP_FAILED) {
+		perror("mmap");
+		return false;
 	}
 
-	initialized = true;
+	secs->base = ((uint64_t)area + secs->size - 1) & ~(secs->size - 1);
+	munmap(area, secs->base - (uint64_t)area);
+	munmap((void *)(secs->base + secs->size),
+	       (uint64_t)area + secs->size - secs->base);
 
+	if (mprotect((void *)secs->base, secs->size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
+		perror("mprotect");
+		return false;
+	}
+
+	ioc.src = (unsigned long)secs;
+	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
+	if (rc) {
+		fprintf(stderr, "ECREATE failed rc=%d, err=%d.\n", rc, errno);
+		munmap((void *)secs->base, secs->size);
+		return false;
+	}
+
+	return true;
+}
+
+static bool encl_add_pages(int dev_fd, unsigned long addr, void *data,
+			   unsigned long length, uint64_t flags)
+{
+	struct sgx_enclave_add_page ioc;
+	struct sgx_secinfo secinfo;
+	int rc;
+
+	memset(&secinfo, 0, sizeof(secinfo));
+	secinfo.flags = flags;
+
+	ioc.src = (uint64_t)data;
+	ioc.addr = addr;
+	ioc.secinfo = (unsigned long)&secinfo;
+	ioc.mrmask = (__u16)-1;
+
+	uint64_t added_size = 0;
+	while (added_size < length) {
+		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_ADD_PAGE, &ioc);
+		if (rc) {
+			fprintf(stderr, "EADD failed rc=%d.\n", rc);
+			return false;
+		}
+
+		ioc.addr += PAGE_SIZE;
+		ioc.src += PAGE_SIZE;
+		added_size += PAGE_SIZE;
+	}
+
+	return true;
+}
+
+static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size, 
+			struct sgx_sigstruct *sigstruct,struct sgx_einittoken *token)
+{
+	struct sgx_enclave_init ioc;
+	int dev_fd;
+	int rc;
+
+	dev_fd = open("/dev/isgx", O_RDWR);
+	if (dev_fd < 0) {
+		fprintf(stderr, "Unable to open /dev/sgx\n");
+		return false;
+	}
+
+	if (!encl_create(dev_fd, bin_size, secs))
+		goto out_dev_fd;
+
+	if (!encl_add_pages(dev_fd, secs->base + 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+		goto out_dev_fd;
+
+	if (!encl_add_pages(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
+			    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
+		goto out_dev_fd;
+
+	ioc.addr = secs->base;
+	ioc.sigstruct = (uint64_t)sigstruct;
+	ioc.einittoken = (uint64_t)token;
+	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT, &ioc);
+	if (rc) {
+		printf("EINIT failed rc=%d\n", rc);
+		goto out_map;
+	}
+
+	close(dev_fd);
+	return true;
+out_map:
+	munmap((void *)secs->base, secs->size);
+out_dev_fd:
+	close(dev_fd);
+	return false;
+}
+
+bool get_file_size(const char *path, off_t *bin_size)
+{
+	struct stat sb;
+	int ret;
+
+	ret = stat(path, &sb);
+	if (ret) {
+		perror("stat");
+		return false;
+	}
+
+	if (!sb.st_size || sb.st_size & 0xfff) {
+		fprintf(stderr, "Invalid blob size %lu\n", sb.st_size);
+		return false;
+	}
+
+	*bin_size = sb.st_size;
+	return true;
+}
+
+bool encl_data_map(const char *path, void **bin, off_t *bin_size)
+{
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)  {
+		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
+		return false;
+	}
+
+	if (!get_file_size(path, bin_size))
+		goto err_out;
+
+	*bin = mmap(NULL, *bin_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (*bin == MAP_FAILED) {
+		fprintf(stderr, "mmap() %s failed, errno=%d.\n", path, errno);
+		goto err_out;
+	}
+
+	close(fd);
+	return true;
+
+err_out:
+	close(fd);
+	return false;
+}
+
+bool load_sigstruct(const char *path, void *sigstruct)
+{
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)  {
+		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
+		return false;
+	}
+
+	if (read(fd, sigstruct, sizeof(struct sgx_sigstruct)) !=
+	    sizeof(struct sgx_sigstruct)) {
+		fprintf(stderr, "read() %s failed, errno=%d.\n", path, errno);
+		close(fd);
+		return false;
+	}
+
+	close(fd);
+	return true;
+}
+
+bool load_token(const char *path, void *token)
+{
+	int fd;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1)  {
+		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
+		return false;
+	}
+
+	if (read(fd, token, sizeof(struct sgx_einittoken)) !=
+		sizeof(struct sgx_einittoken)) {
+		fprintf(stderr, "read() %s failed, errno=%d.\n", path, errno);
+		close(fd);
+		return false;
+	}
+
+	close(fd);
+	return true;
+}
+
+int skeleton_pal_init(struct pal_attr_t *attr)
+{
+	struct sgx_sigstruct sigstruct;
+	struct sgx_einittoken token;
+	off_t bin_size;
+	void *bin;
+
+	if (!encl_data_map(IMAGE, &bin, &bin_size))
+		return ENOENT;
+
+	if (!load_sigstruct(SIGSTRUCT, &sigstruct))
+		return ENOENT;
+
+	if (!load_token(TOKEN, &token))
+		return ENOENT;
+
+	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token))
+		return EINVAL;
+
+	initialized = true;	
 	return 0;
 }
 
 int skeleton_pal_exec(char *path, char *argv[], struct pal_stdio_fds *stdio,
-		      int *exit_code)
+			int *exit_code)
 {
-	if (!path || access(path, F_OK) != 0)
-		return -ENOENT;	
+	uint64_t result = 0;
 
-	if (access(path, R_OK) != 0)
-		return -EACCES;
+	sgx_call_eenter((void *)&MAGIC, &result, (void *)secs.base);
 
-	if (!stdio)
-		return -EINVAL;
-
-	if (!exit_code)
-		return -EINVAL;
-
-	if (!initialized) {
-		fprintf(stderr, "enclave runtime skeleton uninitialized yet!\n");
-		return -EINVAL;
+	if (result != MAGIC) {
+		fprintf(stderr, "0x%lx != 0x%lx\n", result, MAGIC);
+		return -1;
 	}
 
-	int i;
-
-	if (debug) {
-		for (i = 0; argv[i]; ++i)
-			printf("argv[%d] = %s\n", i, argv[i]);
-	}
-
-	for (i = 0; i < 60; ++i) {
-		sleep(1);
-		if (stdio->stdout < 0 && debug) {
-			printf("pal_exec running %d seconds\n", i + 1);
-		} else {
-			char buf[BUFF_LEN];
-
-			ssize_t len;
-			if (debug)
-				len = snprintf(buf, BUFF_LEN, "pal_exec running %d seconds, "
-					       "outputting to fd %d\n", i + 1, stdio->stdout);
-			else
-				len = snprintf(buf, BUFF_LEN, "%d", i + 1);
-
-			ssize_t bytes = 0;
-			while (bytes < len) {
-				ssize_t n = write(stdio->stdout, &buf[bytes], len - bytes);
-				if (n < 0) {
-					if (errno == EAGAIN || errno == EINTR)
-						continue;
-
-					fprintf(stderr, "write failed\n");
-					return -1;
-				} else if (n == 0) {
-					fprintf(stderr, "stdout is EOF\n");
-					return -1;
-				} else
-					bytes += n;
-			}
-		}
-	}
-
+	fprintf(stderr, "copy MAGIC with enclave sucess.\n");
+	*exit_code = 0;
 	return 0;
 }
 
@@ -106,7 +291,5 @@ int skeleton_pal_destroy(void)
 		fprintf(stderr, "enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
-
-	printf("enclave runtime skeleton exits\n");
 	return 0;
 }
