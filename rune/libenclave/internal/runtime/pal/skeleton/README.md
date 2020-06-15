@@ -1,6 +1,14 @@
 The files in this directory are used to implement a skeleton enclave runtime,
 in order to help to write your own enclave runtime.
 
+# Install shelter
+Refer to this document:[runectl](https://github.com/alibaba/inclavare-containers/tree/master/runectl)
+
+# Generate pem file
+```shell
+openssl genrsa -3 -out enclave-key.pem 3072
+```
+
 # Build liberpal-skeleton.so
 ```shell
 cd "$GOPATH/src/github.com/alibaba/inclavare-containers/rune"
