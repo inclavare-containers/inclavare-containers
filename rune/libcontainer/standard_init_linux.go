@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"syscall" //only for Exec
 
+	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/runc/libcontainer/apparmor"
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/keys"
@@ -182,7 +183,7 @@ func (l *linuxStandardInit) Init() error {
 		if err != nil {
 			return err
 		}
-		return l.finalizeInit("/proc/self/exe", []string{"init-runelet", "enclave"})
+		return l.finalizeInit("/proc/self/exe", []string{"init-runelet", "enclave"}, true)
 	}
 	// Check for the arg before waiting to make sure it exists and it is
 	// returned as a create time error.
@@ -210,10 +211,10 @@ func (l *linuxStandardInit) Init() error {
 	// since been resolved.
 	// https://github.com/torvalds/linux/blob/v4.9/fs/exec.c#L1290-L1318
 	unix.Close(l.fifoFd)
-	return l.finalizeInit(name, l.config.Args[0:])
+	return l.finalizeInit(name, l.config.Args[0:], false)
 }
 
-func (l *linuxStandardInit) finalizeInit(entryName string, args []string) error {
+func (l *linuxStandardInit) finalizeInit(entryName string, args []string, noexec bool) error {
 	// Set seccomp as close to execve as possible, so as few syscalls take
 	// place afterward (reducing the amount of syscalls that users need to
 	// enable in their seccomp profiles).
@@ -222,8 +223,18 @@ func (l *linuxStandardInit) finalizeInit(entryName string, args []string) error 
 			return newSystemErrorWithCause(err, "init seccomp")
 		}
 	}
-	if err := syscall.Exec(entryName, args, os.Environ()); err != nil {
-		return newSystemErrorWithCause(err, "exec user process")
+	if noexec {
+		exitCode, err := libenclave.StartInitialization()
+		if err != nil {
+			logrus.Fatal(err)
+			os.Exit(1)
+		}
+		logrus.Debugf("enclave exitCode: %d", exitCode)
+		os.Exit(int(exitCode))
+	} else {
+		if err := syscall.Exec(entryName, args, os.Environ()); err != nil {
+			return newSystemErrorWithCause(err, "exec user process")
+		}
 	}
 	return nil
 }

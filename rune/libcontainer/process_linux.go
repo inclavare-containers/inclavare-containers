@@ -144,6 +144,7 @@ func (p *setnsProcess) start() (err error) {
 				Type: p.config.Config.Enclave.Type,
 				Path: p.config.Config.Enclave.Path,
 				Args: p.config.Config.Enclave.Args,
+				Signer: p.config.Config.Enclave.Signer,
 				Cmd:  p.process.Args,
 			}
 			err := utils.WriteJSON(p.messageSockPair.parent, config)
@@ -475,6 +476,7 @@ func (p *initProcess) start() (retErr error) {
 				Type: p.config.Config.Enclave.Type,
 				Path: p.config.Config.Enclave.Path,
 				Args: p.config.Config.Enclave.Args,
+				Signer: p.config.Config.Enclave.Signer,
 				Cmd:  p.config.Args,
 			}
 			err := utils.WriteJSON(p.messageSockPair.parent, config)
