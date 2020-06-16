@@ -1,6 +1,9 @@
 The files in this directory are used to implement a skeleton enclave runtime,
 in order to help to write your own enclave runtime.
 
+# Install runectl
+Refer to this document:[runectl](https://github.com/alibaba/inclavare-containers/tree/master/runectl)
+
 # Build liberpal-skeleton.so
 ```shell
 cd "$GOPATH/src/github.com/alibaba/inclavare-containers/rune"

@@ -44,7 +44,7 @@ recvtty:
 
 skeleton: libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so
 libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so:
-	gcc -fPIC -shared -Wall -Wno-unused-const-variable -Ilibenclave/pal -o $@ libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.c
+	make -C libenclave/internal/runtime/pal/skeleton
 
 static:
 	$(GO_BUILD_STATIC) -o rune .
@@ -125,7 +125,7 @@ clean:
 	rm -rf release
 	rm -rf man/man8
 	rm -f libenclave/proto/*.pb.go
-	rm -f libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so
+	make -C libenclave/internal/runtime/pal/skeleton clean
 
 validate:
 	script/validate-gofmt
