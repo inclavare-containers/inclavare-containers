@@ -247,16 +247,16 @@ int pal_init(const char *args, const char *log_level)
 	void *bin;
 
 	if (!encl_data_map(IMAGE, &bin, &bin_size))
-		return ENOENT;
+		return -ENOENT;
 
 	if (!load_sigstruct(SIGSTRUCT, &sigstruct))
-		return ENOENT;
+		return -ENOENT;
 
 	if (!load_token(TOKEN, &token))
-		return ENOENT;
+		return -ENOENT;
 
 	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token))
-		return EINVAL;
+		return -EINVAL;
 
 	initialized = true;	
 	return 0;
