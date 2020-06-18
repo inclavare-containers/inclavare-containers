@@ -27,17 +27,6 @@
 #define SIGSTRUCT	"encl.ss"
 #define TOKEN		"encl.token"
 
-struct pal_attr_t {
-	const char *args;
-	const char *log_level;
-};
-
-struct pal_stdio_fds {
-	int stdin, stdout, stderr;
-};
-
-static const unsigned int skeleton_pal_version = 1;
-
 static const uint64_t MAGIC = 0x1122334455667788ULL;
 static struct sgx_secs secs;
 static bool initialized = false;
@@ -245,7 +234,12 @@ bool load_token(const char *path, void *token)
 	return true;
 }
 
-int skeleton_pal_init(struct pal_attr_t *attr)
+int pal_get_version(void)
+{
+	return 1;
+}
+
+int pal_init(const char *args, const char *log_level)
 {
 	struct sgx_sigstruct sigstruct;
 	struct sgx_einittoken token;
@@ -268,24 +262,29 @@ int skeleton_pal_init(struct pal_attr_t *attr)
 	return 0;
 }
 
-int skeleton_pal_exec(char *path, char *argv[], struct pal_stdio_fds *stdio,
-			int *exit_code)
+int pal_exec(char *path, char *argv[], const char *envp[],
+	     int *exit_code, int stdin, int stdout, int stderr)
 {
+	FILE *fp = fdopen(stderr, "w");
+	if (!fp)
+		return -1;
+
 	uint64_t result = 0;
 
 	sgx_call_eenter((void *)&MAGIC, &result, (void *)secs.base);
-
 	if (result != MAGIC) {
-		fprintf(stderr, "0x%lx != 0x%lx\n", result, MAGIC);
+		fprintf(fp, "0x%lx != 0x%lx\n", result, MAGIC);
+		fclose(fp);
 		return -1;
 	}
 
-	fprintf(stderr, "copy MAGIC with enclave sucess.\n");
+	fprintf(fp, "copy MAGIC with enclave sucess.\n");
+	fclose(fp);
 	*exit_code = 0;
 	return 0;
 }
 
-int skeleton_pal_destroy(void)
+int pal_destroy(void)
 {
 	if (!initialized) {
 		fprintf(stderr, "enclave runtime skeleton uninitialized yet!\n");
