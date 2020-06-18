@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package aesm_get_token;  // import "github.com/inclavare-containers/runectl/proto"
+package aesm_service;  // import "github.com/inclavare-containers/runectl/proto"
 
 message GetTokenRequest {
     bytes enclavehash = 1;
