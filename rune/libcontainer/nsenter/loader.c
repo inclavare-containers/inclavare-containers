@@ -54,7 +54,7 @@ int load_enclave_runtime(void)
 	file = getenv("_LIBCONTAINER_PAL_PATH");
 	if (file == NULL || *file == '\0') {
 		write_log(DEBUG, "invalid environment _LIBCONTAINER_PAL_PATH");
-		return -EINVAL;
+		return 0;
 	}
 	write_log(DEBUG, "_LIBCONTAINER_PAL_PATH = %s", file);
 
