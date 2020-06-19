@@ -145,7 +145,7 @@ out_dev_fd:
 	return false;
 }
 
-bool get_file_size(const char *path, off_t *bin_size)
+static bool get_file_size(const char *path, off_t *bin_size)
 {
 	struct stat sb;
 	int ret;
@@ -165,7 +165,7 @@ bool get_file_size(const char *path, off_t *bin_size)
 	return true;
 }
 
-bool encl_data_map(const char *path, void **bin, off_t *bin_size)
+static bool encl_data_map(const char *path, void **bin, off_t *bin_size)
 {
 	int fd;
 
@@ -192,7 +192,7 @@ err_out:
 	return false;
 }
 
-bool load_sigstruct(const char *path, void *sigstruct)
+static bool load_sigstruct(const char *path, void *sigstruct)
 {
 	int fd;
 
@@ -213,7 +213,7 @@ bool load_sigstruct(const char *path, void *sigstruct)
 	return true;
 }
 
-bool load_token(const char *path, void *token)
+static bool load_token(const char *path, void *token)
 {
 	int fd;
 
@@ -259,15 +259,22 @@ int pal_init(const char *args, const char *log_level)
 		return -EINVAL;
 
 	initialized = true;	
+
 	return 0;
 }
 
 int pal_exec(char *path, char *argv[], const char *envp[],
 	     int *exit_code, int stdin, int stdout, int stderr)
 {
-	FILE *fp = fdopen(stderr, "w");
-	if (!fp)
-		return -1;
+        FILE *fp = fdopen(stderr, "w");
+        if (!fp)
+                return -1;
+
+	if (!initialized) {
+	        fprintf(fp, "enclave runtime skeleton uninitialized yet!\n");
+		fclose(fp);
+	        return -1;
+	}
 
 	uint64_t result = 0;
 
@@ -280,7 +287,9 @@ int pal_exec(char *path, char *argv[], const char *envp[],
 
 	fprintf(fp, "copy MAGIC with enclave sucess.\n");
 	fclose(fp);
+
 	*exit_code = 0;
+
 	return 0;
 }
 
