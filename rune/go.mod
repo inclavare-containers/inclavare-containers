@@ -9,6 +9,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.0.0
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/docker/go-units v0.4.0
+	github.com/go-restruct/restruct v0.0.0-20191227155143-5734170a48a1
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/protobuf v1.3.5
 	github.com/moby/sys/mountinfo v0.1.3

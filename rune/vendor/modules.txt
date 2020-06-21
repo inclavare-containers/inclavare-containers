@@ -23,6 +23,10 @@ github.com/cyphar/filepath-securejoin
 # github.com/docker/go-units v0.4.0
 ## explicit
 github.com/docker/go-units
+# github.com/go-restruct/restruct v0.0.0-20191227155143-5734170a48a1
+## explicit
+github.com/go-restruct/restruct
+github.com/go-restruct/restruct/expr
 # github.com/godbus/dbus/v5 v5.0.3
 ## explicit
 github.com/godbus/dbus/v5
