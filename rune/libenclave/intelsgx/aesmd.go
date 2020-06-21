@@ -189,3 +189,59 @@ func GetLaunchToken(sig []byte) ([]byte, error) {
 
 	return resp.GetLaunchToken.GetToken(), nil
 }
+
+func GetQeTargetInfo() ([]byte, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.GetQeTargetInfo = &pb.AesmServiceRequest_GetQeTargetInfo{
+		Timeout: 10000,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.GetQeTargetInfo = &pb.AesmServiceResponse_GetQeTargetInfo{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.GetQeTargetInfo.GetError() != 0 {
+		return nil, fmt.Errorf("failed to get TARGETINFO (error code = %d)",
+			resp.GetQeTargetInfo.GetError())
+	}
+
+	targetInfo := resp.GetQeTargetInfo.GetTargetinfo()
+	if len(targetInfo) != TargetinfoLength {
+		return nil, fmt.Errorf("invalid length of TARGETINFO: (returned %d, expected %d)",
+			len(targetInfo), TargetinfoLength)
+	}
+
+	ti := &Targetinfo{}
+	if err := restruct.Unpack(targetInfo, binary.LittleEndian, &ti); err != nil {
+		return nil, err
+	}
+
+	logrus.Debugf("Quoting Enclave's TARGETINFO:\n")
+	logrus.Debugf("  Enclave Hash:       0x%v\n",
+		hex.EncodeToString(ti.Measurement[:]))
+	logrus.Debugf("  Enclave Attributes: 0x%v\n",
+		hex.EncodeToString(ti.Attributes[:]))
+	logrus.Debugf("  CET Attributes:     %#02x\n",
+		ti.CetAttributes)
+	logrus.Debugf("  Config SVN:         %#04x\n",
+		ti.ConfigSvn)
+	logrus.Debugf("  Misc Select:        %#08x\n",
+		ti.MiscSelect)
+	logrus.Debugf("  Config ID:          0x%v\n",
+		hex.EncodeToString(ti.ConfigId[:]))
+
+	return resp.GetQeTargetInfo.GetTargetinfo(), nil
+}
