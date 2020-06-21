@@ -22,7 +22,8 @@ ifeq ($(DEBUG),1)
 	GCFLAGS=-gcflags "-N -l"
 endif
 
-PROTO_DIR := libenclave/proto
+PROTO_DIR := libenclave/proto libenclave/intelsgx/proto
+PROTOS := $(foreach dir,$(PROTO_DIR),$(patsubst %.proto,%.pb.go,$(wildcard $(dir)/*.proto)))
 
 GO_BUILD := $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) -tags "$(BUILDTAGS)" \
 	-ldflags "-X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)"
@@ -31,7 +32,7 @@ GO_BUILD_STATIC := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) $(GCFLAGS) $(EXTRA_FL
 
 .DEFAULT: rune
 
-rune: $(patsubst %.proto,%.pb.go,$(wildcard $(PROTO_DIR)/*.proto))
+rune: $(PROTOS)
 	$(GO_BUILD) -o rune .
 
 %.pb.go: %.proto
@@ -124,7 +125,7 @@ clean:
 	rm -f contrib/cmd/recvtty/recvtty
 	rm -rf release
 	rm -rf man/man8
-	rm -f libenclave/proto/*.pb.go
+	rm -f $(PROTOS)
 	make -C libenclave/internal/runtime/pal/skeleton clean
 
 validate:
