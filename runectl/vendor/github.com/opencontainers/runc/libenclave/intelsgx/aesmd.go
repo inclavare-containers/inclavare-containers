@@ -86,8 +86,8 @@ func GetToken(sig []byte) ([]byte, error) {
 	}
 	defer conn.Close()
 
-	req := pb.GetTokenRequestMessage{}
-	req.Req = &pb.GetTokenRequest{
+	req := pb.AesmServiceRequest{}
+	req.GetLaunchToken = &pb.AesmServiceRequest_GetLaunchToken{
 		Enclavehash: mrenclave,
 		Modulus:     modulus,
 		Attributes:  attributes,
@@ -133,21 +133,21 @@ func GetToken(sig []byte) ([]byte, error) {
 			msgSizeRead, msgSize)
 	}
 
-	resp := pb.GetTokenResponseMessage{}
-	resp.Resp = &pb.GetTokenResponse{}
+	resp := pb.AesmServiceResponse{}
+	resp.GetLaunchToken = &pb.AesmServiceResponse_GetLaunchToken{}
 	if err := proto.Unmarshal(rdata, &resp); err != nil {
 		return nil, err
 	}
 
-	if resp.Resp.GetError() != 0 {
+	if resp.GetLaunchToken.GetError() != 0 {
 		return nil, fmt.Errorf("failed to get EINITTOKEN (error code = %d)",
-			resp.Resp.GetError())
+			resp.GetLaunchToken.GetError())
 	}
 
-	token := resp.Resp.GetToken()
+	token := resp.GetLaunchToken.GetToken()
 	if len(token) != EinittokenLength {
 		return nil, fmt.Errorf("invalid length of token: (returned %d, expected %d)",
-			len(resp.Resp.GetToken()), EinittokenLength)
+			len(token), EinittokenLength)
 	}
 
 	tok := &Einittoken{}
@@ -179,5 +179,5 @@ func GetToken(sig []byte) ([]byte, error) {
 	logrus.Debugf("  MAC:                                      0x%v\n",
 		hex.EncodeToString(tok.Mac[:]))
 
-	return resp.Resp.GetToken(), nil
+	return resp.GetLaunchToken.GetToken(), nil
 }
