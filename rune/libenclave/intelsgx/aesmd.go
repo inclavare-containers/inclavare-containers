@@ -30,6 +30,48 @@ func dialAesmd() (*net.UnixConn, error) {
 	return conn, nil
 }
 
+func transmitAesmd(conn *net.UnixConn, req *pb.AesmServiceRequest) ([]byte, error) {
+	rdata, err := proto.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	msgSize := uint32(len(rdata))
+	byteBuf := bytes.NewBuffer([]byte{})
+	binary.Write(byteBuf, binary.LittleEndian, &msgSize)
+	if _, err = conn.Write(byteBuf.Bytes()); err != nil {
+		return nil, err
+	}
+
+	if _, err = conn.Write(rdata); err != nil {
+		return nil, err
+	}
+
+	rdata = append(rdata[:4])
+	if _, err = conn.Read(rdata); err != nil {
+		return nil, err
+	}
+
+	byteBuf = bytes.NewBuffer(rdata)
+	if err = binary.Read(byteBuf, binary.LittleEndian, &msgSize); err != nil {
+		return nil, err
+	}
+
+	rdata = make([]byte, msgSize)
+	var msgSizeRead int
+	msgSizeRead, err = conn.Read(rdata)
+	if err != nil {
+		return nil, err
+	}
+
+	if msgSizeRead != int(msgSize) {
+		return nil, fmt.Errorf("invalid response size (returned %d, expected %d)",
+			msgSizeRead, msgSize)
+	}
+
+	return rdata, nil
+}
+
 func GetToken(sig []byte) ([]byte, error) {
 	if len(sig) != SigStructLength {
 		return nil, fmt.Errorf("signature not match SIGSTRUCT")
@@ -94,43 +136,9 @@ func GetToken(sig []byte) ([]byte, error) {
 		Timeout:     10000,
 	}
 
-	var rdata []byte
-	rdata, err = proto.Marshal(&req)
+	rdata, err := transmitAesmd(conn, &req)
 	if err != nil {
 		return nil, err
-	}
-
-	msgSize := uint32(len(rdata))
-	byteBuf := bytes.NewBuffer([]byte{})
-	binary.Write(byteBuf, binary.LittleEndian, &msgSize)
-	if _, err = conn.Write(byteBuf.Bytes()); err != nil {
-		return nil, err
-	}
-
-	if _, err = conn.Write(rdata); err != nil {
-		return nil, err
-	}
-
-	rdata = append(rdata[:4])
-	if _, err = conn.Read(rdata); err != nil {
-		return nil, err
-	}
-
-	byteBuf = bytes.NewBuffer(rdata)
-	if err = binary.Read(byteBuf, binary.LittleEndian, &msgSize); err != nil {
-		return nil, err
-	}
-
-	rdata = make([]byte, msgSize)
-	var msgSizeRead int
-	msgSizeRead, err = conn.Read(rdata)
-	if err != nil {
-		return nil, err
-	}
-
-	if msgSizeRead != int(msgSize) {
-		return nil, fmt.Errorf("invalid response size (returned %d, expected %d)",
-			msgSizeRead, msgSize)
 	}
 
 	resp := pb.AesmServiceResponse{}
