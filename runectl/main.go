@@ -43,6 +43,7 @@ func main() {
 
 	app.Commands = []cli.Command{
 		generateTokenCommand,
+		generateQeTargetInfoCommand,
 	}
 
 	//app.Before = func(context *cli.Context) error {
