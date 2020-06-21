@@ -72,7 +72,7 @@ func transmitAesmd(conn *net.UnixConn, req *pb.AesmServiceRequest) ([]byte, erro
 	return rdata, nil
 }
 
-func GetToken(sig []byte) ([]byte, error) {
+func GetLaunchToken(sig []byte) ([]byte, error) {
 	if len(sig) != SigStructLength {
 		return nil, fmt.Errorf("signature not match SIGSTRUCT")
 	}

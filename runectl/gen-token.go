@@ -65,7 +65,7 @@ For example, generate the token file according to the given signature file:
 			return fmt.Errorf("signature file %s read failed", sigPath)
 		}
 
-		tok, err := intelsgx.GetToken(buf)
+		tok, err := intelsgx.GetLaunchToken(buf)
 		if err != nil {
 			logrus.Print(err)
 			return err
