@@ -6,6 +6,10 @@ package aesm_service; // import "github.com/opencontainers/runc/libenclave/intel
 
 message AesmServiceRequest {
 
+    message GetQeTargetInfo {
+        uint32 timeout = 9;
+    }
+
     message GetLaunchToken {
         bytes enclavehash = 1;
         bytes modulus     = 2;
@@ -13,15 +17,23 @@ message AesmServiceRequest {
         uint32 timeout    = 9;
     }
 
-    GetLaunchToken getLaunchToken = 3;
+    GetQeTargetInfo getQeTargetInfo = 1;
+    GetLaunchToken getLaunchToken   = 3;
 }
 
 message AesmServiceResponse {
+
+    message GetQeTargetInfo {
+        uint32 error     = 1;
+        bytes targetinfo = 2;
+        bytes gid        = 3;
+    }
 
     message GetLaunchToken {
         uint32 error = 1;
         bytes token  = 2;
     }
 
-    GetLaunchToken getLaunchToken = 3;
+    GetQeTargetInfo getQeTargetInfo = 1;
+    GetLaunchToken getLaunchToken   = 3;
 }
