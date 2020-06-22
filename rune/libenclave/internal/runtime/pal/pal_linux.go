@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+const (
+	currentPalApiVersion = 2
+)
+
 func (pal *enclaveRuntimePal) Load(palPath string) (err error) {
 	if err = pal.getPalApiVersion(); err != nil {
 		return err
@@ -15,7 +19,7 @@ func (pal *enclaveRuntimePal) Load(palPath string) (err error) {
 func (pal *enclaveRuntimePal) getPalApiVersion() error {
 	api := &enclaveRuntimePalApiV1{}
 	ver := api.get_version()
-	if ver > palApiVersion {
+	if ver > currentPalApiVersion {
 		return fmt.Errorf("unsupported pal api version %d", ver)
 	}
 	pal.version = ver
@@ -32,7 +36,12 @@ func (pal *enclaveRuntimePal) Attest() (err error) {
 }
 
 func (pal *enclaveRuntimePal) Exec(cmd []string, envp []string, stdio [3]*os.File) (int32, error) {
-	api := &enclaveRuntimePalApiV1{}
+	if pal.version <= 1 {
+		api := &enclaveRuntimePalApiV1{}
+		return api.exec(cmd, envp, stdio)
+	}
+
+	api := &enclaveRuntimePalApiV2{}
 	return api.exec(cmd, envp, stdio)
 }
 

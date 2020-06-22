@@ -8,21 +8,12 @@ package nsenter
 #include <stdio.h>
 #include <stdlib.h>
 
-struct pal_attr_t {
-	const char *args;
-	const char *log_level;
-};
-
-struct pal_stdio_fds {
-	int stdin, stdout, stderr;
-};
-
-extern int (*fptr_pal_get_version)(void);
-extern int (*fptr_pal_init)(const struct pal_attr_t *attr);
-extern int (*fptr_pal_exec)(const char *path, const char * const argv[],
-			const struct pal_stdio_fds *stdio, int *exit_code);
-extern int (*fptr_pal_kill)(int sig, int pid);
-extern int (*fptr_pal_destroy)(void);
+extern void *fptr_pal_get_version;
+extern void *fptr_pal_init;
+extern void *fptr_pal_exec;
+extern void *fptr_pal_kill;
+extern void *fptr_pal_destroy;
+extern void *fptr_pal_create_process;
 */
 import "C"
 
@@ -48,4 +39,8 @@ func SymAddrPalKill() unsafe.Pointer {
 
 func SymAddrPalDestroy() unsafe.Pointer {
 	return unsafe.Pointer(C.fptr_pal_destroy)
+}
+
+func SymAddrPalCreateProcess() unsafe.Pointer {
+	return unsafe.Pointer(C.fptr_pal_create_process)
 }
