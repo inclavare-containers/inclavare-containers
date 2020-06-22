@@ -7,11 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/opencontainers/runc/libcontainer/stacktrace"
 	pb "github.com/opencontainers/runc/libenclave/proto"
-	"golang.org/x/sys/unix"
 	"io"
-	"os"
-	"strconv"
-	"syscall"
 	"time"
 	"unsafe"
 )
@@ -34,48 +30,6 @@ func (e *genericError) Error() string {
 	}
 	frame := e.Stack.Frames[0]
 	return fmt.Sprintf("%s:%d: %s caused %q", frame.File, frame.Line, e.Cause, e.Message)
-}
-
-func stageFd(env string, f interface{}) (err error) {
-	var fd int
-	switch f := f.(type) {
-	case *os.File:
-		fd = int(f.Fd())
-	case int:
-		fd = f
-	default:
-		return fmt.Errorf("unsupported type of environment variable %s", env)
-	}
-
-	flags, err := unix.FcntlInt(uintptr(fd), syscall.F_GETFD, 0)
-	if err != nil {
-		return err
-	}
-	if flags&syscall.FD_CLOEXEC == syscall.FD_CLOEXEC {
-		flags &^= syscall.FD_CLOEXEC
-		_, err := unix.FcntlInt(uintptr(fd), syscall.F_SETFD, flags)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = os.Setenv(env, strconv.Itoa(fd))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func unstageFd(env string) {
-	f := os.Getenv(env)
-	os.Unsetenv(env)
-	if f != "" {
-		fd, err := strconv.Atoi(f)
-		if err == nil {
-			unix.Close(fd)
-		}
-	}
 }
 
 func protoBufRead(conn io.Reader, unmarshaled interface{}) error {

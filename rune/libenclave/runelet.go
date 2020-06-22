@@ -23,43 +23,16 @@ const signalBufferSize = 2048
 var enclaveRuntime *runtime.EnclaveRuntimeWrapper
 
 func StartInitialization() (exitCode int32, err error) {
-	logLevel := os.Getenv("_LIBENCLAVE_LOGLEVEL")
+	env := GetEnclaveRunetimeEnv()
 
-	// Make the unused environment variables invisible to enclave runtime.
-	os.Unsetenv("_LIBENCLAVE_LOGPIPE")
-	os.Unsetenv("_LIBENCLAVE_LOGLEVEL")
+	logLevel := env.logLevel
 
 	// Determine which type of runelet is initializing.
-	var fifoFd = -1
-	envFifoFd := os.Getenv("_LIBENCLAVE_FIFOFD")
-	if envFifoFd != "" {
-		defer func() {
-			if err != nil {
-				unstageFd("_LIBENCLAVE_FIFOFD")
-			}
-		}()
-		fifoFd, err = strconv.Atoi(envFifoFd)
-		if err != nil {
-			return 1, err
-		}
-	}
+	fifoFd := env.fifoFd
 
 	// Retrieve the init pipe fd to accomplish the enclave configuration
 	// handshake as soon as possible with parent rune.
-	envInitPipe := os.Getenv("_LIBENCLAVE_INITPIPE")
-	if envInitPipe == "" {
-		return 1, fmt.Errorf("unable to get _LIBENCLAVE_INITPIPE")
-	}
-	defer func() {
-		if err != nil {
-			unstageFd("_LIBENCLAVE_INITPIPE")
-		}
-	}()
-	pipeFd, err := strconv.Atoi(envInitPipe)
-	if err != nil {
-		return 1, err
-	}
-	initPipe := os.NewFile(uintptr(pipeFd), "init-pipe")
+	initPipe := env.initPipe
 	defer func() {
 		if err != nil {
 			initPipe.Close()
@@ -98,17 +71,14 @@ func StartInitialization() (exitCode int32, err error) {
 	}
 
 	// If runelet run as detach mode, close logrus before initpipe closed.
-	envDetach := os.Getenv("_LIBENCLAVE_DETACHED")
-	detach, err := strconv.Atoi(envDetach)
+	detach, err := strconv.Atoi(env.detached)
 	if detach != 0 {
 		logrus.SetOutput(ioutil.Discard)
 	}
-	os.Unsetenv("_LIBENCLAVE_DETACHED")
 
 	// Close the init pipe to signal that we have completed our init.
 	// So `rune create` or the upper half part of `rune run` can return.
 	initPipe.Close()
-	os.Unsetenv("_LIBENCLAVE_INITPIPE")
 
 	// Take care the execution sequence among components. Closing exec fifo
 	// made by finalizeInitialization() allows the execution of `rune start`
@@ -116,22 +86,8 @@ func StartInitialization() (exitCode int32, err error) {
 	// and entrypoint, implying `rune exec` may preempt them too.
 
 	// Launch agent service for child runelet.
-	envAgentPipe := os.Getenv("_LIBENCLAVE_AGENTPIPE")
-	if envAgentPipe == "" {
-		return 1, fmt.Errorf("unable to get _LIBENCLAVE_AGENTPIPE")
-	}
-	defer func() {
-		if err != nil {
-			unstageFd("_LIBENCLAVE_AGENTPIPE")
-		}
-	}()
-	agentPipeFd, err := strconv.Atoi(envAgentPipe)
-	if err != nil {
-		return 1, err
-	}
-	agentPipe := os.NewFile(uintptr(agentPipeFd), "agent-pipe")
+	agentPipe := env.agentPipe
 	defer agentPipe.Close()
-	os.Unsetenv("_LIBENCLAVE_AGENTPIPE")
 
 	notifySignal := make(chan os.Signal, signalBufferSize)
 
@@ -152,7 +108,6 @@ func StartInitialization() (exitCode int32, err error) {
 	if err = finalizeInitialization(fifoFd); err != nil {
 		return 1, err
 	}
-	os.Unsetenv("_LIBENCLAVE_FIFOFD")
 
 	// Capture all signals and then forward to enclave runtime.
 	signal.Notify(notifySignal)

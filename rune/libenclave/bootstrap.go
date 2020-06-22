@@ -5,6 +5,21 @@ import (
 	"os"
 )
 
+type enclaveRuntimeEnv struct {
+	initPipe *os.File
+	logPipe *os.File
+	logLevel string
+	fifoFd int
+	agentPipe *os.File
+	detached string
+}
+
+var enclaveEnv enclaveRuntimeEnv
+
+func GetEnclaveRunetimeEnv() *enclaveRuntimeEnv {
+	return &enclaveEnv
+}
+
 // `rune init` needs to execute self (/proc/self/exe) in container environment
 // as `runc init` executes entrypoint. Thus, some internal states in form of
 // environment variable must be staged and then recovered after re-exec. This
@@ -13,54 +28,12 @@ import (
 func StartBootstrap(initPipe *os.File, logPipe *os.File, logLevel string, fifoFd int, agentPipe *os.File, detached string) (err error) {
 	logrus.Debug("bootstrapping libenclave ...")
 
-	if err = stageFd("_LIBENCLAVE_INITPIPE", initPipe); err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			unstageFd("_LIBENCLAVE_INITPIPE")
-		}
-	}()
+	enclaveEnv.initPipe = initPipe
+	enclaveEnv.logPipe = logPipe
+	enclaveEnv.logLevel = logLevel
+	enclaveEnv.fifoFd = fifoFd
+	enclaveEnv.agentPipe = agentPipe
+	enclaveEnv.detached = detached
 
-	if fifoFd != -1 {
-		if err = stageFd("_LIBENCLAVE_FIFOFD", fifoFd); err != nil {
-			return err
-		}
-		defer func() {
-			if err != nil {
-				unstageFd("_LIBENCLAVE_FIFOFD")
-			}
-		}()
-	}
-
-	if err = stageFd("_LIBENCLAVE_LOGPIPE", logPipe); err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			unstageFd("_LIBENCLAVE_LOGPIPE")
-		}
-	}()
-
-	if err = os.Setenv("_LIBENCLAVE_LOGLEVEL", logLevel); err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			os.Unsetenv("_LIBENCLAVE_LOGLEVEL")
-		}
-	}()
-
-	if err = stageFd("_LIBENCLAVE_AGENTPIPE", agentPipe); err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			unstageFd("_LIBENCLAVE_AGENTPIPE")
-		}
-	}()
-
-	os.Setenv("_LIBENCLAVE_DETACHED", detached)
-	
 	return nil
 }
