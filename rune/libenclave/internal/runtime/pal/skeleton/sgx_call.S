@@ -3,33 +3,44 @@
 * Copyright(c) 2016-18 Intel Corporation.
 */
 
-	.text
-
-	.macro ENCLU
-	.byte 0x0f, 0x01, 0xd7
-	.endm
+#include "sgx_call.h"
 
 	.text
 
-	.global sgx_call_eenter
-sgx_call_eenter:
+	# sgx ecall ABI:
+	# - RDI, RSI, RDX, RCX, R8 and R9 are parameters
+	# - R10 contains the ecall number
+	# - R11 contains the base of TCS
+	.global sgx_ecall
+	.type sgx_ecall, @function
+sgx_ecall:
 	push	%rbx
+	push	%rbp
 	push	%rdi
 	push	%rsi
 	push    %r12
 	push    %r13
 	push    %r14
 	push    %r15
+	# EENTER ABI:
+	# - [IN] RAX contains the EENTER leaf number 2
+	# - [IN] RBX points to target TCS page
+	# - [IN] RCX points to AEP
 	mov	$0x02, %rax
-	mov	%rdx, %rbx
+	mov	%r11, %rbx
+	# RCX is used to hold AEP so back up it with R11
+	mov	%rcx, %r11
 	lea	sgx_async_exit(%rip), %rcx
 sgx_async_exit:
 	ENCLU
+	# Return value is saved in RAX.
+	mov	%rdx, %rax
 	pop	%r15
 	pop	%r14
 	pop	%r13
 	pop	%r12
 	pop	%rsi
 	pop	%rdi
+	pop	%rbp
 	pop	%rbx
 	ret

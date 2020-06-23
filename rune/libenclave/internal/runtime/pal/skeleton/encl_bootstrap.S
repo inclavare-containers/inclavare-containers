@@ -3,9 +3,7 @@
  * Copyright(c) 2016-18 Intel Corporation.
  */
 
-	.macro ENCLU
-	.byte 0x0f, 0x01, 0xd7
-	.endm
+#include "sgx_call.h"
 
 	.section ".tcs", "a"
 	.balign	4096
@@ -25,30 +23,54 @@
 
 	.text
 
+	# At this moment, the register context is:
+	# - R10: the ecall number
+	# - RDI, RSI, RDX, R8 and R9: function parameters
+	# - R11: the backup of fouth parameter originated from RCX
+	# - RAX: the CSSA of current TCS
+	# - RBX: the base of TCS page
+	# - RCX: the return address after EENTER
 encl_entry:
+	cmp	$MAX_ECALLS, %r10
+	jge	err
+
 	# RBX contains the base address for TCS, which is also the first address
 	# inside the enclave. By adding the value of le_stack_end to it, we get
 	# the absolute address for the stack.
-	lea	(encl_stack)(%rbx), %rax
-	xchg	%rsp, %rax
-	push	%rax
+	lea	(encl_stack)(%rbx), %r12
+	xchg	%rsp, %r12
 
-	push	%rcx # push the address after EENTER
-	push	%rbx # push the enclave base address
+	# Save the return address after EENTER to be consumed by EEXIT.
+	mov	%rcx, %r13
 
-	call	encl_body
+	# Recover the fouth parameter.
+	mov	%r11, %rcx
 
-	pop	%rbx # pop the enclave base address
+	# Call ecall function according to R10.
+	lea	enclave_call_table(%rip), %r14
+	mov	(%r14, %r10, 8), %r14
+	call	1f
+1:
+	pop	%r15
+	sub	$1b, %r15
+	add	%r15, %r14
+	call	*%r14
+
+	# Return the result of ecall function in RDX.
+	mov	%rax, %rdx
 
 	# Restore XSAVE registers to a synthetic state.
-	mov     $0xFFFFFFFF, %rax
-	mov     $0xFFFFFFFF, %rdx
 	lea	(xsave_area)(%rbx), %rdi
 	fxrstor	(%rdi)
 
+	# Prepare EEXIT target after EENTER.
+	mov	%r13, %rbx
+
+	# Restore the caller stack.
+	mov	%r12, %rsp
+
 	# Clear GPRs.
-	xor     %rcx, %rcx
-	xor     %rdx, %rdx
+	xor     %rbp, %rbp
 	xor     %rdi, %rdi
 	xor     %rsi, %rsi
 	xor     %r8, %r8
@@ -61,19 +83,19 @@ encl_entry:
 	xor     %r15, %r15
 
 	# Reset status flags.
-	add     %rdx, %rdx # OF = SF = AF = CF = 0; ZF = PF = 1
+	add     %r15, %r15 # OF = SF = AF = CF = 0; ZF = PF = 1
 
-	# Prepare EEXIT target by popping the address of the instruction after
-	# EENTER to RBX.
-	pop	%rbx
-
-	# Restore the caller stack.
-	pop	%rax
-	mov	%rax, %rsp
-
-	# EEXIT
-	mov	$4, %rax
-	enclu
+2:
+	# EEXIT ABI:
+	# - [IN] RAX contains the EEXIT leaf number 4
+	# - [IN] RBX points to the return address of EEXIT
+	mov	$EEXIT, %rax
+	ENCLU
+	# Never return
+3:	jmp	3b
+err:
+	mov	%rcx, %rbx
+	jmp	2b
 
 	.section ".data", "aw"
 
