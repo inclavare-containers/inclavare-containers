@@ -77,7 +77,8 @@ int load_enclave_runtime(void)
 			return -ENOSPC;
 		}
 		snprintf(sofile, sizeof(sofile), "%s/%s", rootfs, file);
-		snprintf(ldpath, sizeof(ldpath), "%s/lib64", rootfs);
+		snprintf(ldpath, sizeof(ldpath), "%s/usr/lib:%s/usr/lib64:%s/lib:%s/lib64",
+				rootfs, rootfs, rootfs, rootfs);
 
 		env_ldpath = getenv("LD_LIBRARY_PATH");
 		if (env_ldpath && *env_ldpath != '\0') {
@@ -99,6 +100,8 @@ int load_enclave_runtime(void)
 
 	if (dl == NULL) {
 		write_log(DEBUG, "dlopen(): %s", dlerror());
+		/* set errno correctly, make bail() work better */
+		errno = ENOEXEC;
 		return -ENOEXEC;
 	}
 
