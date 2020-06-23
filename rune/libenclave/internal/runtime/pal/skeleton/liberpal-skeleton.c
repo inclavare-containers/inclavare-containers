@@ -27,7 +27,6 @@
 #define SIGSTRUCT	"encl.ss"
 #define TOKEN		"encl.token"
 
-static const uint64_t MAGIC = 0x1122334455667788ULL;
 static struct sgx_secs secs;
 static bool initialized = false;
 
@@ -277,15 +276,19 @@ int pal_exec(char *path, char *argv[], const char *envp[],
 	}
 
 	uint64_t result = 0;
-
-	sgx_call_eenter((void *)&MAGIC, &result, (void *)secs.base);
-	if (result != MAGIC) {
-		fprintf(fp, "0x%lx != 0x%lx\n", result, MAGIC);
+	int ret = SGX_ENTER_1_ARG(ECALL_MAGIC, (void *)secs.base, &result);
+	if (ret) {
+		fprintf(fp, "failed to initialize enclave\n");
+		fclose(fp);
+		return ret;
+	}
+	if (result != INIT_MAGIC) {
+		fprintf(fp, "Unexpected result: 0x%lx != 0x%lx\n", result, INIT_MAGIC);
 		fclose(fp);
 		return -1;
 	}
 
-	fprintf(fp, "copy MAGIC with enclave sucess.\n");
+	fprintf(fp, "Enclave initialization succeeded\n");
 	fclose(fp);
 
 	*exit_code = 0;

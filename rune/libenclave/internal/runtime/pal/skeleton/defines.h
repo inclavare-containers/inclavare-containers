@@ -10,6 +10,7 @@
 
 #define __aligned(x) __attribute__((__aligned__(x)))
 #define __packed __attribute__((packed))
+#define static_assert _Static_assert
 
 #include "arch.h"
 #include "sgx.h"

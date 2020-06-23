@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 #include "defines.h"
+#include "arch.h"
+#include "sgx_call.h"
 
 static void *memcpy(void *dest, const void *src, size_t n)
 {
@@ -14,7 +16,15 @@ static void *memcpy(void *dest, const void *src, size_t n)
 	return dest;
 }
 
-void encl_body(void *rdi, void *rsi)
+static int encl_init(void *dst)
 {
-	memcpy(rsi, rdi, 8);
+	static uint64_t magic = INIT_MAGIC;
+
+	memcpy(dst, &magic, 8);
+
+	return 0;
 }
+
+unsigned long enclave_call_table[MAX_ECALLS] = {
+        (unsigned long)encl_init,
+};
