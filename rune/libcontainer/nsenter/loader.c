@@ -28,13 +28,20 @@ struct pal_stdio_fds {
 	int stdin, stdout, stderr;
 };
 
+struct pal_create_process_args {
+	const char *path;
+	const char **argv;
+	const char **env;
+	const struct occlum_stdio_fds *stdio;
+	int *pid;
+};
 
-int (*fptr_pal_get_version)(void);
-int (*fptr_pal_init)(const struct pal_attr_t *attr);
-int (*fptr_pal_exec)(const char *path, const char * const argv[],
-			const struct pal_stdio_fds *stdio, int *exit_code);
-int (*fptr_pal_kill)(int sig, int pid);
-int (*fptr_pal_destroy)(void);
+void *fptr_pal_get_version;
+void *fptr_pal_init;
+void *fptr_pal_exec;
+void *fptr_pal_kill;
+void *fptr_pal_destroy;
+void *fptr_pal_create_process;
 
 int is_enclave(void)
 {
@@ -106,6 +113,7 @@ int load_enclave_runtime(void)
 	DLSYM(exec);
 	DLSYM(kill);
 	DLSYM(destroy);
+	DLSYM(create_process);
 #undef DLSYM
 
 	return 0;

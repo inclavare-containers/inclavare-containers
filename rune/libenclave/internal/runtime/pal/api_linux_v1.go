@@ -59,10 +59,6 @@ import (
 	"github.com/opencontainers/runc/libcontainer/nsenter"
 )
 
-const (
-	palApiVersion = 1
-)
-
 type enclaveRuntimePalApiV1 struct {
 }
 
@@ -72,7 +68,7 @@ func (pal *enclaveRuntimePalApiV1) get_version() uint32 {
 	if sym != nil {
 		return uint32(C.palGetVersion(sym))
 	} else {
-		return palApiVersion
+		return 1
 	}
 }
 
