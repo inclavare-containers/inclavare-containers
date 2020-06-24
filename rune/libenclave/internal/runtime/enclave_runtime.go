@@ -74,14 +74,14 @@ func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, std
 	return rt.runtime.Exec(cmd, envp, stdio)
 }
 
-func (rt *EnclaveRuntimeWrapper) KillPayload(sig int, pid int) error {
+func (rt *EnclaveRuntimeWrapper) KillPayload(pid int, sig int) error {
 	if pid != -1 {
 		logrus.Debugf("enclave runtime killing payload %d with signal %d", pid, sig)
 	} else {
 		logrus.Debugf("enclave runtime killing all payloads with signal %d", sig)
 	}
 
-	return rt.runtime.Kill(sig, pid)
+	return rt.runtime.Kill(pid, sig)
 }
 
 func (rt *EnclaveRuntimeWrapper) DestroyInstance() error {

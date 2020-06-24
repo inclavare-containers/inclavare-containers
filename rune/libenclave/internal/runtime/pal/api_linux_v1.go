@@ -37,11 +37,6 @@ static int palExecV1(void *sym, const char *exe, const char *argv[],
 		(exe, argv, &fds, exit_code);
 }
 
-static int palKillV1(void *sym, int sig, int pid)
-{
-	return ((int (*)(int, int))sym)(sig, pid);
-}
-
 static int palDestroyV1(void *sym)
 {
 	return ((int (*)(void))sym)();
@@ -129,17 +124,6 @@ func (pal *enclaveRuntimePalApiV1) exec(cmd []string, envs []string, stdio [3]*o
 		return exitCode, fmt.Errorf("pal exec() failed with %d", ret)
 	}
 	return exitCode, nil
-}
-
-func (pal *enclaveRuntimePalApiV1) kill(sig int, pid int) error {
-	sigNum := C.int(sig)
-	pidNum := C.int(pid)
-	sym := nsenter.SymAddrPalKill()
-	ret := C.palKillV1(sym, sigNum, pidNum)
-	if ret < 0 {
-		return fmt.Errorf("pal kill() failed with %d", ret)
-	}
-	return nil
 }
 
 func (pal *enclaveRuntimePalApiV1) destroy() error {

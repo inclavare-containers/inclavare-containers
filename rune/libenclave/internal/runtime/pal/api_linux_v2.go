@@ -50,6 +50,11 @@ static int palExecV2(void *sym, int pid, int *exit_code)
 	return ((int (*)(pal_exec_args *))sym)
 		(&args);
 }
+
+static int palKillV2(void *sym, int pid, int sig)
+{
+	return ((int (*)(int, int))sym)(pid, sig);
+}
 */
 import "C"
 
@@ -114,4 +119,19 @@ func (pal *enclaveRuntimePalApiV2) exec(cmd []string, envs []string, stdio [3]*o
 		return exitCode, fmt.Errorf("pal exec() failed with %d", ret)
 	}
 	return exitCode, nil
+}
+
+func (pal *enclaveRuntimePalApiV2) kill(pid int, sig int) error {
+	pidNum := C.int(pid)
+	sigNum := C.int(sig)
+	sym := nsenter.SymAddrPalKill()
+	if sym == nil {
+		return fmt.Errorf("pal kill() not implemented")
+	}
+
+	ret := C.palKillV2(sym, pidNum, sigNum)
+	if ret < 0 {
+		return fmt.Errorf("pal kill() failed with %d", ret)
+	}
+	return nil
 }
