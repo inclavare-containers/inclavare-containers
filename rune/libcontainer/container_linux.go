@@ -532,11 +532,11 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 		}
 
 		if c.config.Enclave.Path != "" {
-			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_PATH="+string(c.config.Enclave.Path))
+			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_PATH="+c.config.Enclave.Path)
 		}
 
 		if c.config.Enclave.Signer != "server" {
-			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS="+string(c.config.Rootfs))
+			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS="+c.config.Rootfs)
 		}
 
 		if detached {
