@@ -579,6 +579,7 @@ void nsexec(void)
 	jmp_buf env;
 	int sync_child_pipe[2], sync_grandchild_pipe[2];
 	struct nlconfig_t config = { 0 };
+	char *rootfs;
 
 	/*
 	 * Setup a pipe to send logs to the parent. This should happen
@@ -643,6 +644,16 @@ void nsexec(void)
 
 	/* TODO: Currently we aren't dealing with child deaths properly. */
 
+	rootfs = getenv("_LIBCONTAINER_PAL_ROOTFS");
+	if (rootfs && *rootfs != '\0') {
+		char ld_path[PATH_MAX+1];
+
+		snprintf(ld_path, sizeof(ld_path) - 1,
+			 "%s/usr/lib/x86_64-linux-gnu:%s/usr/lib:%s/usr/lib64:%s/lib:%s/lib64",
+			 rootfs, rootfs, rootfs, rootfs, rootfs);
+		setenv("LD_LIBRARY_PATH", ld_path, 1);
+	}
+
 	/*
 	 * Okay, so this is quite annoying.
 	 *
@@ -702,14 +713,9 @@ void nsexec(void)
 			int len;
 			pid_t child, first_child = -1;
 			bool ready = false;
-			int ret;
 
 			/* For debugging. */
 			prctl(PR_SET_NAME, (unsigned long)"runc:[0:PARENT]", 0, 0, 0);
-
-			ret = load_enclave_runtime();
-			if (ret < 0)
-				bail("load_enclave_runtime() failed, ret = %d", ret);
 
 			/* Start the process of getting a container. */
 			child = clone_parent(&env, JUMP_CHILD);
@@ -837,6 +843,11 @@ void nsexec(void)
 	case JUMP_CHILD:{
 			pid_t child;
 			enum sync_t s;
+			int ret;
+
+			ret = load_enclave_runtime();
+			if (ret < 0)
+				bail("load_enclave_runtime() failed, ret = %d", ret);
 
 			/* We're in a child and thus need to tell the parent if we die. */
 			syncfd = sync_child_pipe[0];

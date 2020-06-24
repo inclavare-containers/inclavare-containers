@@ -531,16 +531,12 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 				fmt.Sprintf("_LIBCONTAINER_AGENTPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
 		}
 
+		if c.config.Enclave.Path != "" {
+			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_PATH="+string(c.config.Enclave.Path))
+		}
+
 		if c.config.Enclave.Signer != "server" {
-			rootfs := c.config.Rootfs
-			// LD_LIBRARY_PATH must be set before the process starts to be valid
-			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("LD_LIBRARY_PATH=%s/usr/lib:%s/usr/lib64:%s/lib:%s/lib64",
-					rootfs, rootfs, rootfs, rootfs));
-			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("_LIBCONTAINER_PAL_PATH=%s/%s", rootfs, c.config.Enclave.Path))
-		} else if c.config.Enclave.Path != "" {
-			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_PATH=" + c.config.Enclave.Path)
+			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS="+string(c.config.Rootfs))
 		}
 
 		if detached {
