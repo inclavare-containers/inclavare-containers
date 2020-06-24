@@ -224,7 +224,7 @@ func (v *ConfigValidator) enclave(config *configs.Config) error {
 	path := config.Enclave.Path
 	if config.Enclave.Signer != "server" {
 		var err error
-		path, err = securejoin.SecureJoin(config.Rootfs, config.Enclave.Path)
+		path, err = securejoin.SecureJoin(config.Rootfs, path)
 		if err != nil {
 			return err
 		}
