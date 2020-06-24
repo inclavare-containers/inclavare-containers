@@ -214,7 +214,7 @@ func relaySignal(signalPipe *os.File, id int) {
 			return
 		}
 
-		err := enclaveRuntime.KillPayload(int(req.Kill.Sig), id)
+		err := enclaveRuntime.KillPayload(id, int(req.Kill.Sig))
 		if err != nil {
 			logrus.Errorf("unable to kill payload with sig %d by %d: %v\n", int(req.Kill.Sig), id, err)
 			return

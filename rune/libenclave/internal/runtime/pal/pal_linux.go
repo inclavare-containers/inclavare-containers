@@ -45,12 +45,13 @@ func (pal *enclaveRuntimePal) Exec(cmd []string, envp []string, stdio [3]*os.Fil
 	return api.exec(cmd, envp, stdio)
 }
 
-func (pal *enclaveRuntimePal) Kill(sig int, pid int) error {
-	if pal.version >= 2 {
-		api := &enclaveRuntimePalApiV1{}
-		return api.kill(sig, pid)
+func (pal *enclaveRuntimePal) Kill(pid int, sig int) error {
+	if pal.version == 1 {
+		return nil
 	}
-	return nil
+
+	api := &enclaveRuntimePalApiV2{}
+	return api.kill(pid, sig)
 }
 
 func (pal *enclaveRuntimePal) Destroy() error {
