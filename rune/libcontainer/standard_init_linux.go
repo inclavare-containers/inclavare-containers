@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"syscall" //only for Exec
 
-	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/runc/libcontainer/apparmor"
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/keys"
@@ -18,6 +17,7 @@ import (
 	"github.com/opencontainers/runc/libenclave"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"golang.org/x/sys/unix"
 )
@@ -180,11 +180,30 @@ func (l *linuxStandardInit) Init() error {
 		return unix.Kill(unix.Getpid(), unix.SIGKILL)
 	}
 	if l.config.Config.Enclave != nil {
-		err := libenclave.StartBootstrap(l.pipe, l.logPipe, l.logLevel, l.fifoFd, l.agentPipe, l.detached)
-		if err != nil {
-			return err
+		if l.config.Config.Seccomp != nil && l.config.NoNewPrivileges {
+			if err := seccomp.InitSeccomp(l.config.Config.Seccomp); err != nil {
+				return newSystemErrorWithCause(err, "init seccomp")
+			}
 		}
-		return l.finalizeInit("/proc/self/exe", []string{"init-runelet", "enclave"}, true)
+
+		cfg := &libenclave.RuneletConfig{
+			InitPipe:  l.pipe,
+			LogPipe:   l.logPipe,
+			LogLevel:  l.logLevel,
+			FifoFd:    l.fifoFd,
+			AgentPipe: l.agentPipe,
+			Detached:  l.detached,
+		}
+
+		exitCode, err := libenclave.StartInitialization(l.config.Args, cfg)
+		if err != nil {
+			logrus.Fatal(err)
+			os.Exit(1)
+		}
+		logrus.Debugf("init enclave runtime exit code: %d", exitCode)
+		os.Exit(int(exitCode))
+		// make compiler happy
+		return fmt.Errorf("failed to initialize init-runelet")
 	}
 	// Check for the arg before waiting to make sure it exists and it is
 	// returned as a create time error.
@@ -212,10 +231,6 @@ func (l *linuxStandardInit) Init() error {
 	// since been resolved.
 	// https://github.com/torvalds/linux/blob/v4.9/fs/exec.c#L1290-L1318
 	unix.Close(l.fifoFd)
-	return l.finalizeInit(name, l.config.Args[0:], false)
-}
-
-func (l *linuxStandardInit) finalizeInit(entryName string, args []string, noexec bool) error {
 	// Set seccomp as close to execve as possible, so as few syscalls take
 	// place afterward (reducing the amount of syscalls that users need to
 	// enable in their seccomp profiles).
@@ -224,18 +239,8 @@ func (l *linuxStandardInit) finalizeInit(entryName string, args []string, noexec
 			return newSystemErrorWithCause(err, "init seccomp")
 		}
 	}
-	if noexec {
-		exitCode, err := libenclave.StartInitialization()
-		if err != nil {
-			logrus.Fatal(err)
-			os.Exit(1)
-		}
-		logrus.Debugf("enclave exitCode: %d", exitCode)
-		os.Exit(int(exitCode))
-	} else {
-		if err := syscall.Exec(entryName, args, os.Environ()); err != nil {
-			return newSystemErrorWithCause(err, "exec user process")
-		}
+	if err := syscall.Exec(name, l.config.Args[0:], os.Environ()); err != nil {
+		return newSystemErrorWithCause(err, "exec user process")
 	}
-	return nil
+	return err
 }

@@ -346,8 +346,8 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 		envConsole     = os.Getenv("_LIBCONTAINER_CONSOLE")
 		envLogPipe     = os.Getenv("_LIBCONTAINER_LOGPIPE")
 		envLogLevel    = os.Getenv("_LIBCONTAINER_LOGLEVEL")
-		envAgentPipe   = os.Getenv("_LIBCONTAINER_AGENTPIPE")
-		envDetached    = os.Getenv("_LIBCONTAINER_DETACHED")
+		envAgentPipe   = os.Getenv("_LIBENCLAVE_AGENTPIPE")
+		envDetached    = os.Getenv("_LIBENCLAVE_DETACHED")
 	)
 
 	// Get the INITPIPE.
@@ -391,7 +391,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 	if envAgentPipe != "" {
 		agent, err := strconv.Atoi(envAgentPipe)
 		if err != nil {
-			return fmt.Errorf("unable to convert _LIBCONTAINER_AGENTSOCK=%s to int: %s", envAgentPipe, err)
+			return fmt.Errorf("unable to convert _LIBENCLAVE_AGENTSOCK=%s to int: %s", envAgentPipe, err)
 		}
 		agentPipe = os.NewFile(uintptr(agent), "agent-pipe")
 		defer agentPipe.Close()
@@ -400,7 +400,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 	if envDetached != "" {
 		tmpDetached, err := strconv.Atoi(envDetached)
 		if err != nil {
-			return fmt.Errorf("unable to convert _LIBCONTAINER_DETACHED=%s to int: %s", envDetached, err)
+			return fmt.Errorf("unable to convert _LIBENCLAVE_DETACHED=%s to int: %s", envDetached, err)
 		}
 		if tmpDetached != 0 {
 			detached = true
