@@ -10,5 +10,4 @@ type Enclave struct {
 	Type string `json:"type"`
 	Path string `json:"path"`
 	Args string `json:"args,omitempty"`
-	Signer string `json:"signer,omitempty"`
 }

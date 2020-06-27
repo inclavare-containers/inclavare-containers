@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/intelrdt"
 	"github.com/opencontainers/runc/libenclave"
@@ -221,16 +220,7 @@ func (v *ConfigValidator) enclave(config *configs.Config) error {
 		return fmt.Errorf("enclave runtime path is not configured")
 	}
 
-	path := config.Enclave.Path
-	if config.Enclave.Signer != "server" {
-		var err error
-		path, err = securejoin.SecureJoin(config.Rootfs, path)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err := os.Stat(path); err != nil {
+	if _, err := os.Stat(config.Enclave.Path); err != nil {
 		return err
 	}
 

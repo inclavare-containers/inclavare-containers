@@ -7,7 +7,6 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/runc/libcontainer/apparmor"
 	"github.com/opencontainers/runc/libcontainer/keys"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
@@ -15,6 +14,7 @@ import (
 	"github.com/opencontainers/runc/libenclave"
 	"github.com/opencontainers/selinux/go-selinux/label"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"golang.org/x/sys/unix"
 )
@@ -95,20 +95,24 @@ func (l *linuxSetnsInit) Init() error {
 		}
 	}
 	if l.config.Config.Enclave != nil {
-		err := libenclave.StartBootstrap(l.pipe, l.logPipe, l.logLevel, -1, l.agentPipe, l.detached)
-		if err != nil {
-			return newSystemErrorWithCause(err, "libenclave bootstrap")
+		cfg := &libenclave.RuneletConfig{
+			InitPipe:  l.pipe,
+			LogPipe:   l.logPipe,
+			LogLevel:  l.logLevel,
+			FifoFd:    -1,
+			AgentPipe: l.agentPipe,
+			Detached:  l.detached,
 		}
 
-		exitCode, err := libenclave.StartInitialization()
+		exitCode, err := libenclave.StartInitialization(l.config.Args, cfg)
 		if err != nil {
 			logrus.Fatal(err)
 			os.Exit(1)
 		}
-		logrus.Debugf("enclave exitCode: %d", exitCode)
+		logrus.Debugf("enclave payload exit code: %d", exitCode)
 		os.Exit(int(exitCode))
 		// make compiler happy
-		return nil
+		return fmt.Errorf("failed to initialize runelet")
 	}
 	return system.Execv(l.config.Args[0], l.config.Args[0:], os.Environ())
 }

@@ -528,23 +528,15 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 		if agentPipe != nil {
 			cmd.ExtraFiles = append(cmd.ExtraFiles, agentPipe)
 			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("_LIBCONTAINER_AGENTPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
+				fmt.Sprintf("_LIBENCLAVE_AGENTPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1))
 		}
 
 		if c.config.Enclave.Path != "" {
-			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_PATH="+c.config.Enclave.Path)
-		}
-
-		if c.config.Enclave.Signer != "server" {
-			cmd.Env = append(cmd.Env, "_LIBCONTAINER_PAL_ROOTFS="+c.config.Rootfs)
+			cmd.Env = append(cmd.Env, "_LIBENCLAVE_PAL_PATH="+c.config.Enclave.Path)
 		}
 
 		if detached {
-			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", 1))
-		} else {
-			cmd.Env = append(cmd.Env,
-				fmt.Sprintf("_LIBCONTAINER_DETACHED=%d", 0))
+			cmd.Env = append(cmd.Env, "_LIBENCLAVE_DETACHED=1")
 		}
 	}
 

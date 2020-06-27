@@ -570,7 +570,8 @@ void join_namespaces(char *nslist)
 extern int ensure_cloned_binary(void);
 
 /* Defined in loader.c. */
-extern int is_enclave(void);
+extern bool enclave_configured(void);
+extern bool is_init_runelet(void);
 extern int load_enclave_runtime(void);
 
 void nsexec(void)
@@ -579,7 +580,6 @@ void nsexec(void)
 	jmp_buf env;
 	int sync_child_pipe[2], sync_grandchild_pipe[2];
 	struct nlconfig_t config = { 0 };
-	char *rootfs;
 
 	/*
 	 * Setup a pipe to send logs to the parent. This should happen
@@ -602,6 +602,12 @@ void nsexec(void)
 	 */
 	if (ensure_cloned_binary() < 0)
 		bail("could not ensure we are a cloned binary");
+
+	if (enclave_configured()) {
+		int ret = load_enclave_runtime();
+		if (ret < 0)
+			bail("load_enclave_runtime() failed, ret = %d", ret);
+	}
 
 	write_log(DEBUG, "nsexec started");
 
@@ -643,16 +649,6 @@ void nsexec(void)
 		bail("failed to setup sync pipe between parent and grandchild");
 
 	/* TODO: Currently we aren't dealing with child deaths properly. */
-
-	rootfs = getenv("_LIBCONTAINER_PAL_ROOTFS");
-	if (rootfs && *rootfs != '\0') {
-		char ld_path[PATH_MAX+1];
-
-		snprintf(ld_path, sizeof(ld_path) - 1,
-			 "%s/usr/lib/x86_64-linux-gnu:%s/usr/lib:%s/usr/lib64:%s/lib:%s/lib64",
-			 rootfs, rootfs, rootfs, rootfs, rootfs);
-		setenv("LD_LIBRARY_PATH", ld_path, 1);
-	}
 
 	/*
 	 * Okay, so this is quite annoying.
@@ -843,11 +839,6 @@ void nsexec(void)
 	case JUMP_CHILD:{
 			pid_t child;
 			enum sync_t s;
-			int ret;
-
-			ret = load_enclave_runtime();
-			if (ret < 0)
-				bail("load_enclave_runtime() failed, ret = %d", ret);
 
 			/* We're in a child and thus need to tell the parent if we die. */
 			syncfd = sync_child_pipe[0];
@@ -1040,8 +1031,17 @@ void nsexec(void)
 			/* Free netlink data. */
 			nl_free(&config);
 
-			if (is_enclave())
-				prctl(PR_SET_NAME, (unsigned long)"init-runelet", 0, 0, 0);
+			if (enclave_configured()) {
+				const char *name;
+
+				if (is_init_runelet())
+					name = "init-runelet";
+				else
+					name = "runelet";
+
+				/* For debugging. */
+				prctl(PR_SET_NAME, (unsigned long)name, 0, 0, 0);
+			}
 
 			/* Finish executing, let the Go runtime take over. */
 			return;

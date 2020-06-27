@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type EnclaveRuntime interface {
@@ -62,7 +63,7 @@ func (rt *EnclaveRuntimeWrapper) LaunchAttestation() error {
 }
 
 func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, stdio [3]*os.File) (int32, error) {
-	logrus.Debugf("enclave runtime %s executing payload with commandline", cmd)
+	logrus.Debugf("enclave runtime %s executing payload with commandline", strings.Join(cmd, " "))
 
 	// The executable may not exist in container at all according
 	// to the design of enclave runtime, such as Occlum, which uses
