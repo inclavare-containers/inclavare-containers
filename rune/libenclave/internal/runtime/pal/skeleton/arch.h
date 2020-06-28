@@ -10,6 +10,7 @@
 #ifndef _ASM_X86_SGX_ARCH_H
 #define _ASM_X86_SGX_ARCH_H
 
+#include <assert.h>
 #include <linux/types.h>
 
 #define SGX_CPUID				0x12
@@ -18,6 +19,8 @@
 #ifndef BIT
 #define BIT(nr)			(1UL << (nr))
 #endif
+
+#define EREPORT			0
 
 /**
  * enum sgx_return_code - The return code type for ENCLS, ENCLU and ENCLV
@@ -368,5 +371,59 @@ struct sgx_einittoken {
 };
 
 #define SGX_LAUNCH_TOKEN_SIZE 304
+
+#define SGX_TARGET_INFO_SIZE 512
+
+struct sgx_target_info {
+    uint8_t mrenclave[32];
+    uint64_t attributes;
+    uint64_t xfrm;
+    uint8_t cetattributes;
+    uint8_t reserved1;
+    uint16_t config_svn;
+    uint32_t miscselect;
+    uint8_t reserved2[8];
+    uint32_t config_id[16];
+    uint8_t reserved3[384];
+} __packed __aligned(SGX_TARGET_INFO_SIZE);
+static_assert(sizeof(struct sgx_target_info) == SGX_TARGET_INFO_SIZE, "incorrect size of sgx_target_info");
+
+#define SGX_REPORT_DATA_SIZE 64
+
+struct sgx_report_data {
+	uint8_t report_data[SGX_REPORT_DATA_SIZE];
+} __packed __aligned(128);
+static_assert(sizeof(struct sgx_report_data) == 128, "incorrect size of sgx_report_data");
+
+struct sgx_report_body {
+    uint8_t cpusvn[16];
+    uint32_t miscselect;
+    uint8_t cetattributes;
+    uint8_t reserved1[11];
+    uint16_t isv_ext_prod_id[8];
+    uint64_t attributes;
+    uint64_t xfrm;
+    uint8_t mrenclave[32];
+    uint8_t reserved2[32];
+    uint8_t mrsigner[32];
+    uint8_t reserved3[32];
+    uint32_t config_id[16];
+    uint16_t isv_prod_id;
+    uint16_t isv_svn;
+    uint16_t config_svn;
+    uint8_t reserved4[42];
+    uint8_t isv_family_id[16];
+    uint8_t report_data[64];
+} __packed;
+static_assert(sizeof(struct sgx_report_body) == 384, "incorrect size of sgx_report_body");
+
+#define SGX_REPORT_SIZE 432
+
+struct sgx_report {
+    struct sgx_report_body body;
+    uint8_t key_id[32];
+    uint8_t mac[16];
+} __packed __aligned(512);
+static_assert(sizeof(struct sgx_report) == 512, "incorrect size of sgx_report");
 
 #endif /* _ASM_X86_SGX_ARCH_H */

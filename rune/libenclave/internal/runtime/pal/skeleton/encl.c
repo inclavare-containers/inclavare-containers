@@ -25,6 +25,30 @@ static int encl_init(void *dst)
 	return 0;
 }
 
+static int encl_get_report(const struct sgx_target_info *target_info,
+			   const uint8_t *report_data,
+			   struct sgx_report *report)
+{
+	struct sgx_target_info ti;
+	memcpy(&ti, target_info, SGX_TARGET_INFO_SIZE);
+
+	struct sgx_report_data rd;
+	memcpy(&rd, report_data, SGX_REPORT_DATA_SIZE);
+
+	struct sgx_report r;
+
+	asm volatile(
+		ENCLU "\n\t"
+		:: "a" (EREPORT), "b" (&ti), "c" (&rd), "d" (&r)
+		: "memory"
+	);
+
+	memcpy(report, &r, SGX_REPORT_SIZE);
+
+	return 0;
+}
+
 unsigned long enclave_call_table[MAX_ECALLS] = {
-        (unsigned long)encl_init,
+	(unsigned long)encl_init,
+	(unsigned long)encl_get_report,
 };

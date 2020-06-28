@@ -104,7 +104,8 @@ static bool encl_add_pages(int dev_fd, unsigned long addr, void *data,
 }
 
 static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size, 
-			struct sgx_sigstruct *sigstruct,struct sgx_einittoken *token)
+		       struct sgx_sigstruct *sigstruct,
+		       struct sgx_einittoken *token)
 {
 	struct sgx_enclave_init ioc;
 	int dev_fd;
@@ -288,7 +289,7 @@ int pal_exec(char *path, char *argv[], const char *envp[],
 		return -1;
 	}
 
-	fprintf(fp, "Enclave initialization succeeded\n");
+	fprintf(fp, "Enclave runtime skeleton initialization succeeded\n");
 	fclose(fp);
 
 	*exit_code = 0;
@@ -299,7 +300,7 @@ int pal_exec(char *path, char *argv[], const char *envp[],
 int pal_destroy(void)
 {
 	if (!initialized) {
-		fprintf(stderr, "enclave runtime skeleton uninitialized yet!\n");
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
 	return 0;

@@ -7,7 +7,8 @@
 #define SGX_CALL_H
 
 #define ECALL_MAGIC		0
-#define MAX_ECALLS		1
+#define ECALL_REPORT		1
+#define MAX_ECALLS		2
 
 #define EEXIT			4
 
@@ -25,6 +26,21 @@
 			: "=a" (__ret) \
 			: "r" ((uint64_t)ecall_num), "r" (tcs), \
 			  "D" (a0) \
+			: "r10", "r11" \
+		); \
+		__ret; \
+	})
+
+#define SGX_ENTER_3_ARGS(ecall_num, tcs, a0, a1, a2) \
+	({	\
+		int __ret; \
+		asm volatile( \
+			"mov %1, %%r10\n\t" \
+			"mov %2, %%r11\n\t" \
+			"call sgx_ecall\n\t" \
+			: "=a" (__ret) \
+			: "r" ((uint64_t)ecall_num), "r" (tcs), \
+			  "D" (a0), "S" (a1), "d" (a2) \
 			: "r10", "r11" \
 		); \
 		__ret; \
