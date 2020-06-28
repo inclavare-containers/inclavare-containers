@@ -4,9 +4,9 @@ endif
 
 OUTPUT ?= ./
 HOST_CFLAGS := -Wall -Werror -g -fPIC -z noexecstack \
-		-Wno-unused-const-variable
+	       -Wno-unused-const-variable -std=gnu11
 ENCL_CFLAGS := -Wall -Werror -static -nostdlib -nostartfiles -fPIC \
-	       -fno-stack-protector -mrdrnd
+	       -fno-stack-protector -mrdrnd -std=gnu11
 HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 
 TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton.so $(OUTPUT)/signing_key.pem $(OUTPUT)/encl.token
