@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package shelterd_proto;
+
+service Attestation {
+  rpc InitiateChallenge (AttestChallenge) returns (AttestResponse) {}
+}
+
+message AttestChallenge {
+  bytes nonce = 1;
+}
+
+message AttestResponse {
+  bytes quote = 2;
+}

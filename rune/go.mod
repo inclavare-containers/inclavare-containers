@@ -24,4 +24,5 @@ require (
 	github.com/urfave/cli v1.22.1
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/sys v0.0.0-20200327173247-9dae0f8f5775
+	google.golang.org/grpc v1.29.1
 )
