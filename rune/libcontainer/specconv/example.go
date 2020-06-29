@@ -180,7 +180,7 @@ func Example() *specs.Spec {
 				Source:      "/run/aesmd",
 				Options:     []string{"rbind", "rprivate"},
 			})
-		var mode os.FileMode = 0644
+		var mode os.FileMode = 0666
 		spec.Linux.Devices = append(spec.Linux.Devices,
 			specs.LinuxDevice{
 				Path:     "/dev/isgx",
