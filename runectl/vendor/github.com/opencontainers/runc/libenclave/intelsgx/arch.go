@@ -24,14 +24,17 @@ const (
 )
 
 const (
-	SigStructLength  = 1808
-	EinittokenLength = 304
-	TargetinfoLength = 512
-	ReportLength     = ReportBodyLength + 48
-	ReportBodyLength = 384
-	QuoteLength      = QuoteBodyLength + ReportBodyLength + 4
-	QuoteBodyLength  = 48
-	NonceLength      = 16
+	SigStructLength       = 1808
+	EinittokenLength      = 304
+	TargetinfoLength      = 512
+	ReportLength          = ReportBodyLength + 48
+	ReportBodyLength      = 384
+	QuoteLength           = QuoteBodyLength + ReportBodyLength + 4
+	QuoteBodyLength       = 48
+	NonceLength           = 16
+	SpidLength            = 16
+	SubscriptionKeyLength = 16
+	SgxMaxQuoteLength     = 2048
 )
 
 type SigStruct struct {
