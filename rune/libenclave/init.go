@@ -3,6 +3,8 @@ package libenclave // import "github.com/opencontainers/runc/libenclave"
 import (
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libenclave/intelsgx"
+	"net"
+	"os/user"
 )
 
 var (
@@ -31,6 +33,11 @@ func IsEnclaveHwEnabled(etype string) bool {
 }
 
 func init() {
+	// initialize nss libraries in Glibc so that the dynamic libraries are loaded in the host
+	// environment not in the chroot from untrusted files.
+	_, _ = user.Lookup("")
+	_, _ = net.LookupHost("")
+
 	if intelsgx.IsSgxSupported() {
 		enclaveHwType = configs.EnclaveHwIntelSgx
 	}
