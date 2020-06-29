@@ -32,6 +32,35 @@ docker build . -t liberpal-skeleton
 ```
 
 # Run skeleton docker image
+## Build and install rune
+`rune` is a CLI tool for spawning and running enclaves in containers according to the OCI specification.
+
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers#rune) to build `rune` from scratch.
+
+## Configure Docker runtimes
+Add the `rune` OCI runtime configuration in dockerd config file (`/etc/docker/daemon.json`) in your system.
+
+``` JSON
+{
+	"runtimes": {
+		"rune": {
+			"path": "/usr/local/sbin/rune",
+			"runtimeArgs": []
+		}
+	}
+}
+```
+
+then restart docker service on your system.
+> e.g. `sudo systemctl restart docker` for CentOS, or `sudo service docker restart` for Ubuntu
+
+You can check whether `rune` is correctly added to container runtime or not with
+``` shell
+sudo docker info | grep rune
+Runtimes: rune runc
+```
+
+## Run skeleton docker image with rune
 ```shell
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
