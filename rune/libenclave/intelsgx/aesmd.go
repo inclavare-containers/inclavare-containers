@@ -245,3 +245,115 @@ func GetQeTargetInfo() ([]byte, error) {
 
 	return resp.GetQeTargetInfo.GetTargetinfo(), nil
 }
+
+func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
+	if len(report) != ReportLength {
+		return nil, fmt.Errorf("signature not match REPORT")
+	}
+
+	s, err := hex.DecodeString(spid)
+	if err != nil {
+		return nil, err
+	}
+	if len(s) != SpidLength {
+		return nil, fmt.Errorf("SPID is not 16-byte long")
+	}
+
+	r := &Report{}
+	if err := restruct.Unpack(report, binary.LittleEndian, &r); err != nil {
+		return nil, err
+	}
+
+	logrus.Debugf("REPORT:")
+	logrus.Debugf("  CPU SVN:                        0x%v\n",
+		hex.EncodeToString(r.CpuSvn[:]))
+	logrus.Debugf("  Misc Select:                    %#08x\n",
+		r.MiscSelect)
+	logrus.Debugf("  Product ID:                     0x%v\n",
+		hex.EncodeToString(r.IsvExtProdId[:]))
+	logrus.Debugf("  Attributes:                     0x%v\n",
+		hex.EncodeToString(r.Attributes[:]))
+	logrus.Debugf("  Enclave Hash:                   0x%v\n",
+		hex.EncodeToString(r.MrEnclave[:]))
+	logrus.Debugf("  Enclave Signer:                 0x%v\n",
+		hex.EncodeToString(r.MrSigner[:]))
+	logrus.Debugf("  Config ID:                      0x%v\n",
+		hex.EncodeToString(r.ConfigId[:]))
+	logrus.Debugf("  ISV assigned Produdct ID:       %#04x\n",
+		r.IsvProdId)
+	logrus.Debugf("  ISV assigned SVN:               %d\n",
+		r.IsvSvn)
+	logrus.Debugf("  Config SVN:                     %#04x\n",
+		r.ConfigSvn)
+	logrus.Debugf("  ISV assigned Product Family ID: 0x%v\n",
+		hex.EncodeToString(r.IsvFamilyId[:]))
+	logrus.Debugf("  Report Data:                    0x%v\n",
+		hex.EncodeToString(r.ReportData[:]))
+
+	conn, err := dialAesmd()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	var t uint32 = QuoteSignatureTypeUnlinkable
+	if linkable == true {
+		t = QuoteSignatureTypeLinkable
+	}
+
+	req := pb.AesmServiceRequest{}
+	req.GetQuote = &pb.AesmServiceRequest_GetQuote{
+		Report:    report,
+		QuoteType: t,
+		Spid:      s,
+		BufSize:   SgxMaxQuoteLength,
+		QeReport:  false,
+		Timeout:   10000,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.GetQuote = &pb.AesmServiceResponse_GetQuote{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return nil, err
+	}
+
+	if resp.GetQuote.GetError() != 0 {
+		return nil, fmt.Errorf("failed to get QUOTE (error code = %d)",
+			resp.GetQuote.GetError())
+	}
+
+	quote := resp.GetQuote.GetQuote()
+	if len(quote) < QuoteLength || len(quote) != SgxMaxQuoteLength {
+		return nil, fmt.Errorf("invalid length of quote: (returned %d, expected %d)",
+			len(quote), QuoteLength)
+	}
+
+	q := &Quote{}
+	if err := restruct.Unpack(quote, binary.LittleEndian, &q); err != nil {
+		return nil, err
+	}
+
+	logrus.Debugf("QUOTE:")
+	logrus.Debugf("  Version:                              %d\n",
+		q.Version)
+	logrus.Debugf("  Signature Type:                       %d\n",
+		q.SignatureType)
+	logrus.Debugf("  Gid:                                  %#08x\n",
+		q.Gid)
+	logrus.Debugf("  ISV assigned SVN for Quoting Enclave: %d\n",
+		q.ISVSvnQe)
+	logrus.Debugf("  ISV assigned SVN for PCE:             %d\n",
+		q.ISVSvnPce)
+	logrus.Debugf("  Base name:                            0x%v\n",
+		hex.EncodeToString(q.Basename[:]))
+	logrus.Debugf("  Report:                               ...\n")
+	logrus.Debugf("  Signature Length:                     %d\n",
+		q.SigLen)
+
+	return resp.GetQuote.GetQuote(), nil
+}

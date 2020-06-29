@@ -1,8 +1,9 @@
 # runectl
 ## Introduction
 `runectl` is a command line tool for inclavare-containers.
-- Given the signature file of an Enclave, `runectl gen-token` command can generate the corresponding token file from Intel `aesmd` service.
-- `runectl attest` command can allow users to challenge the enclave with the help of Intel Attestation Service through remote attestation requests. `runectl` command will open soon.
+- Given the signature file of an Enclave, `runectl gen-token` command can generate the corresponding token file from aesmd service.
+- `runectl gen-qe-target-info` command can generate Quoting Enclave's target information file from aesm service.
+- Given the report file of an Enclave, `runectl gen-quote` command can generate quote file from aesm service.
 
 ## Install Intel `aesmd` service
 ### Hardware requirements
