@@ -141,9 +141,9 @@ function copyOcclumLiberaries() {
   /bin/cp -f /usr/lib/libsgx_u*.so* ${lib_dir}
   /bin/cp -f /usr/lib/libsgx_enclave_common.so.1 ${lib_dir}
   /bin/cp -f /usr/lib/libsgx_launch.so.1 ${lib_dir}
-  ln -sfn .occlum/build/lib/libocclum-pal.so liberpal-occlum.so
-  # ==== fixme: the file /sbin/ldconfig maybe not exist in customer's image
-  chroot ${rootfs} /sbin/ldconfig
+  #/bin/cp -f .occlum/build/lib/libocclum-pal.so ${lib_dir}/liberpal-occlum.so
+  #ln -sfn .occlum/build/lib/libocclum-pal.so liberpal-occlum.so
+  #chroot ${rootfs} /sbin/ldconfig
   popd
 }
 
@@ -164,6 +164,8 @@ function buildUnsignedEnclave(){
   fi
   # set occlum entrypoint
   sed -i "s#/bin#${entry_point}#g" Occlum.json
+  # generate the configuration file Enclave.xml that used by enclave from Occlum.json
+  /opt/occlum/build/bin/gen_enclave_conf -i Occlum.json -o Enclave.xml
   # build occlum image
   /bin/bash ${base_dir}/replace_occlum_image.sh ${rootfs} image
   # occlum build
@@ -171,12 +173,6 @@ function buildUnsignedEnclave(){
   mkdir -p ${rootfs}/${work_dir} || true
   /bin/cp -fr .occlum ${rootfs}/${work_dir}
   /bin/cp -f Enclave.xml ${rootfs}/${work_dir}
-  # ===fixme debug====
-  /bin/cp -fr image ${rootfs}/${work_dir}
-  /bin/cp -f Occlum.json ${rootfs}/${work_dir}
-  # ==================
-  # copy occlum liberaries to rootfs
-  copyOcclumLiberaries
   popd
 }
 
