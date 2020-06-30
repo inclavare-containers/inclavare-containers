@@ -47,7 +47,7 @@ skeleton: libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so
 libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so:
 	make -C libenclave/internal/runtime/pal/skeleton
 
-static:
+static: $(PROTOS)
 	$(GO_BUILD_STATIC) -o rune .
 	$(GO_BUILD_STATIC) -o contrib/cmd/recvtty/recvtty ./contrib/cmd/recvtty
 
