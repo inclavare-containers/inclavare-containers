@@ -1,4 +1,5 @@
 # Quick Start: Running rune with Occlum bundle
+
 ## Build and install rune
 `rune` is a CLI tool for spawning and running enclaves in containers according to the OCI specification.
 
@@ -6,13 +7,13 @@ Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blo
 
 ---
 
-## Build Occlum application docker image
-Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum_bundle.md) to build the Occlum application Docker image.
+## Build Occlum application container image
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum.md) to build the Occlum application container image.
 
 ## Create Occlum application bundle
-In order to use `rune` you must have your container in the format of an OCI bundle. If you have Docker installed you can use its `export` method to acquire a root filesystem from an existing Occlum application Docker container.
+In order to use `rune` you must have your container image in the format of an OCI bundle. If you have Docker installed you can use its `export` method to acquire a root filesystem from an existing Occlum application container image.
 
-``` shell
+```shell
 # create the top most bundle directory
 mkdir -p "$HOME/rune_workdir"
 cd "$HOME/rune_workdir"
@@ -28,7 +29,7 @@ docker export $(docker create ${Occlum_application_image}) | sudo tar -C rootfs 
 
 After a root filesystem is populated you just generate a spec in the format of a config.json file inside your bundle. `rune` provides a spec command which is similar to `runc` to generate a template file that you are then able to edit.
 
-``` shell
+```shell
 rune spec
 ```
 
@@ -56,12 +57,13 @@ where:
 - @enclave.type: specify the type of enclave hardware to use, such as `intelSgx`.
 - @enclave.runtime.path: specify the path to enclave runtime to launch. For an Occlum application, you need to specify the path of `liberpal-occlum.so` which is a soft link to `libocclum-pal.so` of your Occlum instance dir (`OCCLUM_INSTANCE_DIR`).
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, separated by the comma. For an Occlum application, you need to specify the name of your Occlum instance dir (`OCCLUM_INSTANCE_DIR`) in this parameter.
+
 ---
 
 ## Run Occlum application
 Assuming you have an OCI bundle from the previous step you can execute the container in this way.
 
-``` shell
+```shell
 cd "$HOME/rune_workdir/rune-container"
 sudo rune run ${Occlum_application_container_name}
 ```
