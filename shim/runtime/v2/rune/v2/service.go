@@ -294,12 +294,6 @@ func setOCIRuntime(ctx context.Context, r *taskAPI.CreateTaskRequest) (err error
 			return err
 		}
 	}
-
-	//err = config.UpdateEnclaveEnvConfig(filepath.Join(r.Bundle, "config.json"))
-	//if err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 
@@ -324,6 +318,22 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	container, err := runc.NewContainer(ctx, s.platform, r)
 	if err != nil {
 		logrus.Errorf("rune Create NewContainer error: %++v", err)
+		/*//FIXME debug
+		if _, err := os.Stat(r.Bundle); err == nil {
+			path := "/tmp/rune-container-test/runc-rootfs"
+			os.RemoveAll(path)
+			os.MkdirAll(path, 0644)
+			args := []string{
+				"-r", r.Bundle, path,
+			}
+			if b, err := exec.Command("cp", args...).CombinedOutput(); err != nil {
+				logrus.Errorf("failed to copy bundles. error:%s, %v", string(b), err)
+			}
+			logrus.Infof("copy runc bundle %s to %s", r.Bundle, path)
+			time.Sleep(time.Minute)
+		} else {
+			logrus.Infof("bundle dir is not exist.", r.Bundle)
+		}*/
 		return nil, err
 	}
 
