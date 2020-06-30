@@ -47,14 +47,14 @@ In addition, you can write your own enclave runtime with any programming languag
 
 ## Using rune
 ### Run Occlum
-Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to run `Occlum` with `rune`.
-
-### Run Docker
-Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_docker.md) to run `Docker` with `rune`.
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum_bundle.md) to run `Occlum` with `rune`.
 
 ### Run skeleton
 Skeleton is an example of enclave runtime, interfacing with Enclave Runtime PAL API for easy interfacing with `rune`.  Skeleton sample code is helpful to write your own enclave runtime.
 
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/README.md) to run skeleton with `rune`.
+
+### Run OCI bundle
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum_bundle.md) to run `occlum bundle` with `rune`.
 
 For more information about Enclave Runtime PAL API, please refer to [Enclave Runtime PAL API Specification](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/spec.md).
