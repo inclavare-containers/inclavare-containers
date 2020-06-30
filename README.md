@@ -39,9 +39,7 @@ One typical class of enclave runtime implementations is based on library OSes. C
 In addition, you can write your own enclave runtime with any programming language and SDK (e.g, [Intel SGX SDK](https://github.com/intel/linux-sgx)) you prefer as long as it implements Enclave Runtime PAL API.
 
 ### runectl
-`runectl` is a command line assit tool for inclavare-containers. Its usage includes:
-- Given the signature file of an Enclave, `runectl gen-token` can generate the corresponding token file from Intel `aesmd` service.
-- `runectl attest` can allow users to challenge the enclave with the assist of Intel Attestatiion Service through remote attestation requests. This function will be available soon.
+`runectl` is a commandline tool, used to interact Intel SGX aesm service to retrieve various materials such as launch token, Quoting Enclave's target information and enclave quote. Refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/runectl/README.md) for the details about its usage.
 
 ---
 
