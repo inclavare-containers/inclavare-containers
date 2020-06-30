@@ -1,0 +1,10 @@
+# 2020-06-30 v0.2.0
+- Integrate new components shim-rune and runectl.
+- Implement Enclave Runtime PAL API v2.
+- Change to load the Enclave Runtime PAL on host side.
+- Refresh skeleton example with enclave call ABI.
+
+---
+
+# 2020-05-15 v0.1.0
+- Initial implementation of OCI Runtime.
