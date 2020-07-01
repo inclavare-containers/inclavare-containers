@@ -180,25 +180,6 @@ func Example() *specs.Spec {
 				Source:      "/run/aesmd",
 				Options:     []string{"rbind", "rprivate"},
 			})
-		var mode os.FileMode = 0666
-		spec.Linux.Devices = append(spec.Linux.Devices,
-			specs.LinuxDevice{
-				Path:     "/dev/isgx",
-				Type:     "c",
-				Major:    10,
-				Minor:    58,
-				FileMode: &mode,
-			})
-		var major int64 = 10
-		var minor int64 = 58
-		spec.Linux.Resources.Devices = append(spec.Linux.Resources.Devices,
-			specs.LinuxDeviceCgroup{
-				Major:  &major,
-				Minor:  &minor,
-				Allow:  true,
-				Type:   "c",
-				Access: "rwm",
-			})
 	}
 	return spec
 }

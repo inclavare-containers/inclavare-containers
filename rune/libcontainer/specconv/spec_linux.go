@@ -21,6 +21,7 @@ import (
 	"github.com/opencontainers/runc/libcontainer/seccomp"
 	libcontainerUtils "github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
 
 	"golang.org/x/sys/unix"
 )
@@ -340,37 +341,54 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 	}
 }
 
-// Determine whether the file is a character device
-func IsChrDev(device *configs.Device) (bool) {
-	dev, err := devices.DeviceFromPath(device.Path, "rw")
-	if err == nil {
-		if dev.Type == 'c' && dev.Major == 10 {
-			return true
-		}
+// Determine whether the device is a Intel SGX enclave device
+func intelSgxDev(device *configs.Device) (*configs.Device, error) {
+	dev, err := devices.DeviceFromPath(device.Path, "rwm")
+	if err != nil {
+		return nil, err
 	}
 
-	return false
+	if dev.Type == 'c' && dev.Major == 10 {
+		return dev, nil
+	}
+
+	return nil, fmt.Errorf("%s is not a SGX enclave device", dev.Path)
 }
 
-func createEnclaveDevices(devices []*configs.Device, etype string, fn func(dev configs.Device)) {
+func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *configs.Device)) {
 	var configuredDevs []string
 
-	// Filter out non-enclave devices
-	onMatchEnclaveDevice(devices, genEnclavePathTemplate(etype), etype, func(n string, i int) {
+	// Retrieve the configured enclave devices
+	onMatchEnclaveDevice(devs, genEnclavePathTemplate(etype), etype, func(n string, i int) {
 		configuredDevs = append(configuredDevs, n)
 	})
 
-	// Filter out configured enclave devices
+	if len(configuredDevs) != 0 {
+		for _, d := range configuredDevs {
+			dev, err := devices.DeviceFromPath(d, "rwm")
+			if err != nil {
+				logrus.Debugf("the configured enclave device %s not exist", dev.Path)
+				continue
+			}
+
+			logrus.Debugf("the enclave device %s configured", dev.Path)
+		}
+	}
+
+	// Filter out the configured enclave devices
 	exclusiveDevs := genEnclaveDeviceTemplate(etype)
 	onMatchEnclaveDevice(exclusiveDevs, configuredDevs, etype, func(n string, i int) {
 		exclusiveDevs = append(exclusiveDevs[:i], exclusiveDevs[i+1:]...)
 	})
 
-	// Create default enclave devices
+	// Create the enclave devices not explicitly specified
 	for _, d := range exclusiveDevs {
-		if IsChrDev(d) {
-			fn(*d)
+		dev, err := intelSgxDev(d)
+		if err != nil {
+			continue
 		}
+
+		fn(dev)
 	}
 }
 
@@ -391,13 +409,11 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 				Type:  'c',
 				Path:  "/dev/isgx",
 				Major: 10,
-				Minor: 58,
 			},
 			&configs.Device{
 				Type:  'c',
 				Path:  "/dev/sgx/enclave",
 				Major: 10,
-				Minor: 58,
 			},
 		}
 	default:
@@ -736,10 +752,10 @@ func CreateCgroupConfig(opts *CreateOpts, config *configs.Config) (*configs.Cgro
 }
 
 func createEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
-	createEnclaveDevices(*devices, etype, func(dev configs.Device) {
+	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
 		dev.Permissions = "rwm"
 		dev.Allow = true
-		*devices = append(*devices, &dev)
+		*devices = append(*devices, dev)
 	})
 }
 
@@ -867,11 +883,11 @@ func createDevices(spec *specs.Spec, config *configs.Config) error {
 }
 
 func createEnclaveDeviceConfig(devices *[]*configs.Device, etype string) {
-	createEnclaveDevices(*devices, etype, func(dev configs.Device) {
+	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
 		dev.FileMode = 0666
 		dev.Uid = 0
 		dev.Gid = 0
-		*devices = append(*devices, &dev)
+		*devices = append(*devices, dev)
 	})
 }
 
