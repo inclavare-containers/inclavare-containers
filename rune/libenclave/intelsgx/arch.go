@@ -9,20 +9,6 @@ var (
 	maxEnclaveSizeBits      uint32
 )
 
-// CPUID leafs
-const (
-	cpuidExtendedFeatureFlags = 0x7
-	cpuidSgxFeature           = 0x12
-)
-
-// CPUID leaf 0x12 sub-leafs
-const (
-	sgxCapabilties    = 0
-	sgxAttributes     = 1
-	sgxEpcBaseSection = 2
-	maxSgxEpcSections = 8
-)
-
 const (
 	SigStructLength       = 1808
 	EinittokenLength      = 304
@@ -145,11 +131,9 @@ type QuoteBody struct {
 	Basename      [32]byte `struct:"[32]byte"`
 }
 
-func cpuid_low(leaf, subLeaf uint32) (eax, ebx, ecx, edx uint32)
-
 // Check whether CPUs support SGX or not
 func IsSgxSupported() bool {
-	_, ebx, _, _ := cpuid_low(cpuidExtendedFeatureFlags, 0)
+	_, ebx, _, _ := cpuid(cpuidExtendedFeatureFlags, 0)
 	if (ebx & 0x4) == 0x0 {
 		return false
 	}
@@ -163,7 +147,7 @@ func GetSgxFeatures() {
 		return
 	}
 
-	eax, ebx, _, edx := cpuid_low(cpuidSgxFeature, sgxCapabilties)
+	eax, ebx, _, edx := cpuid(cpuidSgxFeature, sgxCapabilties)
 	if (eax & 0x1) != 0 {
 		sgx1Supported = true
 	}

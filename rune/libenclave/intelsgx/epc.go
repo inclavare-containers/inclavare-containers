@@ -10,7 +10,7 @@ func GetEpcSections() []SgxEpcSection {
 	sections := []SgxEpcSection{}
 
 	for i := 0; i < maxSgxEpcSections; i++ {
-		eax, ebx, ecx, edx := cpuid_low(cpuidSgxFeature, uint32(sgxEpcBaseSection+i))
+		eax, ebx, ecx, edx := cpuid(cpuidSgxFeature, uint32(sgxEpcBaseSection+i))
 
 		if (eax & 0xf) == 0x0 {
 			break
