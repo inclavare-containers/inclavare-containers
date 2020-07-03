@@ -175,9 +175,9 @@ func Example() *specs.Spec {
 		}
 		spec.Mounts = append(spec.Mounts,
 			specs.Mount{
-				Destination: "/run/aesmd",
+				Destination: "/var/run/aesmd",
 				Type:        "bind",
-				Source:      "/run/aesmd",
+				Source:      "/var/run/aesmd",
 				Options:     []string{"rbind", "rprivate"},
 			})
 	}

@@ -461,8 +461,8 @@ func createLibcontainerMount(cwd string, m specs.Mount) *configs.Mount {
 func createLibenclaveMount(cwd string) *configs.Mount {
 	return &configs.Mount{
 		Device:           "bind",
-		Source:           "/run/aesmd",
-		Destination:      "/run/aesmd",
+		Source:           "/var/run/aesmd",
+		Destination:      "/var/run/aesmd",
 		Flags:            unix.MS_BIND | unix.MS_REC,
 		PropagationFlags: []int{unix.MS_PRIVATE | unix.MS_REC},
 	}
