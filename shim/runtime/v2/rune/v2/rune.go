@@ -57,13 +57,6 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 			return carr, err
 		}
 
-		// mount oci defined mounts
-		err = mountOCIOnRootfs(req.Bundle)
-		defer unmountOCIOnRootfs(req.Bundle)
-		if err != nil {
-			return carr, err
-		}
-
 	case rune.Graphene:
 		carr, err = graphene.NewGrapheneCarrier()
 	case rune.Empty:
@@ -232,19 +225,6 @@ func mountOCIOnRootfs(bundle string) error {
 			Options: rm.Options,
 		}
 		target := filepath.Clean(filepath.Join(bundle, "rootfs", rm.Destination))
-		s, err := os.Stat(rm.Source)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return err
-		}
-		if s.IsDir() {
-			os.MkdirAll(target, s.Mode())
-		} else {
-			os.MkdirAll(path.Dir(target), 0644)
-			os.Create(target)
-		}
 		if err := m.Mount(target); err != nil {
 			return errors.Wrapf(err, "failed to mount rootfs component %v, err: %++v", m, err)
 		}

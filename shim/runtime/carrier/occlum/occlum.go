@@ -346,10 +346,6 @@ func (c *occlum) initBundleConfig() error {
 		carr_const.EnclaveTypeKeyName:        string(carr_const.IntelSGX),
 		carr_const.EnclaveRuntimeArgsKeyName: carr_const.DefaultEnclaveRuntimeArgs,
 	}
-	occlumConfigPath, ok := config.GetEnv(spec, carr_const.OcclumConfigPathKeyName)
-	if ok {
-		c.configPath = occlumConfigPath
-	}
 	c.spec = spec
 	if err := config.UpdateEnvs(spec, envs, false); err != nil {
 		return err
