@@ -5,8 +5,6 @@ import (
 	"strings"
 
 	"github.com/opencontainers/runc/libcontainer/cgroups"
-	"github.com/opencontainers/runc/libcontainer/configs"
-	"github.com/opencontainers/runc/libenclave"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
@@ -16,8 +14,7 @@ func Example() *specs.Spec {
 	spec := &specs.Spec{
 		Version: specs.Version,
 		Root: &specs.Root{
-			Path:     "rootfs",
-			Readonly: true,
+			Path: "rootfs",
 		},
 		Process: &specs.Process{
 			Terminal: true,
@@ -29,7 +26,7 @@ func Example() *specs.Spec {
 				"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 				"TERM=xterm",
 			},
-			Cwd:             "/",
+			Cwd:             "/var/run/rune",
 			NoNewPrivileges: true,
 			Capabilities: &specs.LinuxCapabilities{
 				Bounding: []string{
@@ -66,7 +63,7 @@ func Example() *specs.Spec {
 				},
 			},
 		},
-		Hostname: "runc",
+		Hostname: "rune",
 		Mounts: []specs.Mount{
 			{
 				Destination: "/proc",
@@ -110,6 +107,12 @@ func Example() *specs.Spec {
 				Source:      "cgroup",
 				Options:     []string{"nosuid", "noexec", "nodev", "relatime", "ro"},
 			},
+			{
+				Destination: "/var/run/aesmd",
+				Type:        "bind",
+				Source:      "/var/run/aesmd",
+				Options:     []string{"rbind", "rprivate"},
+			},
 		},
 		Linux: &specs.Linux{
 			MaskedPaths: []string{
@@ -144,9 +147,6 @@ func Example() *specs.Spec {
 					Type: specs.PIDNamespace,
 				},
 				{
-					Type: specs.NetworkNamespace,
-				},
-				{
 					Type: specs.IPCNamespace,
 				},
 				{
@@ -157,29 +157,16 @@ func Example() *specs.Spec {
 				},
 			},
 		},
+		Annotations: map[string]string{
+			"enclave.type":         "intelSgx",
+			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton.so",
+			"enclave.runtime.args": "skeleton,debug",
+		},
 	}
 	if cgroups.IsCgroup2UnifiedMode() {
 		spec.Linux.Namespaces = append(spec.Linux.Namespaces, specs.LinuxNamespace{
 			Type: specs.CgroupNamespace,
 		})
-	}
-
-	if libenclave.IsEnclaveHwEnabled(configs.EnclaveHwIntelSgx) {
-		spec.Hostname = "rune"
-		spec.Process.Cwd = "/var/run/rune"
-		spec.Root.Readonly = false
-		spec.Annotations = map[string]string{
-			"enclave.type":         "intelSgx",
-			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton.so",
-			"enclave.runtime.args": "skeleton,debug",
-		}
-		spec.Mounts = append(spec.Mounts,
-			specs.Mount{
-				Destination: "/var/run/aesmd",
-				Type:        "bind",
-				Source:      "/var/run/aesmd",
-				Options:     []string{"rbind", "rprivate"},
-			})
 	}
 	return spec
 }
