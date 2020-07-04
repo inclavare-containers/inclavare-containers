@@ -166,11 +166,11 @@ func Example() *specs.Spec {
 
 	if libenclave.IsEnclaveHwEnabled(configs.EnclaveHwIntelSgx) {
 		spec.Hostname = "rune"
-		spec.Process.Cwd = "/run/rune"
+		spec.Process.Cwd = "/var/run/rune"
 		spec.Root.Readonly = false
 		spec.Annotations = map[string]string{
 			"enclave.type":         "intelSgx",
-			"enclave.runtime.path": "/run/rune/liberpal-skeleton.so",
+			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton.so",
 			"enclave.runtime.args": "skeleton,debug",
 		}
 		spec.Mounts = append(spec.Mounts,
