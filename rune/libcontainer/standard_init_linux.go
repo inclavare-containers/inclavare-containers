@@ -197,8 +197,7 @@ func (l *linuxStandardInit) Init() error {
 
 		exitCode, err := libenclave.StartInitialization(l.config.Args, cfg)
 		if err != nil {
-			logrus.Fatal(err)
-			os.Exit(1)
+			return err
 		}
 		logrus.Debugf("init enclave runtime exit code: %d", exitCode)
 		os.Exit(int(exitCode))
