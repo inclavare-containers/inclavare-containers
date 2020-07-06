@@ -128,6 +128,9 @@ clean:
 	rm -f $(PROTOS)
 	make -C libenclave/internal/runtime/pal/skeleton clean
 
+uninstall:
+	rm -f $(BINDIR)/rune
+
 validate:
 	script/validate-gofmt
 	script/validate-c
@@ -161,5 +164,5 @@ localcross:
 .PHONY: rune all recvtty static release dbuild lint man runcimage \
 	test localtest unittest localunittest integration localintegration \
 	rootlessintegration localrootlessintegration shell install install-bash \
-	install-man clean validate ci \
+	install-man clean uninstall validate ci \
 	vendor verify-dependencies cross localcross skeleton
