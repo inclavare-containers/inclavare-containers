@@ -11,7 +11,7 @@ Refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/maste
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 make
-cp liberpal-skeletion.so /usr/lib
+cp liberpal-skeleton.so /usr/lib
 ```
 
 ---
