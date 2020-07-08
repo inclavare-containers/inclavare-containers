@@ -1,7 +1,12 @@
 package ias
 
 const (
-	apiVersion = 3
+	apiV3 = 3
+	apiV4 = 4
+)
+
+var (
+	apiVersion uint64 = apiV4
 )
 
 type evidencePayload struct {
@@ -22,4 +27,8 @@ type verificationReport struct {
 	PlatformInfoBlob      string `json:"platformInfoBlob,omitempty"`
 	Nonce                 string `json:"nonce,omitempty"`
 	EpidPseudonym         string `json:"epidPseudonym,omitempty"`
+
+	// V4 fields
+	AdvisoryIds string   `json:"advisoryURL,omitempty"`
+	AdvisoryUrl []string `json:"advisoryIDs,omitempty"`
 }
