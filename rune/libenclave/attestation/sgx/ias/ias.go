@@ -86,7 +86,17 @@ func (reg *iasRegistry) Create(p map[string]string) (*attest.Service, error) {
 	if !isProduct {
 		url += "/dev"
 	}
-	url += "/attestation/v3/report"
+
+	apiVer := attest.GetParameter("apiVer", p)
+	if apiVer != "" {
+		apiVersion, err = strconv.ParseUint(apiVer, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("Invalid IAS API Version: %s", err)
+		} else if apiVersion != apiV3 && apiVersion != apiV4 {
+			return nil, fmt.Errorf("Unsupported IAS API Version: %s", apiVer)
+		}
+	}
+	url += fmt.Sprintf("/attestation/v%d/report", apiVersion)
 
 	ias := &iasService{
 		reportApiUrl: url,
@@ -335,7 +345,7 @@ func checkVerificationReport(resp *http.Response, quote []byte, nonce string) (*
 	status.timestamp = report.Timestamp
 	status.quoteStatus = report.IsvEnclaveQuoteStatus
 
-	if report.Version != apiVersion {
+	if report.Version != (uint32)(apiVersion) {
 		return status, fmt.Errorf("Unsupported attestation API version %d in attesation verification report",
 			report.Version)
 	}
@@ -354,9 +364,12 @@ func checkVerificationReport(resp *http.Response, quote []byte, nonce string) (*
 
 	if report.IsvEnclaveQuoteStatus == "GROUP_OUT_OF_DATE" ||
 		report.IsvEnclaveQuoteStatus == "CONFIGURATION_NEEDED" {
-		if resp.Header.Get("Advisory-Ids") == "" ||
-			resp.Header.Get("Advisory-Url") == "" {
-			return status, fmt.Errorf("Advisory-Ids or Advisory-Url is not present in response header")
+		if report.Version == apiV3 {
+			if resp.Header.Get("Advisory-Ids") == "" || resp.Header.Get("Advisory-Url") == "" {
+				return status, fmt.Errorf("Advisory-Ids or Advisory-Url is not present in response header")
+			}
+		} else if report.Version == apiV4 && (report.AdvisoryIds == "" || report.AdvisoryUrl == nil) {
+			return status, fmt.Errorf("Advisory-Ids or Advisory-Url is not present in attestation verification report")
 		}
 	}
 
