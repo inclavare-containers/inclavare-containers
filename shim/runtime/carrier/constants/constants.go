@@ -11,7 +11,6 @@ const (
 	EnclaveRuntimePathKeyName = "ENCLAVE_RUNTIME_PATH"
 	EnclaveRuntimeArgsKeyName = "ENCLAVE_RUNTIME_ARGS"
 	DefaultEnclaveRuntimeArgs = ".occlum"
-	OcclumConfigPathKeyName   = "OCCLUM_CONFIG_PATH"
 )
 
 const (
