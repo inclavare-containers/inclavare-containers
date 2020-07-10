@@ -1,21 +1,30 @@
-.PHONY: all install clean uninstall
+.PHONY: all install clean uninstall rpm
+
+export INCLAVARE_CONTAINERS_VERSION := $(shell cat ./VERSION)
+components := rune shim runectl
+rpm_release_components := rune shim
 
 all:
-	$(MAKE) -C rune
-	$(MAKE) -C runectl
-	$(MAKE) -C shim
+	for name in $(components); do \
+		$(MAKE) -C $$name; \
+	done
 
 install:
-	$(MAKE) -C rune install
-	$(MAKE) -C runectl install
-	$(MAKE) -C shim install
+	for name in $(components); do \
+		$(MAKE) -C $$name install; \
+	done
 
 clean:
-	$(MAKE) -C rune clean
-	$(MAKE) -C runectl clean
-	$(MAKE) -C shim clean
+	for name in $(components); do \
+		$(MAKE) -C $$name clean; \
+	done
 
 uninstall:
-	$(MAKE) -C rune uninstall
-	$(MAKE) -C runectl uninstall
-	$(MAKE) -C shim uninstall
+	for name in $(components); do \
+		$(MAKE) -C $$name uninstall; \
+	done
+
+rpm:
+	for name in $(rpm_release_components); do \
+		$(MAKE) -C $$name rpm; \
+	done
