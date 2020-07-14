@@ -303,12 +303,12 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 
 	req := pb.AesmServiceRequest{}
 	req.GetQuote = &pb.AesmServiceRequest_GetQuote{
-		Report:    report,
-		QuoteType: t,
-		Spid:      s,
-		BufSize:   SgxMaxQuoteLength,
-		QeReport:  false,
-		Timeout:   10000,
+		Report:           report,
+		QuoteTypePresent: &pb.AesmServiceRequest_GetQuote_QuoteType{QuoteType: t},
+		Spid:             s,
+		BufSize:          SgxMaxQuoteLength,
+		QeReportPresent:  &pb.AesmServiceRequest_GetQuote_QeReport{QeReport: false},
+		Timeout:          10000,
 	}
 
 	rdata, err := transmitAesmd(conn, &req)
@@ -328,7 +328,7 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	}
 
 	quote := resp.GetQuote.GetQuote()
-	if len(quote) < QuoteLength || len(quote) != SgxMaxQuoteLength {
+	if len(quote) < QuoteLength || len(quote) > SgxMaxQuoteLength {
 		return nil, fmt.Errorf("invalid length of quote: (returned %d, expected %d)",
 			len(quote), QuoteLength)
 	}
@@ -355,5 +355,6 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	logrus.Debugf("  Signature Length:                     %d\n",
 		q.SigLen)
 
-	return resp.GetQuote.GetQuote(), nil
+	validQuote := quote[0 : q.SigLen+QuoteLength]
+	return validQuote, nil
 }
