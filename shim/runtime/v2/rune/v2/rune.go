@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	shim_config "github.com/alibaba/inclavare-containers/shim/config"
@@ -29,13 +30,15 @@ import (
 
 // runE main flow.
 func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, error) {
+	timeStart := time.Now()
+	ts := time.Now()
 	var err error
 	var carr carrier.Carrier
 
 	defer func() {
 		carr.Cleanup()
+		logrus.Debugf("carrierMain: total time cost: %d", (time.Now().Sub(ts))/time.Second)
 	}()
-
 	found, carrierKind, err := getCarrierKind(req.Bundle)
 	if err != nil {
 		return carr, err
@@ -93,6 +96,7 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 		if _, err := toml.DecodeFile(constants.ConfigurationPath, &cfg); err != nil {
 			return carr, err
 		}
+		timeStart = time.Now()
 		materialRealPath := signingMaterial
 		if carrierKind == rune.Occlum {
 			materialRealPath = filepath.Join(req.Bundle, signingMaterial)
@@ -114,6 +118,8 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 			}
 			defer os.RemoveAll(path.Dir(publicKey))
 		}
+		logrus.Debugf("carrierMain: sign enclave time cost: %d", (time.Now().Sub(timeStart))/time.Second)
+		defer os.RemoveAll(path.Dir(publicKey))
 		commonArgs.Key = publicKey
 		signatureFile = signature
 	}
@@ -125,7 +131,7 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 	if err != nil {
 		return carr, err
 	}
-	logrus.Debugf("Finished carrier: %v, signedEnclave: %s", carr, signedEnclave)
+	logrus.Debugf("carrierMain: finished carrier: %v, signedEnclave: %s", carr, signedEnclave)
 	return carr, nil
 }
 
