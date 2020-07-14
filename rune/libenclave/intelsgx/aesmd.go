@@ -303,12 +303,12 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 
 	req := pb.AesmServiceRequest{}
 	req.GetQuote = &pb.AesmServiceRequest_GetQuote{
-		Report:    report,
-		QuoteType: t,
-		Spid:      s,
-		BufSize:   SgxMaxQuoteLength,
-		QeReport:  false,
-		Timeout:   10000,
+		Report:           report,
+		QuoteTypePresent: &pb.AesmServiceRequest_GetQuote_QuoteType{QuoteType: t},
+		Spid:             s,
+		BufSize:          SgxMaxQuoteLength,
+		QeReportPresent:  &pb.AesmServiceRequest_GetQuote_QeReport{QeReport: false},
+		Timeout:          10000,
 	}
 
 	rdata, err := transmitAesmd(conn, &req)

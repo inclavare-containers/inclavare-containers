@@ -12,12 +12,16 @@ message AesmServiceRequest {
 
     message GetQuote {
         bytes report      = 1;
-        uint32 quote_type = 2;
+        oneof quote_type_present {
+                uint32 quote_type = 2;
+        }
         bytes spid        = 3;
         bytes nonce       = 4;
         bytes sig_rl      = 5;
         uint32 buf_size   = 6;
-        bool qe_report    = 7;
+        oneof qe_report_present {
+                bool qe_report = 7;
+        }
         uint32 timeout    = 9;
     }
 
