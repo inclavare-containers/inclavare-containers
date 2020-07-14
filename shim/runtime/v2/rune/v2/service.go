@@ -300,9 +300,10 @@ func setOCIRuntime(ctx context.Context, r *taskAPI.CreateTaskRequest) (err error
 
 // Create a new initial process and container with the underlying OCI runtime
 func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *taskAPI.CreateTaskResponse, err error) {
+	timeStart := time.Now()
+	ts := timeStart
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	err = setOCIRuntime(ctx, r)
 	if err != nil {
 		return nil, err
@@ -313,7 +314,9 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		return nil, err
 	}
 	if carrierKind != rune.Skeleton {
+		timeStart = time.Now()
 		carr, err := s.carrierMain(r)
+		logrus.Debugf("Create: carrierMain time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 		if err != nil {
 			return nil, err
 		}
@@ -321,8 +324,9 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	}
 
 	data, _ := json.Marshal(r)
-	logrus.Infof("CreateTaskRequest: %s", string(data))
+	logrus.Infof("CreateTaskRequest: %s, Carrier: %v", string(data), carrierKind)
 
+	timeStart = time.Now()
 	container, err := runc.NewContainer(ctx, s.platform, r)
 
 	/*if carr.Name() == "occlum" {
@@ -348,8 +352,8 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		//}
 	}*/
 
-	data, _ = json.Marshal(container)
-	logrus.Infof("rune.NewContainer success: %s %s", r.ID, string(data))
+	logrus.Debugf("Create: create container time cost: %d", (time.Now().Sub(timeStart))/time.Second)
+	logrus.Infof("rune.NewContainer success: %s", r.ID)
 
 	var opts options.Options
 	if r.Options != nil {
@@ -371,7 +375,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	}
 
 	s.containers[r.ID] = container
-
 	s.send(&eventstypes.TaskCreate{
 		ContainerID: r.ID,
 		Bundle:      r.Bundle,
@@ -397,6 +400,8 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		//	log.G(ctx).Infof("Attestation Failed!")
 		//}
 	}
+	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)
+	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(ts))/time.Second)
 	return &taskAPI.CreateTaskResponse{
 		Pid: uint32(container.Pid()),
 	}, nil
@@ -404,6 +409,7 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 
 // Start a process
 func (s *service) Start(ctx context.Context, r *taskAPI.StartRequest) (*taskAPI.StartResponse, error) {
+	timeStart := time.Now()
 	container, err := s.getContainer(r.ID)
 	if err != nil {
 		return nil, err
@@ -433,6 +439,7 @@ func (s *service) Start(ctx context.Context, r *taskAPI.StartRequest) (*taskAPI.
 		})
 	}
 	s.eventSendMu.Unlock()
+	logrus.Debugf("Start: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	return &taskAPI.StartResponse{
 		Pid: uint32(p.Pid()),
 	}, nil
