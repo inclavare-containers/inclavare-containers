@@ -54,7 +54,6 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 		if carr, err = occlum.NewOcclumCarrier(s.context, req.Bundle); err != nil {
 			return nil, err
 		}
-
 		// mount rootfs
 		err = mountRootfs(req)
 		defer unmountRootfs(req)

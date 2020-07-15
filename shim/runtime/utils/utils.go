@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 )
 
 func CopyFile(src, dst string, bufferSize int64) error {
@@ -55,4 +56,13 @@ func GenerateID() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return hex.EncodeToString(b)
+}
+
+// ExecCommand executes the cmd with args
+func ExecCommand(cmd string, arg ...string) ([]byte, error) {
+	b, err := exec.Command(cmd, arg...).CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("%s %s", string(b), err)
+	}
+	return b, nil
 }
