@@ -91,7 +91,7 @@ start $@`
 	CarrierScript = `#!/bin/bash
 set -xe
 base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-occlum_workspace=/occlum_workspace
+occlum_workspace=${base_dir}/occlum_workspace
 
 temp=$(getopt -a -o a:r:w:p:c:e:u:m:s:k:n: -l action:,rootfs:,work_dir:,entry_point:,occlum_config_path:,enclave_config_path:,\
 unsigned_encalve_path:,unsigned_material_path:,signed_enclave_path:,public_key_path:,signature_path: -- "$@")
@@ -151,7 +151,7 @@ function buildUnsignedEnclave(){
     echo "BuildUnsignedEnclave:: the argumentes should not be empty: entry_point, rootfs, work_dir"
     exit 1
   fi
-
+  export PATH=$PATH:/opt/occlum/build/bin/
   rm -fr ${occlum_workspace}
   mkdir -p ${occlum_workspace}
   pushd ${occlum_workspace}
