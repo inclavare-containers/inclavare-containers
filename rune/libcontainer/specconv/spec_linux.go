@@ -395,7 +395,7 @@ func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *con
 func genEnclavePathTemplate(etype string) []string {
 	switch etype {
 	case configs.EnclaveHwIntelSgx:
-		return []string{"/dev/isgx", "/dev/sgx/enclave"}
+		return []string{"/dev/isgx", "/dev/sgx/enclave", "/dev/gsgx"}
 	default:
 		return nil
 	}
@@ -413,6 +413,11 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 			&configs.Device{
 				Type:  'c',
 				Path:  "/dev/sgx/enclave",
+				Major: 10,
+			},
+			&configs.Device{
+				Type:  'c',
+				Path:  "/dev/gsgx",
 				Major: 10,
 			},
 		}
