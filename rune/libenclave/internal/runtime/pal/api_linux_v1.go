@@ -2,6 +2,7 @@ package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave
 
 /*
 #include <stdlib.h>
+#include <errno.h>
 
 static int palGetVersion(void *sym)
 {
@@ -20,6 +21,13 @@ static int palInitV1(void *sym, const char *args, const char *log_level)
 	};
 
 	return ((int (*)(pal_attr_t *))sym)(&attr);
+}
+
+static int pal_get_reportV1(void *sym, void *target_info, int target_info_len,
+			void *data, int data_len, void *report, int* report_len)
+{
+	return ((int (*)(void *, int, void*, int, void*, int*))sym)(target_info, target_info_len,
+								data, data_len, report, report_len);
 }
 
 static int palExecV1(void *sym, const char *exe, const char *argv[],
@@ -46,12 +54,12 @@ import "C"
 
 import (
 	"fmt"
+	"github.com/opencontainers/runc/libcontainer/nsenter"
+	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
 	"unsafe"
-
-	"github.com/opencontainers/runc/libcontainer/nsenter"
 )
 
 type enclaveRuntimePalApiV1 struct {
@@ -135,4 +143,38 @@ func (pal *enclaveRuntimePalApiV1) destroy() error {
 		return fmt.Errorf("pal destroy() failed with %d", ret)
 	}
 	return nil
+}
+
+func (pal *enclaveRuntimePalApiV1) GetSgxReport(targetInfo []byte, data []byte) ([]byte, error) {
+	var ret C.int
+	reportBufSize := int32(intelsgx.ReportLength)
+	sym := nsenter.SymAddrPalGetSgxReport()
+
+	for {
+		report := make([]byte, reportBufSize)
+		var pTargetInfo unsafe.Pointer = nil
+		var pData unsafe.Pointer = nil
+		if len(targetInfo) > 0 {
+			pTargetInfo = unsafe.Pointer(&targetInfo[0])
+		}
+		if len(data) > 0 {
+			pData = unsafe.Pointer(&data[0])
+		}
+		ret = C.pal_get_reportV1(sym, pTargetInfo,
+			C.int(len(targetInfo)),
+			pData,
+			C.int(len(data)),
+			unsafe.Pointer(&report[0]),
+			(*C.int)(unsafe.Pointer(&reportBufSize)))
+
+		if ret == 0 {
+			return report, nil
+		}
+
+		if ret != -C.EAGAIN {
+			break
+		}
+	}
+
+	return nil, fmt.Errorf("C.do_pal_get_report() failed, return %d.\n", ret)
 }

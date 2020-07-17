@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sys/unix"
 	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -68,8 +69,16 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 		}
 
 		// Launch a remote attestation to the enclave runtime.
-		if err = rt.LaunchAttestation(); err != nil {
-			return 1, err
+		product := "development"
+		quote_type := "SGX_UNLINKABLE_SIGNATURE"
+		if config.RaQuoteType == "linkable" {
+			quote_type = "SGX_LINKABLE_SIGNATURE"
+		}
+
+		if config.RaType == "EPID" && config.RaSpid != "" && config.RaSubscriptionKey != "" {
+			if err = rt.LaunchAttestation(config.RaSpid, quote_type, product, config.RaSubscriptionKey); err != nil {
+				return 1, err
+			}
 		}
 		if err = readSync(initPipe, procEnclaveReady); err != nil {
 			return 1, err
@@ -97,13 +106,26 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 	notifySignal := make(chan os.Signal, signalBufferSize)
 
 	if fifoFd == -1 {
-		exitCode, err = remoteExec(agentPipe, cmd, notifySignal)
-		if err != nil {
+		AttestCommand := os.Getenv("AttestCommand")
+		if AttestCommand == "" {
+			logrus.Infof("Get an exec command")
+			exitCode, err = remoteExec(agentPipe, cmd, notifySignal)
+			if err != nil {
+				return exitCode, err
+			}
+			logrus.Debug("remote exec normally exits")
+
+			return exitCode, err
+		} else {
+			logrus.Infof("Get an attest command")
+			exitCode, err = remoteAttest(agentPipe, config, notifySignal)
+			if err != nil {
+				return exitCode, err
+			}
+			logrus.Debugf("remote attest normally exits")
+
 			return exitCode, err
 		}
-		logrus.Debug("remote exec normally exits")
-
-		return exitCode, err
 	}
 
 	notifyExit := make(chan struct{})
@@ -196,6 +218,87 @@ func finalizeInitialization(fifoFd int) error {
 	unix.Close(fifoFd)
 	unix.Close(fd)
 	return nil
+}
+
+func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySignal chan os.Signal) (exitCode int32, err error) {
+	logrus.Infof("preparing to remote Attest")
+	c, err := net.FileConn(agentPipe)
+	if err != nil {
+		return 1, err
+	}
+	defer c.Close()
+	conn, ok := c.(*net.UnixConn)
+	if !ok {
+		return 1, fmt.Errorf("casting to UnixConn faild")
+	}
+
+	req := &pb.AgentServiceRequest{}
+	req.Attest = &pb.AgentServiceRequest_Attest{
+		Spid:            os.Getenv("SPID"),
+		QuoteType:       os.Getenv("QUOTE_TYPE"),
+		Product:         os.Getenv("PRODUCT"),
+		SubscriptionKey: os.Getenv("SUBSCRIPTION_KEY"),
+	}
+
+	if err = protoBufWrite(conn, req); err != nil {
+		return 1, err
+	}
+
+	agentFile, err := conn.File()
+	if err != nil {
+		return 1, err
+	}
+	defer agentFile.Close()
+
+	// Send signal notification pipe.
+	childSignalPipe, parentSignalPipe, err := os.Pipe()
+	agentFile, err = conn.File()
+	if err != nil {
+		return 1, err
+	}
+	defer agentFile.Close()
+
+	// Send signal notification pipe.
+	childSignalPipe, parentSignalPipe, err = os.Pipe()
+	if err != nil {
+		return 1, err
+	}
+	defer func() {
+		if err != nil {
+			childSignalPipe.Close()
+		}
+		parentSignalPipe.Close()
+	}()
+
+	if err = utils.SendFd(agentFile, childSignalPipe.Name(), childSignalPipe.Fd()); err != nil {
+		return 1, err
+	}
+
+	// Close the child signal pipe in parent side **after** sending all stdio fds to
+	// make sure the parent runelet has retrieved the child signal pipe.
+	childSignalPipe.Close()
+
+	signal.Notify(notifySignal)
+
+	notifyExit := make(chan struct{})
+	sigForwarderExit := forwardSignalToParent(parentSignalPipe, notifySignal, notifyExit)
+
+	resp := &pb.AgentServiceResponse{}
+	if err = protoBufRead(conn, resp); err != nil {
+		return 1, err
+	}
+
+	notifyExit <- struct{}{}
+	logrus.Debug("awaiting for signal forwarder exiting ...")
+	<-sigForwarderExit
+	logrus.Debug("signal forwarder exited")
+
+	if resp.Attest.Error == "" {
+		err = nil
+	} else {
+		err = fmt.Errorf(resp.Attest.Error)
+	}
+	return resp.Attest.ExitCode, err
 }
 
 func remoteExec(agentPipe *os.File, cmd []string, notifySignal chan os.Signal) (exitCode int32, err error) {

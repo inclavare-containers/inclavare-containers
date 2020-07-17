@@ -399,6 +399,19 @@ func validateProcessSpec(spec *specs.Process) error {
 	return nil
 }
 
+func validateAttestProcessSpec(spec *specs.Process) error {
+	if spec.Cwd == "" {
+		return fmt.Errorf("Cwd property must not be empty")
+	}
+	if !filepath.IsAbs(spec.Cwd) {
+		return fmt.Errorf("Cwd must be an absolute path")
+	}
+	if spec.SelinuxLabel != "" && !selinux.GetEnabled() {
+		return fmt.Errorf("selinux label is specified in config, but selinux is disabled or not supported")
+	}
+	return nil
+}
+
 type CtAct uint8
 
 const (

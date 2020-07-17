@@ -22,7 +22,7 @@ ifeq ($(DEBUG),1)
 	GCFLAGS=-gcflags "-N -l"
 endif
 
-PROTO_DIR := libenclave/proto libenclave/intelsgx/proto
+PROTO_DIR := libenclave/proto libenclave/intelsgx/proto libenclave/attestation/proto
 PROTOS := $(foreach dir,$(PROTO_DIR),$(patsubst %.proto,%.pb.go,$(wildcard $(dir)/*.proto)))
 
 GO_BUILD := $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) -tags "$(BUILDTAGS)" \

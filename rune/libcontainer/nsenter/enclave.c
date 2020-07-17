@@ -27,6 +27,7 @@ void *fptr_pal_init;
 void *fptr_pal_exec;
 void *fptr_pal_kill;
 void *fptr_pal_destroy;
+void *fptr_pal_GetSgxReport;
 void *fptr_pal_create_process;
 
 bool enclave_configured(void)
@@ -78,6 +79,7 @@ int load_enclave_runtime(void)
 	DLSYM(exec);
 	DLSYM(kill);
 	DLSYM(destroy);
+	DLSYM(GetSgxReport);
 #undef DLSYM
 
 	return 0;
