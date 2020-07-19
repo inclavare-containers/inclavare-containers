@@ -161,8 +161,11 @@ localcross:
 	CGO_ENABLED=1 GOARCH=arm64 CC=aarch64-linux-gnu-gcc         $(GO_BUILD) -o runc-arm64 .
 	CGO_ENABLED=1 GOARCH=ppc64le CC=powerpc64le-linux-gnu-gcc   $(GO_BUILD) -o runc-ppc64le .
 
+rpm:
+	$(MAKE) -C dist rpm
+
 .PHONY: rune all recvtty static release dbuild lint man runcimage \
 	test localtest unittest localunittest integration localintegration \
 	rootlessintegration localrootlessintegration shell install install-bash \
 	install-man clean uninstall validate ci \
-	vendor verify-dependencies cross localcross skeleton
+	vendor verify-dependencies cross localcross skeleton rpm

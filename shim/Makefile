@@ -4,11 +4,6 @@ ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 # Base path used to install.
 DESTDIR ?= /usr/local
 
-# Variables for building rpm
-VERSION ?= 0.2.0
-RELEASE_TARBALL_URL ?= https://github.com/alibaba/inclavare-containers/archive/v$(VERSION).tar.gz
-RPMBUILD_DIR ?= /tmp/inclavare-containers/shim/rpmbuild
-
 ifneq "$(strip $(shell command -v go 2>/dev/null))" ""
 	GOOS ?= $(shell go env GOOS)
 	GOARCH ?= $(shell go env GOARCH)
@@ -59,14 +54,9 @@ binaries: clean $(BINARIES) ## build binaries
 clean: ## clean up binaries
 	@echo "$@"
 	@rm -f $(BINARIES)
-	@rm -fr ${RPMBUILD_DIR}
 
 rpm:
-	@mkdir -p $(RPMBUILD_DIR)
-	@echo "%_topdir $(RPMBUILD_DIR)" >> ~/.rpmmacros
-	@mkdir -p $(RPMBUILD_DIR)/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-	@wget -P $(RPMBUILD_DIR)/SOURCES $(RELEASE_TARBALL_URL)
-	$(MAKE) -C dist/centos rpm RPMBUILD_DIR=$(RPMBUILD_DIR)
+	$(MAKE) -C dist rpm
 
 install: ## install binaries
 	@echo "$@ $(BINARIES)"
