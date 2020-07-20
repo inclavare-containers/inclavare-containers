@@ -58,6 +58,7 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 
 	if (mprotect((void *)secs->base, secs->size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
 		perror("mprotect");
+		munmap((void *)secs->base, secs->size);
 		return false;
 	}
 
@@ -72,7 +73,7 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	return true;
 }
 
-static bool encl_add_pages(int dev_fd, unsigned long addr, void *data,
+static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 			   unsigned long length, uint64_t flags)
 {
 	struct sgx_enclave_add_page ioc;
@@ -121,11 +122,11 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		goto out_dev_fd;
 
 	if (!encl_add_pages(dev_fd, secs->base + 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
-		goto out_dev_fd;
+		goto out_map;
 
 	if (!encl_add_pages(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
 			    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
-		goto out_dev_fd;
+		goto out_map;
 
 	ioc.addr = secs->base;
 	ioc.sigstruct = (uint64_t)sigstruct;
