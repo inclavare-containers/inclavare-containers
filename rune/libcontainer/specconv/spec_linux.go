@@ -332,11 +332,35 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 		args = strings.Join(a, " ")
 	}
 
+	ra_type := filterOut(env, "ENCLAVE_RA_TYPE")
+	if ra_type == "" {
+		ra_type = libcontainerUtils.SearchLabels(config.Labels, "ra_type")
+	}
+
+	ra_epid_spid := filterOut(env, "ENCLAVE_RA_EPID_SPID")
+	if ra_epid_spid == "" {
+		ra_epid_spid = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_spid")
+	}
+
+	ra_epid_subscription_key := filterOut(env, "ENCLAVE_RA_EPID_SUB_KEY")
+	if ra_epid_subscription_key == "" {
+		ra_epid_subscription_key = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_subscription_key")
+	}
+
+	ra_epid_quote_type := filterOut(env, "ENCLAVE_RA_EPID_SIGNATURE_TYPE")
+	if ra_epid_quote_type == "" {
+		ra_epid_quote_type = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_quote_type")
+	}
+
 	if etype != "" {
 		config.Enclave = &configs.Enclave{
-			Type: etype,
-			Path: path,
-			Args: args,
+			Type:                  etype,
+			Path:                  path,
+			Args:                  args,
+			RaType:                ra_type,
+			RaEpidSpid:            ra_epid_spid,
+			RaEpidSubscriptionKey: ra_epid_subscription_key,
+			RaEpidQuoteType:       ra_epid_quote_type,
 		}
 	}
 }
