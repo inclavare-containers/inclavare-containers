@@ -141,9 +141,13 @@ func (p *setnsProcess) start() (err error) {
 				return newSystemErrorWithCause(nil, "received syncT 'EnclaveConfigReq'")
 			}
 			config := &enclave_configs.InitEnclaveConfig{
-				Type: p.config.Config.Enclave.Type,
-				Path: p.config.Config.Enclave.Path,
-				Args: p.config.Config.Enclave.Args,
+				Type:                  p.config.Config.Enclave.Type,
+				Path:                  p.config.Config.Enclave.Path,
+				Args:                  p.config.Config.Enclave.Args,
+				RaType:                p.config.Config.Enclave.RaType,
+				RaEpidSpid:            p.config.Config.Enclave.RaEpidSpid,
+				RaEpidSubscriptionKey: p.config.Config.Enclave.RaEpidSubscriptionKey,
+				RaEpidQuoteType:       p.config.Config.Enclave.RaEpidQuoteType,
 			}
 			err := utils.WriteJSON(p.messageSockPair.parent, config)
 			if err != nil {
@@ -471,9 +475,13 @@ func (p *initProcess) start() (retErr error) {
 				return newSystemErrorWithCause(nil, "received syncT 'EnclaveConfigReq'")
 			}
 			config := &enclave_configs.InitEnclaveConfig{
-				Type: p.config.Config.Enclave.Type,
-				Path: p.config.Config.Enclave.Path,
-				Args: p.config.Config.Enclave.Args,
+				Type:                  p.config.Config.Enclave.Type,
+				Path:                  p.config.Config.Enclave.Path,
+				Args:                  p.config.Config.Enclave.Args,
+				RaType:                p.config.Config.Enclave.RaType,
+				RaEpidSpid:            p.config.Config.Enclave.RaEpidSpid,
+				RaEpidSubscriptionKey: p.config.Config.Enclave.RaEpidSubscriptionKey,
+				RaEpidQuoteType:       p.config.Config.Enclave.RaEpidQuoteType,
 			}
 			err := utils.WriteJSON(p.messageSockPair.parent, config)
 			if err != nil {
