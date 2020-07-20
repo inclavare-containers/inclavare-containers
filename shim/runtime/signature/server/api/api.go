@@ -18,11 +18,12 @@ func (s *ApiServer) installRoutes() {
 		{
 			g.POST("/pkcs1", s.pkcs1Handler)
 		}
+		r.Use(loggerHandleFunc).GET("/api/v1/publickey", s.publicKeyHandler)
 	}
 }
 
 func (s ApiServer) installHealthz() {
 	r := s.router
-	r.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "pong") })
+	r.GET("/ping", func(c *gin.Context) { c.String(http.StatusOK, "ping") })
 	r.GET("/healthz", func(c *gin.Context) { c.String(http.StatusOK, "ok") })
 }
