@@ -169,6 +169,13 @@ function buildUnsignedEnclave(){
   /bin/bash ${base_dir}/replace_occlum_image.sh ${rootfs} image
   # occlum build
   occlum build
+  if [ ! -f .occlum/build/lib/libocclum-libos.so ]; then
+    if [ -f .occlum/build/lib/libocclum-libos.so.0 ]; then
+      pushd .occlum/build/lib/
+      ln -s libocclum-libos.so.0 libocclum-libos.so
+      popd
+    fi
+  fi
   mkdir -p ${rootfs}/${work_dir} || true
   /bin/cp -fr .occlum ${rootfs}/${work_dir}
   /bin/cp -f Enclave.xml ${rootfs}/${work_dir}

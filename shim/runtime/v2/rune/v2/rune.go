@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -8,12 +9,13 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/config"
-
+	"github.com/BurntSushi/toml"
+	shim_config "github.com/alibaba/inclavare-containers/shim/config"
 	"github.com/alibaba/inclavare-containers/shim/runtime/carrier"
 	emptycarrier "github.com/alibaba/inclavare-containers/shim/runtime/carrier/empty"
 	"github.com/alibaba/inclavare-containers/shim/runtime/carrier/graphene"
 	"github.com/alibaba/inclavare-containers/shim/runtime/carrier/occlum"
+	"github.com/alibaba/inclavare-containers/shim/runtime/config"
 	signclient "github.com/alibaba/inclavare-containers/shim/runtime/signature/client"
 	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune"
 	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
@@ -86,19 +88,32 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 	var signatureFile string
 	if carrierKind != rune.Empty {
 		//TODO: Retry on failture.
-		/*publicKey, signature, err := remoteSign("https://10.0.8.126:8443/api/v1/signature", commonArgs.Enclave)
-		defer os.RemoveAll(path.Dir(publicKey))*/
-		//FIXME mock signature
+		var cfg shim_config.Config
+		var publicKey, signature string
+		if _, err := toml.DecodeFile(constants.ConfigurationPath, &cfg); err != nil {
+			return carr, err
+		}
 		materialRealPath := signingMaterial
 		if carrierKind == rune.Occlum {
 			materialRealPath = filepath.Join(req.Bundle, signingMaterial)
 		}
-		publicKey, signature, err := mockSign(materialRealPath)
-		if err != nil {
-			logrus.Errorf("carrierMain: mock sign failed. error: %++v", err)
-			return carr, err
+		if cfg.Signature.ServerAddress == "" {
+			publicKey, signature, err = mockSign(materialRealPath)
+			if err != nil {
+				logrus.Errorf("carrierMain: mock sign failed. error: %++v", err)
+				return carr, err
+			}
+			defer os.RemoveAll(path.Dir(publicKey))
+		} else {
+			publicKey, signature, err = remoteSign(fmt.Sprintf("%s/api/v1/signature",
+				cfg.Signature.ServerAddress), materialRealPath)
+			if err != nil {
+				logrus.Errorf("carrierMain: get signature failed. server address: %s. error: %++v",
+					cfg.Signature.ServerAddress, err)
+				return carr, err
+			}
+			defer os.RemoveAll(path.Dir(publicKey))
 		}
-		defer os.RemoveAll(path.Dir(publicKey))
 		commonArgs.Key = publicKey
 		signatureFile = signature
 	}

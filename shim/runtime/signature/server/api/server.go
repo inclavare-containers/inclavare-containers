@@ -10,11 +10,13 @@ import (
 )
 
 type ApiServer struct {
-	router      *gin.Engine
-	listenAddr  string
-	privateKey  *rsa.PrivateKey
-	publicKey   *rsa.PublicKey
-	certificate *x509.Certificate
+	router             *gin.Engine
+	listenAddr         string
+	privateKey         *rsa.PrivateKey
+	publicKey          *rsa.PublicKey
+	certificate        *x509.Certificate
+	publicKeyFilePath  string
+	privateKeyFilePath string
 }
 
 func NewApiServer(listenAddr string, conf *conf.Config) (*ApiServer, error) {
@@ -27,10 +29,12 @@ func NewApiServer(listenAddr string, conf *conf.Config) (*ApiServer, error) {
 		return nil, err
 	}
 	s := &ApiServer{
-		router:     gin.Default(),
-		listenAddr: listenAddr,
-		privateKey: privateKey,
-		publicKey:  publicKey,
+		router:             gin.Default(),
+		listenAddr:         listenAddr,
+		privateKey:         privateKey,
+		publicKey:          publicKey,
+		publicKeyFilePath:  conf.PublicKeyPath,
+		privateKeyFilePath: conf.PrivateKeyPath,
 	}
 	s.installRoutes()
 	return s, nil

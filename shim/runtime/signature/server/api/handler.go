@@ -5,8 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
-	"encoding/pem"
 	"io/ioutil"
 	"net/http"
 
@@ -37,9 +35,22 @@ func (s *ApiServer) pkcs1Handler(c *gin.Context) {
 	}
 
 	payload.Signature = string(signedBytes)
-	payload.PublicKey = string(pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PUBLIC KEY",
-		Bytes: x509.MarshalPKCS1PublicKey(s.publicKey),
-	}))
+	bytes, err := ioutil.ReadFile(s.publicKeyFilePath)
+	if err != nil {
+		glog.Errorf("failed to parse public key, public key path: %s, err:%v", s.publicKeyFilePath, err.Error())
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	payload.PublicKey = string(bytes)
 	c.JSON(http.StatusOK, payload)
+}
+
+func (s *ApiServer) publicKeyHandler(c *gin.Context) {
+	bytes, err := ioutil.ReadFile(s.publicKeyFilePath)
+	if err != nil {
+		glog.Errorf("failed to parse public key, public key path: %s, err:%v", s.publicKeyFilePath, err.Error())
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	c.JSON(http.StatusOK, string(bytes))
 }
