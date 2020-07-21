@@ -328,7 +328,7 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	}
 
 	quote := resp.GetQuote.GetQuote()
-	if len(quote) < QuoteLength || len(quote) > SgxMaxQuoteLength {
+	if len(quote) < QuoteLength || len(quote) != SgxMaxQuoteLength {
 		return nil, fmt.Errorf("invalid length of quote: (returned %d, expected %d)",
 			len(quote), QuoteLength)
 	}
@@ -355,6 +355,5 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	logrus.Debugf("  Signature Length:                     %d\n",
 		q.SigLen)
 
-	validQuote := quote[0 : q.SigLen+QuoteLength]
-	return validQuote, nil
+	return quote[0 : q.SigLen+QuoteLength], nil
 }
