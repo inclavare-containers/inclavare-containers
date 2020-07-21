@@ -7,7 +7,7 @@
 - Assume the host system is CentOS 7.5.
 - You can also launch a CentOS 7.5 container as your host system with the following command:
   ```shell
-
+  docker run -it --privileged --device /dev/isgx centos:7.5.1804
   ```
   If so, you need to run **another docker daemon** inside this CentOS 7.5 container. Please refer to [this guide](https://docs.docker.com/engine/install/centos) to install docker daemon, and type the following command to start dockerd.
   ```shell
@@ -22,7 +22,7 @@
 mkdir "$HOME/rune_workdir"
 docker run -it --privileged --device /dev/isgx \
   -v "$HOME/rune_workdir":/root/rune_workdir \
-  occlum/occlum:0.13.0-centos7.5
+  occlum/occlum:0.14.0-centos7.5
 ```
 
 ### Prepare the materials
