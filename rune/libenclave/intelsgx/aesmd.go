@@ -355,5 +355,5 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	logrus.Debugf("  Signature Length:                     %d\n",
 		q.SigLen)
 
-	return resp.GetQuote.GetQuote(), nil
+	return quote[0 : q.SigLen+QuoteLength], nil
 }
