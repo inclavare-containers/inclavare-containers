@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"encoding/base64"
 	"io/ioutil"
 	"net/http"
 
@@ -34,7 +35,7 @@ func (s *ApiServer) pkcs1Handler(c *gin.Context) {
 		return
 	}
 
-	payload.Signature = string(signedBytes)
+	payload.Signature = base64.StdEncoding.EncodeToString(signedBytes)
 	bytes, err := ioutil.ReadFile(s.publicKeyFilePath)
 	if err != nil {
 		glog.Errorf("failed to parse public key, public key path: %s, err:%v", s.publicKeyFilePath, err.Error())
