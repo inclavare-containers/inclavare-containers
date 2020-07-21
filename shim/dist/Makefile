@@ -1,4 +1,5 @@
 # Variables for building rpm
+PROJECT_DIR := $(shell cd ../..; pwd)
 RPMBUILD_DIR := $(shell mktemp -u /tmp/rpmbuild.XXXX)
 RELEASE_TARBALL_URL := https://github.com/alibaba/inclavare-containers/archive/v$(INCLAVARE_CONTAINERS_VERSION).tar.gz
 RELEASE_TARBALL_FILE := $(RPMBUILD_DIR)/SOURCES/v$(INCLAVARE_CONTAINERS_VERSION).tar.gz
@@ -12,6 +13,8 @@ endif
 
 rpm: release-tarball
 	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba centos/shim-rune.spec
-	@echo "the rpms of shim-rune located in $(RPMBUILD_DIR)/RPMS"
+	@cp $(RPMBUILD_DIR)/RPMS/x86_64/*.rpm $(PROJECT_DIR)
+	@rm -rf $(RPMBUILD_DIR)
+	@echo "the rpms of shim-rune located in $(PROJECT_DIR)"
 
 .PHONY: release-tarball rpm

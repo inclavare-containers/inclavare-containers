@@ -4,3 +4,4 @@ build/
 _output/
 shim/bin/
 shim/.idea/
+*.rpm
