@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -91,7 +92,12 @@ func (c *pkcs1Client) Sign(data []byte) (signature []byte, publicKey []byte, err
 		glog.Errorf("failed to unmarshal sign response,%v", err)
 		return nil, nil, err
 	}
-	return []byte(payload.Signature), []byte(payload.PublicKey), nil
+	decode, err := base64.StdEncoding.DecodeString(payload.Signature)
+	if err != nil {
+		glog.Errorf("failed to decode signature,%v", err)
+		return nil, nil, err
+	}
+	return decode, []byte(payload.PublicKey), nil
 }
 
 func (c *pkcs1Client) GetStandard() SignStandard {
