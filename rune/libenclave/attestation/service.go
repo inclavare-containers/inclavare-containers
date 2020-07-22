@@ -1,4 +1,4 @@
-package attestation
+package attestation // import "github.com/opencontainers/runc/libenclave/attestation"
 
 import (
 	"fmt"

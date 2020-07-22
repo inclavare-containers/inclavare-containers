@@ -1,4 +1,4 @@
-package ias
+package ias // import "github.com/opencontainers/runc/libenclave/attestation/sgx/ias"
 
 const (
 	apiV3 = 3
