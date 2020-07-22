@@ -2,8 +2,8 @@ The files in this directory are used to implement a skeleton enclave runtime in 
 
 ---
 
-# Install runectl
-Refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/runectl).
+# Install sgx-tools
+Refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/sgx-tools/README.md).
 
 ---
 

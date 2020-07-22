@@ -3,7 +3,7 @@ EXTRA_FLAGS ?=
 EXTRA_LDFLAGS ?=
 DESTDIR ?=
 
-APP := runectl
+APP := sgx-tools
 .DEFAULT: $(APP)
 .PHONY: clean test lint install uninstall
 

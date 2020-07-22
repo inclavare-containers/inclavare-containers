@@ -1,4 +1,4 @@
-module github.com/inclavare-containers/runectl
+module github.com/inclavare-containers/sgx-tools
 
 go 1.14
 

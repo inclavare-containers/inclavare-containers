@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/runectl"
+package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ var generateTokenCommand = cli.Command{
 EXAMPLE:
 For example, generate the token file according to the given signature file:
 
-	# runectl gen-token --signature foo.sig`,
+	# sgx-tools gen-token --signature foo.sig`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "signature",
