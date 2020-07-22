@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/runectl"
+package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"fmt"
@@ -17,12 +17,12 @@ var version = ""
 // and will be populated by the Makefile
 var gitCommit = ""
 
-const usage = `runectl command line tool
+const usage = `sgx-tools command line tool
 `
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "runectl"
+	app.Name = "sgx-tools"
 	app.Usage = usage
 
 	var ver []string

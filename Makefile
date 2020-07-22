@@ -1,7 +1,7 @@
 .PHONY: all install clean uninstall rpm
 
 export INCLAVARE_CONTAINERS_VERSION := $(shell cat ./VERSION)
-components := rune shim runectl
+components := rune shim sgx-tools
 rpm_release_components := rune shim
 
 all:

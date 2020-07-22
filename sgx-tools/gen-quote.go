@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/runectl"
+package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ var generateQuoteCommand = cli.Command{
 EXAMPLE:
 For example, generate the quote file according to the given local report file:
 
-	# runectl gen-quote --report foo.rep`,
+	# sgx-tools gen-quote --report foo.rep`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "report",

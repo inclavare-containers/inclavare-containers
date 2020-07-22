@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/runectl"
+package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"github.com/opencontainers/runc/libenclave/intelsgx"
@@ -15,7 +15,7 @@ var generateQeTargetInfoCommand = cli.Command{
 EXAMPLE:
 For example, save the target information file about Quoting Enclave retrieved from aesmd:
 
-	# runectl gen-qe-target-info --targetinfo foo`,
+	# sgx-tools gen-qe-target-info --targetinfo foo`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "targetinfo",

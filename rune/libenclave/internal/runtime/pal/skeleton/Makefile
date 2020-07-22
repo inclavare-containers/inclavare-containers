@@ -35,7 +35,7 @@ $(OUTPUT)/encl.ss: $(OUTPUT)/encl.bin $(OUTPUT)/signing_key.pem
 	$(OUTPUT)/sgxsign signing_key.pem $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss
 
 $(OUTPUT)/encl.token: $(OUTPUT)/encl.ss
-	runectl gen-token --signature encl.ss --token $@
+	sgx-tools gen-token --signature encl.ss --token $@
 
 $(OUTPUT)/sgxsign: sgxsign.c
 	$(CC) -I../include -o $@ $< -lcrypto
