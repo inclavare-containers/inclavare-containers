@@ -1,8 +1,8 @@
-.PHONY: all install clean uninstall rpm
+.PHONY: all install clean uninstall package
 
 export INCLAVARE_CONTAINERS_VERSION := $(shell cat ./VERSION)
 components := rune shim sgx-tools
-rpm_release_components := rune shim
+dist_release_components := rune shim
 
 all:
 	for name in $(components); do \
@@ -24,7 +24,7 @@ uninstall:
 		$(MAKE) -C $$name uninstall; \
 	done
 
-rpm:
-	for name in $(rpm_release_components); do \
-		$(MAKE) -C $$name rpm; \
+package:
+	for name in $(dist_release_components); do \
+		$(MAKE) -C $$name package; \
 	done

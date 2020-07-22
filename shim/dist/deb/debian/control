@@ -1,0 +1,12 @@
+Source: shim-rune
+Section: devel
+Priority: extra
+Maintainer: Shirong Hao <shirong@linux.alibaba.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.8
+Homepage: https://github.com/alibaba/inclavare-containers
+
+Package: shim-rune
+Architecture: amd64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: containerd-shim-rune-v2 is a shim for Inclavare Containers(runE).

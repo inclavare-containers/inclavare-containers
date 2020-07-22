@@ -1,0 +1,16 @@
+#!/bin/sh
+
+SHIM_CONFIG_DIR=/etc/inclavare-containers
+
+mkdir -p $SHIM_CONFIG_DIR
+cat << EOF > $SHIM_CONFIG_DIR/config.toml
+log_level = "info" # "debug" "info" "warn" "error"
+sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
+[containerd]
+    socket = "/run/containerd/containerd.sock"
+[enclave_runtime]
+    [enclave_runtime.occlum]
+        build_image = "docker.io/occlum/occlum:0.13.0-ubuntu18.04"
+        enclave_runtime_path = "/usr/lib64/libocclum-pal.so"
+    [enclave_runtime.graphene]
+EOF

@@ -5,3 +5,4 @@ _output/
 shim/bin/
 shim/.idea/
 *.rpm
+*.deb

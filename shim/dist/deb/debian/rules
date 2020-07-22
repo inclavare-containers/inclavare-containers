@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+BUILD_ROOT := $(CURDIR)/debian/shim-rune
+BUILD_DIR := /usr/local/bin
+LICENSE := /usr/share/licenses/shim-rune
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	GOOS=linux make binaries -C shim
+override_dh_auto_install:
+	install -d -p $(BUILD_ROOT)$(BUILD_DIR)
+	install -p -m 755 $(CURDIR)/shim/bin/containerd-shim-rune-v2 $(BUILD_ROOT)$(BUILD_DIR)
+	install -d -p $(BUILD_ROOT)$(LICENSE)
+	install -p -m 644 $(CURDIR)/shim/LICENSE $(BUILD_ROOT)$(LICENSE)
+override_dh_usrlocal:
+
