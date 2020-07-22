@@ -20,6 +20,8 @@ import (
 	"github.com/opencontainers/runc/libcontainer/devices"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
 	libcontainerUtils "github.com/opencontainers/runc/libcontainer/utils"
+	"github.com/opencontainers/runc/libenclave/attestation/sgx"
+	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 
@@ -332,9 +334,17 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 		args = strings.Join(a, " ")
 	}
 
-	ra_type := filterOut(env, "ENCLAVE_RA_TYPE")
-	if ra_type == "" {
-		ra_type = libcontainerUtils.SearchLabels(config.Labels, "ra_type")
+	raType := filterOut(env, "ENCLAVE_RA_TYPE")
+	if raType == "" {
+		raType = libcontainerUtils.SearchLabels(config.Labels, "ra_type")
+	}
+	var ra_type uint32
+	if strings.EqualFold(raType, "EPID") {
+		ra_type = sgx.EPID
+	} else if strings.EqualFold(raType, "DCAP") {
+		ra_type = sgx.DCAP
+	} else {
+		ra_type = sgx.InvalidRaType
 	}
 
 	ra_epid_spid := filterOut(env, "ENCLAVE_RA_EPID_SPID")
@@ -347,9 +357,17 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 		ra_epid_subscription_key = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_subscription_key")
 	}
 
-	ra_epid_quote_type := filterOut(env, "ENCLAVE_RA_EPID_SIGNATURE_TYPE")
-	if ra_epid_quote_type == "" {
-		ra_epid_quote_type = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_quote_type")
+	linkable := filterOut(env, "ENCLAVE_RA_EPID_IS_LINKABLE")
+	if linkable == "" {
+		linkable = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_is_linkable")
+	}
+	var ra_epid_is_linkable uint32
+	if strings.EqualFold(linkable, "true") {
+		ra_epid_is_linkable = intelsgx.QuoteSignatureTypeLinkable
+	} else if strings.EqualFold(linkable, "false") {
+		ra_epid_is_linkable = intelsgx.QuoteSignatureTypeUnlinkable
+	} else {
+		ra_epid_is_linkable = intelsgx.InvalidQuoteSignatureType
 	}
 
 	if etype != "" {
@@ -360,7 +378,7 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 			RaType:                ra_type,
 			RaEpidSpid:            ra_epid_spid,
 			RaEpidSubscriptionKey: ra_epid_subscription_key,
-			RaEpidQuoteType:       ra_epid_quote_type,
+			RaEpidIsLinkable:      ra_epid_is_linkable,
 		}
 	}
 }

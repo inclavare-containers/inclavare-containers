@@ -147,7 +147,7 @@ func (p *setnsProcess) start() (err error) {
 				RaType:                p.config.Config.Enclave.RaType,
 				RaEpidSpid:            p.config.Config.Enclave.RaEpidSpid,
 				RaEpidSubscriptionKey: p.config.Config.Enclave.RaEpidSubscriptionKey,
-				RaEpidQuoteType:       p.config.Config.Enclave.RaEpidQuoteType,
+				RaEpidIsLinkable:      p.config.Config.Enclave.RaEpidIsLinkable,
 			}
 			err := utils.WriteJSON(p.messageSockPair.parent, config)
 			if err != nil {
@@ -481,7 +481,7 @@ func (p *initProcess) start() (retErr error) {
 				RaType:                p.config.Config.Enclave.RaType,
 				RaEpidSpid:            p.config.Config.Enclave.RaEpidSpid,
 				RaEpidSubscriptionKey: p.config.Config.Enclave.RaEpidSubscriptionKey,
-				RaEpidQuoteType:       p.config.Config.Enclave.RaEpidQuoteType,
+				RaEpidIsLinkable:      p.config.Config.Enclave.RaEpidIsLinkable,
 			}
 			err := utils.WriteJSON(p.messageSockPair.parent, config)
 			if err != nil {

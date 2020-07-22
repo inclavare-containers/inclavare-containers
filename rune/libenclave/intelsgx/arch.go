@@ -115,6 +115,7 @@ type Quote struct {
 const (
 	QuoteSignatureTypeUnlinkable = iota
 	QuoteSignatureTypeLinkable
+	InvalidQuoteSignatureType
 )
 
 const (

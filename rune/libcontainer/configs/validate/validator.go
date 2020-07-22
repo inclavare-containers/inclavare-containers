@@ -9,6 +9,8 @@ import (
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/intelrdt"
 	"github.com/opencontainers/runc/libenclave"
+	"github.com/opencontainers/runc/libenclave/attestation/sgx"
+	"github.com/opencontainers/runc/libenclave/intelsgx"
 	selinux "github.com/opencontainers/selinux/go-selinux"
 )
 
@@ -224,6 +226,13 @@ func (v *ConfigValidator) enclave(config *configs.Config) error {
 		return err
 	}
 
+	if config.Enclave.RaType == sgx.InvalidRaType {
+		return fmt.Errorf("Unsupported ra_type Configuration %v!\n", config.Enclave.RaType)
+	}
+
+	if config.Enclave.RaEpidIsLinkable == intelsgx.InvalidQuoteSignatureType {
+		return fmt.Errorf("Unsupported ra_epid_is_linkable Configuration %v!\n", config.Enclave.RaEpidIsLinkable)
+	}
 	return nil
 }
 
