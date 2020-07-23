@@ -10,6 +10,7 @@ type Enclave struct {
 	Type                  string `json:"type"`
 	Path                  string `json:"path"`
 	Args                  string `json:"args,omitempty"`
+	IsProductEnclave      uint32 `json:"is_product_enclave,omitempty"`
 	RaType                uint32 `json:"ra_type,omitempty"`
 	RaEpidSpid            string `json:"ra_epid_spid,omitempty"`
 	RaEpidSubscriptionKey string `json:"ra_epid_subscription_key,omitempty"`

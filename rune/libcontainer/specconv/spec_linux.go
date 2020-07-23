@@ -334,9 +334,22 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 		args = strings.Join(a, " ")
 	}
 
+	isProductEnclave := filterOut(env, "ENCLAVE_IS_PRODUCT_ENCLAVE")
+	if isProductEnclave == "" {
+		isProductEnclave = libcontainerUtils.SearchLabels(config.Labels, "enclave.is_product_enclave")
+	}
+	var is_product_enclave uint32
+	if strings.EqualFold(isProductEnclave, "false") {
+		is_product_enclave = sgx.DebugEnclave
+	} else if strings.EqualFold(isProductEnclave, "true") {
+		is_product_enclave = sgx.ProductEnclave
+	} else {
+		is_product_enclave = sgx.InvalidEnclaveType
+	}
+
 	raType := filterOut(env, "ENCLAVE_RA_TYPE")
 	if raType == "" {
-		raType = libcontainerUtils.SearchLabels(config.Labels, "ra_type")
+		raType = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_type")
 	}
 	var ra_type uint32
 	if strings.EqualFold(raType, "EPID") {
@@ -349,17 +362,17 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 
 	ra_epid_spid := filterOut(env, "ENCLAVE_RA_EPID_SPID")
 	if ra_epid_spid == "" {
-		ra_epid_spid = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_spid")
+		ra_epid_spid = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_spid")
 	}
 
 	ra_epid_subscription_key := filterOut(env, "ENCLAVE_RA_EPID_SUB_KEY")
 	if ra_epid_subscription_key == "" {
-		ra_epid_subscription_key = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_subscription_key")
+		ra_epid_subscription_key = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_subscription_key")
 	}
 
 	linkable := filterOut(env, "ENCLAVE_RA_EPID_IS_LINKABLE")
 	if linkable == "" {
-		linkable = libcontainerUtils.SearchLabels(config.Labels, "ra_epid_is_linkable")
+		linkable = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_is_linkable")
 	}
 	var ra_epid_is_linkable uint32
 	if strings.EqualFold(linkable, "true") {
@@ -375,6 +388,7 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 			Type:                  etype,
 			Path:                  path,
 			Args:                  args,
+			IsProductEnclave:      is_product_enclave,
 			RaType:                ra_type,
 			RaEpidSpid:            ra_epid_spid,
 			RaEpidSubscriptionKey: ra_epid_subscription_key,
