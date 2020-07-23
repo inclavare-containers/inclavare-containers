@@ -1,6 +1,9 @@
 ifndef OBJCOPY
 OBJCOPY := $(CROSS_COMPILE)objcopy
 endif
+#ifndef CC
+CC = $(CROSS_COMPILE)gcc
+#endif
 
 OUTPUT ?= ./
 HOST_CFLAGS := -Wall -Werror -g -fPIC -z noexecstack \
@@ -9,7 +12,7 @@ ENCL_CFLAGS := -Wall -Werror -static -nostdlib -nostartfiles -fPIC \
 	       -fno-stack-protector -mrdrnd -std=gnu11
 HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 
-TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton.so $(OUTPUT)/signing_key.pem $(OUTPUT)/encl.token
+TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton.so $(OUTPUT)/sgxmain $(OUTPUT)/signing_key.pem $(OUTPUT)/encl.token
 
 all: $(TEST_CUSTOM_PROGS)
 
@@ -21,6 +24,12 @@ $(OUTPUT)/liberpal-skeleton.o: liberpal-skeleton.c
 
 $(OUTPUT)/sgx_call.o: sgx_call.S
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
+
+$(OUTPUT)/sgxmain.o: sgxmain.c
+	$(CC) $(HOST_CFLAGS) -c $< -o $@
+
+$(OUTPUT)/sgxmain: $(OUTPUT)/sgxmain.o $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton.o
+	$(CC) -o $@ $^
 
 $(OUTPUT)/encl.bin: $(OUTPUT)/encl.elf $(OUTPUT)/sgxsign
 	$(OBJCOPY) -O binary $< $@
