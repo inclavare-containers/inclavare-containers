@@ -11,7 +11,7 @@ ifneq ($(RELEASE_TARBALL_EXIST), y)
 endif
 
 rpm: release-tarball
-	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba centos/rune.spec
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba rpm/rune.spec
 	@cp $(RPMBUILD_DIR)/RPMS/x86_64/*.rpm $(PROJECT_DIR)
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of rune located in $(PROJECT_DIR)"	

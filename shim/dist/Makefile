@@ -12,7 +12,7 @@ ifneq ($(RELEASE_TARBALL_EXIST), y)
 endif
 
 rpm: release-tarball
-	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba centos/shim-rune.spec
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba rpm/shim-rune.spec
 	@cp $(RPMBUILD_DIR)/RPMS/x86_64/*.rpm $(PROJECT_DIR)
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of shim-rune located in $(PROJECT_DIR)"
