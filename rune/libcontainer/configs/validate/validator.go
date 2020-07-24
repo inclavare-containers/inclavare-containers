@@ -226,16 +226,22 @@ func (v *ConfigValidator) enclave(config *configs.Config) error {
 		return err
 	}
 
-	if config.Enclave.IsProductEnclave == sgx.InvalidEnclaveType {
-		return fmt.Errorf("Unsupported enclave.is_product_enclave Configuration %v!\n", config.Enclave.IsProductEnclave)
-	}
+	if config.Enclave.RaType != sgx.UnknownRaType {
+		if config.Enclave.IsProductEnclave == sgx.InvalidEnclaveType {
+			return fmt.Errorf("Unsupported enclave.is_product_enclave Configuration!\n")
+		}
 
-	if config.Enclave.RaType == sgx.InvalidRaType {
-		return fmt.Errorf("Unsupported enclave.attestation.ra_type Configuration %v!\n", config.Enclave.RaType)
-	}
+		if config.Enclave.RaEpidSpid == "" {
+			return fmt.Errorf("The enclave.attestation.ra_epid_spid Configuration isn't set!\n")
+		}
 
-	if config.Enclave.RaEpidIsLinkable == intelsgx.InvalidQuoteSignatureType {
-		return fmt.Errorf("Unsupported enclave.attestation.ra_epid_is_linkable Configuration %v!\n", config.Enclave.RaEpidIsLinkable)
+		if config.Enclave.RaEpidSubscriptionKey == "" {
+			return fmt.Errorf("The enclave.attestation.ra_epid_subscription_key Configuration isn't set!\n")
+		}
+
+		if config.Enclave.RaEpidIsLinkable == intelsgx.InvalidQuoteSignatureType {
+			return fmt.Errorf("Unsupported enclave.attestation.ra_epid_is_linkable Configuration!\n")
+		}
 	}
 
 	return nil
