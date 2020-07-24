@@ -1,0 +1,4 @@
+#!/bin/bash
+
+SHIM_CONFIG_DIR=/etc/inclavare-containers
+rm -f $SHIM_CONFIG_DIR/config.toml

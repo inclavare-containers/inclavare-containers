@@ -1,0 +1,12 @@
+Source: rune
+Section: devel
+Priority: extra
+Maintainer: Shirong Hao <shirong@linux.alibaba.com>
+Build-Depends: debhelper (>=9), libseccomp-dev, libprotobuf-dev (>=3), protobuf-compiler
+Standards-Version: 3.9.8
+Homepage: https://github.com/alibaba/inclavare-containers
+
+Package: rune
+Architecture: amd64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: rune is a CLI tool for spawning and running enclaves in containers according to the OCI specification. The codebase of rune is a fork of runc, so rune can be used as runc if enclave is not configured or available.

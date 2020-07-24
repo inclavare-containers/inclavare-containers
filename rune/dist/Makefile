@@ -16,4 +16,17 @@ rpm: release-tarball
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of rune located in $(PROJECT_DIR)"	
 
-.PHONY: release-tarball rpm
+deb:
+	@cd deb && ./build.sh
+	@echo "the debs of rune located in $(PROJECT_DIR)"
+
+package:
+ifeq (/etc/debian_version, $(wildcard /etc/debian_version))
+	make deb
+else ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
+	make rpm
+else
+	@echo "error! don't support generating packages on this system"
+endif
+
+.PHONY: release-tarball rpm deb package

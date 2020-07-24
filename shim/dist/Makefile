@@ -1,4 +1,3 @@
-# Variables for building rpm
 PROJECT_DIR := $(shell cd ../..; pwd)
 RPMBUILD_DIR := $(shell mktemp -u /tmp/rpmbuild.XXXX)
 RELEASE_TARBALL_URL := https://github.com/alibaba/inclavare-containers/archive/v$(INCLAVARE_CONTAINERS_VERSION).tar.gz
@@ -17,4 +16,17 @@ rpm: release-tarball
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of shim-rune located in $(PROJECT_DIR)"
 
-.PHONY: release-tarball rpm
+deb:
+	@cd deb && ./build.sh
+	@echo "the debs of shim-rune located in $(PROJECT_DIR)"
+
+package:
+ifeq (/etc/debian_version, $(wildcard /etc/debian_version))
+	make deb
+else ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
+	make rpm
+else
+	@echo "error! don't support generating packages on this system"
+endif
+
+.PHONY: release-tarball rpm deb package

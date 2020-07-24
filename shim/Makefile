@@ -39,7 +39,7 @@ SHIM_CGO_ENABLED ?= 0
 
 BINARIES=$(addprefix bin/,$(COMMANDS))
 
-.PHONY: clean all binaries help install uninstall rpm
+.PHONY: clean all binaries help install uninstall package
 .DEFAULT: default
 
 all: binaries
@@ -55,8 +55,8 @@ clean: ## clean up binaries
 	@echo "$@"
 	@rm -f $(BINARIES)
 
-rpm:
-	$(MAKE) -C dist rpm
+package:
+	$(MAKE) -C dist package
 
 install: ## install binaries
 	@echo "$@ $(BINARIES)"
