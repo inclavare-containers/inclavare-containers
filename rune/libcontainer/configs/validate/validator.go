@@ -226,13 +226,18 @@ func (v *ConfigValidator) enclave(config *configs.Config) error {
 		return err
 	}
 
+	if config.Enclave.IsProductEnclave == sgx.InvalidEnclaveType {
+		return fmt.Errorf("Unsupported enclave.is_product_enclave Configuration %v!\n", config.Enclave.IsProductEnclave)
+	}
+
 	if config.Enclave.RaType == sgx.InvalidRaType {
-		return fmt.Errorf("Unsupported ra_type Configuration %v!\n", config.Enclave.RaType)
+		return fmt.Errorf("Unsupported enclave.attestation.ra_type Configuration %v!\n", config.Enclave.RaType)
 	}
 
 	if config.Enclave.RaEpidIsLinkable == intelsgx.InvalidQuoteSignatureType {
-		return fmt.Errorf("Unsupported ra_epid_is_linkable Configuration %v!\n", config.Enclave.RaEpidIsLinkable)
+		return fmt.Errorf("Unsupported enclave.attestation.ra_epid_is_linkable Configuration %v!\n", config.Enclave.RaEpidIsLinkable)
 	}
+
 	return nil
 }
 
