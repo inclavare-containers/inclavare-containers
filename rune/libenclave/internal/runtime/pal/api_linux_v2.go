@@ -76,12 +76,13 @@ func (pal *enclaveRuntimePalApiV2) exec(cmd []string, envs []string, stdio [3]*o
 
 	// Skip cmd[0] as used as the executable.
 	var exe *C.char
-	argc := len(cmd) + 1
+	argc := len(cmd)
 	pargs := make([]*C.char, argc)
 	if argc > 1 {
 		exe = C.CString(cmd[0])
 		defer C.free(unsafe.Pointer(exe))
-
+		
+		cmd = cmd[1:]
 		for i, arg := range cmd {
 			logrus.Debugf("arg[%d]: %s", i, arg)
 			pargs[i] = C.CString(arg)
