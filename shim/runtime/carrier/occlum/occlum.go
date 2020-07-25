@@ -25,8 +25,6 @@ import (
 )
 
 const (
-	defaultNamespace         = "k8s.io"
-	startScriptFileName      = "start.sh"
 	replaceOcclumImageScript = "replace_occlum_image.sh"
 	carrierScriptFileName    = "carrier.sh"
 	rootfsDirName            = "rootfs"
@@ -99,7 +97,7 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 
 	// Execute the carrier script to generate the unsigned enclave.so in rootfs
 	cmdArgs := []string{
-		"/bin/bash", filepath.Join(dataDir, carrierScriptFileName),
+		filepath.Join(dataDir, carrierScriptFileName),
 		"--action", "buildUnsignedEnclave",
 		"--entry_point", c.entryPoints[0],
 		"--work_dir", c.workDirectory,
@@ -115,9 +113,9 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 			return "", err
 		}
 	}
+	cmdArgs = append(cmdArgs, "--occlum_config_path", occlumConfigPath)
 	logrus.Debugf("BuildUnsignedEnclave: command: %v", cmdArgs)
 	timeStart = time.Now()
-	cmdArgs = append(cmdArgs, "--occlum_config_path", occlumConfigPath)
 	if _, err := utils.ExecCommand("/bin/bash", cmdArgs...); err != nil {
 		logrus.Errorf("BuildUnsignedEnclave: execute command failed. error: %++v", err)
 		return "", err
@@ -125,7 +123,6 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 	logrus.Debugf("BuildUnsignedEnclave: init and build enclave time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	enclavePath := filepath.Join(rootfsDir, c.workDirectory, "./build/lib/libocclum-libos.so")
 	logrus.Debugf("BuildUnsignedEnclave: total time cost: %d", (time.Now().Sub(ts))/time.Second)
-
 	return enclavePath, nil
 }
 
@@ -145,8 +142,6 @@ func (c *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carr
 		"--unsigned_material_path", signingMaterial,
 	}
 	logrus.Debugf("GenerateSigningMaterial: sgx_sign gendata command: %v", cmdArgs)
-	//FIXME debug
-	time.Sleep(time.Minute * 2)
 	if _, err := utils.ExecCommand("/bin/bash", cmdArgs...); err != nil {
 		logrus.Errorf("GenerateSigningMaterial: sgx_sign gendata failed. error: %++v", err)
 		return "", err
@@ -185,62 +180,6 @@ func (c *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carr
 
 // Cleanup impl Carrier.
 func (c *occlum) Cleanup() error {
-	/*timeStart := time.Now()
-	ts := timeStart
-	defer func() {
-		if c.task.client != nil {
-			c.task.client.Close()
-		}
-		logrus.Debugf("Cleanup: total time cost: %d", (time.Now().Sub(ts))/time.Second)
-	}()
-	defer func() {
-		if c.task.container != nil {
-			timeStart = time.Now()
-			container := *c.task.container
-			if err := container.Delete(c.context, containerd.WithSnapshotCleanup); err != nil {
-				logrus.Errorf("Cleanup: delete container %s failed. err: %++v", container.ID(), err)
-			}
-			logrus.Debugf("Cleanup: delete container %s successfully.", container.ID())
-			logrus.Debugf("Cleanup: delete occlum SDK container time cost: %d", (time.Now().Sub(ts))/time.Second)
-		}
-	}()
-
-	if c.task.task == nil {
-		return nil
-	}
-	timeStart = time.Now()
-	t := *c.task.task
-	if err := t.Kill(c.context, syscall.SIGTERM); err != nil {
-		logrus.Errorf("Cleanup: kill task %s failed. err: %++v", t.ID(), err)
-		return err
-	}
-	for {
-		status, err := t.Status(c.context)
-		if err != nil {
-			logrus.Errorf("Cleanup: get task %s status failed. error: %++v", t.ID(), err)
-			return err
-		}
-		if status.ExitStatus != 0 {
-			logrus.Errorf("Cleanup: task %s exit abnormally. exit code: %d, task status: %s", t.ID(),
-				status.ExitStatus, status.Status)
-			return fmt.Errorf("task  %s exit abnormally. exit code: %d, task status: %s",
-				t.ID(), status.ExitStatus, status.Status)
-		}
-		if status.Status != containerd.Stopped {
-			logrus.Debugf("Cleanup: task %s status: %s", t.ID(), status.Status)
-			time.Sleep(time.Second)
-			continue
-		}
-		break
-	}
-	logrus.Debugf("Cleanup: kill occlum SDK container task time cost: %d", (time.Now().Sub(timeStart))/time.Second)
-	timeStart = time.Now()
-	if _, err := t.Delete(c.context); err != nil {
-		logrus.Errorf("Cleanup: delete task %s failed. error: %++v", t.ID(), err)
-		return err
-	}
-	logrus.Debugf("Cleanup: delete occlum SDK container task time cost: %d", (time.Now().Sub(timeStart))/time.Second)
-	logrus.Debugf("Cleanup: clean occlum container and task successfully")*/
 	return nil
 }
 
