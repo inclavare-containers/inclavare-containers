@@ -168,6 +168,8 @@ function buildUnsignedEnclave(){
   # build occlum image
   /bin/bash ${base_dir}/replace_occlum_image.sh ${rootfs} image
   # occlum build
+  empty_sign_tool=$(mktemp sign_tool.XXXXXX)
+  #occlum build --sign-tool ${empty_sign_tool} || true
   occlum build
   if [ ! -f ./build/lib/libocclum-libos.so ]; then
     if [ -f ./build/lib/libocclum-libos.so.0 ]; then
@@ -238,23 +240,4 @@ function doAction(){
 }
 
 doAction`
-
-	StartScript = `#!/bin/bash
-function handle_TERM() {
-  echo "recevied signal SIGTERM, exit now"
-  exit 0
-}
-
-function handle_INT() {
-  echo "recevied signal SIGINT, exit now"
-  exit 0
-}
-
-trap 'handle_INT' SIGINT
-trap 'handle_TERM' SIGTERM
-
-while true
-do
-  sleep 1
-done`
 )
