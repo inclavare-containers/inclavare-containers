@@ -2,7 +2,7 @@ package sgx // import "github.com/opencontainers/runc/libenclave/attestation/sgx
 
 // RA Type
 const (
-	InvalidRaType = iota
+	UnknownRaType = iota
 	EPID
 	DCAP
 )

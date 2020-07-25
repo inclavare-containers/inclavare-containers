@@ -334,53 +334,49 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 		args = strings.Join(a, " ")
 	}
 
-	isProductEnclave := filterOut(env, "ENCLAVE_IS_PRODUCT_ENCLAVE")
-	if isProductEnclave == "" {
-		isProductEnclave = libcontainerUtils.SearchLabels(config.Labels, "enclave.is_product_enclave")
-	}
-	var is_product_enclave uint32
-	if strings.EqualFold(isProductEnclave, "false") {
-		is_product_enclave = sgx.DebugEnclave
-	} else if strings.EqualFold(isProductEnclave, "true") {
-		is_product_enclave = sgx.ProductEnclave
-	} else {
-		is_product_enclave = sgx.InvalidEnclaveType
-	}
-
 	raType := filterOut(env, "ENCLAVE_RA_TYPE")
 	if raType == "" {
 		raType = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_type")
 	}
-	var ra_type uint32
-	if strings.EqualFold(raType, "EPID") {
-		ra_type = sgx.EPID
-	} else if strings.EqualFold(raType, "DCAP") {
-		ra_type = sgx.DCAP
-	} else {
-		ra_type = sgx.InvalidRaType
-	}
 
-	ra_epid_spid := filterOut(env, "ENCLAVE_RA_EPID_SPID")
-	if ra_epid_spid == "" {
-		ra_epid_spid = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_spid")
-	}
+	var enclaveRaType, sgxEnclaveType, raEpidIsLinkable uint32 = sgx.UnknownRaType, sgx.InvalidEnclaveType, intelsgx.InvalidQuoteSignatureType
+	var raEpidSpid, raEpidSubscriptionKey string
+	if raType != "" {
+		if strings.EqualFold(raType, "EPID") {
+			enclaveRaType = sgx.EPID
+		} else if strings.EqualFold(raType, "DCAP") {
+			enclaveRaType = sgx.DCAP
+		}
 
-	ra_epid_subscription_key := filterOut(env, "ENCLAVE_RA_EPID_SUB_KEY")
-	if ra_epid_subscription_key == "" {
-		ra_epid_subscription_key = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_subscription_key")
-	}
+		isProductEnclave := filterOut(env, "ENCLAVE_IS_PRODUCT_ENCLAVE")
+		if isProductEnclave == "" {
+			isProductEnclave = libcontainerUtils.SearchLabels(config.Labels, "enclave.is_product_enclave")
+		}
+		if strings.EqualFold(isProductEnclave, "false") {
+			sgxEnclaveType = sgx.DebugEnclave
+		} else if strings.EqualFold(isProductEnclave, "true") {
+			sgxEnclaveType = sgx.ProductEnclave
+		}
 
-	linkable := filterOut(env, "ENCLAVE_RA_EPID_IS_LINKABLE")
-	if linkable == "" {
-		linkable = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_is_linkable")
-	}
-	var ra_epid_is_linkable uint32
-	if strings.EqualFold(linkable, "true") {
-		ra_epid_is_linkable = intelsgx.QuoteSignatureTypeLinkable
-	} else if strings.EqualFold(linkable, "false") {
-		ra_epid_is_linkable = intelsgx.QuoteSignatureTypeUnlinkable
-	} else {
-		ra_epid_is_linkable = intelsgx.InvalidQuoteSignatureType
+		raEpidSpid = filterOut(env, "ENCLAVE_RA_EPID_SPID")
+		if raEpidSpid == "" {
+			raEpidSpid = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_spid")
+		}
+
+		raEpidSubscriptionKey = filterOut(env, "ENCLAVE_RA_EPID_SUB_KEY")
+		if raEpidSubscriptionKey == "" {
+			raEpidSubscriptionKey = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_subscription_key")
+		}
+
+		linkable := filterOut(env, "ENCLAVE_RA_EPID_IS_LINKABLE")
+		if linkable == "" {
+			linkable = libcontainerUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_is_linkable")
+		}
+		if strings.EqualFold(linkable, "true") {
+			raEpidIsLinkable = intelsgx.QuoteSignatureTypeLinkable
+		} else if strings.EqualFold(linkable, "false") {
+			raEpidIsLinkable = intelsgx.QuoteSignatureTypeUnlinkable
+		}
 	}
 
 	if etype != "" {
@@ -388,11 +384,11 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 			Type:                  etype,
 			Path:                  path,
 			Args:                  args,
-			IsProductEnclave:      is_product_enclave,
-			RaType:                ra_type,
-			RaEpidSpid:            ra_epid_spid,
-			RaEpidSubscriptionKey: ra_epid_subscription_key,
-			RaEpidIsLinkable:      ra_epid_is_linkable,
+			IsProductEnclave:      sgxEnclaveType,
+			RaType:                enclaveRaType,
+			RaEpidSpid:            raEpidSpid,
+			RaEpidSubscriptionKey: raEpidSubscriptionKey,
+			RaEpidIsLinkable:      raEpidIsLinkable,
 		}
 	}
 }
