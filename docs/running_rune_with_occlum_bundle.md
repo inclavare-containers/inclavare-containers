@@ -48,14 +48,14 @@ and then configure enclave runtime as following:
 ``` json
   "annotations": {
       "enclave.type": "intelSgx",
-      "enclave.runtime.path": "/usr/lib/liberpal-occlum.so",
+      "enclave.runtime.path": "/opt/occlum/build/lib/libocclum-pal.so",
       "enclave.runtime.args": "$OCCLUM_INSTANCE_DIR"
   }
 ```
 
 where:
 - @enclave.type: specify the type of enclave hardware to use, such as `intelSgx`.
-- @enclave.runtime.path: specify the path to enclave runtime to launch. For an Occlum application, you need to specify the path of `liberpal-occlum.so` which is a soft link to `libocclum-pal.so` of your Occlum instance dir (`OCCLUM_INSTANCE_DIR`).
+- @enclave.runtime.path: specify the path to enclave runtime to launch. For an Occlum application, you need to specify the path to `libocclum-pal.so`.
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, separated by the comma. For an Occlum application, you need to specify the name of your Occlum instance dir (`OCCLUM_INSTANCE_DIR`) in this parameter.
 
 ---
