@@ -4,12 +4,19 @@
 ## Requirements
 - Install [Intel SGX driver for Linux](https://github.com/intel/linux-sgx-driver#build-and-install-the-intelr-sgx-driver), required by Intel SGX SDK && PSW.
 - Install [enable_rdfsbase kernel module](https://github.com/occlum/enable_rdfsbase#how-to-build), allowing to use `rdfsbase` -family instructions in Occlum.
-- Assume the host system is CentOS 7.5.
-- You can also launch a CentOS 7.5 container as your host system with the following command:
+- Ensure that you have one of the following required operating systems:
+  - CenOS 7.5
+  - Ubuntu 18.04-server
+
+  Note: You may also choose to launch a container corresponding to above operating systems.
   ```shell
   docker run -it --privileged --device /dev/isgx centos:7.5.1804
   ```
-  If so, you need to run **another docker daemon** inside this CentOS 7.5 container. Please refer to [this guide](https://docs.docker.com/engine/install/centos) to install docker daemon, and type the following command to start dockerd.
+  or
+  ```shell
+  docker run -it --privileged --device /dev/isgx ubuntu:18.04
+  ```
+  If so, you need to run **another docker daemon** inside your container. Please refer to [this guide](https://docs.docker.com/engine/install) to install docker daemon. In CentOS 7.5 container, type the following command to start dockerd.
   ```shell
   dockerd -b docker0 --storage-driver=vfs &
   ```
@@ -54,7 +61,6 @@ RUN mkdir -p /run/rune/${OCCLUM_INSTANCE_DIR}
 WORKDIR /run/rune
 
 COPY ${OCCLUM_INSTANCE_DIR} ${OCCLUM_INSTANCE_DIR}
-COPY ${OCCLUM_INSTANCE_DIR}/build/lib/libocclum-pal.so /usr/lib/liberpal-occlum.so
 
 ENTRYPOINT ["/bin/hello_world"]
 EOF
@@ -70,15 +76,15 @@ docker build . -t ${Occlum_application_image}
 ## Install Inclavare Containers binary
 Download the binary release from [here](https://github.com/alibaba/inclavare-containers/releases/).
 
-### Install `sgx_linux_x64_sdk_2.9.101.2.bin`
-Type the following commands to install `sgx_linux_x64_sdk_2.9.101.2.bin` on your host system.
+### Install SGX SDK
+Type the following commands to install SGX SDK on your host system.
 ```shell
 yum install -y make
 echo -e "no\n/opt/intel\n" | ./sgx_linux_x64_sdk_2.9.101.2.bin
 ```
 
-### Install `sgx_linux_x64_psw_2.9.101.2.bin` 
-Type the following commands to install `sgx_linux_x64_psw_2.9.101.2.bin` on your host system.
+### Install SGX PSW
+Type the following commands to install SGX PSW on your host system.
 ```shell
 yum install -y https://cbs.centos.org/kojifiles/packages/protobuf/3.6.1/4.el7/x86_64/protobuf-3.6.1-4.el7.x86_64.rpm
 ./sgx_linux_x64_psw_2.9.101.2.bin
@@ -88,10 +94,17 @@ export AESM_PATH=$PWD
 /opt/intel/sgxpsw/aesm/aesm_service
 ```
 
-### Install rune and liberpal-occlum.so
+### Install rune and occlum-pal
+Download the package from [here](https://github.com/alibaba/inclavare-containers/releases/).
+- On CentOS 7.5:
 ```shell
-cp ./rune /usr/local/sbin
-cp ./liberpal-occlum.so /usr/lib
+rpm -ivh rune-0.3.0-1.el7.x86_64.rpm
+rpm -ivh occlum-pal-0.14.0-1.el7.x86_64.rpm
+```
+- On Ubuntu 18.04-server:
+```shell
+dpkg -i rune_0.3.0-1_amd64.deb
+dpkg -i occlum-pal_0.14.0-1_amd64.deb
 ```
 
 ---
@@ -103,7 +116,7 @@ Add the `rune` OCI runtime configuration in dockerd config file, e.g, `/etc/dock
 {
 	"runtimes": {
 		"rune": {
-			"path": "/usr/local/sbin/rune",
+			"path": "/usr/bin/rune",
 			"runtimeArgs": []
 		}
 	}
@@ -128,7 +141,7 @@ export OCCLUM_INSTANCE_DIR=occlum-app
 yum install -y libseccomp
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
-  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-occlum.so \
+  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
   -e ENCLAVE_RUNTIME_ARGS=${OCCLUM_INSTANCE_DIR} \
   ${Occlum_application_image}
 ```
