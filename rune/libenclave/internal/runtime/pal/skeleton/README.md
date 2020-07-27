@@ -1,5 +1,7 @@
 The files in this directory are used to implement a skeleton enclave runtime in order to help to write your own enclave runtime.
 
+Note that this code base is inspired by [v28 SGX in-tree driver](https://patchwork.kernel.org/patch/11418925/).
+
 ---
 
 # Install sgx-tools
