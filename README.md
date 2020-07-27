@@ -45,6 +45,11 @@ In addition, you can write your own enclave runtime with any programming languag
 
 ---
 
+## Terminology 
+Please refer to [this doc] for the details.
+
+---
+
 ## Using rune
 ### Run Occlum
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum.md) to run `Occlum` with `rune`.
