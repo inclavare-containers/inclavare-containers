@@ -162,7 +162,7 @@ function buildUnsignedEnclave(){
     /bin/cp -f ${occlum_config_path} Occlum.json
   fi
   # set occlum entrypoint
-  sed -i "s#/bin#${entry_point}#g" Occlum.json
+  # sed -i "s#/bin#${entry_point}#g" Occlum.json
   # generate the configuration file Enclave.xml that used by enclave from Occlum.json
   /opt/occlum/build/bin/gen_enclave_conf -i Occlum.json -o Enclave.xml
   # build occlum image
@@ -179,6 +179,7 @@ function buildUnsignedEnclave(){
   mkdir -p ${rootfs}/${work_dir} || true
   /bin/cp -fr .occlum ${rootfs}/${work_dir}
   /bin/cp -f Enclave.xml ${rootfs}/${work_dir}
+  /bin/cp -f Occlum.json ${rootfs}/${work_dir}
   popd
 }
 
