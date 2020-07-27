@@ -359,6 +359,7 @@ func (o *occlum) saveOcclumConfig(path string) error {
 	}
 	cfg := GetDefaultOcclumConfig()
 	cfg.ApplyEnvs(o.spec.Process.Env)
+	cfg.ApplyEntrypoints([]string{o.entryPoints[0]})
 	bytes, err := json.Marshal(cfg)
 	if err != nil {
 		return err

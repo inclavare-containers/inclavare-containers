@@ -8,16 +8,18 @@ import (
 )
 
 const (
-	EnvUserSpaceSize        = "OCCLUM_USER_SPACE_SIZE"
-	EnvKernelSpaceHeapSize  = "OCCLUM_KERNEL_SPACE_HEAP_SIZE"
-	EnvKernelSpaceStackSize = "OCCLUM_KERNEL_SPACE_STACK_SIZE"
-	EnvMaxNumOfThreads      = "OCCLUM_MAX_NUM_OF_THREADS"
-	EnvDefaultStackSize     = "OCCLUM_DEFAULT_STACK_SIZE"
-	EnvDefaultHeapSize      = "OCCLUM_DEFAULT_HEAP_SIZE"
-	EnvDefaultMmapSize      = "OCCLUM_DEFAULT_MMAP_SIZE"
-	EnvProductId            = "OCCLUM_PRODUCT_ID"
-	EnvVersionNumber        = "OCCLUM_VERSION_NUMBER"
-	EnvDebuggable           = "OCCLUM_DEBUGGABLE"
+	UserSpaceSize           = "OCCLUM_USER_SPACE_SIZE"
+	KernelSpaceHeapSize     = "OCCLUM_KERNEL_SPACE_HEAP_SIZE"
+	KernelSpaceStackSize    = "OCCLUM_KERNEL_SPACE_STACK_SIZE"
+	MaxNumOfThreads         = "OCCLUM_MAX_NUM_OF_THREADS"
+	ProcessDefaultStackSize = "OCCLUM_PROCESS_DEFAULT_STACK_SIZE"
+	ProcessDefaultHeapSize  = "OCCLUM_PROCESS_DEFAULT_HEAP_SIZE"
+	ProcessDefaultMmapSize  = "OCCLUM_PROCESS_DEFAULT_MMAP_SIZE"
+	ProductId               = "OCCLUM_PRODUCT_ID"
+	VersionNumber           = "OCCLUM_VERSION_NUMBER"
+	Debuggable              = "OCCLUM_DEBUGGABLE"
+	DefalutEnv              = "OCCLUM_DEFAULT_ENV"
+	UntrustedEnv            = "OCCLUM_UNTRUSTED_ENV"
 )
 
 type OcclumConfig struct {
@@ -69,54 +71,68 @@ func (c *OcclumConfig) ApplyEnvs(envs []string) {
 		k := items[0]
 		v := items[1]
 		switch k {
-		case EnvUserSpaceSize:
+		case UserSpaceSize:
 			c.ResourceLimits.UserSpaceSize = v
 			break
-		case EnvKernelSpaceHeapSize:
+		case KernelSpaceHeapSize:
 			c.ResourceLimits.KernelSpaceHeapSize = v
 			break
-		case EnvKernelSpaceStackSize:
+		case KernelSpaceStackSize:
 			c.ResourceLimits.KernelSpaceStackSize = v
 			break
-		case EnvMaxNumOfThreads:
+		case MaxNumOfThreads:
 			i, err := strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				logrus.Error("ApplyEnvs: parse environment variable %s failed. error: %++v", k, err)
 			}
 			c.ResourceLimits.MaxNumOfThreads = i
 			break
-		case EnvDefaultStackSize:
+		case ProcessDefaultStackSize:
 			c.Process.DefaultStackSize = v
 			break
-		case EnvDefaultHeapSize:
+		case ProcessDefaultHeapSize:
 			c.Process.DefaultHeapSize = v
 			break
-		case EnvDefaultMmapSize:
+		case ProcessDefaultMmapSize:
 			c.Process.DefaultMmapSize = v
 			break
-		case EnvProductId:
+		case ProductId:
 			i, err := strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				logrus.Error("ApplyEnvs: parse environment variable %s failed. error: %++v", k, err)
 			}
 			c.Metadata.ProductId = i
 			break
-		case EnvVersionNumber:
+		case VersionNumber:
 			i, err := strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				logrus.Error("ApplyEnvs: parse environment variable %s failed. error: %++v", k, err)
 			}
 			c.Metadata.VersionNumber = i
 			break
-		case EnvDebuggable:
+		case Debuggable:
 			i, err := strconv.ParseBool(v)
 			if err != nil {
 				logrus.Error("ApplyEnvs: parse environment variable %s failed. error: %++v", k, err)
 			}
 			c.Metadata.Debuggable = i
 			break
+		case DefalutEnv:
+			if len(v) > 0 {
+				c.Env.Default = strings.Split(v, ",")
+			}
+			break
+		case UntrustedEnv:
+			if len(v) > 0 {
+				c.Env.Untrusted = strings.Split(v, ",")
+			}
+			break
 		}
 	}
+}
+
+func (c *OcclumConfig) ApplyEntrypoints(entrypoints []string) {
+	c.EntryPoints = entrypoints
 }
 
 func GetDefaultOcclumConfig() *OcclumConfig {
