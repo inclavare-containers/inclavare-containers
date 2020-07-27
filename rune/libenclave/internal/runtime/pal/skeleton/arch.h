@@ -4,8 +4,6 @@
  *
  * Contains data structures defined by the SGX architecture.  Data structures
  * defined by the Linux software stack should not be placed here.
- *
- * Inspired by https://github.com/jsakkine-intel/linux-sgx/tree/next/tools/testing/selftests/x86/sgx
  */
 #ifndef _ASM_X86_SGX_ARCH_H
 #define _ASM_X86_SGX_ARCH_H
