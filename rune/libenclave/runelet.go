@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/opencontainers/runc/libcontainer/utils"
+	"github.com/opencontainers/runc/libenclave/attestation/sgx"
 	"github.com/opencontainers/runc/libenclave/configs"
 	"github.com/opencontainers/runc/libenclave/internal/runtime"
 	pb "github.com/opencontainers/runc/libenclave/proto"
@@ -68,8 +69,10 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 		}
 
 		// Launch a remote attestation to the enclave runtime.
-		if err = rt.LaunchAttestation(); err != nil {
-			return 1, err
+		if config.RaType == sgx.EPID {
+			if err = rt.LaunchAttestation(config.RaEpidSpid, config.RaEpidSubscriptionKey, config.IsProductEnclave, config.RaEpidIsLinkable); err != nil {
+				return 1, err
+			}
 		}
 		if err = readSync(initPipe, procEnclaveReady); err != nil {
 			return 1, err
