@@ -1,7 +1,7 @@
 Source: rune
 Section: devel
 Priority: extra
-Maintainer: Shirong Hao <shirong@linux.alibaba.com>
+Maintainer: shirong <shirong@linux.alibaba.com>
 Build-Depends: debhelper (>=9), libseccomp-dev, libprotobuf-dev (>=3), protobuf-compiler
 Standards-Version: 3.9.8
 Homepage: https://github.com/alibaba/inclavare-containers
