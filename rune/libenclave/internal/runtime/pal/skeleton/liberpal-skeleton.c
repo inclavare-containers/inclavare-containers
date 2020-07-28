@@ -29,6 +29,34 @@
 
 static struct sgx_secs secs;
 static bool initialized = false;
+static char *sgx_dev_path;
+static bool is_oot_driver;
+
+static bool is_sgx_device(const char *dev)
+{
+	struct stat st;
+	int rc;
+
+	rc = stat(dev, &st);
+	if (!rc) {
+		if ((st.st_mode & S_IFCHR) && (major(st.st_dev) == 10))
+			return true;
+	}
+
+	return false;
+}
+
+static void detect_driver_type(void)
+{
+	if (is_sgx_device("/dev/isgx")) {
+		sgx_dev_path = "/dev/isgx";
+		is_oot_driver = true;
+		return;
+	}
+
+	sgx_dev_path = "/dev/sgx/enclave";
+	is_oot_driver = false;
+}
 
 static bool encl_create(int dev_fd, unsigned long bin_size,
 			struct sgx_secs *secs)
@@ -73,10 +101,11 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	return true;
 }
 
-static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
-			   unsigned long length, uint64_t flags)
+
+static bool encl_add_pages_with_mrmask(int dev_fd, uint64_t addr, void *data,
+				       unsigned long length, uint64_t flags)
 {
-	struct sgx_enclave_add_page ioc;
+	struct sgx_enclave_add_pages_with_mrmask ioc;
 	struct sgx_secinfo secinfo;
 	int rc;
 
@@ -90,7 +119,7 @@ static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 
 	uint64_t added_size = 0;
 	while (added_size < length) {
-		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_ADD_PAGE, &ioc);
+		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_ADD_PAGES_WITH_MRMASK, &ioc);
 		if (rc) {
 			fprintf(stderr, "EADD failed rc=%d.\n", rc);
 			return false;
@@ -104,34 +133,78 @@ static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 	return true;
 }
 
+static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
+			   unsigned long length, uint64_t flags)
+{
+	struct sgx_enclave_add_pages ioc;
+	struct sgx_secinfo secinfo;
+	int rc;
+
+	memset(&secinfo, 0, sizeof(secinfo));
+	secinfo.flags = flags;
+
+	ioc.src = (uint64_t)data;
+	ioc.offset = addr;
+	ioc.length = length;
+	ioc.secinfo = (unsigned long)&secinfo;
+	ioc.flags = SGX_PAGE_MEASURE;
+
+	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_ADD_PAGES, &ioc);
+	if (rc) {
+		fprintf(stderr, "EADD failed rc=%d.\n", rc);
+		return false;
+	}
+
+	if (ioc.count != length) {
+		fprintf(stderr, "EADD short of data.\n");
+		return false;
+	}
+
+	return true;
+}
+
 static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size, 
 		       struct sgx_sigstruct *sigstruct,
 		       struct sgx_einittoken *token)
 {
-	struct sgx_enclave_init ioc;
 	int dev_fd;
 	int rc;
 
-	dev_fd = open("/dev/isgx", O_RDWR);
+	dev_fd = open(sgx_dev_path, O_RDWR);
 	if (dev_fd < 0) {
-		fprintf(stderr, "Unable to open /dev/sgx\n");
+		fprintf(stderr, "Unable to open %s\n", sgx_dev_path);
 		return false;
 	}
 
 	if (!encl_create(dev_fd, bin_size, secs))
 		goto out_dev_fd;
 
-	if (!encl_add_pages(dev_fd, secs->base + 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
-		goto out_map;
+	if (is_oot_driver) {
+		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+			goto out_map;
 
-	if (!encl_add_pages(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
-			    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
-		goto out_map;
+		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
+						bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
+			goto out_map;
 
-	ioc.addr = secs->base;
-	ioc.sigstruct = (uint64_t)sigstruct;
-	ioc.einittoken = (uint64_t)token;
-	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT, &ioc);
+		struct sgx_enclave_init_with_token ioc;
+		ioc.addr = secs->base;
+		ioc.sigstruct = (uint64_t)sigstruct;
+		ioc.einittoken = (uint64_t)token;
+		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT_WITH_TOKEN, &ioc);
+	} else {
+		if (!encl_add_pages(dev_fd, 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+			goto out_map;
+
+		if (!encl_add_pages(dev_fd, PAGE_SIZE, bin + PAGE_SIZE,
+				    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
+			goto out_map;
+
+		struct sgx_enclave_init ioc;
+		ioc.sigstruct = (uint64_t)sigstruct;
+		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT, &ioc);
+	}
+
 	if (rc) {
 		printf("EINIT failed rc=%d\n", rc);
 		goto out_map;
@@ -246,6 +319,8 @@ int pal_init(const char *args, const char *log_level)
 	struct sgx_einittoken token;
 	off_t bin_size;
 	void *bin;
+
+	detect_driver_type();
 
 	if (!encl_data_map(IMAGE, &bin, &bin_size))
 		return -ENOENT;
