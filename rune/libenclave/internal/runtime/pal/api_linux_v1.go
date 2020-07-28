@@ -46,12 +46,11 @@ import "C"
 
 import (
 	"fmt"
+	"github.com/opencontainers/runc/libcontainer/nsenter"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
 	"unsafe"
-
-	"github.com/opencontainers/runc/libcontainer/nsenter"
 )
 
 type enclaveRuntimePalApiV1 struct {

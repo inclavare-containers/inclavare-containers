@@ -14,6 +14,7 @@ extern void *fptr_pal_exec;
 extern void *fptr_pal_kill;
 extern void *fptr_pal_destroy;
 extern void *fptr_pal_create_process;
+extern void *fptr_pal_get_local_report;
 */
 import "C"
 
@@ -39,6 +40,10 @@ func SymAddrPalKill() unsafe.Pointer {
 
 func SymAddrPalDestroy() unsafe.Pointer {
 	return unsafe.Pointer(C.fptr_pal_destroy)
+}
+
+func SymAddrPalGetLocalReport() unsafe.Pointer {
+	return unsafe.Pointer(C.fptr_pal_get_local_report)
 }
 
 func SymAddrPalCreateProcess() unsafe.Pointer {
