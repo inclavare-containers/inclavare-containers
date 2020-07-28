@@ -28,6 +28,7 @@ void *fptr_pal_exec;
 void *fptr_pal_kill;
 void *fptr_pal_destroy;
 void *fptr_pal_create_process;
+void *fptr_pal_get_local_report;
 
 bool enclave_configured(void)
 {
@@ -78,6 +79,7 @@ int load_enclave_runtime(void)
 	DLSYM(exec);
 	DLSYM(kill);
 	DLSYM(destroy);
+	DLSYM(get_local_report);
 #undef DLSYM
 
 	return 0;

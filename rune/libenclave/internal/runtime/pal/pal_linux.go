@@ -58,3 +58,12 @@ func (pal *enclaveRuntimePal) Destroy() error {
 	api := &enclaveRuntimePalApiV1{}
 	return api.destroy()
 }
+
+func (pal *enclaveRuntimePal) GetLocalReport(targetInfo []byte) ([]byte, error) {
+	if pal.version >= 3 {
+		api := &enclaveRuntimePalApiV3{}
+		return api.getLocalReport(targetInfo)
+	}
+
+	return nil, fmt.Errorf("unsupported pal api version %d", pal.version)
+}
