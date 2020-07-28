@@ -23,12 +23,14 @@ enum sgx_page_flags {
 	_IOW(SGX_MAGIC, 0x00, struct sgx_enclave_create)
 #define SGX_IOC_ENCLAVE_ADD_PAGES \
 	_IOWR(SGX_MAGIC, 0x01, struct sgx_enclave_add_pages)
+#define SGX_IOC_ENCLAVE_ADD_PAGES_WITH_MRMASK \
+	_IOW(SGX_MAGIC, 0x01, struct sgx_enclave_add_pages_with_mrmask)
 #define SGX_IOC_ENCLAVE_INIT \
 	_IOW(SGX_MAGIC, 0x02, struct sgx_enclave_init)
+#define SGX_IOC_ENCLAVE_INIT_WITH_TOKEN \
+	_IOW(SGX_MAGIC, 0x02, struct sgx_enclave_init_with_token)
 #define SGX_IOC_ENCLAVE_SET_ATTRIBUTE \
 	_IOW(SGX_MAGIC, 0x03, struct sgx_enclave_set_attribute)
-#define SGX_IOC_ENCLAVE_ADD_PAGE \
-    _IOW(SGX_MAGIC, 0x01, struct sgx_enclave_add_page)
 
 /**
  * struct sgx_enclave_create - parameter structure for the
@@ -58,11 +60,19 @@ struct sgx_enclave_add_pages {
 	__u64	count;
 };
 
-struct sgx_enclave_add_page {
-    __u64   addr;
-    __u64   src;
-    __u64   secinfo;
-    __u16   mrmask;
+/**
+ * struct sgx_enclave_add_page - parameter structure for the
+ *                               %SGX_IOC_ENCLAVE_ADD_PAGE_WITH_MRMASK ioctl
+ * @addr:       address in the ELRANGE
+ * @src:        address for the page data
+ * @secinfo:    address for the SECINFO data
+ * @mrmask:     bitmask for the 256 byte chunks that are to be measured
+ */
+struct sgx_enclave_add_pages_with_mrmask {
+	__u64	addr;
+	__u64	src;
+	__u64	secinfo;
+	__u16	mrmask;
 } __attribute__((__packed__));
 
 /**
@@ -71,9 +81,20 @@ struct sgx_enclave_add_page {
  * @sigstruct:	address for the SIGSTRUCT data
  */
 struct sgx_enclave_init {
-    __u64   addr;
-    __u64   sigstruct;
-    __u64   einittoken;
+	__u64	sigstruct;
+};
+
+/**
+ * struct sgx_enclave_init - parameter structure for the
+ *                           %SGX_IOC_ENCLAVE_INIT_WITH_TOKEN ioctl
+ * @addr:       address in the ELRANGE
+ * @sigstruct:  address for the page data
+ * @einittoken: EINITTOKEN
+ */
+struct sgx_enclave_init_with_token {
+	__u64	addr;
+	__u64	sigstruct;
+	__u64	einittoken;
 } __attribute__((__packed__));
 
 /**
@@ -82,7 +103,7 @@ struct sgx_enclave_init {
  * @attribute_fd:	file handle of the attribute file in the securityfs
  */
 struct sgx_enclave_set_attribute {
-	__u64 attribute_fd;
+	__u64	attribute_fd;
 };
 
 /**
