@@ -140,15 +140,7 @@ func handleRequest(conn net.Conn, id int) {
 
 	var err error
 	resp := &pb.AgentServiceResponse{}
-	resp.Exec = &pb.AgentServiceResponse_Execute{}
 	exitCode := int32(1)
-	defer func() {
-		resp.Exec.ExitCode = exitCode
-		if err != nil {
-			resp.Exec.Error = fmt.Sprint(err)
-		}
-		protoBufWrite(conn, resp)
-	}()
 
 	req := &pb.AgentServiceRequest{}
 	if err = protoBufRead(conn, req); err != nil {
@@ -165,6 +157,32 @@ func handleRequest(conn net.Conn, id int) {
 		return
 	}
 	defer connFile.Close()
+
+	if req.Attest != nil {
+		logrus.Infof("In function handleRequest: get a attest request")
+		resp.Attest = &pb.AgentServiceResponse_Attest{}
+		err = enclaveRuntime.LaunchAttestation(req.Attest.Spid,
+			req.Attest.SubscriptionKey,
+			req.Attest.Product,
+			req.Attest.QuoteType)
+		if err != nil {
+			resp.Attest.Error = fmt.Sprint(err)
+		} else {
+			exitCode = 0
+		}
+		resp.Attest.ExitCode = exitCode
+		protoBufWrite(conn, resp)
+		return
+	}
+
+	resp.Exec = &pb.AgentServiceResponse_Execute{}
+	defer func() {
+		resp.Exec.ExitCode = exitCode
+		if err != nil {
+			resp.Exec.Error = fmt.Sprint(err)
+		}
+		protoBufWrite(conn, resp)
+	}()
 
 	// Retrieve signal pipe.
 	signalPipe, err := utils.RecvFd(connFile)

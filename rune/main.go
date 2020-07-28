@@ -130,6 +130,7 @@ func main() {
 		startCommand,
 		stateCommand,
 		updateCommand,
+		attestCommand,
 	}
 	app.Before = func(context *cli.Context) error {
 		if !context.IsSet("root") && xdgRuntimeDir != "" {
