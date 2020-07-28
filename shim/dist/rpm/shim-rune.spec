@@ -7,7 +7,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name: shim-rune
-Version: 0.2.0
+Version: 0.3.0
 Release: %{centos_base_release}%{?dist}
 Summary: shim for Inclavare Containers(runE)
 Group: Development/Tools
@@ -58,8 +58,8 @@ sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
     socket = "/run/containerd/containerd.sock"
 [enclave_runtime]
     [enclave_runtime.occlum]
-        build_image = "docker.io/occlum/occlum:0.13.0-ubuntu18.04"
-        enclave_runtime_path = "/usr/lib64/libocclum-pal.so"
+        build_image = "docker.io/occlum/occlum:0.14.0-ubuntu18.04"
+        enclave_runtime_path = "/opt/occlum/build/lib/libocclum-pal.so"
     [enclave_runtime.graphene]
 EOF
 
@@ -71,5 +71,8 @@ rm -f %{SHIM_CONFIG_DIR}/config.toml
 %{SHIM_BIN_DIR}/containerd-shim-rune-v2
 
 %changelog
+* Tue Jul 28 2020 shirong <shirong@linux.alibaba.com> - 0.3.0 
+- Update to version 0.3.0
+
 * Fri Jul 10 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.2.0
 - Package init.
