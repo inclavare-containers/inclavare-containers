@@ -34,7 +34,7 @@ For example, generate the quote file according to the given local report file:
 		},
 		cli.BoolFlag{
 			Name:  "linkable",
-			Usage: "linkable",
+			Usage: "specify the EPID signatures policy type",
 		},
 	},
 	Action: func(context *cli.Context) error {

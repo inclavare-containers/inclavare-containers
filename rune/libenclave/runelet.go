@@ -6,14 +6,17 @@ import (
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runc/libenclave/attestation/sgx"
 	"github.com/opencontainers/runc/libenclave/configs"
+	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/opencontainers/runc/libenclave/internal/runtime"
 	pb "github.com/opencontainers/runc/libenclave/proto"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	"io"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -100,13 +103,26 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 	notifySignal := make(chan os.Signal, signalBufferSize)
 
 	if fifoFd == -1 {
-		exitCode, err = remoteExec(agentPipe, cmd, notifySignal)
-		if err != nil {
+		AttestCommand := os.Getenv("AttestCommand")
+		if AttestCommand == "true" {
+			logrus.Infof("Get an attest command")
+			exitCode, err = remoteAttest(agentPipe, config, notifySignal)
+			if err != nil {
+				return exitCode, err
+			}
+			logrus.Debugf("remote attest normally exits")
+
+			return exitCode, err
+		} else {
+			logrus.Infof("Get an exec command")
+			exitCode, err = remoteExec(agentPipe, cmd, notifySignal)
+			if err != nil {
+				return exitCode, err
+			}
+			logrus.Debug("remote exec normally exits")
+
 			return exitCode, err
 		}
-		logrus.Debug("remote exec normally exits")
-
-		return exitCode, err
 	}
 
 	notifyExit := make(chan struct{})
@@ -199,6 +215,105 @@ func finalizeInitialization(fifoFd int) error {
 	unix.Close(fifoFd)
 	unix.Close(fd)
 	return nil
+}
+
+func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySignal chan os.Signal) (exitCode int32, err error) {
+	logrus.Infof("preparing to remote Attest")
+	c, err := net.FileConn(agentPipe)
+	if err != nil {
+		return 1, err
+	}
+	defer c.Close()
+	conn, ok := c.(*net.UnixConn)
+	if !ok {
+		return 1, fmt.Errorf("casting to UnixConn faild")
+	}
+
+	sgxEnclaveType := os.Getenv("PRODUCT")
+	isProductEnclave, err := strconv.ParseUint(sgxEnclaveType, 10, 32)
+	if err != nil {
+		return 1, fmt.Errorf("Invalid sgxEnclaveType Configuration, error = %v!\n", err)
+	}
+	if isProductEnclave != sgx.DebugEnclave && isProductEnclave != sgx.ProductEnclave {
+		return 1, fmt.Errorf("Unsupported is_product_enclave Configuration %v!\n", sgxEnclaveType)
+	}
+
+	quoteType := os.Getenv("QUOTE_TYPE")
+	raEpidQuoteType, err := strconv.ParseUint(quoteType, 10, 32)
+	if err != nil {
+		return 1, fmt.Errorf("Invalid Quote Type Configuration, error = %v!\n", err)
+	}
+	if raEpidQuoteType != (intelsgx.QuoteSignatureTypeUnlinkable) && raEpidQuoteType != (intelsgx.QuoteSignatureTypeLinkable) {
+		return 1, fmt.Errorf("Unsupported Quote Type Configuration %v!\n", raEpidQuoteType)
+	}
+
+	req := &pb.AgentServiceRequest{}
+	req.Attest = &pb.AgentServiceRequest_Attest{
+		Spid:            os.Getenv("SPID"),
+		SubscriptionKey: os.Getenv("SUBSCRIPTION_KEY"),
+		Product:         (uint32)(isProductEnclave),
+		QuoteType:       (uint32)(raEpidQuoteType),
+	}
+
+	if err = protoBufWrite(conn, req); err != nil {
+		return 1, err
+	}
+
+	agentFile, err := conn.File()
+	if err != nil {
+		return 1, err
+	}
+	defer agentFile.Close()
+
+	// Send signal notification pipe.
+	childSignalPipe, parentSignalPipe, err := os.Pipe()
+	agentFile, err = conn.File()
+	if err != nil {
+		return 1, err
+	}
+	defer agentFile.Close()
+
+	// Send signal notification pipe.
+	childSignalPipe, parentSignalPipe, err = os.Pipe()
+	if err != nil {
+		return 1, err
+	}
+	defer func() {
+		if err != nil {
+			childSignalPipe.Close()
+		}
+		parentSignalPipe.Close()
+	}()
+
+	if err = utils.SendFd(agentFile, childSignalPipe.Name(), childSignalPipe.Fd()); err != nil {
+		return 1, err
+	}
+
+	// Close the child signal pipe in parent side **after** sending all stdio fds to
+	// make sure the parent runelet has retrieved the child signal pipe.
+	childSignalPipe.Close()
+
+	signal.Notify(notifySignal)
+
+	notifyExit := make(chan struct{})
+	sigForwarderExit := forwardSignalToParent(parentSignalPipe, notifySignal, notifyExit)
+
+	resp := &pb.AgentServiceResponse{}
+	if err = protoBufRead(conn, resp); err != nil {
+		return 1, err
+	}
+
+	notifyExit <- struct{}{}
+	logrus.Debug("awaiting for signal forwarder exiting ...")
+	<-sigForwarderExit
+	logrus.Debug("signal forwarder exited")
+
+	if resp.Attest.Error == "" {
+		err = nil
+	} else {
+		err = fmt.Errorf(resp.Attest.Error)
+	}
+	return resp.Attest.ExitCode, err
 }
 
 func remoteExec(agentPipe *os.File, cmd []string, notifySignal chan os.Signal) (exitCode int32, err error) {
