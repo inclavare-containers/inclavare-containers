@@ -364,7 +364,12 @@ int pal_get_version(void)
 	return 1;
 }
 
-int pal_init(const char *args, const char *log_level)
+typedef struct {
+	const char *args;
+	const char *log_level;
+} pal_attr_t;
+
+int pal_init(pal_attr_t *attr)
 {
 	struct sgx_sigstruct sigstruct;
 	struct sgx_einittoken token;
