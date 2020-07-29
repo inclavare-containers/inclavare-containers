@@ -10,10 +10,13 @@ ENCL_CFLAGS := -Wall -Werror -static -nostdlib -nostartfiles -fPIC \
 HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 
 IS_OOT_DRIVER := $(shell [ ! -e /dev/isgx ])
+IS_SGX_FLC := $(shell lscpu | grep -q sgx_lc)
 
 TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton.so $(OUTPUT)/signing_key.pem
 
 ifeq ($(IS_OOT_DRIVER),1)
+    TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
+else ifeq ($(IS_SGX_FLC),)
     TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
 endif
 

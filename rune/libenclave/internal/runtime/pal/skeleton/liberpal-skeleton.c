@@ -31,6 +31,7 @@ static struct sgx_secs secs;
 static bool initialized = false;
 static char *sgx_dev_path;
 static bool is_oot_driver;
+static bool no_sgx_flc = false;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
  * intends to exit.
@@ -221,7 +222,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 			goto out_map;
 	}
 
-	if (is_oot_driver) {
+	if (is_oot_driver || no_sgx_flc) {
 		struct sgx_enclave_init_with_token ioc;
 		ioc.addr = secs->base;
 		ioc.sigstruct = (uint64_t)sigstruct;
@@ -359,6 +360,37 @@ static bool load_token(const char *path, void *token)
 	return true;
 }
 
+static void check_opts(const char *opt)
+{
+	if (!strcmp(opt, "no-sgx-flc"))
+		no_sgx_flc = true;
+}
+
+static void parse_args(const char *args)
+{
+	char *a = strdup(args);
+	if (!a)
+		return;
+
+	char *opt = strtok(a, " ");
+	check_opts(opt);
+
+	if (!opt) {
+		free(a);
+		return;
+	}
+
+	do {
+		char *opt = strtok(NULL, " ");
+		if (!opt)
+			break;
+
+		check_opts(opt);
+	} while (1);
+
+	free(a);
+}
+
 int pal_get_version(void)
 {
 	return 1;
@@ -375,6 +407,8 @@ int pal_init(pal_attr_t *attr)
 	struct sgx_einittoken token;
 	off_t bin_size;
 	void *bin;
+
+	parse_args(attr->args);
 
 	detect_driver_type();
 
