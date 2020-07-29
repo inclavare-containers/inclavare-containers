@@ -9,7 +9,13 @@ ENCL_CFLAGS := -Wall -Werror -static -nostdlib -nostartfiles -fPIC \
 	       -fno-stack-protector -mrdrnd -std=gnu11
 HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 
-TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton.so $(OUTPUT)/signing_key.pem $(OUTPUT)/encl.token
+IS_OOT_DRIVER := $(shell [ ! -e /dev/isgx ])
+
+TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton.so $(OUTPUT)/signing_key.pem
+
+ifeq ($(IS_OOT_DRIVER),1)
+    TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
+endif
 
 all: $(TEST_CUSTOM_PROGS)
 

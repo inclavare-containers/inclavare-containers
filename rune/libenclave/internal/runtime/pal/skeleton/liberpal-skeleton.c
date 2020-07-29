@@ -31,6 +31,11 @@ static struct sgx_secs secs;
 static bool initialized = false;
 static char *sgx_dev_path;
 static bool is_oot_driver;
+/*
+ * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
+ * intends to exit.
+ */
+static int enclave_fd = -1;
 
 static bool is_sgx_device(const char *dev)
 {
@@ -58,11 +63,44 @@ static void detect_driver_type(void)
 	is_oot_driver = false;
 }
 
+static uint64_t create_enclave_range(int dev_fd, uint64_t size)
+{
+	void *area;
+	int fd;
+	int flags = MAP_SHARED;
+
+	if (is_oot_driver) {
+		fd = dev_fd;
+	} else {
+		fd = -1;
+		flags |= MAP_ANONYMOUS;
+	}
+
+	area = mmap(NULL, size * 2, PROT_NONE, flags, fd, 0);
+	if (area == MAP_FAILED) {
+		perror("mmap");
+		return 0;
+	}
+
+	uint64_t base = ((uint64_t)area + size - 1) & ~(size - 1);
+	munmap(area, base - (uint64_t)area);
+	munmap((void *)(base + size), (uint64_t)area + size - base);
+
+	if (is_oot_driver) {
+		if (mprotect((void *)base, size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
+			perror("mprotect");
+			munmap((void *)base, size);
+			return 0;
+		}
+	}
+
+	return base;
+}
+
 static bool encl_create(int dev_fd, unsigned long bin_size,
 			struct sgx_secs *secs)
 {
 	struct sgx_enclave_create ioc;
-	void *area;
 	int rc;
 
 	memset(secs, 0, sizeof(*secs));
@@ -73,23 +111,11 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	for (secs->size = PAGE_SIZE; secs->size < bin_size; )
 		secs->size <<= 1;
 
-	area = mmap(NULL, secs->size * 2, PROT_NONE, MAP_SHARED, dev_fd, 0);
-	if (area == MAP_FAILED) {
-		perror("mmap");
+	uint64_t base = create_enclave_range(dev_fd, secs->size);
+	if (!base)
 		return false;
-	}
 
-	secs->base = ((uint64_t)area + secs->size - 1) & ~(secs->size - 1);
-	munmap(area, secs->base - (uint64_t)area);
-	munmap((void *)(secs->base + secs->size),
-	       (uint64_t)area + secs->size - secs->base);
-
-	if (mprotect((void *)secs->base, secs->size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
-		perror("mprotect");
-		munmap((void *)secs->base, secs->size);
-		return false;
-	}
-
+	secs->base = base;
 	ioc.src = (unsigned long)secs;
 	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
 	if (rc) {
@@ -180,18 +206,12 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		goto out_dev_fd;
 
 	if (is_oot_driver) {
-		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+		if (!encl_add_pages_with_mrmask(dev_fd, secs->base, bin, PAGE_SIZE, SGX_SECINFO_TCS))
 			goto out_map;
 
 		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
 						bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
 			goto out_map;
-
-		struct sgx_enclave_init_with_token ioc;
-		ioc.addr = secs->base;
-		ioc.sigstruct = (uint64_t)sigstruct;
-		ioc.einittoken = (uint64_t)token;
-		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT_WITH_TOKEN, &ioc);
 	} else {
 		if (!encl_add_pages(dev_fd, 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
 			goto out_map;
@@ -199,7 +219,15 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		if (!encl_add_pages(dev_fd, PAGE_SIZE, bin + PAGE_SIZE,
 				    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
 			goto out_map;
+	}
 
+	if (is_oot_driver) {
+		struct sgx_enclave_init_with_token ioc;
+		ioc.addr = secs->base;
+		ioc.sigstruct = (uint64_t)sigstruct;
+		ioc.einittoken = (uint64_t)token;
+		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT_WITH_TOKEN, &ioc);
+	} else {
 		struct sgx_enclave_init ioc;
 		ioc.sigstruct = (uint64_t)sigstruct;
 		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT, &ioc);
@@ -210,7 +238,30 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		goto out_map;
 	}
 
-	close(dev_fd);
+	if (is_oot_driver)
+		close(dev_fd);
+	else {
+		void *rc;
+
+		rc = mmap((void *)secs->base, PAGE_SIZE,
+			  PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED,
+			  dev_fd, 0);
+		if (rc == MAP_FAILED) {
+			perror("mmap TCS");
+			goto out_map;
+		}
+
+		rc = mmap((void *)secs->base + PAGE_SIZE, bin_size - PAGE_SIZE,
+			  PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_SHARED,
+			  dev_fd, 0);
+		if (rc == MAP_FAILED) {
+			perror("mmap text & data");
+			goto out_map;
+		}
+
+		enclave_fd = dev_fd;
+	}
+
 	return true;
 out_map:
 	munmap((void *)secs->base, secs->size);
@@ -342,14 +393,14 @@ int pal_init(const char *args, const char *log_level)
 int pal_exec(char *path, char *argv[], const char *envp[],
 	     int *exit_code, int stdin, int stdout, int stderr)
 {
-        FILE *fp = fdopen(stderr, "w");
-        if (!fp)
-                return -1;
+	FILE *fp = fdopen(stderr, "w");
+	if (!fp)
+		return -1;
 
 	if (!initialized) {
-	        fprintf(fp, "enclave runtime skeleton uninitialized yet!\n");
+		fprintf(fp, "enclave runtime skeleton uninitialized yet!\n");
 		fclose(fp);
-	        return -1;
+		return -1;
 	}
 
 	uint64_t result = 0;
@@ -379,5 +430,8 @@ int pal_destroy(void)
 		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
+
+	close(enclave_fd);
+
 	return 0;
 }
