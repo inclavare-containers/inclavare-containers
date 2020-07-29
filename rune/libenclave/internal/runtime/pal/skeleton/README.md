@@ -4,21 +4,20 @@ Note that this code base is inspired by [v28 SGX in-tree driver](https://patchwo
 
 ---
 
-# Install sgx-tools
+# Run skeleton with Docker
+## Install sgx-tools
 Refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/sgx-tools/README.md).
 
----
+Note that this step is only required when using SGX out-of-tree driver.
 
-# Build liberpal-skeleton.so
+## Build liberpal-skeleton.so
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 make
 cp liberpal-skeleton.so /usr/lib
 ```
 
----
-
-# Build skeleton container image
+## Build skeleton container image
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 cat >Dockerfile <<EOF
@@ -30,16 +29,13 @@ WORKDIR /run/rune
 COPY encl.bin .
 COPY encl.elf .
 COPY encl.ss .
+# if any
 COPY encl.token .
 EOF
 docker build . -t skeleton-enclave
 ```
 
----
-
-# Build and install rune
-`rune` is a CLI tool for spawning and running enclaves in containers according to the OCI specification.
-
+## Build and install rune
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers#rune) to build `rune` from scratch.
 
 ---
