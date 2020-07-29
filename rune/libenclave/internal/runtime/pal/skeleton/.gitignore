@@ -1,0 +1,6 @@
+encl.bin
+encl.elf
+encl.ss
+*.o
+sgxsign
+signing_key.pem
