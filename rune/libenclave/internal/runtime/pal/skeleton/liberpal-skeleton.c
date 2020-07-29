@@ -39,7 +39,7 @@ static bool is_sgx_device(const char *dev)
 
 	rc = stat(dev, &st);
 	if (!rc) {
-		if ((st.st_mode & S_IFCHR) && (major(st.st_dev) == 10))
+		if ((st.st_mode & S_IFCHR) && (major(st.st_rdev) == 10))
 			return true;
 	}
 
