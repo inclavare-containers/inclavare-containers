@@ -98,6 +98,7 @@ export AESM_PATH=$PWD
 Download the package from [here](https://github.com/alibaba/inclavare-containers/releases/).
 - On CentOS 7.5:
 ```shell
+yum install -y libseccomp
 rpm -ivh rune-0.3.0-1.el7.x86_64.rpm
 rpm -ivh occlum-pal-0.14.0-1.el7.x86_64.rpm
 ```
@@ -138,7 +139,6 @@ You need to specify a set of parameters to `docker run` in order to use `rune`, 
 
 ```shell
 export OCCLUM_INSTANCE_DIR=occlum-app
-yum install -y libseccomp
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
