@@ -1,3 +1,12 @@
+# 2020-07-30 v0.3.0
+- Support the creation of a Confidential Computing Kubernetes Cluster
+- Support IAS V4 API
+- Support build RPM/DEB package for `shim-rune` and `rune`
+- Support bootstrap remote attestation framework
+- Support Occlum 0.14
+- Rename the repo `runectl` to `sgx-tools`
+- Adapt to v33 SGX in-tree driver
+
 # 2020-06-30 v0.2.0
 - Integrate new components shim-rune and runectl.
 - Implement Enclave Runtime PAL API v2.
