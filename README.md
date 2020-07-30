@@ -66,5 +66,11 @@ Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blo
 
 ---
 
+## Run rune containers in Kubernetes cluster
+Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_kubernetes_cluster.md) to develop and deploy a rune container in a Kubernetes cluster.
+
+---
+
 ## Reference container image
 [The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11 and Golang are provided.
+
