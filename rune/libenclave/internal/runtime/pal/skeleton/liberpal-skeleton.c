@@ -14,7 +14,11 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#if __GLIBC__ == 2 && __GLIBC_MINOR__ < 25
 #include <sys/types.h>
+#else
+#include <sys/sysmacros.h>
+#endif
 #include "defines.h"
 #include "sgx_call.h"
 
