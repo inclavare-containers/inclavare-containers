@@ -429,10 +429,14 @@ int pal_init(pal_attr_t *attr)
 	return 0;
 }
 
-int pal_exec(char *path, char *argv[], const char *envp[],
-	     int *exit_code, int stdin, int stdout, int stderr)
+typedef struct {
+	int stdin, stdout, stderr;
+} pal_stdio_fds;
+
+int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio,
+	     int *exit_code)
 {
-	FILE *fp = fdopen(stderr, "w");
+	FILE *fp = fdopen(stdio->stderr, "w");
 	if (!fp)
 		return -1;
 
