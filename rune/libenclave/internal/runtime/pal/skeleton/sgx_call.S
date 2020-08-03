@@ -14,7 +14,12 @@
 	.global sgx_ecall
 	.type sgx_ecall, @function
 sgx_ecall:
+	mov	$1, %rax
 	push	%rbx
+	mov	tcs_busy(%rip), %rbx	
+	xchgb	(%rbx), %al
+	cmpb	$1, %al
+	jz	busy_err
 	push	%rbp
 	push	%rdi
 	push	%rsi
@@ -33,6 +38,9 @@ sgx_ecall:
 	lea	sgx_async_exit(%rip), %rcx
 sgx_async_exit:
 	ENCLU
+	xor	%rax, %rax
+	mov	tcs_busy(%rip), %rbx
+	movb	%al, (%rbx)
 	# Return value is saved in RAX.
 	mov	%rdx, %rax
 	pop	%r15
@@ -42,5 +50,6 @@ sgx_async_exit:
 	pop	%rsi
 	pop	%rdi
 	pop	%rbp
+busy_err:
 	pop	%rbx
 	ret
