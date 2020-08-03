@@ -19,6 +19,7 @@
 #else
 #include <sys/sysmacros.h>
 #endif
+#include <sys/wait.h>
 #include "defines.h"
 #include "sgx_call.h"
 
@@ -36,11 +37,13 @@ static bool initialized = false;
 static char *sgx_dev_path;
 static bool is_oot_driver;
 static bool no_sgx_flc = false;
+static bool fork_test = false;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
  * intends to exit.
  */
 static int enclave_fd = -1;
+void *tcs_busy;
 
 static bool is_sgx_device(const char *dev)
 {
@@ -368,6 +371,8 @@ static void check_opts(const char *opt)
 {
 	if (!strcmp(opt, "no-sgx-flc"))
 		no_sgx_flc = true;
+	else if (!strcmp(opt, "fork-test"))
+		fork_test = true;
 }
 
 static void parse_args(const char *args)
@@ -416,6 +421,12 @@ int pal_init(pal_attr_t *attr)
 
 	detect_driver_type();
 
+	tcs_busy = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	if (tcs_busy == MAP_FAILED)
+		return -EINVAL;
+	*(uint8_t *)tcs_busy = 0;
+	
 	if (!encl_data_map(IMAGE, &bin, &bin_size))
 		return -ENOENT;
 
@@ -450,6 +461,25 @@ int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio,
 		return -1;
 	}
 
+	bool is_child = false;
+
+	if (fork_test) {
+		switch (fork()) {
+		case -1:
+			fprintf(fp, "fork(), errno = %d\n", errno);
+			fclose(fp);
+			return -1;
+		case 0:
+			fprintf(fp, "run in child process, pid = %d\n", (int)getpid());
+			is_child = true;
+			break;
+		default:
+			wait(NULL);
+			fprintf(fp, "run in parent process, pid = %d\n", (int)getpid());
+			break;
+		}
+	}
+
 	uint64_t result = 0;
 	int ret = SGX_ENTER_1_ARG(ECALL_MAGIC, (void *)secs.base, &result);
 	if (ret) {
@@ -465,6 +495,9 @@ int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio,
 
 	fprintf(fp, "Enclave runtime skeleton initialization succeeded\n");
 	fclose(fp);
+
+	if (fork_test && is_child)
+		exit(0);
 
 	*exit_code = 0;
 
