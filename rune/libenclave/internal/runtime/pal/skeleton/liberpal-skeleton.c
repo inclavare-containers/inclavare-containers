@@ -22,6 +22,7 @@
 #include <sys/wait.h>
 #include "defines.h"
 #include "sgx_call.h"
+#include "liberpal-skeleton.h"
 
 #define PAGE_SIZE  4096
 
@@ -400,17 +401,7 @@ static void parse_args(const char *args)
 	free(a);
 }
 
-int pal_get_version(void)
-{
-	return 1;
-}
-
-typedef struct {
-	const char *args;
-	const char *log_level;
-} pal_attr_t;
-
-int pal_init(pal_attr_t *attr)
+int __pal_init(pal_attr_t *attr)
 {
 	struct sgx_sigstruct sigstruct;
 	struct sgx_einittoken token;
@@ -444,12 +435,7 @@ int pal_init(pal_attr_t *attr)
 	return 0;
 }
 
-typedef struct {
-	int stdin, stdout, stderr;
-} pal_stdio_fds;
-
-int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio,
-	     int *exit_code)
+int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 {
 	FILE *fp = fdopen(stdio->stderr, "w");
 	if (!fp)
@@ -504,7 +490,7 @@ int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio,
 	return 0;
 }
 
-int pal_destroy(void)
+int __pal_destory(void)
 {
 	if (!initialized) {
 		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
