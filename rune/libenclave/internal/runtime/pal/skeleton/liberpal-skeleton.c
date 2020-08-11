@@ -4,7 +4,6 @@
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -36,9 +35,9 @@
 static struct sgx_secs secs;
 static bool initialized = false;
 static char *sgx_dev_path;
-static bool is_oot_driver;
 static bool no_sgx_flc = false;
 static bool fork_test = false;
+bool is_oot_driver;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
  * intends to exit.
@@ -60,7 +59,7 @@ static bool is_sgx_device(const char *dev)
 	return false;
 }
 
-static void detect_driver_type(void)
+__attribute__((constructor)) static void detect_driver_type(void)
 {
 	if (is_sgx_device("/dev/isgx")) {
 		sgx_dev_path = "/dev/isgx";
@@ -409,8 +408,6 @@ int __pal_init(pal_attr_t *attr)
 	void *bin;
 
 	parse_args(attr->args);
-
-	detect_driver_type();
 
 	tcs_busy = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANONYMOUS, -1, 0);

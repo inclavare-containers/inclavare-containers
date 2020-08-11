@@ -1,6 +1,10 @@
 #ifndef LIBERPAL_SKELETON_H
 #define LIBERPAL_SKELETON_H
 
+#include <stdbool.h>
+
+extern bool is_oot_driver;
+
 typedef struct {
         const char *args;
         const char *log_level;
@@ -9,6 +13,19 @@ typedef struct {
 typedef struct {
         int stdin, stdout, stderr;
 } pal_stdio_fds;
+
+typedef struct {
+        char *path;
+        char **argv;
+        char **env;
+        pal_stdio_fds *stdio;
+        int *pid;
+} pal_create_process_args;
+
+typedef struct {
+	int pid;
+	int *exit_value;
+} pal_exec_args;
 
 int __pal_init(pal_attr_t *attr);
 int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code);
