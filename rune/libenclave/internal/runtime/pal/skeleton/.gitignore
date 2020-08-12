@@ -4,3 +4,6 @@ encl.ss
 *.o
 sgxsign
 signing_key.pem
+*.so
+*.token
+Dockerfile

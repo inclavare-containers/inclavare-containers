@@ -37,6 +37,8 @@ static bool initialized = false;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
 static bool fork_test = false;
+static bool attest_test = false;
+bool debugging = false;
 bool is_oot_driver;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
@@ -373,6 +375,10 @@ static void check_opts(const char *opt)
 		no_sgx_flc = true;
 	else if (!strcmp(opt, "fork-test"))
 		fork_test = true;
+	else if (!strcmp(opt, "debug"))
+		debugging = true;
+	else if (!strcmp(opt, "attest-test"))
+		attest_test = true;
 }
 
 static void parse_args(const char *args)
@@ -484,6 +490,120 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 
 	*exit_code = 0;
 
+	return 0;
+}
+
+int __pal_create_process(pal_create_process_args *args)
+{
+	int pid;
+
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		return -1;
+	}
+
+	if (args == NULL || args->path == NULL || args->argv == NULL || args->pid == NULL || args->stdio == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	if ((pid = fork()) < 0)
+		return -1;
+	else if (pid == 0) {
+		int exit_code, ret;
+
+		ret = __pal_exec(args->path, args->argv, args->stdio, &exit_code);
+		exit(ret ? ret : exit_code);
+	} else
+		*args->pid = pid;
+
+	return 0;
+}
+
+void attest_main()
+{
+	while(1) {
+		printf("Hello Skeleton!\n");
+		printf("    - Powered by ACK-TEE and runE\n");
+		fflush(stdout);
+		sleep(3);
+	}
+}
+
+int wait4child(pal_exec_args *attr)
+{
+	int status;
+
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		return -1;
+	}
+
+	if (attr == NULL || attr->exit_value == NULL) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	waitpid(attr->pid, &status, 0);
+
+	if (WIFEXITED(status) || WIFSIGNALED(status))
+		*attr->exit_value = WEXITSTATUS(status);
+
+	if (attest_test) {
+		/* the `rune attest` and `rune exec` commands both need skeleton bundles/containers
+		* keeping running state. Therefore, we use a main loop to keep skeleton 
+		* bundles/containers running.
+		*/
+		attest_main();
+	}
+
+	return 0;
+}
+
+int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int* report_len)
+{
+	uint8_t report_data[64] = { 0, };
+	struct sgx_report report_align;
+	int ret;
+
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		return -1;
+	}
+
+	if (targetinfo == NULL || targetinfo_len != sizeof(struct sgx_target_info)) {
+		fprintf(stderr, "Input parameter targetinfo is NULL or targentinfo_len != sizeof(struct sgx_target_info)!\n");
+		return -EINVAL;
+	}
+
+	if (report == NULL || report_len == NULL || *report_len < SGX_REPORT_SIZE) {
+		fprintf(stderr, "Input parameter report is NULL or report_len is not enough!\n");
+		return -EINVAL;
+	}
+
+	ret = SGX_ENTER_3_ARGS(ECALL_REPORT, (void *)secs.base, targetinfo,
+						report_data, &report_align);
+	if (ret) {
+		fprintf(stderr, "failed to get report\n");
+		return ret;
+	}
+
+	memcpy(report, &report_align, SGX_REPORT_SIZE);
+	if (debugging) {
+		printf("ok to get report\n");
+	}
+
+	return 0;
+}
+
+int __pal_kill(int pid, int sig)
+{
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		return -1;
+	}
+
+	/* No implementation */
 	return 0;
 }
 
