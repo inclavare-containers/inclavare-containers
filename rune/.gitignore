@@ -5,4 +5,4 @@ contrib/cmd/recvtty/recvtty
 man/man8
 release
 *.pb.go
-liberpal-skeleton.so
+liberpal-skeleton*.so

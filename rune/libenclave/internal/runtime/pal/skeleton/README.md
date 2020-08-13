@@ -10,7 +10,7 @@ Refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/maste
 
 Note that this step is only required when using SGX out-of-tree driver.
 
-## Build liberpal-skeleton.so
+## Build liberpal-skeleton
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 make

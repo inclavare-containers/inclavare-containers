@@ -159,7 +159,7 @@ func Example() *specs.Spec {
 		},
 		Annotations: map[string]string{
 			"enclave.type":         "intelSgx",
-			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton.so",
+			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v1.so",
 			"enclave.runtime.args": "skeleton,debug",
 		},
 	}
