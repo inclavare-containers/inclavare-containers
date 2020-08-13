@@ -14,7 +14,7 @@ Note that this step is only required when using SGX out-of-tree driver.
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 make
-cp liberpal-skeleton.so /usr/lib
+cp liberpal-skeleton-v*.so /usr/lib
 ```
 
 ## Build skeleton container image
@@ -68,7 +68,7 @@ Runtimes: rune runc
 ```shell
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
-  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton.so \
+  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v${SKELETON_PAL_VERSION}.so \
   -e ENCLAVE_RUNTIME_ARGS="debug" \
   skeleton-enclave
 ```
@@ -111,7 +111,7 @@ In order to run the skeleton bundle with `rune`, you need to configure enclave r
 ```json
   "annotations": {
       "enclave.type": "intelSgx",
-      "enclave.runtime.path": "/usr/lib/liberpal-skeleton.so",
+      "enclave.runtime.path": "/usr/lib/liberpal-skeleton-v${SKELETON_PAL_VERSION}.so",
       "enclave.runtime.args": "debug"
   }
 ```
