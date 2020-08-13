@@ -43,8 +43,8 @@ all: rune recvtty skeleton
 recvtty:
 	$(GO_BUILD) -o contrib/cmd/recvtty/recvtty ./contrib/cmd/recvtty
 
-skeleton: libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so
-libenclave/internal/runtime/pal/skeleton/liberpal-skeleton.so:
+skeleton: libenclave/internal/runtime/pal/skeleton/liberpal-skeleton*.so
+libenclave/internal/runtime/pal/skeleton/liberpal-skeleton*.so:
 	make -C libenclave/internal/runtime/pal/skeleton
 
 static: $(PROTOS)
