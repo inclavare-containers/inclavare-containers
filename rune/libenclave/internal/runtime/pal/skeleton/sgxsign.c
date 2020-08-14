@@ -426,28 +426,18 @@ int main(int argc, char **argv)
 	const char *program;
 	int opt;
 	RSA *sign_key;
-
-	memset(&ss, 0, sizeof(ss));
-	ss.header.header1[0] = header1[0];
-	ss.header.header1[1] = header1[1];
-	ss.header.header2[0] = header2[0];
-	ss.header.header2[1] = header2[1];
-	ss.exponent = 3;
-
-#ifndef CONFIG_EINITTOKENKEY
-	ss.body.attributes = SGX_ATTR_MODE64BIT;
-#else
-	ss.body.attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_EINITTOKENKEY;
-#endif
-	ss.body.attributes |= SGX_ATTR_DEBUG;
-	ss.body.xfrm = 7;
-	ss.body.attributes_mask = ss.body.attributes;
+	bool enclave_debug = true;
+	char* const short_options = "p";
+	struct option long_options = {"product", 0, NULL, 'p'};
 
 	program = argv[0];
 
 	do {
-		opt = getopt(argc, argv, "");
+		opt = getopt_long(argc, argv, short_options, &long_options, NULL);
 		switch (opt) {
+		case 'p':
+			enclave_debug = false;
+			break;
 		case -1:
 			break;
 		default:
@@ -460,6 +450,23 @@ int main(int argc, char **argv)
 
 	if (argc < 3)
 		exit_usage(program);
+
+        memset(&ss, 0, sizeof(ss));
+        ss.header.header1[0] = header1[0];
+        ss.header.header1[1] = header1[1];
+        ss.header.header2[0] = header2[0];
+        ss.header.header2[1] = header2[1];
+        ss.exponent = 3;
+
+#ifndef CONFIG_EINITTOKENKEY
+        ss.body.attributes = SGX_ATTR_MODE64BIT;
+#else
+        ss.body.attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_EINITTOKENKEY;
+#endif
+	if (enclave_debug)
+		ss.body.attributes |= SGX_ATTR_DEBUG;
+	ss.body.xfrm = 7;
+	ss.body.attributes_mask = ss.body.attributes;
 
 	/* sanity check only */
 	if (check_crypto_errors())
