@@ -37,6 +37,7 @@ static bool initialized = false;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
 static bool fork_test = false;
+static bool enclave_debug = true;
 bool is_oot_driver;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
@@ -113,7 +114,9 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 
 	memset(secs, 0, sizeof(*secs));
 	secs->ssa_frame_size = 1;
-	secs->attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_DEBUG;
+	secs->attributes = SGX_ATTR_MODE64BIT;
+	if (enclave_debug)
+		secs->attributes |= SGX_ATTR_DEBUG;
 	secs->xfrm = 7;
 
 	for (secs->size = PAGE_SIZE; secs->size < bin_size; )
@@ -209,6 +212,9 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		fprintf(stderr, "Unable to open %s\n", sgx_dev_path);
 		return false;
 	}
+
+	if (!(sigstruct->body.attributes & SGX_ATTR_DEBUG))
+		enclave_debug = false;
 
 	if (!encl_create(dev_fd, bin_size, secs))
 		goto out_dev_fd;
