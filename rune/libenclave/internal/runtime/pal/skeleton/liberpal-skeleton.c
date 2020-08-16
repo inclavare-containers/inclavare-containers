@@ -18,7 +18,6 @@
 #else
 #include <sys/sysmacros.h>
 #endif
-#include <sys/wait.h>
 #include "defines.h"
 #include "sgx_call.h"
 #include "liberpal-skeleton.h"
@@ -36,7 +35,6 @@ static struct sgx_secs secs;
 static bool initialized = false;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
-static bool fork_test = false;
 static bool enclave_debug = true;
 bool is_oot_driver;
 /*
@@ -377,8 +375,6 @@ static void check_opts(const char *opt)
 {
 	if (!strcmp(opt, "no-sgx-flc"))
 		no_sgx_flc = true;
-	else if (!strcmp(opt, "fork-test"))
-		fork_test = true;
 }
 
 static void parse_args(const char *args)
@@ -450,25 +446,6 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 		return -1;
 	}
 
-	bool is_child = false;
-
-	if (fork_test) {
-		switch (fork()) {
-		case -1:
-			fprintf(fp, "fork(), errno = %d\n", errno);
-			fclose(fp);
-			return -1;
-		case 0:
-			fprintf(fp, "run in child process, pid = %d\n", (int)getpid());
-			is_child = true;
-			break;
-		default:
-			wait(NULL);
-			fprintf(fp, "run in parent process, pid = %d\n", (int)getpid());
-			break;
-		}
-	}
-
 	uint64_t result = 0;
 	int ret = SGX_ENTER_1_ARG(ECALL_MAGIC, (void *)secs.base, &result);
 	if (ret) {
@@ -484,9 +461,6 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 
 	fprintf(fp, "Enclave runtime skeleton initialization succeeded\n");
 	fclose(fp);
-
-	if (fork_test && is_child)
-		exit(0);
 
 	*exit_code = 0;
 
