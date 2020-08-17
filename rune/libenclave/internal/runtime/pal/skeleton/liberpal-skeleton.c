@@ -35,6 +35,7 @@
 static struct sgx_secs secs;
 static pal_stdio_fds pal_stdio;
 static bool initialized = false;
+static int exit_code;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
 static bool enclave_debug = true;
@@ -486,6 +487,13 @@ int __pal_create_process(pal_create_process_args *args)
 		return -1;
 	}
 
+	/* SGX out-of-tree driver disallows the creation of shared enclave mapping
+	 * between parent and child process, so simply launching __pal_exec() directly here.
+	 */
+	if (is_oot_driver) {
+		return __pal_exec(args->path, args->argv, args->stdio, &exit_code);
+	}
+
 	FILE *fp = fdopen(args->stdio->stderr, "w");
 	if (!fp)
 		return -1;
@@ -522,6 +530,11 @@ int wait4child(pal_exec_args *attr)
 	if (!initialized) {
 		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
+	}
+
+	if (is_oot_driver) {
+		*attr->exit_value = exit_code;
+		return exit_code;
 	}
 
 	waitpid(attr->pid, &status, 0);

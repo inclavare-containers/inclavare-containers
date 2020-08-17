@@ -13,11 +13,6 @@ int pal_get_version(void)
 
 int pal_init(pal_attr_t *attr)
 {
-	if (is_oot_driver) {
-		fprintf(stderr, "Skeleton PAL API v2 doesn't support SGX OOT driver!\n");
-		return -1;
-	}
-
 	return __pal_init(attr);
 }
 
