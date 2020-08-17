@@ -33,6 +33,7 @@
 #define TOKEN		"encl.token"
 
 static struct sgx_secs secs;
+static pal_stdio_fds pal_stdio;
 static bool initialized = false;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
@@ -437,6 +438,10 @@ int __pal_init(pal_attr_t *attr)
 
 int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 {
+	if (path == NULL || argv == NULL || stdio == NULL || exit_code == NULL) {
+		return -1;
+	}
+
 	FILE *fp = fdopen(stdio->stderr, "w");
 	if (!fp)
 		return -1;
@@ -446,6 +451,8 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 		fclose(fp);
 		return -1;
 	}
+
+	memcpy(&pal_stdio, stdio, sizeof(pal_stdio_fds));
 
 	uint64_t result = 0;
 	int ret = SGX_ENTER_1_ARG(ECALL_MAGIC, (void *)secs.base, &result);
@@ -476,9 +483,20 @@ int __pal_create_process(pal_create_process_args *args)
 		return -1;
 	}
 
-	if ((pid = fork()) < 0)
+	FILE *fp = fdopen(args->stdio->stderr, "w");
+	if (!fp)
 		return -1;
-	else if (pid == 0) {
+
+	if (!initialized) {
+		fprintf(fp, "Enclave runtime skeleton uninitialized yet!\n");
+		fclose(fp);
+		return -1;
+	}
+
+	if ((pid = fork()) < 0) {
+		fclose(fp);
+		return -1;
+	} else if (pid == 0) {
 		int exit_code, ret;
 
 		ret = __pal_exec(args->path, args->argv, args->stdio, &exit_code);
@@ -486,6 +504,7 @@ int __pal_create_process(pal_create_process_args *args)
 	} else
 		*args->pid = pid;
 
+	fclose(fp);
 	return 0;
 }
 
@@ -494,6 +513,11 @@ int wait4child(pal_exec_args *attr)
 	int status;
 
 	if (attr == NULL || attr->exit_value == NULL) {
+		return -1;
+	}
+
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
 
@@ -507,17 +531,28 @@ int wait4child(pal_exec_args *attr)
 
 int __pal_kill(int pid, int sig)
 {
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		return -1;
+	}
+
 	/* No implementation */
 	return 0;
 }
 
 int __pal_destory(void)
 {
+	FILE *fp = fdopen(pal_stdio.stderr, "w");
+	if (!fp)
+		return -1;
+
 	if (!initialized) {
-		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		fprintf(fp, "Enclave runtime skeleton uninitialized yet!\n");
+		fclose(fp);
 		return -1;
 	}
 
+	fclose(fp);
 	close(enclave_fd);
 
 	return 0;
