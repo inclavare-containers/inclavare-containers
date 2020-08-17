@@ -13,6 +13,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 25
 #include <sys/types.h>
 #else
@@ -464,6 +465,49 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 
 	*exit_code = 0;
 
+	return 0;
+}
+
+int __pal_create_process(pal_create_process_args *args)
+{
+	int pid;
+
+	if (args == NULL || args->path == NULL || args->argv == NULL || args->pid == NULL || args->stdio == NULL) {
+		return -1;
+	}
+
+	if ((pid = fork()) < 0)
+		return -1;
+	else if (pid == 0) {
+		int exit_code, ret;
+
+		ret = __pal_exec(args->path, args->argv, args->stdio, &exit_code);
+		exit(ret ? ret : exit_code);
+	} else
+		*args->pid = pid;
+
+	return 0;
+}
+
+int wait4child(pal_exec_args *attr)
+{
+	int status;
+
+	if (attr == NULL || attr->exit_value == NULL) {
+		return -1;
+	}
+
+	waitpid(attr->pid, &status, 0);
+
+	if (WIFEXITED(status) || WIFSIGNALED(status))
+		*attr->exit_value = WEXITSTATUS(status);
+
+	return 0;
+}
+
+int __pal_kill(int pid, int sig)
+{
+	/* No implementation */
 	return 0;
 }
 
