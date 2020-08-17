@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 extern bool is_oot_driver;
+extern bool debugging;
 
 typedef struct {
         const char *args;
