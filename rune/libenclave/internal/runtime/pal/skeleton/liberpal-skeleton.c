@@ -38,6 +38,7 @@ static bool initialized = false;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
 static bool enclave_debug = true;
+bool debugging = false;
 bool is_oot_driver;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
@@ -377,6 +378,8 @@ static void check_opts(const char *opt)
 {
 	if (!strcmp(opt, "no-sgx-flc"))
 		no_sgx_flc = true;
+	else if (!strcmp(opt, "debug"))
+		debugging = true;
 }
 
 static void parse_args(const char *args)
