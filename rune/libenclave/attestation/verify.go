@@ -1,4 +1,4 @@
-package attestation // import "github.com/opencontainers/runc/libenclave/attestation"
+package attestation // import "github.com/inclavare-containers/rune/libenclave/attestation"
 
 const (
 	// FIXME: allow tuning via parameter

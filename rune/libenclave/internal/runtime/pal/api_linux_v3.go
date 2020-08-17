@@ -1,4 +1,4 @@
-package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
+package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 
 /*
 #include <stdlib.h>

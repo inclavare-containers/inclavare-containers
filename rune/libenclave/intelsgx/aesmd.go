@@ -1,4 +1,4 @@
-package intelsgx // import "github.com/opencontainers/runc/libenclave/intelsgx"
+package intelsgx // import "github.com/inclavare-containers/rune/libenclave/intelsgx"
 
 import (
 	"bytes"

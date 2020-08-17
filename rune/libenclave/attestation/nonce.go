@@ -1,4 +1,4 @@
-package attestation // import "github.com/opencontainers/runc/libenclave/attestation"
+package attestation // import "github.com/inclavare-containers/rune/libenclave/attestation"
 
 import (
 	"encoding/binary"

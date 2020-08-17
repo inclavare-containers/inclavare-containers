@@ -1,4 +1,4 @@
-package libenclave // import "github.com/opencontainers/runc/libenclave"
+package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
 	"fmt"

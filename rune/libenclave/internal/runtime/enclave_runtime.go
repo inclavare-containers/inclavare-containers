@@ -1,4 +1,4 @@
-package runtime // import "github.com/opencontainers/runc/libenclave/internal/runtime"
+package runtime // import "github.com/inclavare-containers/rune/libenclave/internal/runtime"
 
 import (
 	"github.com/opencontainers/runc/libenclave/configs"

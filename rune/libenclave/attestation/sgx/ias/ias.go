@@ -1,4 +1,4 @@
-package ias // import "github.com/opencontainers/runc/libenclave/attestation/sgx/ias"
+package ias // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 
 import (
 	"bytes"

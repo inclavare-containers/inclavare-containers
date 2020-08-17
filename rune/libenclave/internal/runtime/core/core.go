@@ -1,4 +1,4 @@
-package enclave_runtime_core // import "github.com/opencontainers/runc/libenclave/internal/runtime/core"
+package enclave_runtime_core // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/core"
 
 import (
 	"fmt"
