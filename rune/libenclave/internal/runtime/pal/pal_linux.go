@@ -18,25 +18,14 @@ const (
 	palApiVersion = 2
 )
 
-func (pal *enclaveRuntimePal) Load(palPath string) (err error) {
-	if err = pal.getPalApiVersion(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (pal *enclaveRuntimePal) getPalApiVersion() error {
+func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	api := &enclaveRuntimePalApiV1{}
 	ver := api.get_version()
 	if ver > palApiVersion {
-		return fmt.Errorf("unsupported pal api version %d", ver)
-	}
-	pal.version = ver
-	return nil
-}
+                return fmt.Errorf("unsupported pal api version %d", ver)
+        }
+        pal.version = ver
 
-func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
-	api := &enclaveRuntimePalApiV1{}
 	return api.init(args, logLevel)
 }
 
