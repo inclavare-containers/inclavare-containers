@@ -11,7 +11,6 @@ import (
 )
 
 type EnclaveRuntime interface {
-	Load(path string) error
 	Init(args string, logLevel string) error
 	Attest(string, string, uint32, uint32) error
 	Exec(cmd []string, envp []string, stdio [3]*os.File) (int32, error)
@@ -36,12 +35,6 @@ func StartInitialization(config *configs.InitEnclaveConfig, logLevel string) (*E
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	logrus.Infof("Loading enclave runtime %s", config.Path)
-	err = runtime.Load(config.Path)
-	if err != nil {
-		return nil, err
 	}
 
 	logrus.Infof("Initializing enclave runtime")
