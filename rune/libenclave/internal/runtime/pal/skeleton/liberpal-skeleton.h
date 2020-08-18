@@ -32,6 +32,7 @@ int __pal_init(pal_attr_t *attr);
 int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code);
 int __pal_create_process(pal_create_process_args *args);
 int wait4child(pal_exec_args *attr);
+int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int* report_len);
 int __pal_kill(int pid, int sig);
 int __pal_destory(void);
 

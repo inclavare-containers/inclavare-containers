@@ -12,7 +12,7 @@ HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 IS_OOT_DRIVER := $(shell [ ! -e /dev/isgx ])
 IS_SGX_FLC := $(shell lscpu | grep -q sgx_lc)
 
-TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton-v1.so $(OUTPUT)/liberpal-skeleton-v2.so $(OUTPUT)/signing_key.pem
+TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton-v1.so $(OUTPUT)/liberpal-skeleton-v2.so $(OUTPUT)/liberpal-skeleton-v3.so $(OUTPUT)/signing_key.pem
 
 ifeq ($(IS_OOT_DRIVER),1)
     TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
@@ -35,6 +35,12 @@ $(OUTPUT)/liberpal-skeleton-v2.o: liberpal-skeleton-v2.c liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(OUTPUT)/liberpal-skeleton.o: liberpal-skeleton.c
+	$(CC) $(HOST_CFLAGS) -c $< -o $@
+
+$(OUTPUT)/liberpal-skeleton-v3.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v3.o $(OUTPUT)/liberpal-skeleton.o
+	$(CC) $(HOST_LDFLAGS) -o $@ $^
+
+$(OUTPUT)/liberpal-skeleton-v3.o: liberpal-skeleton-v3.c liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(OUTPUT)/sgx_call.o: sgx_call.S
