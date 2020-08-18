@@ -39,6 +39,7 @@ static int exit_code;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
 static bool enclave_debug = true;
+static int wait_timeout;
 bool debugging = false;
 bool is_oot_driver;
 /*
@@ -471,6 +472,15 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 		return -1;
 	}
 
+	for (int i = 0; argv[i]; i++) {
+		if (!strcmp(argv[i], "wait_timeout") && argv[i+1]) {
+			wait_timeout = atoi(argv[i+1]);
+			if (wait_timeout > 0)
+				sleep(wait_timeout);
+			break;
+		}
+	}
+
 	fprintf(fp, "Enclave runtime skeleton initialization succeeded\n");
 	fclose(fp);
 
@@ -541,6 +551,42 @@ int wait4child(pal_exec_args *attr)
 
 	if (WIFEXITED(status) || WIFSIGNALED(status))
 		*attr->exit_value = WEXITSTATUS(status);
+
+	return 0;
+}
+
+int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int* report_len)
+{
+	uint8_t report_data[64] = { 0, };
+	struct sgx_report report_align;
+	int ret;
+
+	if (!initialized) {
+		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		return -1;
+	}
+
+	if (targetinfo == NULL || targetinfo_len != sizeof(struct sgx_target_info)) {
+		fprintf(stderr, "Input parameter targetinfo is NULL or targentinfo_len != sizeof(struct sgx_target_info)!\n");
+		return -1;
+	}
+
+	if (report == NULL || report_len == NULL || *report_len < SGX_REPORT_SIZE) {
+		fprintf(stderr, "Input parameter report is NULL or report_len is not enough!\n");
+		return -1;
+	}
+
+	ret = SGX_ENTER_3_ARGS(ECALL_REPORT, (void *)secs.base, targetinfo,
+						report_data, &report_align);
+	if (ret) {
+		fprintf(stderr, "failed to get report\n");
+		return ret;
+	}
+
+	memcpy(report, &report_align, SGX_REPORT_SIZE);
+	if (debugging) {
+		fprintf(stdout, "succeed to get local report\n");
+	}
 
 	return 0;
 }
