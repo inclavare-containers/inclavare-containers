@@ -7,12 +7,21 @@ This guide will guide you how to use remote attestation based on SGX in skeleton
 - Register a `SPID` and `Subscription Key` of [IAS](https://api.portal.trustedservices.intel.com/EPID-attestation). After the registration, Intel will respond with a SPID which is needed to communicate with IAS.
 
 # Run skeleton bundle with `rune`
-Before using `rune attest` command, you must ensure your skeleton container/bundles(such as skeleton-enclave-container) running by setting `"wait_timeout","100"` of `process.args` in config.json, just like
+Before using `rune attest` command, you must ensure your skeleton container/bundles(such as skeleton-enclave-container) running by setting `"wait_timeout","100"` of `process.args` in config.json as following:
 ```json
 "process": {
 	"args": [
 		"${YOUR_PROGRAM}","wait_timeout","100"
 	],
+}
+```
+
+Only `liberpal-skeleton-v3.so` supports `rune attest` command. So you also need to configure enclave runtime as following:
+```json
+"annotations": {
+      "enclave.type": "intelSgx",
+      "enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
+      "enclave.runtime.args": "debug"
 }
 ```
 
