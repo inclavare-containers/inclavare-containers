@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune"
 	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/containerd/cgroups"
 	eventstypes "github.com/containerd/containerd/api/events"
@@ -307,13 +308,20 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		return nil, err
 	}
 
-	carr, err := s.carrierMain(r)
+	_, carrierKind, err := getCarrierKind(r.Bundle)
 	if err != nil {
 		return nil, err
 	}
+	if carrierKind != rune.Skeleton {
+		carr, err := s.carrierMain(r)
+		if err != nil {
+			return nil, err
+		}
+		logrus.Infof("Carrier: %v", carr.Name())
+	}
 
 	data, _ := json.Marshal(r)
-	logrus.Infof("CreateTaskRequest: %s, Carrier: %v", string(data), carr.Name())
+	logrus.Infof("CreateTaskRequest: %s", string(data))
 
 	container, err := runc.NewContainer(ctx, s.platform, r)
 	if err != nil {
