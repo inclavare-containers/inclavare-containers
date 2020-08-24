@@ -141,7 +141,7 @@ func getCarrierKind(bundlePath string) (found bool, value rune.CarrierKind, err 
 		return
 	}
 	value = rune.CarrierKind(v)
-	if value == rune.Occlum || value == rune.Graphene || value == rune.Empty {
+	if value == rune.Occlum || value == rune.Graphene || value == rune.Empty || value == rune.Skeleton {
 		found = true
 		return
 	}
