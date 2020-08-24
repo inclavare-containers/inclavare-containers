@@ -2,21 +2,21 @@
 [rune](https://github.com/alibaba/inclavare-containers) is a new OCI runtime used to run trusted applications in containers with the hardware-assisted enclave technology.
 
 ## Requirements
-- Install [Intel SGX driver for Linux](https://github.com/intel/linux-sgx-driver#build-and-install-the-intelr-sgx-driver), required by Intel SGX SDK && PSW.
+- Install Intel SGX driver for Linux by following [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.9.1/docs/Intel_SGX_Installation_Guide_Linux_2.9.1_Open_Source.pdf), required by Intel SGX SDK && PSW.
 - Install [enable_rdfsbase kernel module](https://github.com/occlum/enable_rdfsbase#how-to-build), allowing to use `rdfsbase` -family instructions in Occlum.
 - Ensure that you have one of the following required operating systems:
-  - CenOS 7.5
+  - CenOS 8.1
   - Ubuntu 18.04-server
 
   Note: You may also choose to launch a container corresponding to above operating systems.
   ```shell
-  docker run -it --privileged --device /dev/isgx centos:7.5.1804
+  docker run -it --privileged --device /dev/isgx centos:8.1.1911
   ```
   or
   ```shell
   docker run -it --privileged --device /dev/isgx ubuntu:18.04
   ```
-  If so, you need to run **another docker daemon** inside your container. Please refer to [this guide](https://docs.docker.com/engine/install) to install docker daemon. In CentOS 7.5 container, type the following command to start dockerd.
+  If so, you need to run **another docker daemon** inside your container. Please refer to [this guide](https://docs.docker.com/engine/install) to install docker daemon. In CentOS 8.1 container, type the following command to start dockerd.
   ```shell
   dockerd -b docker0 --storage-driver=vfs &
   ```
@@ -29,7 +29,7 @@
 mkdir "$HOME/rune_workdir"
 docker run -it --privileged --device /dev/isgx \
   -v "$HOME/rune_workdir":/root/rune_workdir \
-  occlum/occlum:0.14.0-centos7.5
+  occlum/occlum:0.15.1-centos8.1
 ```
 
 ### Prepare the materials
@@ -52,15 +52,17 @@ Now you can build your occlum application image in the $HOME/rune_workdir direct
 
 Type the following commands to create a `Dockerfile`:
 ``` Dockerfile
-cd "$HOME/rune_workdir"
+cd "$HOME/rune_workdir/${OCCLUM_INSTANCE_DIR}"
 cat >Dockerfile <<EOF
-FROM centos:7.5.1804
+FROM centos:8.1.1911
 
-ENV OCCLUM_INSTANCE_DIR=occlum-app
-RUN mkdir -p /run/rune/${OCCLUM_INSTANCE_DIR}
+RUN mkdir -p /run/rune
 WORKDIR /run/rune
 
-COPY ${OCCLUM_INSTANCE_DIR} ${OCCLUM_INSTANCE_DIR}
+COPY Occlum.json ./
+COPY build ./build
+COPY image ./image
+COPY run ./run
 
 ENTRYPOINT ["/bin/hello_world"]
 EOF
@@ -73,39 +75,28 @@ docker build . -t ${Occlum_application_image}
 
 ---
 
-## Install Inclavare Containers binary
-Download the binary release from [here](https://github.com/alibaba/inclavare-containers/releases/).
+## Install SGX SDK and SGX PSW
+Please follow [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.9.1/docs/Intel_SGX_Installation_Guide_Linux_2.9.1_Open_Source.pdf) to install SGX SDK and SGX PSW.
 
-### Install SGX SDK
-Type the following commands to install SGX SDK on your host system.
+In additon, UAE service libraries are needed but may not installed together with SGX PSW if SGX PSW installer is used. Go to SGX RPM local repo and run:
+
 ```shell
-yum install -y make
-echo -e "no\n/opt/intel\n" | ./sgx_linux_x64_sdk_2.9.101.2.bin
+rpm -i libsgx-uae-service-2.9.101.2-1.el8.x86_64.rpm
 ```
 
-### Install SGX PSW
-Type the following commands to install SGX PSW on your host system.
-```shell
-yum install -y https://cbs.centos.org/kojifiles/packages/protobuf/3.6.1/4.el7/x86_64/protobuf-3.6.1-4.el7.x86_64.rpm
-./sgx_linux_x64_psw_2.9.101.2.bin
-cd /opt/intel/sgxpsw/aesm
-export LD_LIBRARY_PATH=$PWD
-export AESM_PATH=$PWD
-/opt/intel/sgxpsw/aesm/aesm_service
-```
-
-### Install rune and occlum-pal
+## Install rune and occlum-pal
 Download the package from [here](https://github.com/alibaba/inclavare-containers/releases/).
-- On CentOS 7.5:
+
+- On CentOS 8.1:
 ```shell
 yum install -y libseccomp
-rpm -ivh rune-0.3.0-1.el7.x86_64.rpm
-rpm -ivh occlum-pal-0.14.0-1.el7.x86_64.rpm
+rpm -ivh rune-0.4.0-1.el8.x86_64.rpm
+rpm -ivh occlum-pal-0.15.1-1.el8.x86_64.rpm
 ```
 - On Ubuntu 18.04-server:
 ```shell
-dpkg -i rune_0.3.0-1_amd64.deb
-dpkg -i occlum-pal_0.14.0-1_amd64.deb
+dpkg -i rune_0.4.0-1_amd64.deb
+dpkg -i occlum-pal_0.15.1_amd64.deb
 ```
 
 ---
@@ -138,11 +129,10 @@ Runtimes: rune runc
 You need to specify a set of parameters to `docker run` in order to use `rune`, e.g,
 
 ```shell
-export OCCLUM_INSTANCE_DIR=occlum-app
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
-  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
-  -e ENCLAVE_RUNTIME_ARGS=${OCCLUM_INSTANCE_DIR} \
+  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so.0.15.1 \
+  -e ENCLAVE_RUNTIME_ARGS=./ \
   ${Occlum_application_image}
 ```
 

@@ -21,7 +21,7 @@ cp liberpal-skeleton-v*.so /usr/lib
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 cat >Dockerfile <<EOF
-FROM centos:7.5.1804
+FROM centos:8.1.1911
 
 RUN mkdir -p /run/rune
 WORKDIR /run/rune
