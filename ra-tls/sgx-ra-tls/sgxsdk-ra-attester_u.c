@@ -5,7 +5,7 @@
 
 #include <ra.h>
 #include <ra-attester.h>
-// #include <ias-ra.h>
+#include <ias-ra.h>
 
 /* Untrusted code to do remote attestation with the SGX SDK. */
 
@@ -35,7 +35,7 @@ void ocall_remote_attestation
     assert(SGX_SUCCESS == status);
 
     // verify against IAS
-    // obtain_attestation_verification_report(quote, quote_size, opts, attn_report);
+    obtain_attestation_verification_report(quote, quote_size, opts, attn_report);
 }
 
 void ocall_sgx_init_quote

@@ -1,0 +1,15 @@
+build
+curl-wolfssl
+wolfssl
+wolfssl-examples
+*.so
+*.o
+sgx-ra-tls/ra_tls_options.c
+sgx-ra-tls/ra_tls_t.c
+sgx-ra-tls/ra_tls_t.h
+sgx-ra-tls/ra_tls_u.c
+sgx-ra-tls/ra_tls_u.h
+stub-enclave/Wolfssl_Enclave_t.c
+stub-enclave/Wolfssl_Enclave_t.h
+pal/Wolfssl_Enclave_u.c
+pal/Wolfssl_Enclave_u.h
