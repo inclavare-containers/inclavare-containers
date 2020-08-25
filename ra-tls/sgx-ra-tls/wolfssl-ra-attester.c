@@ -188,8 +188,8 @@ wolfssl_create_key_and_x509
 
     do_remote_attestation(&report_data, opts, &attestation_report);
 
-    // generate_x509(&genKey, der_cert, der_cert_len,
-       //           &attestation_report);
+    generate_x509(&genKey, der_cert, der_cert_len,
+                  &attestation_report);
 }
 
 #ifdef RATLS_ECDSA
@@ -663,65 +663,13 @@ void create_key_and_x509
     int* der_key_len,  /* in/out */
     uint8_t* der_cert, /* out */
     int* der_cert_len, /* in/out */
-    const struct ra_tls_options* opts, /* in */
-    void* targetinfo, void* data, void* report
+    const struct ra_tls_options* opts /* in */
 )
 {
     wolfssl_create_key_and_x509(der_key, der_key_len,
                                 der_cert, der_cert_len,
                                 opts);
 }
-
-static void create_key_111
-(
-	uint8_t* der_key,  /* out */
-	int* der_key_len,  /* in/out */
-	uint8_t* der_cert, /* out */
-	int* der_cert_len, /* in/out */
-	const struct ra_tls_options* opts, /* in */
-	void* targetinfo, void* data, void* report
-)
-{
-	wolfssl_create_key_and_x509(der_key, der_key_len,
-			            der_cert, der_cert_len,
-				    opts);
-}
-
-static void
-wolfssl_create_key
-(
-	uint8_t* der_key,
-	int* der_key_len,
- 	uint8_t* der_cert,
-	int* der_cert_len,
- 	const struct ra_tls_options* opts,
-	void* targetinfo, void* data, void* report
-)
-{
-        /* Generate key. */
-	RsaKey genKey;
-	RNG    rng;
-	int    ret;
-
-	wc_InitRng(&rng);
-	wc_InitRsaKey(&genKey, 0);
-	ret = wc_MakeRsaKey(&genKey, 3072, 65537, &rng);
-	assert(ret == 0);
-
-	uint8_t der[4096];
-	int  derSz = wc_RsaKeyToDer(&genKey, der, sizeof(der));
-	assert(derSz >= 0);
-	assert(derSz <= (int) *der_key_len);
-
-	*der_key_len = derSz;
-	memcpy(der_key, der, derSz);
-	/* Generate certificate */
-	sgx_report_data_t report_data = {0, };
-	sha256_rsa_pubkey(report_data.d, &genKey);
-	attestation_verification_report_t attestation_report;
-	do_remote_attestation(&report_data, opts, &attestation_report);
-}
-
 
 void create_key_and_x509_pem
 (

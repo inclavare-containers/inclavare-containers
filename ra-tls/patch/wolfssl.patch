@@ -1,5 +1,17 @@
+diff --git a/m4/ax_vcs_checkout.m4 b/m4/ax_vcs_checkout.m4
+index 4636b58ed..58c1af256 100644
+--- a/m4/ax_vcs_checkout.m4
++++ b/m4/ax_vcs_checkout.m4
+@@ -57,7 +57,6 @@ AC_DEFUN([AX_VCS_SYSTEM],
+       AS_IF([test -d ".bzr"],[ac_cv_vcs_system="bazaar"])
+       AS_IF([test -d ".svn"],[ac_cv_vcs_system="svn"])
+       AS_IF([test -d ".hg"],[ac_cv_vcs_system="mercurial"])
+-      AS_IF([test -e ".git"],[ac_cv_vcs_system="git"])
+       ])
+     AC_DEFINE_UNQUOTED([VCS_SYSTEM],["$ac_cv_vcs_system"],[VCS system])
+     ])
 diff --git a/pre-commit.sh b/pre-commit.sh
-index cbac1b5..71c7976 100755
+index cbac1b5e3..71c79767d 100755
 --- a/pre-commit.sh
 +++ b/pre-commit.sh
 @@ -3,6 +3,8 @@
@@ -12,7 +24,7 @@ index cbac1b5..71c7976 100755
  echo "\n\nSaving current config\n\n"
  cp config.status tmp.status
 diff --git a/src/internal.c b/src/internal.c
-index a6989c4..9036910 100644
+index a6989c419..9036910ba 100644
 --- a/src/internal.c
 +++ b/src/internal.c
 @@ -9777,11 +9777,14 @@ static int DoHandShakeMsg(WOLFSSL* ssl, byte* input, word32* inOutIdx,
@@ -52,7 +64,7 @@ index a6989c4..9036910 100644
          #ifdef WOLFSSL_ASYNC_CRYPT
              if (ret == WC_PENDING_E) {
 diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
-index e234253..5cdeae5 100644
+index e23425311..5cdeae542 100644
 --- a/wolfcrypt/src/asn.c
 +++ b/wolfcrypt/src/asn.c
 @@ -19,6 +19,7 @@
@@ -443,7 +455,7 @@ index e234253..5cdeae5 100644
  
      der->total = der->versionSz + der->serialSz + der->sigAlgoSz +
 diff --git a/wolfssl/internal.h b/wolfssl/internal.h
-index 9c77120..3c922dd 100644
+index 9c77120a1..3c922dd88 100644
 --- a/wolfssl/internal.h
 +++ b/wolfssl/internal.h
 @@ -1272,7 +1272,7 @@ enum Misc {
@@ -456,7 +468,7 @@ index 9c77120..3c922dd 100644
  
  #ifndef SESSION_TICKET_LEN
 diff --git a/wolfssl/wolfcrypt/asn_public.h b/wolfssl/wolfcrypt/asn_public.h
-index b730846..870ffdb 100644
+index b73084634..870ffdb44 100644
 --- a/wolfssl/wolfcrypt/asn_public.h
 +++ b/wolfssl/wolfcrypt/asn_public.h
 @@ -164,6 +164,32 @@ typedef struct Cert {
@@ -504,7 +516,7 @@ index b730846..870ffdb 100644
      } /* extern "C" */
  #endif
 diff --git a/wolfssl/wolfcrypt/settings.h b/wolfssl/wolfcrypt/settings.h
-index 6254b72..9a20413 100644
+index 6254b727d..9a204138c 100644
 --- a/wolfssl/wolfcrypt/settings.h
 +++ b/wolfssl/wolfcrypt/settings.h
 @@ -1228,7 +1228,9 @@ extern void uITRON4_free(void *p) ;

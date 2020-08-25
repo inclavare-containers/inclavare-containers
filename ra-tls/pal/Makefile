@@ -1,11 +1,12 @@
 ######## Intel(R) SGX SDK Settings ########
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
+SGX_DEBUG ?= 1
 SGX_ARCH ?= x64
-SGX_WOLFSSL_LIB ?= ./deps/wolfssl/IDE/LINUX-SGX
-WOLFSSL_ROOT ?= ./deps/wolfssl
+WOLFSSL_ROOT ?= $(shell readlink -f ../wolfssl)
+SGX_WOLFSSL_LIB ?= $(shell readlink -f $(WOLFSSL_ROOT)/IDE/LINUX-SGX)
+SGX_RA_TLS_ROOT ?= $(shell readlink -f ../sgx-ra-tls)
 
-UNTRUSTED_DIR=untrusted
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
 else ifeq ($(findstring -m32, $(CXXFLAGS)), -m32)
@@ -36,8 +37,6 @@ else
         SGX_COMMON_CFLAGS += -O2
 endif
 
-SGX_RA_TLS_ROOT=$(shell readlink -f .)
-
 ######## App Settings ########
 
 ifneq ($(SGX_MODE), HW)
@@ -47,24 +46,23 @@ else
 endif
 
 Wolfssl_C_Extra_Flags := -DWOLFSSL_SGX -DUSE_WOLFSSL
-Wolfssl_Include_Paths := -I$(WOLFSSL_ROOT)/ \
-						 -I$(WOLFSSL_ROOT)/wolfcrypt/
+Wolfssl_Include_Paths := -I$(WOLFSSL_ROOT) \
+	-I$(WOLFSSL_ROOT)/wolfcrypt
 
 ifeq ($(HAVE_WOLFSSL_TEST), 1)
-	Wolfssl_Include_Paths += -I$(WOLFSSL_ROOT)/wolfcrypt/test/
+	Wolfssl_Include_Paths += -I$(WOLFSSL_ROOT)/wolfcrypt/test
 	Wolfssl_C_Extra_Flags += -DHAVE_WOLFSSL_TEST
 endif
 
 ifeq ($(HAVE_WOLFSSL_BENCHMARK), 1)
-	Wolfssl_Include_Paths += -I$(WOLFSSL_ROOT)/wolfcrypt/benchmark/
+	Wolfssl_Include_Paths += -I$(WOLFSSL_ROOT)/wolfcrypt/benchmark
 	Wolfssl_C_Extra_Flags += -DHAVE_WOLFSSL_BENCHMARK
 endif
 
-
-
-# App_C_Files := $(UNTRUSTED_DIR)/App.c $(UNTRUSTED_DIR)/server-tls.c $(UNTRUSTED_DIR)/sgxsdk-ra-attester_u.c $(UNTRUSTED_DIR)/ias-ra.c
-App_C_Files := $(UNTRUSTED_DIR)/App.c $(UNTRUSTED_DIR)/sgxsdk-ra-attester_u.c 
-App_Include_Paths := $(Wolfssl_Include_Paths) -I$(UNTRUSTED_DIR) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I./deps/local/include -I$(shell readlink -f .)
+#App_C_Files := App.c server-tls.c sgxsdk-ra-attester_u.c ias-ra.c
+#App_C_Files := App.c sgxsdk-ra-attester_u.c
+App_C_Fils := App.c
+App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I$(INCDIR) -I$(shell readlink -f .)
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -shared -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
 
@@ -80,7 +78,8 @@ else
         App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 endif
 
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(SGX_RA_TLS_ROOT)/deps/local/lib -l$(Urts_Library_Name) -lpthread $(SGX_RA_TLS_ROOT)/deps/local/lib/libcurl-wolfssl.a $(SGX_RA_TLS_ROOT)/deps/local/lib/libwolfssl.a -lz -lm
+#App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(TOPDIR)/build/lib -l$(Urts_Library_Name) -lpthread $(TOPDIR)/build/lib/libcurl-wolfssl.a $(TOPDIR)/build/lib/libwolfssl.a -lz -lm
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(TOPDIR)/build/lib -l$(Urts_Library_Name)
 App_Link_Flags += -Wl,--version-script=pal.lds
 
 ifneq ($(SGX_MODE), HW)
@@ -91,8 +90,6 @@ endif
 
 App_C_Objects := $(App_C_Files:.c=.o)
 
-
-
 ifeq ($(SGX_MODE), HW)
 ifneq ($(SGX_DEBUG), 1)
 ifneq ($(SGX_PRERELEASE), 1)
@@ -101,12 +98,11 @@ endif
 endif
 endif
 
-
 .PHONY: all
 
 ifeq ($(Build_Mode), HW_RELEASE)
-all: liberpal-sgxsdk.so
-	@echo "Build liberpal-sgxsdk.so [$(Build_Mode)|$(SGX_ARCH)] success!"
+all: liberpal-stub.so
+	@echo "Build liberpal-stub.so [$(Build_Mode)|$(SGX_ARCH)] success!"
 	@echo
 	@echo "*********************************************************************************************************************************************************"
 	@echo "PLEASE NOTE: In this mode, please sign the Wolfssl_Enclave.so first using Two Step Sign mechanism before you run the app to launch and access the enclave."
@@ -114,31 +110,30 @@ all: liberpal-sgxsdk.so
 	@echo
 
 else
-all: liberpal-sgxsdk.so
+all: liberpal-stub.so
 endif
 
-######## liberpal-sgxsdk.so Objects ########
+######## liberpal-stub.so Objects ########
 
-$(UNTRUSTED_DIR)/Wolfssl_Enclave_u.c: $(SGX_EDGER8R) trusted/Wolfssl_Enclave.edl
-	@cd $(UNTRUSTED_DIR) && $(SGX_EDGER8R) --untrusted ../trusted/Wolfssl_Enclave.edl --search-path ../trusted --search-path $(SGX_SDK)/include --search-path ..
+Wolfssl_Enclave_u.c: $(SGX_EDGER8R) $(TOPDIR)/stub-enclave/Wolfssl_Enclave.edl
+	@$(SGX_EDGER8R) --untrusted $(TOPDIR)/stub-enclave/Wolfssl_Enclave.edl --search-path $(TOPDIR)/stub-enclave --search-path $(SGX_SDK)/include --search-path $(SGX_RA_TLS_ROOT)
 	@echo "GEN  =>  $@"
 
-$(UNTRUSTED_DIR)/Wolfssl_Enclave_u.o: $(UNTRUSTED_DIR)/Wolfssl_Enclave_u.c
+Wolfssl_Enclave_u.o: Wolfssl_Enclave_u.c
 	@echo $(CC) $(App_C_Flags) -c $< -o $@
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-$(UNTRUSTED_DIR)/%.o: $(UNTRUSTED_DIR)/%.c
+%.o: %.c
 	@echo $(CC) $(App_C_Flags) -c $< -o $@
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC  <=  $<"
 
-liberpal-sgxsdk.so: $(UNTRUSTED_DIR)/Wolfssl_Enclave_u.o $(App_C_Objects)
+liberpal-stub.so: Wolfssl_Enclave_u.o $(App_C_Objects)
 	@$(CC) $^ -o $@ $(App_Link_Flags)
 	@echo "LINK =>  $@"
-
 
 .PHONY: clean
 
 clean:
-	@rm -f liberpal-sgxsdk.so $(App_C_Objects) $(UNTRUSTED_DIR)/Wolfssl_Enclave_u.* 
+	@rm -f liberpal-stub.so $(App_C_Objects) Wolfssl_Enclave_u.* 

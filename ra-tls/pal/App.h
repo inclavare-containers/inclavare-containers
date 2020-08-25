@@ -19,8 +19,8 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
 */
 
-#ifndef BENCHMARKS_H
-#define BENCHMARKS_H
+#ifndef STUB_ENCLAVE_H
+#define STUB_ENCLAVE_H
 
 #include "sgx_urts.h"	/* Manages Enclave */
 #include <sys/types.h>	/* for send/recv */
@@ -37,13 +37,6 @@ enum BenchmarkBounds {
 	ntimes = 30 /* how many itteration to run RSA decrypt/encrypt */
 };
 
-#endif
-
-typedef struct sgxsdk_pal_attr {
-	const char *instance_dir;
-	const char *log_level;
-} sgxsdk_pal_attr_t;
-
 #define PAL_DEBUG(fmt, ...) \
 	fprintf(stderr, "[DEBUG] stub-enclave: " fmt " (line %d, file %s)\n", ##__VA_ARGS__, __LINE__, __FILE__)
 #define PAL_INFO(fmt, ...) \
@@ -53,5 +46,4 @@ typedef struct sgxsdk_pal_attr {
 #define PAL_ERROR(fmt, ...) \
 	fprintf(stderr, "[ERROR] stub-enclave: " fmt " (line %d, file %s)\n", ##__VA_ARGS__, __LINE__, __FILE__)
 
-int pal_init(const sgxsdk_pal_attr_t* instance_dir);
-sgx_enclave_id_t pal_get_enclave_id(void);
+#endif	/* STUB_ENCLAVE_H */
