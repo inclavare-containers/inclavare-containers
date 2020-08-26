@@ -65,6 +65,8 @@ Runtimes: rune runc
 ```
 
 ## Run skeleton container image with rune
+Note that replace `${SKELETON_PAL_VERSION}` with the actual version number. Currently skeleton supports PAL API v1 and v2.
+
 ```shell
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
