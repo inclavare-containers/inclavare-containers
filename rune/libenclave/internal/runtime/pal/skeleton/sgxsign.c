@@ -465,7 +465,7 @@ int main(int argc, char **argv)
 #endif
 	if (enclave_debug)
 		ss.body.attributes |= SGX_ATTR_DEBUG;
-	ss.body.xfrm = 7;
+	ss.body.xfrm = 3;
 	ss.body.attributes_mask = ss.body.attributes;
 
 	/* sanity check only */

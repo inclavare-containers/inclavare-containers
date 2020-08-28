@@ -120,7 +120,7 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	secs->attributes = SGX_ATTR_MODE64BIT;
 	if (enclave_debug)
 		secs->attributes |= SGX_ATTR_DEBUG;
-	secs->xfrm = 7;
+	secs->xfrm = 3;
 
 	for (secs->size = PAGE_SIZE; secs->size < bin_size; )
 		secs->size <<= 1;
