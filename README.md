@@ -68,5 +68,5 @@ Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_
 ---
 
 ## Reference container image
-[The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11 and Golang are provided.
+[The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11, Dragonwell, and Golang are provided.
 

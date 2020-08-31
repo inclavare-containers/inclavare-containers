@@ -96,7 +96,7 @@ rpm -ivh occlum-pal-0.15.1-1.el8.x86_64.rpm
 - On Ubuntu 18.04-server:
 ```shell
 dpkg -i rune_0.4.0-1_amd64.deb
-dpkg -i occlum-pal_0.15.1_amd64.deb
+dpkg -i occlum-pal_0.15.1-1_amd64.deb
 ```
 
 ---
