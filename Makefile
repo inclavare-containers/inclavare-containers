@@ -1,7 +1,7 @@
 .PHONY: all install clean uninstall package
 
 export INCLAVARE_CONTAINERS_VERSION := $(shell cat ./VERSION)
-components := rune shim sgx-tools stub_enclave
+components := rune shim sgx-tools
 dist_release_components := rune shim
 
 all:
