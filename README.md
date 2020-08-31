@@ -59,17 +59,10 @@ Skeleton is an example of enclave runtime, interfacing with Enclave Runtime PAL 
 
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/README.md) to run skeleton with `rune`.
 
-### stub_enclave
-Inspired by [sgx-ra-tls](https://github.com/cloud-security-research/sgx-ra-tls), stub_enclave extends the standard X.509 certificate with SGX-related information and integrates Intel SGX remote attestation into the TLS connection.Moreover, stub_enclave is a enclave runtime based on [sgxsdk](https://github.com/intel/linux-sgx) and stub_enclave support PAL API V3 so that you can run rune with stub_enclave according to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/stub_enclave/README.md).
-
-For more information about Enclave Runtime PAL API, please refer to [Enclave Runtime PAL API Specification](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/spec_v2.md).
-
 ### Run OCI bundle
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum_bundle.md) to run `occlum bundle` with `rune`.
 
----
-
-## Run rune containers in Kubernetes cluster
+### Run rune containers in Kubernetes cluster
 Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_kubernetes_cluster.md) to develop and deploy a rune container in a Kubernetes cluster.
 
 ---
