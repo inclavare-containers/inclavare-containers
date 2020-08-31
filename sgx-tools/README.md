@@ -7,10 +7,10 @@
 
 ## Install Intel `aesmd` service
 ### Hardware requirements
-- Install [Intel SGX driver for Linux](https://github.com/intel/linux-sgx-driver#build-and-install-the-intelr-sgx-driver), required by [Intel SGX SDK && PSW](https://github.com/intel/linux-sgx).
+- Install Intel SGX driver for Linux by following [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.9.1/docs/Intel_SGX_Installation_Guide_Linux_2.9.1_Open_Source.pdf), required by [Intel SGX SDK && PSW](https://github.com/intel/linux-sgx).
 
 ### Software requirements
-- Build [Intel(R) SGX SDK and Intel(R) SGX PSW](https://github.com/intel/linux-sgx#build-the-intelr-sgx-sdk-and-intelr-sgx-psw-package) to install the `aesmd` service.
+- Build Intel(R) SGX SDK and Intel(R) SGX PSW by following [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.9.1/docs/Intel_SGX_Installation_Guide_Linux_2.9.1_Open_Source.pdf) to install the `aesmd` service.
 
 ## Dependency
 - golang 1.14 or above.
