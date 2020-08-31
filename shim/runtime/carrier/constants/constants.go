@@ -10,7 +10,7 @@ const (
 	EnclaveTypeKeyName        = "ENCLAVE_TYPE"
 	EnclaveRuntimePathKeyName = "ENCLAVE_RUNTIME_PATH"
 	EnclaveRuntimeArgsKeyName = "ENCLAVE_RUNTIME_ARGS"
-	DefaultEnclaveRuntimeArgs = ".occlum"
+	DefaultEnclaveRuntimeArgs = "./"
 )
 
 const (
@@ -140,8 +140,8 @@ function copyOcclumLiberaries() {
   /bin/cp -f /usr/lib/libsgx_u*.so* ${lib_dir}
   /bin/cp -f /usr/lib/libsgx_enclave_common.so.1 ${lib_dir}
   /bin/cp -f /usr/lib/libsgx_launch.so.1 ${lib_dir}
-  #/bin/cp -f .occlum/build/lib/libocclum-pal.so ${lib_dir}/liberpal-occlum.so
-  #ln -sfn .occlum/build/lib/libocclum-pal.so liberpal-occlum.so
+  #/bin/cp -f ./build/lib/libocclum-pal.so ${lib_dir}/liberpal-occlum.so
+  #ln -sfn ./build/lib/libocclum-pal.so liberpal-occlum.so
   #chroot ${rootfs} /sbin/ldconfig
   popd
 }
@@ -169,17 +169,16 @@ function buildUnsignedEnclave(){
   /bin/bash ${base_dir}/replace_occlum_image.sh ${rootfs} image
   # occlum build
   occlum build
-  if [ ! -f .occlum/build/lib/libocclum-libos.so ]; then
-    if [ -f .occlum/build/lib/libocclum-libos.so.0 ]; then
-      pushd .occlum/build/lib/
+  if [ ! -f ./build/lib/libocclum-libos.so ]; then
+    if [ -f ./build/lib/libocclum-libos.so.0 ]; then
+      pushd ./build/lib/
       ln -s libocclum-libos.so.0 libocclum-libos.so
       popd
     fi
   fi
   mkdir -p ${rootfs}/${work_dir} || true
-  /bin/cp -fr .occlum ${rootfs}/${work_dir}
-  /bin/cp -f Enclave.xml ${rootfs}/${work_dir}
-  /bin/cp -f Occlum.json ${rootfs}/${work_dir}
+  rm -fr image
+  /bin/cp -fr . ${rootfs}/${work_dir}
   popd
 }
 

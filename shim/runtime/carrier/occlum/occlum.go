@@ -217,7 +217,7 @@ func (c *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 		logrus.Errorf("BuildUnsignedEnclave: exec failed. error: %++v", err)
 		return "", err
 	}
-	enclavePath := filepath.Join("/", rootfsDirName, c.workDirectory, ".occlum/build/lib/libocclum-libos.so")
+	enclavePath := filepath.Join("/", rootfsDirName, c.workDirectory, "./build/lib/libocclum-libos.so")
 	return enclavePath, nil
 }
 
@@ -246,7 +246,7 @@ func (c *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carr
 func (c *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carrier.CascadeEnclaveSignatureArgs) (
 	signedEnclave string, err error) {
 	var bufferSize int64 = 1024 * 4
-	signedEnclave = filepath.Join("/", rootfsDirName, c.workDirectory, ".occlum/build/lib/libocclum-libos.signed.so")
+	signedEnclave = filepath.Join("/", rootfsDirName, c.workDirectory, "./build/lib/libocclum-libos.signed.so")
 	publicKey := filepath.Join("/", enclaveDataDir, "public_key.pem")
 	signature := filepath.Join("/", enclaveDataDir, "signature.dat")
 	if err := utils.CopyFile(args.Key, filepath.Join(req.Bundle, publicKey), bufferSize); err != nil {
