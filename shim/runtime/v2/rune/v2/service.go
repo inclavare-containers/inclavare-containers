@@ -324,9 +324,11 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	logrus.Infof("CreateTaskRequest: %s", string(data))
 
 	container, err := runc.NewContainer(ctx, s.platform, r)
-	if err != nil {
-		logrus.Errorf("rune Create NewContainer error: %++v", err)
-		/*//FIXME debug
+
+	/*if carr.Name() == "occlum" {
+		//if err != nil {
+		//	logrus.Errorf("rune Create NewContainer error: %++v", err)
+		//FIXME debug
 		if _, err := os.Stat(r.Bundle); err == nil {
 			path := "/tmp/rune-container-test/runc-rootfs"
 			os.RemoveAll(path)
@@ -341,9 +343,10 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 			time.Sleep(time.Minute)
 		} else {
 			logrus.Infof("bundle dir is not exist.", r.Bundle)
-		}*/
+		}
 		return nil, err
-	}
+		//}
+	}*/
 
 	data, _ = json.Marshal(container)
 	logrus.Infof("rune.NewContainer success: %s %s", r.ID, string(data))
