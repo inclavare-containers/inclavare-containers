@@ -7,7 +7,7 @@ This page shows how to create a single control-plane Kubernetes and install the 
 - A machine with Intel SGX hardware support.
 - Make sure you have one of the following operating systems:
    - Ubuntu 18.04 server 64bits
-   - CentOS 7.5 64bits
+   - CentOS 8.1 64bits
 - Download the packages or binaries corresponding to your operating system from the [releases page](https://github.com/alibaba/inclavare-containers/releases). 
 
 | Module Name | CentOS | Ubuntu |
@@ -15,10 +15,6 @@ This page shows how to create a single control-plane Kubernetes and install the 
 | occlum-pal | occlum-pal-${version}.el7.x86_64.rpm | occlum-pal_${version}_amd64.deb    |
 | shim-rune | shim-rune-${version}.el7.x86_64.rpm | shim-rune_${version}_amd64.deb |
 | rune | rune-${version}.el7.x86_64.rpm  | rune_${version}_amd64.deb |
-| SGX SDK | sgx_linux_x64_sdk.bin | - |
-| SGX PSW | sgx_linux_x64_psw.bin | - |
-
-**Note:** The SGX SDK and PSW installers on Ubuntu operating system are available from [Intel](https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/).
 
 ## Objectives
 
@@ -30,28 +26,10 @@ This page shows how to create a single control-plane Kubernetes and install the 
 ## Instructions
 
 ### 1. Install Linux SGX software stack
-The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, and Intel SGX PSW.
-
-- Step 1. Build and install the Intel SGX driver
-
-    Please refer to the [documentation](https://github.com/intel/linux-sgx-driver#build-and-install-the-intelr-sgx-driver) to build and install the Intel SGX driver. It is recommended that the version equal to or greater than `sgx_driver_2.5`.
-
-- Step 2. Install Intel SGX SDK and Intel Platform Software
-
-    Please refer to the [documentation](https://github.com/alibaba/inclavare-containers/blob/master/docs/running_rune_with_occlum.md#install-inclavare-containers-binary) to install SGX SDK and SGX PSW.
-
-- Step 3. Check the aesmd daemon status
-
-    Make sure the aesmd daemon is started and running. The expected result is as following:
-    ```
-    $ systemctl status aesmd.service
-    ● aesmd.service - Intel(R) Architectural Enclave Service Manager
-       Loaded: loaded (/usr/lib/systemd/system/aesmd.service; enabled; vendor preset: disabled)
-       Active: active (running) since 2020-07-01 22:45:10 CST; 12h ago
-      Process: 30597 ExecStart=/opt/intel/sgxpsw/aesm/aesm_service (code=exited, status=0/SUCCESS)
-      Process: 30590 ExecStartPre=/bin/chmod 0750 /var/opt/aesmd/ (code=exited, status=0/SUCCESS)
-      ...
-    ```
+The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, and Intel SGX PSW. 
+Please follow [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.9.1/docs/Intel_SGX_Installation_Guide_Linux_2.9.1_Open_Source.pdf) to install SGX driver, SDK and PSW, the recommended version is 2.9.1.
+                                                                             
+Note that you should install the OOT SGX driver that without ECDSA attestation.
 
 ### 2. Install Occlum software stack
 [Occlum](https://github.com/occlum/occlum) is the only enclave runtime supported by shim-rune currently. `enable-rdfsdbase` and `occlum-pal`  are used by Occlum.<br />
@@ -62,16 +40,30 @@ The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, an
 
     Please follow the [documentation](https://github.com/occlum/enable_rdfsbase) to install `enable-rdfsdbase`.
 
-- Step 2. Install occlum-pal
+- Step 2. Install package libsga-uae-service
+    
+    `libsga-uae-service` is used by occlum-pal, go to the SGX RPM local repo and run the following command:
+    - On CentOS
+    ```bash
+    sudo rpm -ivh libsgx-uae-service-2.9.101.2-1.el8.x86_64.rpm
+    ```
+  
+    - On Ubuntu
+    ```
+    wget https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/debian_pkgs/libs/libsgx-uae-service/libsgx-uae-service_2.9.101.2-xenial1_amd64.deb -O libsgx-uae-service_2.9.101.2-xenial1_amd64.deb
+    sudo dpkg -i libsgx-uae-service_2.9.101.2-xenial1_amd64.deb
+    ```
+    
+- Step 3. Install occlum-pal
    - On CentOS
     ```bash
-    version=0.14.0-1
+    version=0.15.1-1
     sudo rpm -ivh occlum-pal-${version}.el7.x86_64.rpm
     ```
 
    - On Ubuntu
     ```bash
-    version=0.14.0-1
+    version=0.15.1-1
     sudo dpkg -i occlum-pal_${version}_amd64.deb
     ```
 
@@ -88,14 +80,14 @@ The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, an
 - Step 2. Download and install the `rune` package
    - On CentOS
     ```bash
-    version=0.3.0-1
+    version=0.4.0-1
     sudo yum install -y libseccomp
     sudo rpm -ivh rune-${version}.el7.x86_64.rpm
     ```
 
    - On Ubuntu
     ```bash
-    version=0.3.0-1
+    version=0.4.0-1
     sudo dpkg -i rune_${version}_amd64.deb
     ```
 
@@ -105,13 +97,13 @@ The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, an
 
 - On CentOS
     ```bash
-    version=0.3.0-1
+    version=0.4.0-1
     sudo rpm -ivh shim-rune-${version}.el7.x86_64.rpm
     ```
 
 - On Ubuntu
     ```bash
-    version=0.3.0-1
+    version=0.4.0-1
     sudo dpkg -i shim-rune_${version}_amd64.deb
     ```
 
@@ -182,7 +174,7 @@ containerd is an industry-standard container runtime with an emphasis on simplic
 
     It is recommended to download the occlum SDK image in advance, which is configured in the filed `enclave_runtime.occlum.build_image` in `/etc/inclavare-containers/config.toml` . This image will be used when creating pods. Note that downloading this image in advance can save the container launch time.  <br />Run the following command to download the Occlum SDK image:
     ```bash
-    ctr image pull docker.io/occlum/occlum:0.14.0-ubuntu18.04
+    ctr image pull docker.io/occlum/occlum:0.15.1-ubuntu18.04
     ```
 
 ### 6. Create a single control-plane Kubernetes cluster with kubeadm
