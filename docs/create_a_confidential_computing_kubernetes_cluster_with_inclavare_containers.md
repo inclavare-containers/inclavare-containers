@@ -12,9 +12,9 @@ This page shows how to create a single control-plane Kubernetes and install the 
 
 | Module Name | CentOS | Ubuntu |
 | --- | --- | --- |
-| occlum-pal | occlum-pal-${version}.el7.x86_64.rpm | occlum-pal_${version}_amd64.deb    |
-| shim-rune | shim-rune-${version}.el7.x86_64.rpm | shim-rune_${version}_amd64.deb |
-| rune | rune-${version}.el7.x86_64.rpm  | rune_${version}_amd64.deb |
+| occlum-pal | occlum-pal-${version}.el8.x86_64.rpm | occlum-pal_${version}_amd64.deb    |
+| shim-rune | shim-rune-${version}.el8.x86_64.rpm | shim-rune_${version}_amd64.deb |
+| rune | rune-${version}.el8.x86_64.rpm  | rune_${version}_amd64.deb |
 
 ## Objectives
 
@@ -58,12 +58,12 @@ Note that you should install the OOT SGX driver that without ECDSA attestation.
    - On CentOS
     ```bash
     version=0.15.1-1
-    sudo rpm -ivh occlum-pal-${version}.el7.x86_64.rpm
+    sudo rpm -ivh occlum-pal-${version}.el8.x86_64.rpm
     ```
 
    - On Ubuntu
     ```bash
-    version=0.15.1-1
+    version=0.15.1
     sudo dpkg -i occlum-pal_${version}_amd64.deb
     ```
 
@@ -82,7 +82,7 @@ Note that you should install the OOT SGX driver that without ECDSA attestation.
     ```bash
     version=0.4.0-1
     sudo yum install -y libseccomp
-    sudo rpm -ivh rune-${version}.el7.x86_64.rpm
+    sudo rpm -ivh rune-${version}.el8.x86_64.rpm
     ```
 
    - On Ubuntu
@@ -98,7 +98,7 @@ Note that you should install the OOT SGX driver that without ECDSA attestation.
 - On CentOS
     ```bash
     version=0.4.0-1
-    sudo rpm -ivh shim-rune-${version}.el7.x86_64.rpm
+    sudo rpm -ivh shim-rune-${version}.el8.x86_64.rpm
     ```
 
 - On Ubuntu
