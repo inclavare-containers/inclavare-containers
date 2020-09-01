@@ -63,7 +63,7 @@ Note that you should install the OOT SGX driver that without ECDSA attestation.
 
    - On Ubuntu
     ```bash
-    version=0.15.1
+    version=0.15.1-1
     sudo dpkg -i occlum-pal_${version}_amd64.deb
     ```
 
