@@ -17,6 +17,7 @@ type Attester interface {
 	PrepareChallenge() (*pb.AttestChallenge, error)
 	HandleChallengeResponse(r *pb.AttestResponse) (*Quote, error)
 	Check([]byte) error
+	GetVerifiedReport([]byte) (*Status, map[string]string, error)
 	Verify([]byte) *Status
 	ShowStatus(status *Status)
 }
