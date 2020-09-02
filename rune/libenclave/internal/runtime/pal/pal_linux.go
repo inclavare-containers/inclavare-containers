@@ -31,11 +31,11 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	api := &enclaveRuntimePalApiV1{}
 	ver := api.get_version()
 	if ver > palApiVersion {
-                return fmt.Errorf("unsupported pal api version %d", ver)
-        }
-        pal.version = ver
+		return fmt.Errorf("unsupported pal api version %d", ver)
+	}
+	pal.version = ver
 
-	C.workaround_nanosleep();
+	C.workaround_nanosleep()
 
 	return api.init(args, logLevel)
 }
