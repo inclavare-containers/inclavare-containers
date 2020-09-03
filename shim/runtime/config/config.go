@@ -81,7 +81,7 @@ func GetEnv(spec *specs.Spec, key string) (string, bool) {
 		}
 		return p[1], true
 	}
-	return "", true
+	return "", false
 }
 
 func UpdateEnclaveEnvConfig(cPath string) error {
