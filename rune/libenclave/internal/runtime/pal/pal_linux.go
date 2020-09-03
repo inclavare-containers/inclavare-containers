@@ -139,9 +139,9 @@ func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, produc
 		return err
 	}
 
-	status := svc.Verify(quote)
-	if status.ErrorMessage != "" {
-		return fmt.Errorf("%s", status.ErrorMessage)
+	status, _, err := svc.GetVerifiedReport(quote)
+	if err != nil {
+		return fmt.Errorf("%s", err)
 	}
 
 	svc.ShowStatus(status)
