@@ -25,7 +25,7 @@ github.com/Microsoft/hcsshim/osversion
 # github.com/containerd/cgroups v0.0.0-20190919134610-bf292b21730f
 github.com/containerd/cgroups
 github.com/containerd/cgroups/stats/v1
-# github.com/containerd/console v0.0.0-20191206165004-02ecf6a7291e
+# github.com/containerd/console v1.0.0
 github.com/containerd/console
 # github.com/containerd/containerd v1.3.3
 github.com/containerd/containerd
@@ -104,6 +104,8 @@ github.com/containerd/ttrpc
 github.com/containerd/typeurl
 # github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
 github.com/coreos/go-systemd/dbus
+# github.com/cpuguy83/go-md2man/v2 v2.0.0
+github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/docker/distribution v0.0.0-00010101000000-000000000000 => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
@@ -141,7 +143,7 @@ github.com/gogo/protobuf/sortkeys
 github.com/gogo/protobuf/types
 # github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 github.com/golang/glog
-# github.com/golang/protobuf v1.3.3
+# github.com/golang/protobuf v1.3.5
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
@@ -169,15 +171,21 @@ github.com/opencontainers/go-digest
 github.com/opencontainers/image-spec/identity
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v0.1.1
+# github.com/opencontainers/runc v0.1.1 => github.com/alibaba/inclavare-containers/rune v0.0.0-20200903043353-e35cb5b583ad
 github.com/opencontainers/runc/libcontainer/system
 github.com/opencontainers/runc/libcontainer/user
+github.com/opencontainers/runc/libenclave/attestation/sgx
+github.com/opencontainers/runc/libenclave/proto
 # github.com/opencontainers/runtime-spec v1.0.2
 github.com/opencontainers/runtime-spec/specs-go
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/russross/blackfriday/v2 v2.0.1
+github.com/russross/blackfriday/v2
+# github.com/shurcooL/sanitized_anchor_name v1.0.0
+github.com/shurcooL/sanitized_anchor_name
 # github.com/sirupsen/logrus v1.5.0
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v1.0.0
@@ -186,11 +194,11 @@ github.com/spf13/cobra
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
-# github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8
+# github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2
 github.com/syndtr/gocapability/capability
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
-# github.com/urfave/cli v0.0.0-20171014202726-7bc6a0acffa5
+# github.com/urfave/cli v1.22.1
 github.com/urfave/cli
 # go.opencensus.io v0.22.0
 go.opencensus.io
@@ -219,7 +227,7 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.28.0
+# google.golang.org/grpc v1.29.1
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -248,6 +256,7 @@ google.golang.org/grpc/internal/grpcsync
 google.golang.org/grpc/internal/grpcutil
 google.golang.org/grpc/internal/resolver/dns
 google.golang.org/grpc/internal/resolver/passthrough
+google.golang.org/grpc/internal/status
 google.golang.org/grpc/internal/syscall
 google.golang.org/grpc/internal/transport
 google.golang.org/grpc/keepalive
