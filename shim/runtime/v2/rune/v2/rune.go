@@ -138,7 +138,7 @@ func getCarrierKind(bundlePath string) (found bool, value rune.CarrierKind, err 
 	}
 	v, ok := config.GetEnv(spec, constants.EnvKeyRuneCarrier)
 	if !ok {
-		return
+		return true, rune.Empty, nil
 	}
 	value = rune.CarrierKind(v)
 	if value == rune.Occlum || value == rune.Graphene || value == rune.Empty || value == rune.Skeleton {
