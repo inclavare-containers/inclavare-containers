@@ -73,7 +73,7 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 
 		// Launch a remote attestation to the enclave runtime.
 		if config.RaType == sgx.EPID {
-			if err = rt.LaunchAttestation(config.RaEpidSpid, config.RaEpidSubscriptionKey, config.IsProductEnclave, config.RaEpidIsLinkable); err != nil {
+			if _, err := rt.LaunchAttestation(config.RaEpidSpid, config.RaEpidSubscriptionKey, config.IsProductEnclave, config.RaEpidIsLinkable); err != nil {
 				return 1, err
 			}
 		}
@@ -313,6 +313,7 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 	} else {
 		err = fmt.Errorf(resp.Attest.Error)
 	}
+
 	return resp.Attest.ExitCode, err
 }
 
