@@ -18,7 +18,7 @@ N/A
 
 ### Return value
 ```
-N/A
+@int: the PAL API version of the current enclave runtime.
 ```
 
 ## 2.pal_init()
@@ -105,6 +105,13 @@ int pal_exec(struct pal_exec_args *attr);
 ```
 @pid: The pid of the generation process.
 @exit_value: The exit value of the process.
+```
+
+### Return value
+```
+0: Success
+-EINVAL: Invalid argument
+-ENOSYS: The function is not supported
 ```
 
 ## 5.pal_kill()
