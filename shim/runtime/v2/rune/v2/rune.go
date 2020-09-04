@@ -97,9 +97,9 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 		}
 		timeStart = time.Now()
 		materialRealPath := signingMaterial
-		if carrierKind == rune.Occlum {
-			materialRealPath = filepath.Join(req.Bundle, signingMaterial)
-		}
+		//if carrierKind == rune.Occlum {
+		//	materialRealPath = filepath.Join(req.Bundle, signingMaterial)
+		//}
 		if cfg.Signature.ServerAddress == "" {
 			publicKey, signature, err = mockSign(materialRealPath)
 			if err != nil {

@@ -329,10 +329,10 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	timeStart = time.Now()
 	container, err := runc.NewContainer(ctx, s.platform, r)
 
-	/*if carr.Name() == "occlum" {
+	/*//FIXME debug
+	if carrierKind == "occlum" {
 		//if err != nil {
 		//	logrus.Errorf("rune Create NewContainer error: %++v", err)
-		//FIXME debug
 		if _, err := os.Stat(r.Bundle); err == nil {
 			path := "/tmp/rune-container-test/runc-rootfs"
 			os.RemoveAll(path)
