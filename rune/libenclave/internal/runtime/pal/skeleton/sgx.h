@@ -17,6 +17,25 @@ enum sgx_page_flags {
 	SGX_PAGE_MEASURE	= 0x01,
 };
 
+#define	SGX_LEAF	0x12
+
+/**
+ *CPUID function 1
+ *ECX[26] enums general support for XSAVE
+ *ECX[27] enums XSAVE is enabled or not
+*/
+#define	XSAVE_SHIFT	26
+#define	OSXSAVE_SHIFT	27
+
+/**
+ *CPUID function 0DH, sub-function 1
+ *EAX[1] enums support for compaction extensions to XSAVE
+ */
+#define	XSAVEC_SHIFT	1
+
+/* XSAVE Feature Request Mask */
+#define	SGX_XFRM_LEGACY	0x0000000000000003ULL     /* Legacy XFRM which includes the basic feature bits required by SGX, x87 state(0x01) and SSE state(0x02) */
+
 #define SGX_MAGIC 0xA4
 
 #define SGX_IOC_ENCLAVE_CREATE \
@@ -143,4 +162,5 @@ typedef int (*sgx_enclave_exit_handler_t)(long rdi, long rsi, long rdx,
 					  void *tcs, int ret,
 					  struct sgx_enclave_exception *e);
 
+void get_sgx_xfrm_by_cpuid(uint64_t *xfrm);
 #endif /* _UAPI_ASM_X86_SGX_H */
