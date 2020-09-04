@@ -12,6 +12,8 @@ HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 IS_OOT_DRIVER := $(shell [ ! -e /dev/isgx ])
 IS_SGX_FLC := $(shell lscpu | grep -q sgx_lc)
 
+PRODUCT_ENCLAVE ?=
+
 TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton-v1.so $(OUTPUT)/liberpal-skeleton-v2.so $(OUTPUT)/liberpal-skeleton-v3.so $(OUTPUT)/signing_key.pem
 
 ifeq ($(IS_OOT_DRIVER),1)
@@ -56,8 +58,14 @@ $(OUTPUT)/encl.elf: encl.lds encl.c encl_bootstrap.S
 $(OUTPUT)/signing_key.pem:
 	openssl genrsa -3 -out $@ 3072
 
+ifeq ($(PRODUCT_ENCLAVE),1)
+    PRODUCT_OPT := -p
+else
+    PRODUCT_OPT :=
+endif
+
 $(OUTPUT)/encl.ss: $(OUTPUT)/encl.bin $(OUTPUT)/signing_key.pem
-	$(OUTPUT)/sgxsign signing_key.pem $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss
+	$(OUTPUT)/sgxsign $(PRODUCT_OPT) signing_key.pem $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss
 
 $(OUTPUT)/encl.token: $(OUTPUT)/encl.ss
 	sgx-tools gen-token --signature encl.ss --token $@
