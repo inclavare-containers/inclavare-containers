@@ -114,13 +114,16 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 {
 	struct sgx_enclave_create ioc;
 	int rc;
+	uint64_t xfrm;
 
 	memset(secs, 0, sizeof(*secs));
 	secs->ssa_frame_size = 1;
 	secs->attributes = SGX_ATTR_MODE64BIT;
 	if (enclave_debug)
 		secs->attributes |= SGX_ATTR_DEBUG;
-	secs->xfrm = 7;
+
+	get_sgx_xfrm_by_cpuid(&xfrm);
+	secs->xfrm = xfrm;
 
 	for (secs->size = PAGE_SIZE; secs->size < bin_size; )
 		secs->size <<= 1;

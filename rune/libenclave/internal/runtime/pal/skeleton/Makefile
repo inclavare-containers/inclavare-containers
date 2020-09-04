@@ -22,13 +22,13 @@ endif
 
 all: $(TEST_CUSTOM_PROGS)
 
-$(OUTPUT)/liberpal-skeleton-v1.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v1.o $(OUTPUT)/liberpal-skeleton.o
+$(OUTPUT)/liberpal-skeleton-v1.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v1.o $(OUTPUT)/liberpal-skeleton.o $(OUTPUT)/sgxutils.o
 	$(CC) $(HOST_LDFLAGS) -o $@ $^
 
 $(OUTPUT)/liberpal-skeleton-v1.o: liberpal-skeleton-v1.c liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
-$(OUTPUT)/liberpal-skeleton-v2.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v2.o $(OUTPUT)/liberpal-skeleton.o
+$(OUTPUT)/liberpal-skeleton-v2.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v2.o $(OUTPUT)/liberpal-skeleton.o $(OUTPUT)/sgxutils.o
 	$(CC) $(HOST_LDFLAGS) -o $@ $^
 
 $(OUTPUT)/liberpal-skeleton-v2.o: liberpal-skeleton-v2.c liberpal-skeleton.c
@@ -37,13 +37,16 @@ $(OUTPUT)/liberpal-skeleton-v2.o: liberpal-skeleton-v2.c liberpal-skeleton.c
 $(OUTPUT)/liberpal-skeleton.o: liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
-$(OUTPUT)/liberpal-skeleton-v3.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v3.o $(OUTPUT)/liberpal-skeleton.o
+$(OUTPUT)/liberpal-skeleton-v3.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v3.o $(OUTPUT)/liberpal-skeleton.o $(OUTPUT)/sgxutils.o
 	$(CC) $(HOST_LDFLAGS) -o $@ $^
 
 $(OUTPUT)/liberpal-skeleton-v3.o: liberpal-skeleton-v3.c liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(OUTPUT)/sgx_call.o: sgx_call.S
+	$(CC) $(HOST_CFLAGS) -c $< -o $@
+
+$(OUTPUT)/sgxutils.o: sgxutils.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(OUTPUT)/encl.bin: $(OUTPUT)/encl.elf $(OUTPUT)/sgxsign
@@ -62,14 +65,15 @@ $(OUTPUT)/encl.ss: $(OUTPUT)/encl.bin $(OUTPUT)/signing_key.pem
 $(OUTPUT)/encl.token: $(OUTPUT)/encl.ss
 	sgx-tools gen-token --signature encl.ss --token $@
 
-$(OUTPUT)/sgxsign: sgxsign.c
-	$(CC) -I../include -o $@ $< -lcrypto
+$(OUTPUT)/sgxsign: sgxsign.c sgxutils.c
+	$(CC) -I../include -o $@ $^ -lcrypto
 
 EXTRA_CLEAN := \
 	$(OUTPUT)/encl.bin \
 	$(OUTPUT)/encl.elf \
 	$(OUTPUT)/encl.ss \
 	$(OUTPUT)/sgx_call.o \
+	$(OUTPUT)/sgxutils.o \
 	$(OUTPUT)/sgxsign \
 	$(OUTPUT)/liberpal-skeleton*.o \
 	$(OUTPUT)/liberpal-skeleton*.so \
