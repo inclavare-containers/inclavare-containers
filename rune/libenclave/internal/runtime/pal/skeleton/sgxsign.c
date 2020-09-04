@@ -422,6 +422,7 @@ int main(int argc, char **argv)
 {
 	uint64_t header1[2] = {0x000000E100000006, 0x0000000000010000};
 	uint64_t header2[2] = {0x0000006000000101, 0x0000000100000060};
+	uint64_t xfrm;
 	struct sgx_sigstruct ss;
 	const char *program;
 	int opt;
@@ -465,7 +466,10 @@ int main(int argc, char **argv)
 #endif
 	if (enclave_debug)
 		ss.body.attributes |= SGX_ATTR_DEBUG;
-	ss.body.xfrm = 7;
+
+	get_sgx_xfrm_by_cpuid(&xfrm);
+	ss.body.xfrm = xfrm;
+
 	ss.body.attributes_mask = ss.body.attributes;
 
 	/* sanity check only */
