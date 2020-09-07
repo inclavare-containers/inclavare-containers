@@ -9,17 +9,14 @@ ENCL_CFLAGS := -Wall -Werror -static -nostdlib -nostartfiles -fPIC \
 	       -fno-stack-protector -mrdrnd -std=gnu11
 HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 
-IS_OOT_DRIVER := $(shell [ ! -e /dev/isgx ])
-IS_SGX_FLC := $(shell lscpu | grep -q sgx_lc)
+IS_SGX_FLC ?= $(shell if lscpu | grep -q sgx_lc; then echo "1"; else echo "0"; fi;)
 
 PRODUCT_ENCLAVE ?=
 
 TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/liberpal-skeleton-v1.so $(OUTPUT)/liberpal-skeleton-v2.so $(OUTPUT)/liberpal-skeleton-v3.so $(OUTPUT)/signing_key.pem
 
-ifeq ($(IS_OOT_DRIVER),1)
-    TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
-else ifeq ($(IS_SGX_FLC),)
-    TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
+ifeq ($(IS_SGX_FLC),0)
+        TEST_CUSTOM_PROGS += $(OUTPUT)/encl.token
 endif
 
 all: $(TEST_CUSTOM_PROGS)
@@ -62,16 +59,18 @@ $(OUTPUT)/signing_key.pem:
 	openssl genrsa -3 -out $@ 3072
 
 ifeq ($(PRODUCT_ENCLAVE),1)
-    PRODUCT_OPT := -p
+        PRODUCT_OPT := -p
 else
-    PRODUCT_OPT :=
+        PRODUCT_OPT :=
 endif
 
 $(OUTPUT)/encl.ss: $(OUTPUT)/encl.bin $(OUTPUT)/signing_key.pem
 	$(OUTPUT)/sgxsign $(PRODUCT_OPT) signing_key.pem $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss
 
+ifeq ($(IS_SGX_FLC),0)
 $(OUTPUT)/encl.token: $(OUTPUT)/encl.ss
 	sgx-tools gen-token --signature encl.ss --token $@
+endif
 
 $(OUTPUT)/sgxsign: sgxsign.c sgxutils.c
 	$(CC) -I../include -o $@ $^ -lcrypto
@@ -85,8 +84,11 @@ EXTRA_CLEAN := \
 	$(OUTPUT)/sgxsign \
 	$(OUTPUT)/liberpal-skeleton*.o \
 	$(OUTPUT)/liberpal-skeleton*.so \
-	$(OUTPUT)/signing_key.pem \
-	$(OUTPUT)/encl.token
+	$(OUTPUT)/signing_key.pem
+
+ifeq ($(IS_SGX_FLC),0)
+        EXTRA_CLEAN += $(OUTPUT)/encl.token
+endif
 
 clean:
 	rm -f ${EXTRA_CLEAN}
