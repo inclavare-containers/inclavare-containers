@@ -74,6 +74,3 @@ func (m *defaultMonitor) Wait(c *exec.Cmd, ec chan Exit) (int, error) {
 	e := <-ec
 	return e.Status, nil
 }
-
-
-
