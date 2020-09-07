@@ -93,6 +93,7 @@ func New(ctx context.Context, id string, publisher shim.Publisher, shutdown func
 		ep:         ep,
 		cancel:     shutdown,
 		containers: make(map[string]*runc.Container),
+		config:     make(map[string]*containerConfiguration),
 	}
 	go s.processExits()
 	runcC.Monitor = reaper.Default
@@ -102,6 +103,11 @@ func New(ctx context.Context, id string, publisher shim.Publisher, shutdown func
 	}
 	go s.forward(ctx, publisher)
 	return s, nil
+}
+
+type containerConfiguration struct {
+	binary string
+	root   string
 }
 
 // service is the shim implementation of a remote shim over GRPC
@@ -119,6 +125,7 @@ type service struct {
 	id string
 
 	containers map[string]*runc.Container
+	config     map[string]*containerConfiguration
 
 	cancel func()
 }
@@ -360,21 +367,31 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		v, err := typeurl.UnmarshalAny(r.Options)
 		if err != nil {
 			logrus.Errorf("Get rune options error: %v", err)
-		}
-		if err != nil {
 			return nil, err
 		}
 		opts = *v.(*options.Options)
 	}
 
-	//result := make(chan bool, 1)
-	// start remote attestation
-	if opts.BinaryName == constants.RuneOCIRuntime {
-		logrus.Infof("Attestation Start")
-		//go attestation.Attestation_main(ctx, result)
+	ns, err := namespaces.NamespaceRequired(ctx)
+	if err != nil {
+		return nil, err
 	}
 
+	var runeRootGlobalOption string = process.RuncRoot
+	if opts.Root != "" {
+		runeRootGlobalOption = opts.Root
+	}
+	runeRootGlobalOption = filepath.Join(runeRootGlobalOption, ns)
+
+	config := &containerConfiguration{
+		binary: opts.BinaryName,
+		root:   runeRootGlobalOption,
+	}
 	s.containers[r.ID] = container
+	s.config[r.ID] = config
+
+	logrus.Infof("s.config[%v] = %v", r.ID, s.config[r.ID])
+
 	s.send(&eventstypes.TaskCreate{
 		ContainerID: r.ID,
 		Bundle:      r.Bundle,
@@ -391,15 +408,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 
 	logrus.Infof("TaskCreate sent: %s %d", r.ID, container.Pid())
 
-	if opts.BinaryName == constants.RuneOCIRuntime {
-		//// judge remote attestation result
-		//switch <-result {
-		//case true:
-		//	log.G(ctx).Infof("Attestation Success!")
-		//case false:
-		//	log.G(ctx).Infof("Attestation Failed!")
-		//}
-	}
 	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(ts))/time.Second)
 	return &taskAPI.CreateTaskResponse{
