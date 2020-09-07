@@ -93,6 +93,7 @@ func New(ctx context.Context, id string, publisher shim.Publisher, shutdown func
 		ep:         ep,
 		cancel:     shutdown,
 		containers: make(map[string]*runc.Container),
+		config:     make(map[string]*containerConfiguration),
 	}
 	go s.processExits()
 	runcC.Monitor = reaper.Default
@@ -102,6 +103,11 @@ func New(ctx context.Context, id string, publisher shim.Publisher, shutdown func
 	}
 	go s.forward(ctx, publisher)
 	return s, nil
+}
+
+type containerConfiguration struct {
+	binary string
+	root   string
 }
 
 // service is the shim implementation of a remote shim over GRPC
@@ -119,6 +125,7 @@ type service struct {
 	id string
 
 	containers map[string]*runc.Container
+	config     map[string]*containerConfiguration
 
 	cancel func()
 }
@@ -374,7 +381,26 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		//go attestation.Attestation_main(ctx, result)
 	}
 
+	ns, err := namespaces.NamespaceRequired(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var runeRootGlobalOption string = process.RuncRoot
+	if opts.Root != "" {
+		runeRootGlobalOption = opts.Root
+	}
+	runeRootGlobalOption = filepath.Join(runeRootGlobalOption, ns)
+
+	config := &containerConfiguration{
+		binary: opts.BinaryName,
+		root:   runeRootGlobalOption,
+	}
 	s.containers[r.ID] = container
+	s.config[r.ID] = config
+
+	logrus.Infof("s.config[%v] = %v", r.ID, s.config[r.ID])
+
 	s.send(&eventstypes.TaskCreate{
 		ContainerID: r.ID,
 		Bundle:      r.Bundle,
