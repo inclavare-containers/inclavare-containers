@@ -367,18 +367,9 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		v, err := typeurl.UnmarshalAny(r.Options)
 		if err != nil {
 			logrus.Errorf("Get rune options error: %v", err)
-		}
-		if err != nil {
 			return nil, err
 		}
 		opts = *v.(*options.Options)
-	}
-
-	//result := make(chan bool, 1)
-	// start remote attestation
-	if opts.BinaryName == constants.RuneOCIRuntime {
-		logrus.Infof("Attestation Start")
-		//go attestation.Attestation_main(ctx, result)
 	}
 
 	ns, err := namespaces.NamespaceRequired(ctx)
@@ -417,15 +408,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 
 	logrus.Infof("TaskCreate sent: %s %d", r.ID, container.Pid())
 
-	if opts.BinaryName == constants.RuneOCIRuntime {
-		//// judge remote attestation result
-		//switch <-result {
-		//case true:
-		//	log.G(ctx).Infof("Attestation Success!")
-		//case false:
-		//	log.G(ctx).Infof("Attestation Failed!")
-		//}
-	}
 	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(ts))/time.Second)
 	return &taskAPI.CreateTaskResponse{
