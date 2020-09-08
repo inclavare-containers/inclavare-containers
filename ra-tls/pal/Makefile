@@ -60,8 +60,7 @@ ifeq ($(HAVE_WOLFSSL_BENCHMARK), 1)
 endif
 
 #App_C_Files := App.c server-tls.c sgxsdk-ra-attester_u.c ias-ra.c
-#App_C_Files := App.c sgxsdk-ra-attester_u.c
-App_C_Fils := App.c
+App_C_Files := App.c sgxsdk-ra-attester_u.c
 App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I$(INCDIR) -I$(shell readlink -f .)
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -shared -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
