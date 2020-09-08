@@ -4,26 +4,26 @@ import (
 	cache_manager "github.com/alibaba/inclavare-containers/epm/pkg/epm"
 )
 
-type Cach0Manager struct {
-	cache_manager.DefaultCachePoolManager
+type BundleCach0Manager struct {
+	cache_manager.DefaultEnclavePool
 }
 
-func (d *Cach0Manager) GetCacheType() string {
-	return "bundle-cache-pool.occlum.cache0"
+func (d *BundleCach0Manager) GetPoolType() string {
+	return "bundle-cache.occlum.cache0"
 }
 
-type Cach1Manager struct {
-	cache_manager.DefaultCachePoolManager
+type BundleCach1Manager struct {
+	cache_manager.DefaultEnclavePool
 }
 
-func (d *Cach1Manager) GetCacheType() string {
-	return "bundle-cache-pool.occlum.cache1"
+func (d *BundleCach1Manager) GetPoolType() string {
+	return "bundle-cache.occlum.cache1"
 }
 
-type Cach2Manager struct {
-	cache_manager.DefaultCachePoolManager
+type BundleCach2Manager struct {
+	cache_manager.DefaultEnclavePool
 }
 
-func (d *Cach2Manager) GetCacheType() string {
-	return "bundle-cache-pool.occlum.cache2"
+func (d *BundleCach2Manager) GetPoolType() string {
+	return "bundle-cache.occlum.cache2"
 }

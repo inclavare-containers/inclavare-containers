@@ -13,10 +13,10 @@ import (
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
-// CachePoolManagerClient is the client API for CachePoolManager service.
+// EnclavePoolManagerClient is the client API for EnclavePoolManager service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CachePoolManagerClient interface {
+type EnclavePoolManagerClient interface {
 	// GetCache represents get the specified cache metadata
 	GetCache(ctx context.Context, in *GetCacheRequest, opts ...grpc.CallOption) (*GetCacheResponse, error)
 	// SaveCache represents save the data to a cache directory and record the cache metadata
@@ -29,63 +29,63 @@ type CachePoolManagerClient interface {
 	LoadCache(ctx context.Context, in *LoadCacheRequest, opts ...grpc.CallOption) (*LoadCacheResponse, error)
 }
 
-type cachePoolManagerClient struct {
+type enclavePoolManagerClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCachePoolManagerClient(cc grpc.ClientConnInterface) CachePoolManagerClient {
-	return &cachePoolManagerClient{cc}
+func NewEnclavePoolManagerClient(cc grpc.ClientConnInterface) EnclavePoolManagerClient {
+	return &enclavePoolManagerClient{cc}
 }
 
-func (c *cachePoolManagerClient) GetCache(ctx context.Context, in *GetCacheRequest, opts ...grpc.CallOption) (*GetCacheResponse, error) {
+func (c *enclavePoolManagerClient) GetCache(ctx context.Context, in *GetCacheRequest, opts ...grpc.CallOption) (*GetCacheResponse, error) {
 	out := new(GetCacheResponse)
-	err := c.cc.Invoke(ctx, "/v1alpha1.CachePoolManager/GetCache", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1alpha1.EnclavePoolManager/GetCache", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *cachePoolManagerClient) SaveCache(ctx context.Context, in *SaveCacheRequest, opts ...grpc.CallOption) (*SaveCacheResponse, error) {
+func (c *enclavePoolManagerClient) SaveCache(ctx context.Context, in *SaveCacheRequest, opts ...grpc.CallOption) (*SaveCacheResponse, error) {
 	out := new(SaveCacheResponse)
-	err := c.cc.Invoke(ctx, "/v1alpha1.CachePoolManager/SaveCache", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1alpha1.EnclavePoolManager/SaveCache", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *cachePoolManagerClient) ListCache(ctx context.Context, in *ListCacheRequest, opts ...grpc.CallOption) (*ListCacheResponse, error) {
+func (c *enclavePoolManagerClient) ListCache(ctx context.Context, in *ListCacheRequest, opts ...grpc.CallOption) (*ListCacheResponse, error) {
 	out := new(ListCacheResponse)
-	err := c.cc.Invoke(ctx, "/v1alpha1.CachePoolManager/ListCache", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1alpha1.EnclavePoolManager/ListCache", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *cachePoolManagerClient) DeleteCache(ctx context.Context, in *DeleteCacheRequest, opts ...grpc.CallOption) (*DeleteCacheResponse, error) {
+func (c *enclavePoolManagerClient) DeleteCache(ctx context.Context, in *DeleteCacheRequest, opts ...grpc.CallOption) (*DeleteCacheResponse, error) {
 	out := new(DeleteCacheResponse)
-	err := c.cc.Invoke(ctx, "/v1alpha1.CachePoolManager/DeleteCache", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1alpha1.EnclavePoolManager/DeleteCache", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *cachePoolManagerClient) LoadCache(ctx context.Context, in *LoadCacheRequest, opts ...grpc.CallOption) (*LoadCacheResponse, error) {
+func (c *enclavePoolManagerClient) LoadCache(ctx context.Context, in *LoadCacheRequest, opts ...grpc.CallOption) (*LoadCacheResponse, error) {
 	out := new(LoadCacheResponse)
-	err := c.cc.Invoke(ctx, "/v1alpha1.CachePoolManager/LoadCache", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/v1alpha1.EnclavePoolManager/LoadCache", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CachePoolManagerServer is the server API for CachePoolManager service.
-// All implementations must embed UnimplementedCachePoolManagerServer
+// EnclavePoolManagerServer is the server API for EnclavePoolManager service.
+// All implementations must embed UnimplementedEnclavePoolManagerServer
 // for forward compatibility
-type CachePoolManagerServer interface {
+type EnclavePoolManagerServer interface {
 	// GetCache represents get the specified cache metadata
 	GetCache(context.Context, *GetCacheRequest) (*GetCacheResponse, error)
 	// SaveCache represents save the data to a cache directory and record the cache metadata
@@ -96,147 +96,147 @@ type CachePoolManagerServer interface {
 	DeleteCache(context.Context, *DeleteCacheRequest) (*DeleteCacheResponse, error)
 	// LoadCache represents load the specified cache data to work directory
 	LoadCache(context.Context, *LoadCacheRequest) (*LoadCacheResponse, error)
-	mustEmbedUnimplementedCachePoolManagerServer()
+	mustEmbedUnimplementedEnclavePoolManagerServer()
 }
 
-// UnimplementedCachePoolManagerServer must be embedded to have forward compatible implementations.
-type UnimplementedCachePoolManagerServer struct {
+// UnimplementedEnclavePoolManagerServer must be embedded to have forward compatible implementations.
+type UnimplementedEnclavePoolManagerServer struct {
 }
 
-func (*UnimplementedCachePoolManagerServer) GetCache(context.Context, *GetCacheRequest) (*GetCacheResponse, error) {
+func (*UnimplementedEnclavePoolManagerServer) GetCache(context.Context, *GetCacheRequest) (*GetCacheResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCache not implemented")
 }
-func (*UnimplementedCachePoolManagerServer) SaveCache(context.Context, *SaveCacheRequest) (*SaveCacheResponse, error) {
+func (*UnimplementedEnclavePoolManagerServer) SaveCache(context.Context, *SaveCacheRequest) (*SaveCacheResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveCache not implemented")
 }
-func (*UnimplementedCachePoolManagerServer) ListCache(context.Context, *ListCacheRequest) (*ListCacheResponse, error) {
+func (*UnimplementedEnclavePoolManagerServer) ListCache(context.Context, *ListCacheRequest) (*ListCacheResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCache not implemented")
 }
-func (*UnimplementedCachePoolManagerServer) DeleteCache(context.Context, *DeleteCacheRequest) (*DeleteCacheResponse, error) {
+func (*UnimplementedEnclavePoolManagerServer) DeleteCache(context.Context, *DeleteCacheRequest) (*DeleteCacheResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCache not implemented")
 }
-func (*UnimplementedCachePoolManagerServer) LoadCache(context.Context, *LoadCacheRequest) (*LoadCacheResponse, error) {
+func (*UnimplementedEnclavePoolManagerServer) LoadCache(context.Context, *LoadCacheRequest) (*LoadCacheResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadCache not implemented")
 }
-func (*UnimplementedCachePoolManagerServer) mustEmbedUnimplementedCachePoolManagerServer() {}
+func (*UnimplementedEnclavePoolManagerServer) mustEmbedUnimplementedEnclavePoolManagerServer() {}
 
-func RegisterCachePoolManagerServer(s *grpc.Server, srv CachePoolManagerServer) {
-	s.RegisterService(&_CachePoolManager_serviceDesc, srv)
+func RegisterEnclavePoolManagerServer(s *grpc.Server, srv EnclavePoolManagerServer) {
+	s.RegisterService(&_EnclavePoolManager_serviceDesc, srv)
 }
 
-func _CachePoolManager_GetCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EnclavePoolManager_GetCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetCacheRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CachePoolManagerServer).GetCache(ctx, in)
+		return srv.(EnclavePoolManagerServer).GetCache(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1alpha1.CachePoolManager/GetCache",
+		FullMethod: "/v1alpha1.EnclavePoolManager/GetCache",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CachePoolManagerServer).GetCache(ctx, req.(*GetCacheRequest))
+		return srv.(EnclavePoolManagerServer).GetCache(ctx, req.(*GetCacheRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CachePoolManager_SaveCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EnclavePoolManager_SaveCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SaveCacheRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CachePoolManagerServer).SaveCache(ctx, in)
+		return srv.(EnclavePoolManagerServer).SaveCache(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1alpha1.CachePoolManager/SaveCache",
+		FullMethod: "/v1alpha1.EnclavePoolManager/SaveCache",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CachePoolManagerServer).SaveCache(ctx, req.(*SaveCacheRequest))
+		return srv.(EnclavePoolManagerServer).SaveCache(ctx, req.(*SaveCacheRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CachePoolManager_ListCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EnclavePoolManager_ListCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCacheRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CachePoolManagerServer).ListCache(ctx, in)
+		return srv.(EnclavePoolManagerServer).ListCache(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1alpha1.CachePoolManager/ListCache",
+		FullMethod: "/v1alpha1.EnclavePoolManager/ListCache",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CachePoolManagerServer).ListCache(ctx, req.(*ListCacheRequest))
+		return srv.(EnclavePoolManagerServer).ListCache(ctx, req.(*ListCacheRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CachePoolManager_DeleteCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EnclavePoolManager_DeleteCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteCacheRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CachePoolManagerServer).DeleteCache(ctx, in)
+		return srv.(EnclavePoolManagerServer).DeleteCache(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1alpha1.CachePoolManager/DeleteCache",
+		FullMethod: "/v1alpha1.EnclavePoolManager/DeleteCache",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CachePoolManagerServer).DeleteCache(ctx, req.(*DeleteCacheRequest))
+		return srv.(EnclavePoolManagerServer).DeleteCache(ctx, req.(*DeleteCacheRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CachePoolManager_LoadCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EnclavePoolManager_LoadCache_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LoadCacheRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CachePoolManagerServer).LoadCache(ctx, in)
+		return srv.(EnclavePoolManagerServer).LoadCache(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1alpha1.CachePoolManager/LoadCache",
+		FullMethod: "/v1alpha1.EnclavePoolManager/LoadCache",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CachePoolManagerServer).LoadCache(ctx, req.(*LoadCacheRequest))
+		return srv.(EnclavePoolManagerServer).LoadCache(ctx, req.(*LoadCacheRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _CachePoolManager_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "v1alpha1.CachePoolManager",
-	HandlerType: (*CachePoolManagerServer)(nil),
+var _EnclavePoolManager_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "v1alpha1.EnclavePoolManager",
+	HandlerType: (*EnclavePoolManagerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetCache",
-			Handler:    _CachePoolManager_GetCache_Handler,
+			Handler:    _EnclavePoolManager_GetCache_Handler,
 		},
 		{
 			MethodName: "SaveCache",
-			Handler:    _CachePoolManager_SaveCache_Handler,
+			Handler:    _EnclavePoolManager_SaveCache_Handler,
 		},
 		{
 			MethodName: "ListCache",
-			Handler:    _CachePoolManager_ListCache_Handler,
+			Handler:    _EnclavePoolManager_ListCache_Handler,
 		},
 		{
 			MethodName: "DeleteCache",
-			Handler:    _CachePoolManager_DeleteCache_Handler,
+			Handler:    _EnclavePoolManager_DeleteCache_Handler,
 		},
 		{
 			MethodName: "LoadCache",
-			Handler:    _CachePoolManager_LoadCache_Handler,
+			Handler:    _EnclavePoolManager_LoadCache_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

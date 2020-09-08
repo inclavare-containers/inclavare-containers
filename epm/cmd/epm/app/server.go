@@ -42,32 +42,32 @@ func runServer(opts *options.Options) error {
 		return fmt.Errorf("create metadata server failed. %++v", err)
 	}
 
-	server := epm.CachePoolManagerServer{}
+	server := epm.EnclavePoolManagerServer{}
 
-	bundleCache0 := occlum.Cach0Manager{
-		DefaultCachePoolManager: epm.DefaultCachePoolManager{
+	bundleCache0 := occlum.BundleCach0Manager{
+		DefaultEnclavePool: epm.DefaultEnclavePool{
 			Root:          cfg.Root,
 			CacheMetadata: metadata,
 		}}
-	bundleCache1 := occlum.Cach1Manager{
-		DefaultCachePoolManager: epm.DefaultCachePoolManager{
+	bundleCache1 := occlum.BundleCach1Manager{
+		DefaultEnclavePool: epm.DefaultEnclavePool{
 			Root:          cfg.Root,
 			CacheMetadata: metadata,
 		}}
-	bundleCache2 := occlum.Cach2Manager{
-		DefaultCachePoolManager: epm.DefaultCachePoolManager{
+	bundleCache2 := occlum.BundleCach2Manager{
+		DefaultEnclavePool: epm.DefaultEnclavePool{
 			Root:          cfg.Root,
 			CacheMetadata: metadata,
 		}}
-	// registry the bundle cache pool managers to the manager server
-	server.RegistryCachePoolManager(&bundleCache0)
-	server.RegistryCachePoolManager(&bundleCache1)
-	server.RegistryCachePoolManager(&bundleCache2)
+	// register the bundle cache pool managers to the manager server
+	server.RegisterCachePoolManager(&bundleCache0)
+	server.RegisterCachePoolManager(&bundleCache1)
+	server.RegisterCachePoolManager(&bundleCache2)
 
 	// start the grpc server with the server options
 	s := grpc.NewServer(serverOpts...)
 	// registry and start the cache pool manager server
-	v1alpha1.RegisterCachePoolManagerServer(s, &server)
+	v1alpha1.RegisterEnclavePoolManagerServer(s, &server)
 	// listen and serve
 	lis, err := net.Listen("udp", cfg.GRPC.Address)
 	if err != nil {

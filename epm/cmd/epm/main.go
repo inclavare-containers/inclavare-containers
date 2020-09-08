@@ -14,7 +14,7 @@ func main() {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	}
 
-	cmd := app.NewCachePoolManagerServer()
+	cmd := app.NewEnclavePoolManagerServer()
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 
 	if err := cmd.Execute(); err != nil {
