@@ -10,8 +10,8 @@
 
 /**
  * enum sgx_epage_flags - page control flags
- * %SGX_PAGE_MEASURE:	Measure the page contents with a sequence of
- *			ENCLS[EEXTEND] operations.
+ * %SGX_PAGE_MEASURE:	Measure the page contents with a
+ * sequence of ENCLS[EEXTEND] operations.
  */
 enum sgx_page_flags {
 	SGX_PAGE_MEASURE	= 0x01,
