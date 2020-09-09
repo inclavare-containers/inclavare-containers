@@ -9,8 +9,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	attest "github.com/opencontainers/runc/libenclave/attestation"
-	pb "github.com/opencontainers/runc/libenclave/attestation/proto"
+	//pb "github.com/opencontainers/runc/libenclave/attestation/proto"
 	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -27,47 +26,42 @@ const (
 	subscriptionKeyLength = 16
 )
 
-type reportStatus struct {
-	requestId   string
-	reportId    string
-	timestamp   string
-	quoteStatus string
-}
-
-type iasRegistry struct {
-}
-
-type iasService struct {
-	attest.Service
+type IasAttestation struct {
 	reportApiUrl    string
 	spid            [spidLength]byte
 	subscriptionKey [subscriptionKeyLength]byte
 }
 
-func (reg *iasRegistry) Create(p map[string]string) (*attest.Service, error) {
+type IasReportStatus struct {
+	RequestId   string
+	ReportId    string
+	Timestamp   string
+	QuoteStatus string
+}
+
+func NewIasAttestation(cfg map[string]string) (*IasAttestation, error) {
 	isProduct := false
-	v := attest.GetParameter("service-class", p)
-	if v != "" && v == "product" {
+	v, ok := cfg["service-class"]
+	if ok && v == "product" {
 		isProduct = true
 	}
 
-	spid := attest.GetParameter("spid", p)
-	if spid == "" {
-		return nil, fmt.Errorf("Missing parameter spid")
+	spid, ok := cfg["spid"]
+	if !ok || spid == "" {
+		return nil, fmt.Errorf("EPID parameter spid not specified")
 	}
 
 	if len(spid) != spidLength*2 {
-		return nil, fmt.Errorf("The length of spid must be %d-character",
-			spidLength*2)
+		return nil, fmt.Errorf("Spid must be %d-character long", spidLength*2)
 	}
 
-	subKey := attest.GetParameter("subscription-key", p)
-	if subKey == "" {
-		return nil, fmt.Errorf("Missing parameter subscription-key")
+	subKey, ok := cfg["subscription-key"]
+	if !ok && subKey == "" {
+		return nil, fmt.Errorf("EPID parameter subscription-key not specified")
 	}
 
 	if len(subKey) != subscriptionKeyLength*2 {
-		return nil, fmt.Errorf("The length of subscription key must be %d-character",
+		return nil, fmt.Errorf("Subscription key must be %d-character long",
 			subscriptionKeyLength*2)
 	}
 
@@ -87,86 +81,67 @@ func (reg *iasRegistry) Create(p map[string]string) (*attest.Service, error) {
 		url += "/dev"
 	}
 
-	apiVer := attest.GetParameter("apiVer", p)
-	if apiVer != "" {
-		apiVersion, err = strconv.ParseUint(apiVer, 10, 32)
+	version := apiVersion
+	apiVer, ok := cfg["apiVer"]
+	if ok && apiVer != "" {
+		version, err = strconv.ParseUint(apiVer, 10, 32)
 		if err != nil {
 			return nil, fmt.Errorf("Invalid IAS API Version: %s", err)
-		} else if apiVersion != apiV3 && apiVersion != apiV4 {
+		}
+		if version != apiV3 && apiVersion != apiV4 {
 			return nil, fmt.Errorf("Unsupported IAS API Version: %s", apiVer)
 		}
 	}
-	url += fmt.Sprintf("/attestation/v%d/report", apiVersion)
+	url += fmt.Sprintf("/attestation/v%d/report", version)
 
-	ias := &iasService{
+	ias := &IasAttestation{
 		reportApiUrl: url,
 	}
 	copy(ias.subscriptionKey[:], rawSubKey)
 	copy(ias.spid[:], rawSpid)
 
-	ias.Attester = ias
-
-	return &ias.Service, nil
+	return ias, nil
 }
 
-func (ias *iasService) PrepareChallenge() (*pb.AttestChallenge, error) {
-	return &pb.AttestChallenge{
-		Nonce: ias.NonceForChallenge.Generate(),
-	}, nil
-}
-
-func (ias *iasService) HandleChallengeResponse(r *pb.AttestResponse) (*attest.Quote, error) {
-	quote := r.GetQuote()
-
-	if len(quote) <= intelsgx.QuoteLength {
-		return nil, fmt.Errorf("Invalid length of quote returned: %d-byte", len(quote))
-	}
-
-	return &attest.Quote{Evidence: quote}, nil
-}
-
-// TODO: check target enclave report
-func (ias *iasService) Check(q []byte) error {
+func (ias *IasAttestation) CheckQuote(q []byte) error {
 	quote := (*intelsgx.Quote)(unsafe.Pointer(&q[0]))
 
-	if ias.IsVerbose() {
-		logrus.Infof("Target Platform's Quote")
-		logrus.Infof("  Quote Body")
-		logrus.Infof("    QUOTE Structure Version:                               %d",
-			quote.Version)
-		logrus.Infof("    EPID Signature Type:                                   %d",
-			quote.SignatureType)
-		logrus.Infof("    Platform's EPID Group ID:                              %#08x",
-			quote.Gid)
-		logrus.Infof("    Quoting Enclave's ISV assigned SVN:                    %#04x",
-			quote.ISVSvnQe)
-		logrus.Infof("    Provisioning Certification Enclave's ISV assigned SVN: %#04x",
-			quote.ISVSvnPce)
-		logrus.Infof("    EPID Basename:                                         0x%v",
-			hex.EncodeToString(quote.Basename[:]))
-		logrus.Infof("  Report Body")
-		logrus.Infof("    Target CPU SVN:                                        0x%v",
-			hex.EncodeToString(quote.CpuSvn[:]))
-		logrus.Infof("    Enclave Misc Select:                                   %#08x",
-			quote.MiscSelect)
-		logrus.Infof("    Enclave Attributes:                                    0x%v",
-			hex.EncodeToString(quote.Attributes[:]))
-		logrus.Infof("    Enclave Hash:                                          0x%v",
-			hex.EncodeToString(quote.MrEnclave[:]))
-		logrus.Infof("    Enclave Signer:                                        0x%v",
-			hex.EncodeToString(quote.MrSigner[:]))
-		logrus.Infof("    ISV assigned Product ID:                               %#04x",
-			quote.IsvProdId)
-		logrus.Infof("    ISV assigned SVN:                                      %#04x",
-			quote.IsvSvn)
-		logrus.Infof("    Report Data:                                           0x%v...",
-			hex.EncodeToString(quote.ReportData[:32]))
-		logrus.Infof("  Encrypted EPID Signature")
-		logrus.Infof("    Length:                                                %d",
-			quote.SigLen)
-		logrus.Infof("    Signature:                                             0x%v...",
-			hex.EncodeToString(q[intelsgx.QuoteLength:intelsgx.QuoteLength+32]))
-	}
+	logrus.Debugf("Target Platform's Quote")
+	logrus.Debugf("  Quote Body")
+	logrus.Debugf("    QUOTE Structure Version:                               %d",
+		quote.Version)
+	logrus.Debugf("    EPID Signature Type:                                   %d",
+		quote.SignatureType)
+	logrus.Debugf("    Platform's EPID Group ID:                              %#08x",
+		quote.Gid)
+	logrus.Debugf("    Quoting Enclave's ISV assigned SVN:                    %#04x",
+		quote.ISVSvnQe)
+	logrus.Debugf("    Provisioning Certification Enclave's ISV assigned SVN: %#04x",
+		quote.ISVSvnPce)
+	logrus.Debugf("    EPID Basename:                                         0x%v",
+		hex.EncodeToString(quote.Basename[:]))
+	logrus.Debugf("  Report Body")
+	logrus.Debugf("    Target CPU SVN:                                        0x%v",
+		hex.EncodeToString(quote.CpuSvn[:]))
+	logrus.Debugf("    Enclave Misc Select:                                   %#08x",
+		quote.MiscSelect)
+	logrus.Debugf("    Enclave Attributes:                                    0x%v",
+		hex.EncodeToString(quote.Attributes[:]))
+	logrus.Debugf("    Enclave Hash:                                          0x%v",
+		hex.EncodeToString(quote.MrEnclave[:]))
+	logrus.Debugf("    Enclave Signer:                                        0x%v",
+		hex.EncodeToString(quote.MrSigner[:]))
+	logrus.Debugf("    ISV assigned Product ID:                               %#04x",
+		quote.IsvProdId)
+	logrus.Debugf("    ISV assigned SVN:                                      %#04x",
+		quote.IsvSvn)
+	logrus.Debugf("    Report Data:                                           0x%v...",
+		hex.EncodeToString(quote.ReportData[:32]))
+	logrus.Debugf("  Encrypted EPID Signature")
+	logrus.Debugf("    Length:                                                %d",
+		quote.SigLen)
+	logrus.Debugf("    Signature:                                             0x%v...",
+		hex.EncodeToString(q[intelsgx.QuoteLength:intelsgx.QuoteLength+32]))
 
 	if quote.Version != intelsgx.QuoteVersion {
 		return fmt.Errorf("Invalid quote version: %d", quote.Version)
@@ -187,64 +162,49 @@ func (ias *iasService) Check(q []byte) error {
 	return nil
 }
 
-func (ias *iasService) getIasReport(quote []byte) (*attest.Status, map[string]string, error) {
-	nonce := strconv.FormatUint(rand.Uint64(), 16) + strconv.FormatUint(rand.Uint64(), 16)
+func (ias *IasAttestation) VerifyQuote(quote []byte) (*IasReportStatus, error) {
+	status, _, err := ias.RetrieveIasReport(quote, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return status, nil
+}
+
+func (ias *IasAttestation) GetVerifiedReport(quote []byte, nonce uint64) (*IasReportStatus, map[string]string, error) {
+	return ias.RetrieveIasReport(quote, nonce)
+}
+
+func (ias *IasAttestation) RetrieveIasReport(quote []byte, nonce uint64) (*IasReportStatus, map[string]string, error) {
+	var nonceStr string
+
+	if nonce == 0 {
+		nonceStr = strconv.FormatUint(rand.Uint64(), 16) + strconv.FormatUint(rand.Uint64(), 16)
+	} else {
+		nonceStr = strconv.FormatUint(nonce, 16)
+	}
+
 	p := &evidencePayload{
 		IsvEnclaveQuote: base64.StdEncoding.EncodeToString(quote),
 		PseManifest:     "",
-		Nonce:           nonce,
+		Nonce:           nonceStr,
 	}
 
-	status := &attest.Status{
-		StatusCode:   attest.StatusSgxBit,
-		ErrorMessage: "",
-	}
-
-	var resp *http.Response
-	var err error
-	if resp, err = ias.reportAttestationEvidence(p); err != nil {
-		status.ErrorMessage = fmt.Sprintf("%s", err)
-		return status, nil, err
+	resp, err := ias.reportAttestationEvidence(p)
+	if err != nil {
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
-	var reportStatus *reportStatus
-	reportStatus, rawReport, err := checkVerificationReport(resp, quote, nonce)
+	status, rawReport, err := checkAttestationVerificationReport(resp, quote, nonceStr)
 	if err != nil {
-		status.ErrorMessage = fmt.Sprintf("%s", err)
-		return status, nil, err
+		return nil, nil, err
 	}
 
-	iasReport := formatIasReport(resp, rawReport)
-
-	status.SpecificStatus = reportStatus
-	return status, iasReport, nil
+	return status, formatIasReport(resp, rawReport), nil
 }
 
-func (ias *iasService) Verify(quote []byte) *attest.Status {
-	status, _, err := ias.getIasReport(quote)
-	if err != nil {
-		return nil
-	}
-
-	return status
-}
-
-func (ias *iasService) GetVerifiedReport(quote []byte) (*attest.Status, map[string]string, error) {
-	return ias.getIasReport(quote)
-}
-
-func (ias *iasService) ShowStatus(status *attest.Status) {
-	s, ok := status.SpecificStatus.(*reportStatus)
-	if ok {
-		logrus.Infof("Request ID: %s\n", s.requestId)
-		logrus.Infof("Report ID: %s\n", s.reportId)
-		logrus.Infof("Timestamp: %s\n", s.timestamp)
-		logrus.Infof("IsvEnclaveQuoteStatus: %s\n", s.quoteStatus)
-	}
-}
-
-func (ias *iasService) reportAttestationEvidence(p *evidencePayload) (*http.Response, error) {
+func (ias *IasAttestation) reportAttestationEvidence(p *evidencePayload) (*http.Response, error) {
 	var jp []byte
 	var err error
 
@@ -261,14 +221,12 @@ func (ias *iasService) reportAttestationEvidence(p *evidencePayload) (*http.Resp
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Ocp-Apim-Subscription-Key", hex.EncodeToString(ias.subscriptionKey[:]))
 
-	if ias.IsVerbose() {
-		logrus.Infof("Initializing attestation evidence report ...")
+	logrus.Debugf("Initializing attestation evidence report ...")
 
-		if dump, err := httputil.DumpRequestOut(req, true); err == nil {
-			logrus.Infof("--- start of request ---")
-			logrus.Infof("%s\n", dump)
-			logrus.Infof("--- end of request ---")
-		}
+	if dump, err := httputil.DumpRequestOut(req, true); err == nil {
+		logrus.Debugf("--- start of request ---")
+		logrus.Debugf("%s\n", dump)
+		logrus.Debugf("--- end of request ---")
 	}
 
 	client := &http.Client{
@@ -282,14 +240,12 @@ func (ias *iasService) reportAttestationEvidence(p *evidencePayload) (*http.Resp
 		return nil, fmt.Errorf("Failed to send http request and receive http response: %s", err)
 	}
 
-	if ias.IsVerbose() {
-		logrus.Infof("Attestation evidence response retrieved ...")
+	logrus.Debugf("Attestation evidence response retrieved ...")
 
-		if dump, err := httputil.DumpResponse(resp, true); err == nil {
-			logrus.Infof("--- start of response ---")
-			logrus.Infof("%s\n", dump)
-			logrus.Infof("--- end of response ---")
-		}
+	if dump, err := httputil.DumpResponse(resp, true); err == nil {
+		logrus.Debugf("--- start of response ---")
+		logrus.Debugf("%s\n", dump)
+		logrus.Debugf("--- end of response ---")
 	}
 
 	return resp, nil
@@ -309,11 +265,11 @@ func formatIasReport(resp *http.Response, rawReport string) map[string]string {
 	return iasReport
 }
 
-func checkVerificationReport(resp *http.Response, quote []byte, nonce string) (*reportStatus, string, error) {
-	status := &reportStatus{
-		requestId:   "",
-		reportId:    "",
-		quoteStatus: "",
+func checkAttestationVerificationReport(resp *http.Response, quote []byte, nonce string) (*IasReportStatus, string, error) {
+	status := &IasReportStatus{
+		RequestId:   "",
+		ReportId:    "",
+		QuoteStatus: "",
 	}
 
 	if resp.StatusCode != 200 {
@@ -339,7 +295,7 @@ func checkVerificationReport(resp *http.Response, quote []byte, nonce string) (*
 		return status, "", fmt.Errorf("No Request-ID in response header")
 	}
 
-	status.requestId = reqId
+	status.RequestId = reqId
 
 	if resp.Header.Get("X-Iasreport-Signature") == "" {
 		return status, "", fmt.Errorf("No X-Iasreport-Signature in response header")
@@ -371,9 +327,9 @@ func checkVerificationReport(resp *http.Response, quote []byte, nonce string) (*
 			rawReport, err)
 	}
 
-	status.reportId = report.Id
-	status.timestamp = report.Timestamp
-	status.quoteStatus = report.IsvEnclaveQuoteStatus
+	status.ReportId = report.Id
+	status.Timestamp = report.Timestamp
+	status.QuoteStatus = report.IsvEnclaveQuoteStatus
 
 	if report.Version != (uint32)(apiVersion) {
 		return status, "", fmt.Errorf("Unsupported attestation API version %d in attesation verification report",
@@ -480,10 +436,4 @@ func checkVerificationReport(resp *http.Response, quote []byte, nonce string) (*
 	}
 
 	return status, string(rawReport), nil
-}
-
-func init() {
-	if err := attest.RegisterAttestation(&iasRegistry{}); err != nil {
-		fmt.Print(err)
-	}
 }
