@@ -13,8 +13,8 @@ import (
 	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
 )
 
-// CachePoolManager represents a cache manager
-type CachePoolManager interface {
+// EnclavePool represents a kind of enclave pool
+type EnclavePool interface {
 	// GetCache gets the cache by ID
 	GetCache(ID string) (*v1alpha1.Cache, error)
 	// SaveCache saves the data to a cache directory and record the cache metadata
@@ -25,21 +25,21 @@ type CachePoolManager interface {
 	DeleteCache(ID string) error
 	// LoadCache loads the specified cache data to work directory
 	LoadCache(ID, targetPath string) error
-	// GetCacheType gets the cache type of current cache pool manager
-	GetCacheType() string
+	// GetPoolType gets the pool type of current pool
+	GetPoolType() string
 }
 
-// DefaultCachePoolManager is the default implementation of CachePoolManager
-type DefaultCachePoolManager struct {
+// DefaultEnclavePool is the default implementation of EnclavePool
+type DefaultEnclavePool struct {
 	Root          string
 	CacheMetadata *cache_metadata.Metadata
 }
 
-func (d *DefaultCachePoolManager) GetCache(ID string) (*v1alpha1.Cache, error) {
-	return d.CacheMetadata.GetCache(d.GetCacheType(), ID)
+func (d *DefaultEnclavePool) GetCache(ID string) (*v1alpha1.Cache, error) {
+	return d.CacheMetadata.GetCache(d.GetPoolType(), ID)
 }
 
-func (d *DefaultCachePoolManager) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
+func (d *DefaultEnclavePool) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
 	savePath, err := d.BuildCacheSavePath(d.Root, cache)
 	if err != nil {
 		return err
@@ -64,14 +64,14 @@ func (d *DefaultCachePoolManager) SaveCache(sourcePath string, cache *v1alpha1.C
 	cache.SavePath = savePath
 	cache.Size = size
 	cache.Created = time.Now().Unix()
-	return d.CacheMetadata.SaveCache(d.GetCacheType(), cache.ID, cache)
+	return d.CacheMetadata.SaveCache(d.GetPoolType(), cache.ID, cache)
 }
 
-func (d *DefaultCachePoolManager) ListCache(lastCacheID string, limit int32) ([]*v1alpha1.Cache, error) {
-	return d.CacheMetadata.ListCache(d.GetCacheType(), lastCacheID, limit)
+func (d *DefaultEnclavePool) ListCache(lastCacheID string, limit int32) ([]*v1alpha1.Cache, error) {
+	return d.CacheMetadata.ListCache(d.GetPoolType(), lastCacheID, limit)
 }
 
-func (d *DefaultCachePoolManager) DeleteCache(ID string) error {
+func (d *DefaultEnclavePool) DeleteCache(ID string) error {
 	cache, err := d.GetCache(ID)
 	if err != nil {
 		return err
@@ -79,10 +79,10 @@ func (d *DefaultCachePoolManager) DeleteCache(ID string) error {
 	if err := os.RemoveAll(cache.SavePath); err != nil {
 		return err
 	}
-	return d.CacheMetadata.DeleteCache(d.GetCacheType(), ID)
+	return d.CacheMetadata.DeleteCache(d.GetPoolType(), ID)
 }
 
-func (d *DefaultCachePoolManager) LoadCache(ID, targetPath string) error {
+func (d *DefaultEnclavePool) LoadCache(ID, targetPath string) error {
 	cache, err := d.GetCache(ID)
 	if err != nil {
 		return err
@@ -96,11 +96,11 @@ func (d *DefaultCachePoolManager) LoadCache(ID, targetPath string) error {
 	return nil
 }
 
-func (d *DefaultCachePoolManager) GetCacheType() string {
+func (d *DefaultEnclavePool) GetPoolType() string {
 	return "default"
 }
 
-func (d *DefaultCachePoolManager) BuildCacheSavePath(rootDir string, cache *v1alpha1.Cache) (string, error) {
+func (d *DefaultEnclavePool) BuildCacheSavePath(rootDir string, cache *v1alpha1.Cache) (string, error) {
 	caches, err := d.CacheMetadata.GetAncestorCaches(cache)
 	if err != nil {
 		return "", err

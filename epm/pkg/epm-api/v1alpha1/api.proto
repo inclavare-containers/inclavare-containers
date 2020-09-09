@@ -2,11 +2,11 @@ syntax = 'proto3';
 
 package v1alpha1;
 
-// Cache represents the metadata of a cache managed by cache pool manager.
+// Cache represents the metadata of a cache managed by enclave pool.
 message Cache {
-    // Type represents the type of cache pool manager
+    // Type represents the type of enclave pool
     string type = 1;
-    // ID represents the id of the cache and the id is unique in the same type of cache
+    // ID represents the id of the cache and the id is unique in the same type of enclave pool
     string ID = 2;
     // SavePath represents the absolute path to store the cache
     string savePath = 3;
@@ -18,8 +18,8 @@ message Cache {
     int64 created = 6;
 }
 
-// CachePoolManager represents a cache pool manager.
-service CachePoolManager {
+// EnclavePoolManager represents an enclave pool
+service EnclavePoolManager {
     // GetCache represents get the specified cache metadata
     rpc GetCache(GetCacheRequest) returns (GetCacheResponse) {}
     // SaveCache represents save the data to a cache directory and record the cache metadata
@@ -34,7 +34,7 @@ service CachePoolManager {
 
 // GetCacheRequest
 message GetCacheRequest {
-    // Type represents the type of cache pool manager
+    // Type represents the type of enclave pool
     string type = 1;
     // ID represents the id of the cache
     string ID = 2;
@@ -58,7 +58,7 @@ message SaveCacheResponse {
 }
 
 message ListCacheRequest {
-    // Type represents the type of cache pool manager
+    // Type represents the type of enclave pool
     string type = 1;
     // LastCacheID represents the id of the last cache metadata in the most recent query list,
     // if the value is "", query the cache metadata from the starting point of DB,
@@ -73,7 +73,7 @@ message ListCacheResponse {
 }
 
 message DeleteCacheRequest {
-    // Type represents the type of cache pool manager
+    // Type represents the type of enclave pool
     string type = 1;
     // ID represents the id of the cache
     string ID = 2;
@@ -84,7 +84,7 @@ message DeleteCacheResponse {
 }
 
 message LoadCacheRequest {
-    // Type represents the type of cache pool manager
+    // Type represents the type of enclave pool
     string type = 1;
     // ID represents the id of the cache
     string ID = 3;

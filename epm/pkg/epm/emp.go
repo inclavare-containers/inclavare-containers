@@ -9,15 +9,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// CachePoolManagerServer represents the service that manages the cache pool managers
-type CachePoolManagerServer struct {
-	v1alpha1.UnimplementedCachePoolManagerServer
-	// cachePoolManagers containers the mapping of the cache type and cache pool manager
-	cachePoolManagers map[string]CachePoolManager
+// EnclavePoolManagerServer represents the service that manages the enclave pools
+type EnclavePoolManagerServer struct {
+	v1alpha1.UnimplementedEnclavePoolManagerServer
+	// cachePools containers the mapping of the cache type and enclave pool
+	cachePools map[string]EnclavePool
 }
 
 // GetCache gets the specified cache metadata
-func (s *CachePoolManagerServer) GetCache(ctx context.Context, req *v1alpha1.GetCacheRequest) (*v1alpha1.GetCacheResponse, error) {
+func (s *EnclavePoolManagerServer) GetCache(ctx context.Context, req *v1alpha1.GetCacheRequest) (*v1alpha1.GetCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -30,7 +30,7 @@ func (s *CachePoolManagerServer) GetCache(ctx context.Context, req *v1alpha1.Get
 }
 
 // SaveCache saves the data to a cache directory and record the cache metadata
-func (s *CachePoolManagerServer) SaveCache(ctx context.Context, req *v1alpha1.SaveCacheRequest) (*v1alpha1.SaveCacheResponse, error) {
+func (s *EnclavePoolManagerServer) SaveCache(ctx context.Context, req *v1alpha1.SaveCacheRequest) (*v1alpha1.SaveCacheResponse, error) {
 	cache := req.Cache
 	manager, err := s.getCachePoolManager(cache.Type)
 	if err != nil {
@@ -43,7 +43,7 @@ func (s *CachePoolManagerServer) SaveCache(ctx context.Context, req *v1alpha1.Sa
 }
 
 // ListCache lists part of or all of the cache metadata
-func (s *CachePoolManagerServer) ListCache(ctx context.Context, req *v1alpha1.ListCacheRequest) (*v1alpha1.ListCacheResponse, error) {
+func (s *EnclavePoolManagerServer) ListCache(ctx context.Context, req *v1alpha1.ListCacheRequest) (*v1alpha1.ListCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -56,7 +56,7 @@ func (s *CachePoolManagerServer) ListCache(ctx context.Context, req *v1alpha1.Li
 }
 
 // DeleteCache deletes the specified cached data and remove the corresponding cache metadata
-func (s *CachePoolManagerServer) DeleteCache(ctx context.Context, req *v1alpha1.DeleteCacheRequest) (*v1alpha1.DeleteCacheResponse, error) {
+func (s *EnclavePoolManagerServer) DeleteCache(ctx context.Context, req *v1alpha1.DeleteCacheRequest) (*v1alpha1.DeleteCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -68,7 +68,7 @@ func (s *CachePoolManagerServer) DeleteCache(ctx context.Context, req *v1alpha1.
 }
 
 // LoadCache loads the specified cache data to work directory
-func (s *CachePoolManagerServer) LoadCache(ctx context.Context, req *v1alpha1.LoadCacheRequest) (*v1alpha1.LoadCacheResponse, error) {
+func (s *EnclavePoolManagerServer) LoadCache(ctx context.Context, req *v1alpha1.LoadCacheRequest) (*v1alpha1.LoadCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -79,17 +79,17 @@ func (s *CachePoolManagerServer) LoadCache(ctx context.Context, req *v1alpha1.Lo
 	return &v1alpha1.LoadCacheResponse{Ok: true}, nil
 }
 
-// RegistryCachePoolManager registry the cache pool manager to the cache pool manager server
-func (s *CachePoolManagerServer) RegistryCachePoolManager(m CachePoolManager) {
-	if s.cachePoolManagers == nil {
-		s.cachePoolManagers = make(map[string]CachePoolManager)
+// RegisterCachePoolManager register the cache pool manager to the cache pool manager server
+func (s *EnclavePoolManagerServer) RegisterCachePoolManager(m EnclavePool) {
+	if s.cachePools == nil {
+		s.cachePools = make(map[string]EnclavePool)
 	}
-	s.cachePoolManagers[m.GetCacheType()] = m
+	s.cachePools[m.GetPoolType()] = m
 }
 
 // getCachePoolManager gets the cache pool manager by the cache type
-func (s *CachePoolManagerServer) getCachePoolManager(cacheType string) (CachePoolManager, error) {
-	manager, ok := s.cachePoolManagers[cacheType]
+func (s *EnclavePoolManagerServer) getCachePoolManager(cacheType string) (EnclavePool, error) {
+	manager, ok := s.cachePools[cacheType]
 	if ok && manager != nil {
 		return manager, nil
 	}

@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCachePoolManagerServer creat and start the cache pool manager server
-func NewCachePoolManagerServer() *cobra.Command {
+// NewEnclavePoolManagerServer creat and start the enclave pool manager server
+func NewEnclavePoolManagerServer() *cobra.Command {
 	opts := &options.Options{}
 	cmd := &cobra.Command{
 		Short: "Launch signature server",

@@ -9,8 +9,8 @@ type Config struct {
 	DBPath string `toml:"db_path"`
 	// DBTimeout is the amount of time to wait to obtain a database file lock.
 	DBTimeout int `toml:"db_timeout"`
-	// CachePools stores the configurations of cache pool managers
-	CachePools map[string]CachePool `toml:"cache_pools"`
+	// EnclavePools stores the configurations of enclave pool
+	EnclavePools map[string]EnclavePoolConfiguration `toml:"pools"`
 }
 
 // GRPCConfig provides GRPC configuration for the socket
@@ -25,7 +25,7 @@ type GRPCConfig struct {
 	MaxSendMsgSize int    `toml:"max_send_message_size"`
 }
 
-// CachePool provides the configuration for the cache pool
-type CachePool struct {
+// EnclavePoolConfiguration provides the configuration for the enclave pool
+type EnclavePoolConfiguration struct {
 	Type string `toml:"type"`
 }
