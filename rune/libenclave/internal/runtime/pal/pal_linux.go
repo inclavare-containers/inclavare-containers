@@ -126,25 +126,24 @@ func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, produc
 	}
 
 	// get IAS remote attestation report
-	var verbose bool = true
 	p := parseAttestParameters(spid, subscriptionKey, product)
-	svc, err := attestation.NewService(p, verbose)
+	challenger, err := attestation.NewChallenger("sgx-epid", p)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 
-	if err = svc.Check(quote); err != nil {
+	if err = challenger.Check(quote); err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 
-	status, iasReport, err := svc.GetVerifiedReport(quote)
+	status, iasReport, err := challenger.GetReport(quote, 0)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
 
-	svc.ShowStatus(status)
+	challenger.ShowReportStatus(status)
 
 	return iasReport, nil
 }
