@@ -32,6 +32,11 @@ For example, generate the token file according to the given signature file:
 		},
 	},
 	Action: func(context *cli.Context) error {
+
+		if intelsgx.IsSGXLaunchControlSupported() {
+			return fmt.Errorf("gen-token command is unable to run without SGX launch control feature")
+		}
+
 		sigPath := context.String("signature")
 		if sigPath == "" {
 			return fmt.Errorf("signature argument cannot be empty")

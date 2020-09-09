@@ -7,6 +7,7 @@
 
 #include <linux/types.h>
 #include <linux/ioctl.h>
+#include <stdbool.h>
 
 /**
  * enum sgx_epage_flags - page control flags
@@ -18,6 +19,9 @@ enum sgx_page_flags {
 };
 
 #define	SGX_LEAF	0x12
+
+// CPUID leafs
+#define	CPUIID_EXTENDED_FEATURE_FLAGS	0x7
 
 /**
  *CPUID function 1
@@ -163,4 +167,5 @@ typedef int (*sgx_enclave_exit_handler_t)(long rdi, long rsi, long rdx,
 					  struct sgx_enclave_exception *e);
 
 void get_sgx_xfrm_by_cpuid(uint64_t *xfrm);
+bool is_launch_control_supported(void);
 #endif /* _UAPI_ASM_X86_SGX_H */

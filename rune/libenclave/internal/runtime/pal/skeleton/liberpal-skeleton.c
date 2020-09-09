@@ -433,8 +433,10 @@ int __pal_init(pal_attr_t *attr)
 	if (!load_sigstruct(SIGSTRUCT, &sigstruct))
 		return -ENOENT;
 
-	if (!load_token(TOKEN, &token))
-		return -ENOENT;
+	if (!is_launch_control_supported()) {
+		if (!load_token(TOKEN, &token))
+			return -ENOENT;
+	}
 
 	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token))
 		return -EINVAL;

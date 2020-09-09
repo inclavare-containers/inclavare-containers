@@ -88,3 +88,12 @@ void get_sgx_xfrm_by_cpuid(uint64_t *xfrm)
 		*xfrm &= (((uint64_t)cpu_info[3] << 32) | cpu_info[2]);
 	}
 }
+
+bool is_launch_control_supported(void)
+{
+	int cpu_info[4] = {0, 0, 0, 0};
+
+	__cpuidex(cpu_info, CPUIID_EXTENDED_FEATURE_FLAGS, 0);
+
+	return !!(cpu_info[2] & 0x40000000);
+}
