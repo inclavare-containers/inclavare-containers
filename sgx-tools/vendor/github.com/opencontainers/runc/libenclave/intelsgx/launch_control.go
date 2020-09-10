@@ -5,7 +5,7 @@ var (
 )
 
 func GetSgxLaunchControl() {
-	_, _, ecx, _ := cpuid_low(cpuidExtendedFeatureFlags, 0)
+	_, _, ecx, _ := cpuid(cpuidExtendedFeatureFlags, 0)
 	if (ecx & 0x40000000) != 0 {
 		sgxLaunchControlSupported = true
 	}
