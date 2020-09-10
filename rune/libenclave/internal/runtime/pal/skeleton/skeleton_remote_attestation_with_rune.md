@@ -33,14 +33,14 @@ cd "$HOME/rune_workdir/rune-container"
 # copy /etc/resolv.conf from host to bundles to ensure network is ready for the remote attestation of IAS.
 cp /etc/resolv.conf rootfs/etc/resolv.conf
 
-sudo rune run skeleton-enclave-container
+sudo rune --debug run skeleton-enclave-container
 ```
 
 # Use `rune attest` command with skeleton
 You can type the following command to use `rune attest` command with skeleton in another shell:
 
 ```shell
-rune attest --product=false \
+rune --debug attest --product=false \
 		--linkable=false \
 		--spid=${EPID_SPID} \
 		--subscription-key=${EPID_SUBSCRIPTION_KEY} \
