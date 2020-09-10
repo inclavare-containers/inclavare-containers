@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package aesm_service; // import "github.com/opencontainers/runc/libenclave/intelsgx/proto"
+
+// Refer to https://github.com/intel/linux-sgx/blob/master/psw/ae/aesm_service/source/core/ipc/messages.proto
+
+message AesmServiceRequest {
+
+    message GetQeTargetInfo {
+        uint32 timeout = 9;
+    }
+
+    message GetQuote {
+        bytes report      = 1;
+        oneof quote_type_present {
+                uint32 quote_type = 2;
+        }
+        bytes spid        = 3;
+        bytes nonce       = 4;
+        bytes sig_rl      = 5;
+        uint32 buf_size   = 6;
+        oneof qe_report_present {
+                bool qe_report = 7;
+        }
+        uint32 timeout    = 9;
+    }
+
+    message GetLaunchToken {
+        bytes enclavehash = 1;
+        bytes modulus     = 2;
+        bytes attributes  = 3;
+        uint32 timeout    = 9;
+    }
+
+    GetQeTargetInfo getQeTargetInfo = 1;
+    GetQuote getQuote               = 2;
+    GetLaunchToken getLaunchToken   = 3;
+}
+
+message AesmServiceResponse {
+
+    message GetQeTargetInfo {
+        uint32 error     = 1;
+        bytes targetinfo = 2;
+        bytes gid        = 3;
+    }
+
+    message GetQuote {
+        uint32 error    = 1;
+        bytes quote     = 2;
+        bytes qe_report = 3;
+    }
+
+    message GetLaunchToken {
+        uint32 error = 1;
+        bytes token  = 2;
+    }
+
+    GetQeTargetInfo getQeTargetInfo = 1;
+    GetQuote getQuote               = 2;
+    GetLaunchToken getLaunchToken   = 3;
+}
