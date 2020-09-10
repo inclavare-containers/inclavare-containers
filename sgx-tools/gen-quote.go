@@ -2,6 +2,7 @@ package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"fmt"
+	_ "github.com/opencontainers/runc/libenclave/attestation"
 	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
