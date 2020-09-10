@@ -36,8 +36,6 @@ EOF
 docker build . -t skeleton-enclave
 ```
 
-[Skeleton container image](https://hub.docker.com/r/inclavarecontainers/skeleton-enclave/tags) is available for the demonstration purpose.
-
 ## Build and install rune
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers#rune) to build `rune` from scratch.
 
