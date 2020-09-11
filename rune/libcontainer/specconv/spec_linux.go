@@ -17,13 +17,12 @@ import (
 	dbus "github.com/godbus/dbus/v5"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/configs"
-	"github.com/opencontainers/runc/libcontainer/devices"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
 	libcontainerUtils "github.com/opencontainers/runc/libcontainer/utils"
+	"github.com/opencontainers/runc/libenclave"
 	"github.com/opencontainers/runc/libenclave/attestation/sgx"
 	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/sirupsen/logrus"
 
 	"golang.org/x/sys/unix"
 )
@@ -203,12 +202,15 @@ func CreateLibcontainerConfig(opts *CreateOpts) (*configs.Config, error) {
 	createEnclaveConfig(spec, config)
 
 	exists := false
+
 	for _, m := range spec.Mounts {
 		config.Mounts = append(config.Mounts, createLibcontainerMount(cwd, m))
 	}
+
 	if config.Enclave != nil {
-		config.Mounts = append(config.Mounts, createLibenclaveMount(cwd))
+		libenclave.CreateLibenclaveMount(cwd, config)
 	}
+
 	if err := createDevices(spec, config); err != nil {
 		return nil, err
 	}
@@ -393,104 +395,6 @@ func createEnclaveConfig(spec *specs.Spec, config *configs.Config) {
 	}
 }
 
-// Determine whether the device is a Intel SGX enclave device
-func intelSgxDev(device *configs.Device) (*configs.Device, error) {
-	dev, err := devices.DeviceFromPath(device.Path, "rwm")
-	if err != nil {
-		return nil, err
-	}
-
-	if dev.Type == 'c' && dev.Major == 10 {
-		return dev, nil
-	}
-
-	return nil, fmt.Errorf("%s is not a SGX enclave device", dev.Path)
-}
-
-func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *configs.Device)) {
-	var configuredDevs []string
-
-	// Retrieve the configured enclave devices
-	onMatchEnclaveDevice(devs, genEnclavePathTemplate(etype), etype, func(n string, i int) {
-		configuredDevs = append(configuredDevs, n)
-	})
-
-	if len(configuredDevs) != 0 {
-		for _, d := range configuredDevs {
-			dev, err := devices.DeviceFromPath(d, "rwm")
-			if err != nil {
-				logrus.Debugf("the configured enclave device %s not exist", dev.Path)
-				continue
-			}
-
-			logrus.Debugf("the enclave device %s configured", dev.Path)
-		}
-	}
-
-	// Filter out the configured enclave devices
-	exclusiveDevs := genEnclaveDeviceTemplate(etype)
-	onMatchEnclaveDevice(exclusiveDevs, configuredDevs, etype, func(n string, i int) {
-		exclusiveDevs = append(exclusiveDevs[:i], exclusiveDevs[i+1:]...)
-	})
-
-	// Create the enclave devices not explicitly specified
-	for _, d := range exclusiveDevs {
-		dev, err := intelSgxDev(d)
-		if err != nil {
-			continue
-		}
-
-		fn(dev)
-	}
-}
-
-func genEnclavePathTemplate(etype string) []string {
-	switch etype {
-	case configs.EnclaveHwIntelSgx:
-		return []string{"/dev/isgx", "/dev/sgx/enclave", "/dev/gsgx"}
-	default:
-		return nil
-	}
-}
-
-func genEnclaveDeviceTemplate(etype string) []*configs.Device {
-	switch etype {
-	case configs.EnclaveHwIntelSgx:
-		return []*configs.Device{
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/isgx",
-				Major: 10,
-			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/sgx/enclave",
-				Major: 10,
-			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/gsgx",
-				Major: 10,
-			},
-		}
-	default:
-		return nil
-	}
-}
-
-func onMatchEnclaveDevice(devices []*configs.Device, names []string, etype string, fn func(n string, i int)) {
-	switch etype {
-	case configs.EnclaveHwIntelSgx:
-		for _, n := range names {
-			for i, dev := range devices {
-				if dev.Path == n {
-					fn(n, i)
-				}
-			}
-		}
-	}
-}
-
 func createLibcontainerMount(cwd string, m specs.Mount) *configs.Mount {
 	flags, pgflags, data, ext := parseMountOptions(m.Options)
 	source := m.Source
@@ -512,16 +416,6 @@ func createLibcontainerMount(cwd string, m specs.Mount) *configs.Mount {
 		Flags:            flags,
 		PropagationFlags: pgflags,
 		Extensions:       ext,
-	}
-}
-
-func createLibenclaveMount(cwd string) *configs.Mount {
-	return &configs.Mount{
-		Device:           "bind",
-		Source:           "/var/run/aesmd",
-		Destination:      "/var/run/aesmd",
-		Flags:            unix.MS_BIND | unix.MS_REC,
-		PropagationFlags: []int{unix.MS_PRIVATE | unix.MS_REC},
 	}
 }
 
@@ -803,17 +697,9 @@ func CreateCgroupConfig(opts *CreateOpts, config *configs.Config) (*configs.Cgro
 	// append the default allowed devices to the end of the list
 	c.Resources.Devices = append(c.Resources.Devices, AllowedDevices...)
 	if config.Enclave != nil {
-		createEnclaveCgroupConfig(&c.Resources.Devices, config.Enclave.Type)
+		libenclave.CreateEnclaveCgroupConfig(&c.Resources.Devices, config.Enclave.Type)
 	}
 	return c, nil
-}
-
-func createEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
-	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
-		dev.Permissions = "rwm"
-		dev.Allow = true
-		*devices = append(*devices, dev)
-	})
 }
 
 func stringToCgroupDeviceRune(s string) (rune, error) {
@@ -934,18 +820,9 @@ func createDevices(spec *specs.Spec, config *configs.Config) error {
 		}
 	}
 	if config.Enclave != nil {
-		createEnclaveDeviceConfig(&config.Devices, config.Enclave.Type)
+		libenclave.CreateEnclaveDeviceConfig(&config.Devices, config.Enclave.Type)
 	}
 	return nil
-}
-
-func createEnclaveDeviceConfig(devices *[]*configs.Device, etype string) {
-	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
-		dev.FileMode = 0666
-		dev.Uid = 0
-		dev.Gid = 0
-		*devices = append(*devices, dev)
-	})
 }
 
 func setupUserNamespace(spec *specs.Spec, config *configs.Config) error {
