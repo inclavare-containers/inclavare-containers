@@ -4,6 +4,7 @@
 - Given the signature file of an Enclave, `sgx-tools gen-token` command can generate the corresponding token file from aesmd service.
 - `sgx-tools gen-qe-target-info` command can generate Quoting Enclave's target information file from aesm service.
 - Given the report file of an Enclave, `sgx-tools gen-quote` command can generate quote file from aesm service.
+- Given the quote file of an Enclave, a registered `SPID` and `Subscription Key` of [IAS](https://api.portal.trustedservices.intel.com/EPID-attestation), `sgx-tools get-ias-report` command can get remote attestation report from IAS.
 
 ## Install Intel `aesmd` service
 ### Hardware requirements

@@ -12,6 +12,7 @@ github.com/konsorten/go-windows-terminal-sequences
 # github.com/opencontainers/runc v0.0.0-00010101000000-000000000000 => github.com/alibaba/inclavare-containers/rune v0.0.0-20200910122807-fd8d2f54e423
 ## explicit
 github.com/opencontainers/runc/libenclave/attestation
+github.com/opencontainers/runc/libenclave/attestation/sgx
 github.com/opencontainers/runc/libenclave/attestation/sgx/ias
 github.com/opencontainers/runc/libenclave/intelsgx
 github.com/opencontainers/runc/libenclave/intelsgx/proto
