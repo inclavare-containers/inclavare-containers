@@ -19,7 +19,7 @@ var generateQuoteCommand = cli.Command{
 EXAMPLE:
 For example, generate the quote file according to the given local report file:
 
-	# sgx-tools gen-quote --report foo.rep`,
+	# sgx-tools gen-quote --report foo.rep --spid ${SPID}`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "report",
