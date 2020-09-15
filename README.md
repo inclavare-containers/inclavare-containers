@@ -41,7 +41,7 @@ One typical class of enclave runtime implementations is based on library OSes. C
 In addition, you can write your own enclave runtime with any programming language and SDK (e.g, [Intel SGX SDK](https://github.com/intel/linux-sgx)) you prefer as long as it implements Enclave Runtime PAL API.
 
 ### sgx-tools
-`sgx-tools` is a commandline tool, used to interact Intel SGX aesm service to retrieve various materials such as launch token, Quoting Enclave's target information and enclave quote. Refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/sgx-tools/README.md) for the details about its usage.
+`sgx-tools` is a commandline tool, used to interact Intel SGX aesm service to retrieve various materials such as launch token, Quoting Enclave's target information, enclave quote and enclave remote attestation report from IAS. Refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/sgx-tools/README.md) for the details about its usage.
 
 ---
 
