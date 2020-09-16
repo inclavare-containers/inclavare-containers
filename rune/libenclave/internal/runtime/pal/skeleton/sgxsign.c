@@ -142,7 +142,7 @@ struct mrecreate {
 } __attribute__((__packed__));
 
 
-static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size)
+static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size, uint32_t miscselect, uint64_t xfrm, uint32_t *ssa_frame_size)
 {
 	struct mrecreate mrecreate;
 	uint64_t encl_size;
@@ -152,7 +152,9 @@ static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size)
 
 	memset(&mrecreate, 0, sizeof(mrecreate));
 	mrecreate.tag = MRECREATE;
-	mrecreate.ssaframesize = 1;
+	mrecreate.ssaframesize = sgx_calc_ssaframesize(miscselect, xfrm);
+	*ssa_frame_size = mrecreate.ssaframesize;
+
 	mrecreate.size = encl_size;
 
 	if (!EVP_DigestInit_ex(ctx, EVP_sha256(), NULL))
@@ -225,7 +227,7 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
  * enclave as the signing tool is used at the moment only for the launch
  * enclave, which is pass-through (everything gets a token).
  */
-static bool measure_encl(const char *path, uint8_t *mrenclave)
+static bool measure_encl(const char *path, uint8_t *mrenclave, uint32_t miscselect, uint64_t xfrm)
 {
 	FILE *file;
 	struct stat sb;
@@ -234,12 +236,13 @@ static bool measure_encl(const char *path, uint8_t *mrenclave)
 	uint64_t offset;
 	uint8_t data[0x1000];
 	int rc;
+	uint32_t ssa_frame_size;
 
 	ctx = EVP_MD_CTX_create();
 	if (!ctx)
 		return false;
 
-	file = fopen(path, "rb");
+	file = fopen(path, "rb+");
 	if (!file) {
 		perror("fopen");
 		EVP_MD_CTX_destroy(ctx);
@@ -257,7 +260,13 @@ static bool measure_encl(const char *path, uint8_t *mrenclave)
 		goto out;
 	}
 
-	if (!mrenclave_ecreate(ctx, sb.st_size))
+	fseek(file, 16L, SEEK_SET);
+	rc = fwrite(&sb.st_size, 1, 8, file);
+	if (rc < 8)
+		goto out;
+	fseek(file, 0L, SEEK_SET);
+
+	if (!mrenclave_ecreate(ctx, sb.st_size, miscselect, xfrm, &ssa_frame_size))
 		goto out;
 
 	for (offset = 0; offset < sb.st_size; offset += 0x1000) {
@@ -280,14 +289,39 @@ static bool measure_encl(const char *path, uint8_t *mrenclave)
 			goto out;
 	}
 
+	uint64_t *ssa_frame =  malloc(4096 * ssa_frame_size);
+	if (ssa_frame == NULL){
+		fprintf(stderr, "Failed malloc memory for ssa_frame\n");
+		return false;
+	}
+	memset(ssa_frame, 0, 4096 * ssa_frame_size);
+
+	for (offset = sb.st_size; offset < sb.st_size + 4096 * ssa_frame_size; offset += 0x1000) {
+		flags = SGX_SECINFO_REG | SGX_SECINFO_R |
+			SGX_SECINFO_W | SGX_SECINFO_X;
+
+		if (!mrenclave_eadd(ctx, offset, flags))
+                        goto out_ssa;
+
+		memcpy(data, ssa_frame+offset-sb.st_size, 0x1000);
+
+		if (!mrenclave_eextend(ctx, offset, data))
+                        goto out_ssa;
+	}
+
 	if (!mrenclave_commit(ctx, mrenclave))
 		goto out;
 
 	fclose(file);
+	free(ssa_frame);
 	EVP_MD_CTX_destroy(ctx);
 	return true;
 out:
 	fclose(file);
+	EVP_MD_CTX_destroy(ctx);
+	return false;
+out_ssa:
+	free(ssa_frame);
 	EVP_MD_CTX_destroy(ctx);
 	return false;
 }
@@ -423,6 +457,7 @@ int main(int argc, char **argv)
 	uint64_t header1[2] = {0x000000E100000006, 0x0000000000010000};
 	uint64_t header2[2] = {0x0000006000000101, 0x0000000100000060};
 	uint64_t xfrm;
+	uint32_t miscselect;
 	struct sgx_sigstruct ss;
 	const char *program;
 	int opt;
@@ -472,6 +507,9 @@ int main(int argc, char **argv)
 
 	ss.body.attributes_mask = ss.body.attributes;
 
+	get_sgx_miscselect_by_cpuid(&miscselect);
+	ss.body.miscselect = miscselect;
+
 	/* sanity check only */
 	if (check_crypto_errors())
 		exit(1);
@@ -482,7 +520,7 @@ int main(int argc, char **argv)
 
 	BN_bn2bin(get_modulus(sign_key), ss.modulus);
 
-	if (!measure_encl(argv[1], ss.body.mrenclave))
+	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm))
 		goto out;
 
 	if (!sign_encl(&ss, sign_key, ss.signature))

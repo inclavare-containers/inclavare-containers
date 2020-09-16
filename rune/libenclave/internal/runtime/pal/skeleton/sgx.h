@@ -167,5 +167,7 @@ typedef int (*sgx_enclave_exit_handler_t)(long rdi, long rsi, long rdx,
 					  struct sgx_enclave_exception *e);
 
 void get_sgx_xfrm_by_cpuid(uint64_t *xfrm);
+uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm);
+void get_sgx_miscselect_by_cpuid(uint32_t *miscselect);
 bool is_launch_control_supported(void);
 #endif /* _UAPI_ASM_X86_SGX_H */
