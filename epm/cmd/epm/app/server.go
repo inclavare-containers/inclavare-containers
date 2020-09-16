@@ -6,6 +6,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/golang/glog"
+
 	"github.com/alibaba/inclavare-containers/epm/cmd/epm/app/options"
 	"github.com/alibaba/inclavare-containers/epm/config"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm"
@@ -16,7 +18,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func runServer(opts *options.Options) error {
+func runServer(opts *options.Options, stopCh <-chan struct{}) error {
 	var err error
 	var cfg config.Config
 
@@ -36,11 +38,11 @@ func runServer(opts *options.Options) error {
 		serverOpts = append(serverOpts, grpc.MaxSendMsgSize(cfg.GRPC.MaxSendMsgSize))
 	}
 	metadata, err := cache_metadata.NewMetadataServer(cfg.DBPath, time.Second*time.Duration(cfg.DBTimeout))
-	defer metadata.Close()
 
 	if err != nil {
 		return fmt.Errorf("create metadata server failed. %++v", err)
 	}
+	defer metadata.Close()
 
 	server := epm.EnclavePoolManagerServer{}
 
@@ -58,12 +60,14 @@ func runServer(opts *options.Options) error {
 	// registry and start the cache pool manager server
 	v1alpha1.RegisterEnclavePoolManagerServer(s, &server)
 	// listen and serve
-	lis, err := net.Listen("udp", cfg.GRPC.Address)
+	lis, err := net.Listen("unix", cfg.GRPC.Address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	glog.Info("start the and epm server...")
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to start cache pool manager server: %v", err)
+		log.Fatalf("failed to start epm server: %v", err)
 	}
+	<-stopCh
 	return nil
 }
