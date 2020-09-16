@@ -44,25 +44,14 @@ func runServer(opts *options.Options) error {
 
 	server := epm.EnclavePoolManagerServer{}
 
-	bundleCache0 := occlum.BundleCach0Manager{
-		DefaultEnclavePool: epm.DefaultEnclavePool{
-			Root:          cfg.Root,
-			CacheMetadata: metadata,
-		}}
-	bundleCache1 := occlum.BundleCach1Manager{
-		DefaultEnclavePool: epm.DefaultEnclavePool{
-			Root:          cfg.Root,
-			CacheMetadata: metadata,
-		}}
-	bundleCache2 := occlum.BundleCach2Manager{
-		DefaultEnclavePool: epm.DefaultEnclavePool{
-			Root:          cfg.Root,
-			CacheMetadata: metadata,
-		}}
+	bundleCache0 := occlum.NewBundleCach0Manager(cfg.Root, metadata)
+	bundleCache1 := occlum.NewBundleCach1Manager(cfg.Root, metadata)
+	bundleCache2 := occlum.NewBundleCach2Manager(cfg.Root, metadata)
+
 	// register the bundle cache pool managers to the manager server
-	server.RegisterCachePoolManager(&bundleCache0)
-	server.RegisterCachePoolManager(&bundleCache1)
-	server.RegisterCachePoolManager(&bundleCache2)
+	server.RegisterCachePoolManager(bundleCache0)
+	server.RegisterCachePoolManager(bundleCache1)
+	server.RegisterCachePoolManager(bundleCache2)
 
 	// start the grpc server with the server options
 	s := grpc.NewServer(serverOpts...)
