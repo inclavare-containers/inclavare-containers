@@ -1,14 +1,14 @@
 # Enclave Runtime PAL API Specification v2
 Enclave Runtime PAL API defines a common interface to interact between `rune` and enclave runtime.
 
-## 1.pal_version()
+## 1.pal_get_version()
 
 ### Description
 Indicate PAL API version number implemented by runelet and enclave runtime; runelet is compatible with any enclave runtimes equal to or less than the indicated value. If this symbol is undefined in enclave runtime, version 1 is assuemd by runelet.
 
 ### Prototype
 ```c
-int pal_version();
+int pal_get_version();
 ```
 
 ### Parameters
