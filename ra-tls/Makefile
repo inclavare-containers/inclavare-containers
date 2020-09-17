@@ -11,6 +11,8 @@ INCDIR := $(PREFIX)/include
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_RA_TLS := $(TOPDIR)/sgx-ra-tls
 WOLFSSL := $(TOPDIR)/wolfssl
+ELV := $(TOPDIR)/elv
+RA_TLS_SERVER := $(TOPDIR)/ra-tls-server
 
 ifdef ECDSA
   SGX_DCAP_URI := https://github.com/intel/SGXDataCenterAttestationPrimitives
@@ -35,23 +37,13 @@ CC ?= gcc
 export DEBUG PREFIX BINDIR LIBDIR INCDIR SGX_SDK SGX_RA_TLS WOLFSSL CC
 
 deps := $(LIBDIR)/libwolfssl.sgx.static.lib.a $(LIBDIR)/libsgx_ra_tls_wolfssl.a $(LIBDIR)/libcurl-wolfssl.a
-all: $(deps) $(BINDIR)/ra-tls-client $(BINDIR)/ra-tls-server $(BINDIR)/Wolfssl_Enclave.signed.so
-	$(MAKE) -C pal
+all: $(deps) $(BINDIR)/elv $(BINDIR)/ra-tls-server $(BINDIR)/Wolfssl_Enclave.signed.so
 
-WOLFSSL_CLIENT_LIBS := -l:libra-challenger.a -l:libwolfssl.a -lm
-ifdef ECDSA
-  WOLFSSL_CLIENT_LIBS += -l:libQuoteVerification.so -ldl
-  $(BINDIR)/ra-tls-client: $(LIBDIR)/libQuoteVerification.so
-endif
-$(BINDIR)/ra-tls-client: $(BINDIR) $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a wolfssl-examples wolfssl-examples/tls/client-tls.c
-	$(CC) -o "$@" $(filter %.c, $^) $(CFLAGS) -L$(LIBDIR) $(WOLFSSL_CLIENT_LIBS)
+$(BINDIR)/elv: $(BINDIR) $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
+	make -C $(ELV) && cp -f $(ELV)/elv $@
 
-$(BINDIR)/ra-tls-server: $(LIBDIR)/libwolfssl.sgx.static.lib.a $(LIBDIR)/libsgx_ra_tls_wolfssl.a
-ifndef ECDSA
-	cp -f $(SGX_RA_TLS)/sgxsdk-ra-attester_u.c $(SGX_RA_TLS)/ias-ra.c wolfssl-examples/SGX_Linux/untrusted && \
-	  $(MAKE) -C wolfssl-examples/SGX_Linux SGX_MODE=HW SGX_DEBUG=1 SGX_WOLFSSL_LIB=$(shell readlink -f wolfssl/IDE/LINUX-SGX) SGX_SDK=$(SGX_SDK) WOLFSSL_ROOT=$(shell readlink -f wolfssl) SGX_RA_TLS_LIB=$(shell readlink -f $(SGX_RA_TLS))
-endif
-	cp -f wolfssl-examples/SGX_Linux/App "$@"
+$(BINDIR)/ra-tls-server: $(BINDIR) $(LIBDIR)/libcurl-wolfssl.a $(LIBDIR)/libwolfssl.a
+	make -C $(RA_TLS_SERVER) && cp -f $(RA_TLS_SERVER)/ra-tls-server $@
 
 $(BINDIR)/Wolfssl_Enclave.signed.so: $(BINDIR)
 	$(MAKE) -C stub-enclave && \
@@ -77,12 +69,6 @@ wolfssl:
 	  patch -p1 < ../patch/wolfssl.patch && \
 	  ./autogen.sh && \
 	  CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS)
-
-wolfssl-examples:
-	git clone https://github.com/wolfSSL/wolfssl-examples.git && \
-	  cd wolfssl-examples && \
-	  git checkout 94b94262b45d264a40d484060cee595b26bdbfd7 && \
-	  patch -p1 < ../patch/wolfssl-examples.patch
 
 ifdef ECDSA
   $(LIBDIR)/libra-challenger.a: $(SGX_RA_TLS)/ecdsa-sample-data/real/sample_data.o
@@ -149,14 +135,14 @@ clean:
 	rm -rf $(PREFIX)
 	[ -d curl-wolfssl ] && $(MAKE) clean -C curl-wolfssl || true
 	[ -d wolfssl ] && $(MAKE) clean -C wolfssl || true
-	[ -d wolfssl-examples ] && $(MAKE) clean -C wolfssl-examples || true
-	$(MAKE) -C pal clean
 	$(MAKE) -C stub-enclave clean
 	$(MAKE) -C $(SGX_RA_TLS) clean
+	$(MAKE) -C $(ELV) clean
+	$(MAKE) -C $(RA_TLS_SERVER) clean
 	rm -f wolfssl/IDE/LINUX-SGX/libwolfssl.sgx.static.lib.a
 
 mrproper:
 	$(MAKE) clean
-	rm -rf curl-wolfssl wolfssl wolfssl-examples
+	rm -rf curl-wolfssl wolfssl
 
-.PHONY: stub_enclave clean mrproper 
+.PHONY: all clean mrproper
