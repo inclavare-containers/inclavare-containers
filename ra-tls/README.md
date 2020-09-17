@@ -14,8 +14,8 @@ make
 # Run
 ``` shell
 cd build/bin
-./ra-tls-server -s &
-./ra-tls-client
+./ra-tls-server run &
+./elv echo
 ```
 
 # Trouble shooting

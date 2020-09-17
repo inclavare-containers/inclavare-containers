@@ -78,8 +78,8 @@ else
         App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 endif
 
-#App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(TOPDIR)/build/lib -l$(Urts_Library_Name) -lpthread $(TOPDIR)/build/lib/libcurl-wolfssl.a $(TOPDIR)/build/lib/libwolfssl.a -lz -lm
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(TOPDIR)/build/lib -l$(Urts_Library_Name)
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(TOPDIR)/build/lib -l$(Urts_Library_Name) -lpthread $(TOPDIR)/build/lib/libcurl-wolfssl.a $(TOPDIR)/build/lib/libwolfssl.a -lz -lm
+#App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -shared -L$(TOPDIR)/build/lib -l$(Urts_Library_Name)
 App_Link_Flags += -Wl,--version-script=pal.lds
 
 ifneq ($(SGX_MODE), HW)
