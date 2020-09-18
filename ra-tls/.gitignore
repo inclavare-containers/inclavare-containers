@@ -1,7 +1,6 @@
 build
 curl-wolfssl
 wolfssl
-wolfssl-examples
 *.so
 *.o
 sgx-ra-tls/ra_tls_options.c
