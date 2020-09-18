@@ -3,7 +3,7 @@ db_path = "/var/local/epm/epm.db"
 db_timeout = 10
 
 [grpc]
-  address = "/var/run/containerd/containerd.sock"
+  address = "/var/run/epm.sock"
   uid = 0
   gid = 0
   max_recv_message_size = 16777216

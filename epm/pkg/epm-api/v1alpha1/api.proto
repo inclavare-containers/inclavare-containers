@@ -2,6 +2,8 @@ syntax = 'proto3';
 
 package v1alpha1;
 
+import "google/protobuf/any.proto";
+
 // Cache represents the metadata of a cache managed by enclave pool.
 message Cache {
     // Type represents the type of enclave pool
@@ -16,6 +18,8 @@ message Cache {
     int64 size = 5;
     // Created represents the creation time of the cache which is the number of seconds elapsed since January 1, 1970 UTC
     int64 created = 6;
+    // Options is an optional field which can extend any type of data structure
+    google.protobuf.Any options = 7;
 }
 
 // EnclavePoolManager represents an enclave pool

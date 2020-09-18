@@ -54,6 +54,7 @@ func (m *Metadata) GetCache(bucket, key string) (*v1alpha1.Cache, error) {
 	err := m.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		if b == nil {
+			cache = nil
 			return nil
 		}
 		value := b.Get([]byte(key))

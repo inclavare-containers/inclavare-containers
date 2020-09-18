@@ -3,7 +3,6 @@ package epm
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,11 +31,12 @@ type EnclavePool interface {
 // DefaultEnclavePool is the default implementation of EnclavePool
 type DefaultEnclavePool struct {
 	Root          string
+	Type          string
 	CacheMetadata *cache_metadata.Metadata
 }
 
 func (d *DefaultEnclavePool) GetCache(ID string) (*v1alpha1.Cache, error) {
-	return d.CacheMetadata.GetCache(d.GetPoolType(), ID)
+	return d.CacheMetadata.GetCache(d.Type, ID)
 }
 
 func (d *DefaultEnclavePool) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
@@ -50,16 +50,27 @@ func (d *DefaultEnclavePool) SaveCache(sourcePath string, cache *v1alpha1.Cache)
 	if err := os.MkdirAll(savePath, 755); err != nil {
 		return err
 	}
-	if _, err := utils.ExecCmd("/bin/cp", []string{"-fr", sourcePath, savePath}); err != nil {
-		return err
-	}
-	sizeStr, err := utils.ExecCmd("du", []string{"-sb", savePath, "|", "awk", "'{print $1}'"})
+	f, err := os.Stat(sourcePath)
 	if err != nil {
 		return err
 	}
-	size, err := strconv.ParseInt(sizeStr, 10, 64)
-	if err != nil {
-		return err
+	var size int64 = 0
+	if f.IsDir() {
+		if err := utils.CopyDirectory(sourcePath, savePath); err != nil {
+			return err
+		}
+		size, err = utils.DirSize(savePath)
+		if err != nil {
+			return err
+		}
+	} else {
+		if err := utils.CopyFile(sourcePath, savePath); err != nil {
+			return err
+		}
+		size, err = utils.FileSize(savePath)
+		if err != nil {
+			return err
+		}
 	}
 	cache.SavePath = savePath
 	cache.Size = size
@@ -87,17 +98,27 @@ func (d *DefaultEnclavePool) LoadCache(ID, targetPath string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(targetPath); err != nil {
+	if cache == nil {
+		return fmt.Errorf("cache %s is not exist", ID)
+	}
+	f, err := os.Stat(targetPath)
+	if err != nil {
 		return fmt.Errorf("target path is not exist. error: %++v", err)
 	}
-	if _, err := utils.ExecCmd("/bin/cp", []string{"-fr", fmt.Sprintf("%s/", cache.SavePath), targetPath}); err != nil {
-		return err
+	if f.IsDir() {
+		if err := utils.CopyDirectory(cache.SavePath, targetPath); err != nil {
+			return err
+		}
+	} else {
+		if err := utils.CopyFile(cache.SavePath, targetPath); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (d *DefaultEnclavePool) GetPoolType() string {
-	return "default"
+	return d.Type
 }
 
 func (d *DefaultEnclavePool) BuildCacheSavePath(rootDir string, cache *v1alpha1.Cache) (string, error) {
@@ -105,6 +126,8 @@ func (d *DefaultEnclavePool) BuildCacheSavePath(rootDir string, cache *v1alpha1.
 	if err != nil {
 		return "", err
 	}
+	caches = append([]*v1alpha1.Cache{cache}, caches...)
+
 	paths := []string{rootDir}
 	for index := len(caches) - 1; index >= 0; index-- {
 		cache := caches[index]
