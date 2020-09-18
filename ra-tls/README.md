@@ -13,6 +13,7 @@ make
 
 # Run
 ``` shell
+mkdir -p /run/rune
 cd build/bin
 ./ra-tls-server run &
 ./elv echo
