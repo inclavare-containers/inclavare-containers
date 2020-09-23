@@ -1,11 +1,11 @@
 %define centos_base_release 1
-%define debug_package %{nil}
+%define _debugsource_template %{nil}
 
 %global PROTOBUF_VERSION 1.3.5
 %global PROJECT inclavare-containers
 
 Name: rune
-Version: 0.4.0
+Version: 0.4.1
 Release: %{centos_base_release}%{?dist}
 Summary: CLI tool for spawning and running enclaves in containers according to the OCI specification.  
 
@@ -60,6 +60,9 @@ install -p -m 644 %{name}/LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{ve
 %{_bindir}/%{name}
 
 %changelog
+* Wed Sep 23 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.4.1
+- Update to version 0.4.1
+
 * Sun Aug 30 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.4.0
 - Update to version 0.4.0
 

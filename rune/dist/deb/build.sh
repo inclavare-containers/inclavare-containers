@@ -37,5 +37,5 @@ fi
 cp -rf  $SCRIPT_DIR/debian $DEB_BUILD_FOLDER
 cd $DEB_BUILD_FOLDER
 dpkg-buildpackage -us -uc
-cp $DEBBUILD_DIR/*.deb $PROJECT_DIR
+cp $DEBBUILD_DIR/*.*deb $PROJECT_DIR
 rm -rf $DEBBUILD_DIR
