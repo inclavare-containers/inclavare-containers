@@ -7,6 +7,7 @@ export QUOTE_TYPE=<SGX_LINKABLE_SIGNATURE | SGX_UNLINKABLE_SIGNATURE>
 
 # Build
 ``` shell
+sudo yum install -y glibc-static
 cd $src/ra-tls
 make
 ```
