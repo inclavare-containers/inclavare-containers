@@ -38,3 +38,6 @@ install: $(APP)
 
 uninstall:
 	@rm -f $(BINDIR)/$(APP)
+
+package:
+	$(MAKE) -C dist package

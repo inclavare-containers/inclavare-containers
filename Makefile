@@ -2,7 +2,6 @@
 
 export INCLAVARE_CONTAINERS_VERSION := $(shell cat ./VERSION)
 components := rune shim sgx-tools
-dist_release_components := rune shim
 
 all:
 	for name in $(components); do \
@@ -25,6 +24,6 @@ uninstall:
 	done
 
 package:
-	for name in $(dist_release_components); do \
+	for name in $(components); do \
 		$(MAKE) -C $$name package; \
 	done
