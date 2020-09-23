@@ -1,5 +1,4 @@
 # Enclave Runtime PAL API Specification v1
-Enclave Runtime PAL API defines a common interface to interact between `rune` and enclave runtime.
 
 ## 1.pal_init()
 
