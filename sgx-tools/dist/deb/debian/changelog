@@ -1,0 +1,5 @@
+sgx-tools (0.4.1-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Shirong Hao <shirong@linux.alibaba.com>  Sun, 30 Aug 2020 13:48:35 +0000
