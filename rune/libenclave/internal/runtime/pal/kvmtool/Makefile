@@ -19,10 +19,11 @@ include config/utilities.mak
 include config/feature-tests.mak
 
 CC	:= $(CROSS_COMPILE)gcc
-CFLAGS	:=
+CFLAGS	:= -fPIC
 LD	:= $(CROSS_COMPILE)ld
 LDFLAGS	:=
 OBJCOPY	:= $(CROSS_COMPILE)objcopy
+AR	:= $(CROSS_COMPILE)ar
 
 FIND	:= find
 CSCOPE	:= cscope
@@ -38,18 +39,20 @@ bindir_SQ = $(subst ','\'',$(bindir))
 
 PROGRAM	:= lkvm
 PROGRAM_ALIAS := vm
+LIBVMM := libvmm
+VMM_MAIN := vmm_main
 
-OBJS	+= builtin-balloon.o
-OBJS	+= builtin-debug.o
-OBJS	+= builtin-help.o
-OBJS	+= builtin-list.o
-OBJS	+= builtin-stat.o
-OBJS	+= builtin-pause.o
-OBJS	+= builtin-resume.o
-OBJS	+= builtin-run.o
+APP_OBJS	+= builtin-balloon.o
+APP_OBJS	+= builtin-debug.o
+APP_OBJS	+= builtin-help.o
+APP_OBJS	+= builtin-list.o
+APP_OBJS	+= builtin-stat.o
+APP_OBJS	+= builtin-pause.o
+APP_OBJS	+= builtin-resume.o
+APP_OBJS	+= builtin-run.o
 OBJS	+= builtin-setup.o
-OBJS	+= builtin-stop.o
-OBJS	+= builtin-version.o
+APP_OBJS	+= builtin-stop.o
+APP_OBJS	+= builtin-version.o
 OBJS	+= devices.o
 OBJS	+= disk/core.o
 OBJS	+= framebuffer.o
@@ -60,7 +63,7 @@ OBJS	+= ioport.o
 OBJS	+= irq.o
 OBJS	+= kvm-cpu.o
 OBJS	+= kvm.o
-OBJS	+= main.o
+APP_OBJS	+= main.o
 OBJS	+= mmio.o
 OBJS	+= pci.o
 OBJS	+= term.o
@@ -88,7 +91,7 @@ OBJS	+= net/uip/udp.o
 OBJS	+= net/uip/buf.o
 OBJS	+= net/uip/csum.o
 OBJS	+= net/uip/dhcp.o
-OBJS	+= kvm-cmd.o
+APP_OBJS	+= kvm-cmd.o
 OBJS	+= util/init.o
 OBJS    += util/iovec.o
 OBJS	+= util/rbtree.o
@@ -101,8 +104,10 @@ OBJS	+= util/util.o
 OBJS	+= virtio/9p.o
 OBJS	+= virtio/9p-pdu.o
 OBJS	+= kvm-ipc.o
-OBJS	+= builtin-sandbox.o
+APP_OBJS	+= builtin-sandbox.o
 OBJS	+= virtio/mmio.o
+
+LIB_OBJS += libvmm.o
 
 # Translate uname -m into ARCH string
 ARCH ?= $(shell uname -m | sed -e s/i.86/i386/ -e s/ppc.*/powerpc/ \
@@ -352,6 +357,8 @@ depfile = $(subst $(comma),_,$(dir $@).$(notdir $@).d)
 
 DEPS	:= $(foreach obj,$(OBJS),\
 		$(subst $(comma),_,$(dir $(obj)).$(notdir $(obj)).d))
+DEPS	+= $(foreach obj,$(APP_OBJS),\
+		$(subst $(comma),_,$(dir $(obj)).$(notdir $(obj)).d))
 
 DEFINES	+= -D_FILE_OFFSET_BITS=64
 DEFINES	+= -D_GNU_SOURCE
@@ -383,7 +390,7 @@ ifneq ($(WERROR),0)
 	CFLAGS += -Werror
 endif
 
-all: $(PROGRAM) $(PROGRAM_ALIAS)
+all: $(PROGRAM) $(PROGRAM_ALIAS) $(LIBVMM).so $(LIBVMM).a $(VMM_MAIN)
 
 # CFLAGS used when building objects
 # This is intentionally not assigned using :=
@@ -404,13 +411,25 @@ $(PROGRAM)-static:  $(STATIC_OBJS) $(OTHEROBJS) $(GUEST_OBJS)
 	$(E) "  LINK    " $@
 	$(Q) $(CC) -static $(CFLAGS) $(STATIC_OBJS) $(OTHEROBJS) $(GUEST_OBJS) $(LDFLAGS) $(LIBS) $(LIBS_STATOPT) -o $@
 
-$(PROGRAM): $(OBJS) $(OBJS_DYNOPT) $(OTHEROBJS) $(GUEST_OBJS)
+$(PROGRAM): $(OBJS) $(APP_OBJS) $(OBJS_DYNOPT) $(OTHEROBJS) $(GUEST_OBJS)
 	$(E) "  LINK    " $@
-	$(Q) $(CC) $(CFLAGS) $(OBJS) $(OBJS_DYNOPT) $(OTHEROBJS) $(GUEST_OBJS) $(LDFLAGS) $(LIBS) $(LIBS_DYNOPT) -o $@
+	$(Q) $(CC) $(CFLAGS) $(OBJS) $(APP_OBJS) $(OBJS_DYNOPT) $(OTHEROBJS) $(GUEST_OBJS) $(LDFLAGS) $(LIBS) $(LIBS_DYNOPT) -o $@
 
 $(PROGRAM_ALIAS): $(PROGRAM)
 	$(E) "  LN      " $@
 	$(Q) ln -f $(PROGRAM) $@
+
+$(LIBVMM).so: $(LIB_OBJS) $(OBJS) $(OBJS_DYNOPT) $(OTHEROBJS) $(GUEST_OBJS)
+	$(E) "  LINK    " $@
+	$(Q) $(CC) -shared -fPIC $(CFLAGS) $^ $(LDFLAGS) $(LIBS) $(LIBS_DYNOPT) -o $@
+
+$(LIBVMM).a: $(LIB_OBJS) $(OBJS) $(OBJS_DYNOPT) $(OTHEROBJS) $(GUEST_OBJS)
+	$(E) "  AR      " $@
+	$(Q) rm -f $@ && $(AR) rcs $@ $^
+
+$(VMM_MAIN): vmm_main.o $(LIBVMM).so
+	$(E) "  LINK    " $@
+	$(Q) $(CC) $(CFLAGS) $< -L. -lvmm -Wl,-rpath=. $(LDFLAGS) -pthread -o $@
 
 ifneq ($(ARCH_PRE_INIT),)
 $(GUEST_PRE_INIT): $(ARCH_PRE_INIT)
@@ -518,7 +537,8 @@ clean:
 	$(Q) rm -f x86/bios/bios-rom.h
 	$(Q) rm -f tests/boot/boot_test.iso
 	$(Q) rm -rf tests/boot/rootfs/
-	$(Q) rm -f $(DEPS) $(STATIC_DEPS) $(OBJS) $(OTHEROBJS) $(OBJS_DYNOPT) $(STATIC_OBJS) $(PROGRAM) $(PROGRAM_ALIAS) $(PROGRAM)-static $(GUEST_INIT) $(GUEST_PRE_INIT) $(GUEST_OBJS)
+	$(Q) rm -f $(DEPS) $(STATIC_DEPS) $(APP_OBJS) $(OBJS) $(OTHEROBJS) $(OBJS_DYNOPT) $(STATIC_OBJS) $(PROGRAM) $(PROGRAM_ALIAS) $(PROGRAM)-static $(GUEST_INIT) $(GUEST_PRE_INIT) $(GUEST_OBJS)
+	$(Q) rm -f $(LIBVMM).so $(LIBVMM).a $(LIBVMM).o vmm_main.o vmm_main
 	$(Q) rm -f guest/guest_init.c guest/guest_pre_init.c
 	$(Q) rm -f cscope.*
 	$(Q) rm -f tags

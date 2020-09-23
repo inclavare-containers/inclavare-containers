@@ -16,6 +16,7 @@
 .globl _start
 _start:
 
+# mount("hostfs", "/host", "9p", MS_RDONLY, "trans=virtio,version=9p2000.L")
 	mov $165, %rax		# __NR_mount
 	mov $.m_dev, %rdi
 	mov $.m_dir, %rsi
@@ -24,6 +25,7 @@ _start:
 	mov $.m_opt, %r8
 	syscall
 
+# execve("/virt/init", argv, envp)
 	mov $59, %rax		# __NR_execve
 	mov $.e_nam, %rdi
 	lea 8(%rsp), %rsi	# argv[]
@@ -33,6 +35,7 @@ _start:
 	lea (%rsi,%rcx,8), %rdx # envp[]
 	syscall
 
+# exit(1)
 	mov $60, %rax		# __NR_exit
 	mov $1, %rdi
 	syscall			# panic

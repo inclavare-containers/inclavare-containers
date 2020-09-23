@@ -1,6 +1,9 @@
 /lkvm
 /lkvm-static
 /vm
+/libvmm.so
+/libvmm.a
+/vmm_main
 *.o
 *.d
 *.swp
