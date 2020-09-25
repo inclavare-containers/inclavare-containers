@@ -1,14 +1,14 @@
-package libenclave // import "github.com/opencontainers/runc/libenclave"
+package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
+	"github.com/inclavare-containers/rune/libenclave/configs"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/internal/runtime"
+	pb "github.com/inclavare-containers/rune/libenclave/proto"
 	"github.com/opencontainers/runc/libcontainer/utils"
-	"github.com/opencontainers/runc/libenclave/attestation/sgx"
-	"github.com/opencontainers/runc/libenclave/configs"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
-	"github.com/opencontainers/runc/libenclave/internal/runtime"
-	pb "github.com/opencontainers/runc/libenclave/proto"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	"io"
@@ -61,6 +61,7 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 
 	// Only parent runelet has a responsibility to initialize the enclave
 	// runtime.
+
 	var rt *runtime.EnclaveRuntimeWrapper
 	if fifoFd != -1 {
 		rt, err = runtime.StartInitialization(config, logLevel)

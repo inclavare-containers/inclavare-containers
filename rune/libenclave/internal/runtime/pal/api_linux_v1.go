@@ -1,4 +1,4 @@
-package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
+package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 
 /*
 #include <stdlib.h>
@@ -46,7 +46,6 @@ import "C"
 
 import (
 	"fmt"
-	"github.com/opencontainers/runc/libcontainer/nsenter"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -58,7 +57,7 @@ type enclaveRuntimePalApiV1 struct {
 
 func (pal *enclaveRuntimePalApiV1) get_version() uint32 {
 	logrus.Debugf("pal get_version() called")
-	sym := nsenter.SymAddrPalVersion()
+	sym := symAddrPalVersion()
 	if sym != nil {
 		return uint32(C.palGetVersion(sym))
 	} else {
@@ -75,7 +74,7 @@ func (api *enclaveRuntimePalApiV1) init(args string, logLevel string) error {
 	l := C.CString(logLevel)
 	defer C.free(unsafe.Pointer(l))
 
-	sym := nsenter.SymAddrPalInit()
+	sym := symAddrPalInit()
 	ret := C.palInitV1(sym, a, l)
 	if ret < 0 {
 		return fmt.Errorf("pal init() failed with %d", ret)
@@ -117,7 +116,7 @@ func (pal *enclaveRuntimePalApiV1) exec(cmd []string, envs []string, stdio [3]*o
 	stdin := C.int(int(stdio[0].Fd()))
 	stdout := C.int(int(stdio[1].Fd()))
 	stderr := C.int(int(stdio[2].Fd()))
-	sym := nsenter.SymAddrPalExec()
+	sym := symAddrPalExec()
 	ret := C.palExecV1(sym, exe, argv, envp, (*C.int)(unsafe.Pointer(&exitCode)), stdin, stdout, stderr)
 	if ret < 0 {
 		return exitCode, fmt.Errorf("pal exec() failed with %d", ret)
@@ -128,7 +127,7 @@ func (pal *enclaveRuntimePalApiV1) exec(cmd []string, envs []string, stdio [3]*o
 func (pal *enclaveRuntimePalApiV1) destroy() error {
 	logrus.Debugf("pal destroy() called")
 
-	sym := nsenter.SymAddrPalDestroy()
+	sym := symAddrPalDestroy()
 	ret := C.palDestroyV1(sym)
 	if ret < 0 {
 		return fmt.Errorf("pal destroy() failed with %d", ret)

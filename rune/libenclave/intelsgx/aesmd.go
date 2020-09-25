@@ -1,4 +1,4 @@
-package intelsgx // import "github.com/opencontainers/runc/libenclave/intelsgx"
+package intelsgx // import "github.com/inclavare-containers/rune/libenclave/intelsgx"
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/go-restruct/restruct"
 	"github.com/golang/protobuf/proto"
-	pb "github.com/opencontainers/runc/libenclave/intelsgx/proto"
+	pb "github.com/inclavare-containers/rune/libenclave/intelsgx/proto"
 	"github.com/sirupsen/logrus"
 	"net"
 )

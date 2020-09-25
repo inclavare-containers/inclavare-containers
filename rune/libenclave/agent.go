@@ -1,9 +1,9 @@
-package libenclave // import "github.com/opencontainers/runc/libenclave"
+package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
 	"fmt"
+	pb "github.com/inclavare-containers/rune/libenclave/proto"
 	"github.com/opencontainers/runc/libcontainer/utils"
-	pb "github.com/opencontainers/runc/libenclave/proto"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	"net"

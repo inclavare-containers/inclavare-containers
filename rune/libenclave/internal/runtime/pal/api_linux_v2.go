@@ -1,4 +1,4 @@
-package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
+package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 
 /*
 #include <stdlib.h>
@@ -64,8 +64,6 @@ import (
 	"os"
 	"strings"
 	"unsafe"
-
-	"github.com/opencontainers/runc/libcontainer/nsenter"
 )
 
 type enclaveRuntimePalApiV2 struct {
@@ -105,14 +103,14 @@ func (pal *enclaveRuntimePalApiV2) exec(cmd []string, envs []string, stdio [3]*o
 	stdin := C.int(int(stdio[0].Fd()))
 	stdout := C.int(int(stdio[1].Fd()))
 	stderr := C.int(int(stdio[2].Fd()))
-	sym := nsenter.SymAddrPalCreateProcess()
+	sym := symAddrPalCreateProcess()
 
 	ret := C.palCreateProcessV2(sym, exe, argv, envp, stdin, stdout, stderr, (*C.int)(unsafe.Pointer(&pid)))
 	if ret < 0 {
 		return exitCode, fmt.Errorf("pal create process() failed with %d", ret)
 	}
 
-	sym = nsenter.SymAddrPalExec()
+	sym = symAddrPalExec()
 	ret = C.palExecV2(sym, C.int(pid), (*C.int)(unsafe.Pointer(&exitCode)))
 	if ret < 0 {
 		return exitCode, fmt.Errorf("pal exec() failed with %d", ret)
@@ -123,7 +121,7 @@ func (pal *enclaveRuntimePalApiV2) exec(cmd []string, envs []string, stdio [3]*o
 func (pal *enclaveRuntimePalApiV2) kill(pid int, sig int) error {
 	pidNum := C.int(pid)
 	sigNum := C.int(sig)
-	sym := nsenter.SymAddrPalKill()
+	sym := symAddrPalKill()
 	if sym == nil {
 		return fmt.Errorf("pal kill() not implemented")
 	}

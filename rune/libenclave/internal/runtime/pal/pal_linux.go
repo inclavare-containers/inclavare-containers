@@ -1,15 +1,13 @@
-package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
-
-import "C"
+package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 
 import (
 	"encoding/binary"
 	"fmt"
 	"github.com/go-restruct/restruct"
-	"github.com/opencontainers/runc/libenclave/attestation"
-	"github.com/opencontainers/runc/libenclave/attestation/sgx"
-	_ "github.com/opencontainers/runc/libenclave/attestation/sgx/ias"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/attestation"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
+	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"log"
 	"os"
 )

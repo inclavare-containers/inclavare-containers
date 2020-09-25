@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/opencontainers/runc/libcontainer"
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
@@ -119,7 +119,7 @@ func execProcess(context *cli.Context) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	if status == libcontainer.Stopped {
+	if status == libenclave.Stopped {
 		return -1, fmt.Errorf("cannot exec a container that has stopped")
 	}
 	path := context.String("process")

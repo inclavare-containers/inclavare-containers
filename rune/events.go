@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/intelrdt"
@@ -46,7 +47,7 @@ information is displayed once every 5 seconds.`,
 		if err != nil {
 			return err
 		}
-		if status == libcontainer.Stopped {
+		if status == libenclave.Stopped {
 			return fmt.Errorf("container with id %s is not running", container.ID())
 		}
 		var (
@@ -69,7 +70,7 @@ information is displayed once every 5 seconds.`,
 			if err != nil {
 				return err
 			}
-			events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertLibcontainerStats(s)}
+			events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertlibcontainerStats(s)}
 			close(events)
 			group.Wait()
 			return nil
@@ -100,7 +101,7 @@ information is displayed once every 5 seconds.`,
 					n = nil
 				}
 			case s := <-stats:
-				events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertLibcontainerStats(s)}
+				events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertlibcontainerStats(s)}
 			}
 			if n == nil {
 				close(events)
@@ -112,7 +113,7 @@ information is displayed once every 5 seconds.`,
 	},
 }
 
-func convertLibcontainerStats(ls *libcontainer.Stats) *types.Stats {
+func convertlibcontainerStats(ls *libcontainer.Stats) *types.Stats {
 	cg := ls.CgroupStats
 	if cg == nil {
 		return nil

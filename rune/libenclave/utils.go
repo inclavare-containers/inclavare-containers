@@ -1,23 +1,79 @@
-package libenclave // import "github.com/opencontainers/runc/libenclave"
+package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	pb "github.com/inclavare-containers/rune/libenclave/proto"
+	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/stacktrace"
-	pb "github.com/opencontainers/runc/libenclave/proto"
 	"io"
+	"text/template"
 	"time"
 	"unsafe"
 )
 
-// ErrorCode is the API error code type.
-type ErrorCode int
+var errorTemplate = template.Must(template.New("error").Parse(`Timestamp: {{.Timestamp}}
+Code: {{.ECode}}
+{{if .Message }}
+Message: {{.Message}}
+{{end}}
+Frames:{{range $i, $frame := .Stack.Frames}}
+---
+{{$i}}: {{$frame.Function}}
+Package: {{$frame.Package}}
+File: {{$frame.File}}@{{$frame.Line}}{{end}}
+`))
+
+func newGenericError(err error, c libcontainer.ErrorCode) libcontainer.Error {
+	if le, ok := err.(libcontainer.Error); ok {
+		return le
+	}
+	gerr := &genericError{
+		Timestamp: time.Now(),
+		Err:       err,
+		ECode:     c,
+		Stack:     stacktrace.Capture(1),
+	}
+	if err != nil {
+		gerr.Message = err.Error()
+	}
+	return gerr
+}
+
+func newSystemError(err error) libcontainer.Error {
+	return createSystemError(err, "")
+}
+
+func newSystemErrorWithCausef(err error, cause string, v ...interface{}) libcontainer.Error {
+	return createSystemError(err, fmt.Sprintf(cause, v...))
+}
+
+func newSystemErrorWithCause(err error, cause string) libcontainer.Error {
+	return createSystemError(err, cause)
+}
+
+// createSystemError creates the specified error with the correct number of
+// stack frames skipped. This is only to be called by the other functions for
+// formatting the error.
+func createSystemError(err error, cause string) libcontainer.Error {
+	gerr := &genericError{
+		Timestamp: time.Now(),
+		Err:       err,
+		ECode:     libcontainer.SystemError,
+		Cause:     cause,
+		Stack:     stacktrace.Capture(2),
+	}
+	if err != nil {
+		gerr.Message = err.Error()
+	}
+	return gerr
+}
 
 type genericError struct {
 	Timestamp time.Time
-	ECode     ErrorCode
+	ECode     libcontainer.ErrorCode
 	Err       error `json:"-"`
 	Cause     string
 	Message   string
@@ -30,6 +86,14 @@ func (e *genericError) Error() string {
 	}
 	frame := e.Stack.Frames[0]
 	return fmt.Sprintf("%s:%d: %s caused %q", frame.File, frame.Line, e.Cause, e.Message)
+}
+
+func (e *genericError) Code() libcontainer.ErrorCode {
+	return e.ECode
+}
+
+func (e *genericError) Detail(w io.Writer) error {
+	return errorTemplate.Execute(w, e)
 }
 
 func protoBufRead(conn io.Reader, unmarshaled interface{}) error {

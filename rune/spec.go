@@ -82,6 +82,15 @@ created by an unprivileged user.
 			return err
 		}
 		spec := specconv.Example()
+		spec.Process.Cwd = "/var/run/rune"
+		spec.Hostname = "rune"
+		spec.Annotations = map[string]string{
+			"enclave.type":         "intelSgx",
+			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v1.so",
+			"enclave.runtime.args": "skeleton,debug",
+		}
+
+		spec.Mounts = append(spec.Mounts, *createLibenclaveMount())
 
 		rootless := context.Bool("rootless")
 		if rootless {
@@ -132,7 +141,7 @@ func loadSpec(cPath string) (spec *specs.Spec, err error) {
 	return spec, validateProcessSpec(spec.Process)
 }
 
-func createLibContainerRlimit(rlimit specs.POSIXRlimit) (configs.Rlimit, error) {
+func createlibenclaveRlimit(rlimit specs.POSIXRlimit) (configs.Rlimit, error) {
 	rl, err := strToRlimit(rlimit.Type)
 	if err != nil {
 		return configs.Rlimit{}, err
@@ -142,4 +151,13 @@ func createLibContainerRlimit(rlimit specs.POSIXRlimit) (configs.Rlimit, error) 
 		Hard: rlimit.Hard,
 		Soft: rlimit.Soft,
 	}, nil
+}
+
+func createLibenclaveMount() *specs.Mount {
+	return &specs.Mount{
+		Destination: "/var/run/aesmd",
+		Type:        "bind",
+		Source:      "/var/run/aesmd",
+		Options:     []string{"rbind", "rprivate"},
+	}
 }

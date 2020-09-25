@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/opencontainers/runc/libcontainer"
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/urfave/cli"
 )
@@ -36,7 +36,7 @@ instance of a container.`,
 			return err
 		}
 		pid := state.BaseState.InitProcessPid
-		if containerStatus == libcontainer.Stopped {
+		if containerStatus == libenclave.Stopped {
 			pid = 0
 		}
 		bundle, annotations := utils.Annotations(state.Config.Labels)
