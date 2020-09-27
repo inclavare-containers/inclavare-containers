@@ -87,7 +87,7 @@ func parseAttestParameters(spid string, subscriptionKey string, product uint32) 
 	return p
 }
 
-func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, product uint32, quoteType uint32) (map[string]string, error) {
+func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, product uint32, quoteType uint32) ([]byte, error) {
 	if pal.GetLocalReport == nil {
 		return nil, nil
 	}
@@ -138,12 +138,12 @@ func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, produc
 		return nil, err
 	}
 
-	status, iasReport, err := challenger.GetReport(quote, 0)
+	status, _, err := challenger.GetReport(quote, 0)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
 
 	challenger.ShowReportStatus(status)
 
-	return iasReport, nil
+	return report, nil
 }
