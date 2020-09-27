@@ -117,7 +117,6 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	uint64_t xfrm;
 
 	memset(secs, 0, sizeof(*secs));
-	secs->ssa_frame_size = 1;
 	secs->attributes = SGX_ATTR_MODE64BIT;
 	if (enclave_debug)
 		secs->attributes |= SGX_ATTR_DEBUG;
@@ -125,7 +124,11 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	get_sgx_xfrm_by_cpuid(&xfrm);
 	secs->xfrm = xfrm;
 
-	for (secs->size = PAGE_SIZE; secs->size < bin_size; )
+	secs->miscselect = get_sgx_miscselect_by_cpuid();
+	secs->ssa_frame_size = sgx_calc_ssaframesize(secs->miscselect, secs->xfrm);
+
+	uint64_t enclave_size = bin_size + PAGE_SIZE * secs->ssa_frame_size;
+	for (secs->size = PAGE_SIZE; secs->size < enclave_size; )
 		secs->size <<= 1;
 
 	uint64_t base = create_enclave_range(dev_fd, secs->size);
@@ -225,6 +228,16 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	if (!encl_create(dev_fd, bin_size, secs))
 		goto out_dev_fd;
 
+	uint64_t *ssa_frame = valloc(PAGE_SIZE * secs->ssa_frame_size);
+	if (ssa_frame == NULL) {
+		fprintf(stderr, "Failed malloc memory for ssa_frame\n");
+		goto out_map;
+	}
+	memset(ssa_frame, 0, PAGE_SIZE * secs->ssa_frame_size);
+
+	struct sgx_tcs *tcs = bin;
+	tcs->ssa_offset = bin_size;
+
 	if (is_oot_driver) {
 		if (!encl_add_pages_with_mrmask(dev_fd, secs->base, bin, PAGE_SIZE, SGX_SECINFO_TCS))
 			goto out_map;
@@ -232,12 +245,20 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
 						bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
 			goto out_map;
+
+		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + bin_size, ssa_frame,
+						PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
+			goto out_map;
 	} else {
 		if (!encl_add_pages(dev_fd, 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
 			goto out_map;
 
 		if (!encl_add_pages(dev_fd, PAGE_SIZE, bin + PAGE_SIZE,
 				    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
+			goto out_map;
+
+		if (!encl_add_pages(dev_fd, tcs->ssa_offset, ssa_frame,
+				    PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
 			goto out_map;
 	}
 
@@ -271,7 +292,8 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 			goto out_map;
 		}
 
-		rc = mmap((void *)secs->base + PAGE_SIZE, bin_size - PAGE_SIZE,
+		rc = mmap((void *)secs->base + PAGE_SIZE,
+			  bin_size + PAGE_SIZE * (secs->ssa_frame_size -1),
 			  PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_SHARED,
 			  dev_fd, 0);
 		if (rc == MAP_FAILED) {
@@ -282,8 +304,10 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		enclave_fd = dev_fd;
 	}
 
+	free(ssa_frame);
 	return true;
 out_map:
+	free(ssa_frame);
 	munmap((void *)secs->base, secs->size);
 out_dev_fd:
 	close(dev_fd);
@@ -323,7 +347,7 @@ static bool encl_data_map(const char *path, void **bin, off_t *bin_size)
 	if (!get_file_size(path, bin_size))
 		goto err_out;
 
-	*bin = mmap(NULL, *bin_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	*bin = mmap(NULL, *bin_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 	if (*bin == MAP_FAILED) {
 		fprintf(stderr, "mmap() %s failed, errno=%d.\n", path, errno);
 		goto err_out;

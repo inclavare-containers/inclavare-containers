@@ -67,7 +67,7 @@ struct sgx_enclave_create  {
 /**
  * struct sgx_enclave_add_pages - parameter structure for the
  *                                %SGX_IOC_ENCLAVE_ADD_PAGE ioctl
- * @src:	start address for the page data
+ * @src:	start address for the page data (must be 4k aligned required by kernel)
  * @offset:	starting page offset
  * @length:	length of the data (multiple of the page size)
  * @secinfo:	address for the SECINFO data
@@ -84,7 +84,7 @@ struct sgx_enclave_add_pages {
 };
 
 /**
- * struct sgx_enclave_add_page - parameter structure for the
+ * struct sgx_enclave_add_pages_with_mrmask - parameter structure for the
  *                               %SGX_IOC_ENCLAVE_ADD_PAGE_WITH_MRMASK ioctl
  * @addr:       address in the ELRANGE
  * @src:        address for the page data
@@ -167,5 +167,7 @@ typedef int (*sgx_enclave_exit_handler_t)(long rdi, long rsi, long rdx,
 					  struct sgx_enclave_exception *e);
 
 void get_sgx_xfrm_by_cpuid(uint64_t *xfrm);
+uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm);
+uint32_t get_sgx_miscselect_by_cpuid(void);
 bool is_launch_control_supported(void);
 #endif /* _UAPI_ASM_X86_SGX_H */

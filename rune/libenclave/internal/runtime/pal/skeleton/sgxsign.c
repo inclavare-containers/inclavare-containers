@@ -10,10 +10,13 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include "defines.h"
+
+#define PAGE_SIZE  4096
 
 struct sgx_sigstruct_payload {
 	struct sgx_sigstruct_header header;
@@ -142,17 +145,18 @@ struct mrecreate {
 } __attribute__((__packed__));
 
 
-static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size)
+static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size, uint32_t miscselect, uint64_t xfrm, uint32_t * ssa_frame_size)
 {
 	struct mrecreate mrecreate;
 	uint64_t encl_size;
 
-	for (encl_size = 0x1000; encl_size < blob_size; )
+	for (encl_size = PAGE_SIZE; encl_size < blob_size; )
 		encl_size <<= 1;
 
 	memset(&mrecreate, 0, sizeof(mrecreate));
 	mrecreate.tag = MRECREATE;
-	mrecreate.ssaframesize = 1;
+	mrecreate.ssaframesize = sgx_calc_ssaframesize(miscselect, xfrm);
+	*ssa_frame_size = mrecreate.ssaframesize;
 	mrecreate.size = encl_size;
 
 	if (!EVP_DigestInit_ex(ctx, EVP_sha256(), NULL))
@@ -191,7 +195,7 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
 	struct mreextend mreextend;
 	int i;
 
-	for (i = 0; i < 0x1000; i += 0x100) {
+	for (i = 0; i < PAGE_SIZE; i += 0x100) {
 		memset(&mreextend, 0, sizeof(mreextend));
 		mreextend.tag = MREEXTEND;
 		mreextend.offset = offset + i;
@@ -225,15 +229,16 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
  * enclave as the signing tool is used at the moment only for the launch
  * enclave, which is pass-through (everything gets a token).
  */
-static bool measure_encl(const char *path, uint8_t *mrenclave)
+static bool measure_encl(const char *path, uint8_t *mrenclave, uint32_t miscselect, uint64_t xfrm)
 {
 	FILE *file;
 	struct stat sb;
 	EVP_MD_CTX *ctx;
 	uint64_t flags;
 	uint64_t offset;
-	uint8_t data[0x1000];
+	uint8_t data[PAGE_SIZE];
 	int rc;
+	uint32_t ssa_frame_size;
 
 	ctx = EVP_MD_CTX_create();
 	if (!ctx)
@@ -257,10 +262,20 @@ static bool measure_encl(const char *path, uint8_t *mrenclave)
 		goto out;
 	}
 
-	if (!mrenclave_ecreate(ctx, sb.st_size))
+	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
+			 fileno(file), 0);
+	if (bin == MAP_FAILED) {
+		fprintf(stderr, "mmap() %s failed, errno=%d.\n", path, errno);
+		goto out;
+	}
+
+	struct sgx_tcs *tcs = bin;
+	tcs->ssa_offset = sb.st_size;
+
+	if (!mrenclave_ecreate(ctx, sb.st_size, miscselect, xfrm, &ssa_frame_size))
 		goto out;
 
-	for (offset = 0; offset < sb.st_size; offset += 0x1000) {
+	for (offset = 0; offset < sb.st_size; offset += PAGE_SIZE) {
 		if (!offset)
 			flags = SGX_SECINFO_TCS;
 		else
@@ -270,10 +285,18 @@ static bool measure_encl(const char *path, uint8_t *mrenclave)
 		if (!mrenclave_eadd(ctx, offset, flags))
 			goto out;
 
-		rc = fread(data, 1, 0x1000, file);
-		if (!rc)
-			break;
-		if (rc < 0x1000)
+		memcpy(data, bin + offset, PAGE_SIZE);
+
+		if (!mrenclave_eextend(ctx, offset, data))
+		goto out;
+	}
+
+	memset(data, 0, sizeof(data));
+
+	flags = SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X;
+	for (offset = sb.st_size; offset < sb.st_size + PAGE_SIZE * ssa_frame_size;
+	     offset += PAGE_SIZE) {
+		if (!mrenclave_eadd(ctx, offset, flags))
 			goto out;
 
 		if (!mrenclave_eextend(ctx, offset, data))
@@ -283,10 +306,12 @@ static bool measure_encl(const char *path, uint8_t *mrenclave)
 	if (!mrenclave_commit(ctx, mrenclave))
 		goto out;
 
+	munmap(bin, sb.st_size);
 	fclose(file);
 	EVP_MD_CTX_destroy(ctx);
 	return true;
 out:
+	munmap(bin, sb.st_size);
 	fclose(file);
 	EVP_MD_CTX_destroy(ctx);
 	return false;
@@ -471,6 +496,7 @@ int main(int argc, char **argv)
 	ss.body.xfrm = xfrm;
 
 	ss.body.attributes_mask = ss.body.attributes;
+	ss.body.miscselect = get_sgx_miscselect_by_cpuid();
 
 	/* sanity check only */
 	if (check_crypto_errors())
@@ -482,7 +508,7 @@ int main(int argc, char **argv)
 
 	BN_bn2bin(get_modulus(sign_key), ss.modulus);
 
-	if (!measure_encl(argv[1], ss.body.mrenclave))
+	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm))
 		goto out;
 
 	if (!sign_encl(&ss, sign_key, ss.signature))
