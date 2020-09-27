@@ -314,7 +314,6 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 		err = fmt.Errorf(resp.Attest.Error)
 	}
 
-	logrus.Infof("In runelet, resp.Attest = %v", resp.Attest)
 	return resp.Attest.ExitCode, err
 }
 

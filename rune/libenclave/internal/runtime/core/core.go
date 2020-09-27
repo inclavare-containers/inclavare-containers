@@ -25,7 +25,7 @@ func (pal *enclaveRuntimeCore) Init(args string, logLevel string) (err error) {
 	return fmt.Errorf("enclave runtime core Init() unimplemented")
 }
 
-func (pal *enclaveRuntimeCore) Attest(string, string, uint32, uint32) (map[string]string, error) {
+func (pal *enclaveRuntimeCore) Attest(string, string, uint32, uint32) ([]byte, error) {
 	return nil, fmt.Errorf("enclave runtime core Attest() unimplemented")
 }
 
