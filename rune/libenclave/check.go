@@ -28,7 +28,7 @@ func CreateLibenclaveMount(cwd string, config *configs.Config) {
 			break
 		}
 	}
-    if aesmedMounted != true {
+	if aesmedMounted != true {
 		config.Mounts = append(config.Mounts, createLibenclaveMount(cwd))
 	}
 }
