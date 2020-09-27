@@ -1,3 +1,9 @@
+shim-rune (0.4.1-1) unstable; urgency=low
+
+  * Update to version 0.4.1.
+
+ -- Zhiguang Jia <shirong@linux.alibaba.com>  Sun, 27 Sep 2020 10:25:00 +0000
+
 shim-rune (0.4.0-1) unstable; urgency=low
 
   * Update to version 0.4.0.
