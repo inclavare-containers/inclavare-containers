@@ -4,6 +4,9 @@ ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 # Base path used to install.
 DESTDIR ?= /usr/local
 
+ifneq ($(GO111MODULE),off)
+	MOD_VENDOR := "-mod=vendor"
+endif
 ifneq "$(strip $(shell command -v go 2>/dev/null))" ""
 	GOOS ?= $(shell go env GOOS)
 	GOARCH ?= $(shell go env GOARCH)
@@ -47,7 +50,7 @@ all: binaries
 # Build a binary from a cmd.
 bin/containerd-shim-rune-v2:
 	@echo "bin/containerd-shim-rune-v2"
-	@CGO_ENABLED=${SHIM_CGO_ENABLED} GOOS=${GOOS} go build ${GO_BUILD_FLAGS} -o bin/containerd-shim-rune-v2 ./cmd/containerd-shim-rune-v2
+	@CGO_ENABLED=${SHIM_CGO_ENABLED} GOOS=${GOOS} go build $(MOD_VENDOR) ${GO_BUILD_FLAGS} -o bin/containerd-shim-rune-v2 ./cmd/containerd-shim-rune-v2
 
 binaries: clean $(BINARIES) ## build binaries
 
