@@ -1,7 +1,9 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/user.h>
 #include "sgx.h"
+#include "defines.h"
 
 static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 {
@@ -73,6 +75,40 @@ static uint64_t try_get_xcr0()
 void get_sgx_xfrm_by_cpuid(uint64_t *xfrm)
 {
 	*xfrm = try_get_xcr0();
+}
+
+uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm)
+{
+	uint32_t xsave_offset;
+	uint32_t size_max = PAGE_SIZE;
+	int cpu_info[4] = {0, 0, 0, 0};
+	uint32_t size;
+	int i;
+
+	for (i = 2; i < 63; i++) {
+		__cpuidex(cpu_info, 0x0D, i);
+		if (!((1 << i) & xfrm))
+			continue;
+		xsave_offset = cpu_info[0] + cpu_info[1];
+
+		size = SGX_SSA_GPRS_SIZE + xsave_offset;
+		if (miscselect & SGX_MISC_EXINFO)
+			size += SGX_SSA_MISC_EXINFO_SIZE;
+
+		if (size > size_max)
+			size_max = size;
+	}
+
+	return (size_max + PAGE_SIZE - 1) >> PAGE_SHIFT;
+}
+
+uint32_t get_sgx_miscselect_by_cpuid(void)
+{
+	int cpu_info[4] = {0, 0, 0, 0};
+
+	__cpuidex(cpu_info, SGX_CPUID, 0);
+
+	return cpu_info[1];
 }
 
 bool is_launch_control_supported(void)
