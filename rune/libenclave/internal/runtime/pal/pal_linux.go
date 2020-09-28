@@ -1,14 +1,5 @@
 package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
 
-/*
-#include <sys/prctl.h>
-
-static void workaround_nanosleep(void) {
-	// nanosleep() may return the remaining duration longer than
-	// requested one due to timer slack.
-	prctl(PR_SET_TIMERSLACK, 1, 0, 0, 0);
-}
-*/
 import "C"
 
 import (
@@ -34,8 +25,6 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 		return fmt.Errorf("unsupported pal api version %d", ver)
 	}
 	pal.version = ver
-
-	C.workaround_nanosleep()
 
 	return api.init(args, logLevel)
 }
