@@ -218,7 +218,6 @@ func finalizeInitialization(fifoFd int) error {
 }
 
 func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifySignal chan os.Signal) (exitCode int32, err error) {
-	logrus.Infof("preparing to remote Attest")
 	c, err := net.FileConn(agentPipe)
 	if err != nil {
 		return 1, err
@@ -247,8 +246,15 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 		return 1, fmt.Errorf("Unsupported Quote Type Configuration %v!\n", raEpidQuoteType)
 	}
 
+	isRA := false
+	if os.Getenv("IsRemoteAttestation") == "true" {
+		logrus.Infof("preparing to remote Attest")
+		isRA = true
+	}
+
 	req := &pb.AgentServiceRequest{}
 	req.Attest = &pb.AgentServiceRequest_Attest{
+		IsRA:            isRA,
 		Spid:            os.Getenv("SPID"),
 		SubscriptionKey: os.Getenv("SUBSCRIPTION_KEY"),
 		Product:         (uint32)(isProductEnclave),
