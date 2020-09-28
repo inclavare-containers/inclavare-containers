@@ -76,7 +76,7 @@ func parseAttestParameters(spid string, subscriptionKey string, product uint32) 
 	return p
 }
 
-func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, product uint32, quoteType uint32) ([]byte, error) {
+func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey string, product uint32, quoteType uint32) ([]byte, error) {
 	if pal.GetLocalReport == nil {
 		return nil, nil
 	}
@@ -97,6 +97,11 @@ func (pal *enclaveRuntimePal) Attest(spid string, subscriptionKey string, produc
 	}
 	if len(report) != intelsgx.ReportLength {
 		return nil, fmt.Errorf("len(report) is not %d, but %d", intelsgx.ReportLength, len(report))
+	}
+
+	// return local report if the value of iaRA equals to false.
+	if isRA == false {
+		return report, nil
 	}
 
 	// get quote from QE(aesmd)
