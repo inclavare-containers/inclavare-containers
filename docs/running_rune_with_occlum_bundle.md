@@ -48,8 +48,8 @@ and then configure enclave runtime as following:
 ``` json
   "annotations": {
       "enclave.type": "intelSgx",
-      "enclave.runtime.path": "/opt/occlum/build/lib/libocclum-pal.so.0.15.1",
-      "enclave.runtime.args": "./"
+      "enclave.runtime.path": "/opt/occlum/build/lib/libocclum-pal.so",
+      "enclave.runtime.args": "${OCCLUM_INSTANCE_DIR}"
   }
 ```
 
