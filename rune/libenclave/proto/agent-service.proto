@@ -13,10 +13,12 @@ message AgentServiceRequest{
     }
 
     message Attest {
-	string spid       	= 1;
-	string subscriptionKey 	= 2;
-	uint32 product    	= 3;
-	uint32 quoteType	= 4;
+	// isRA: remote attestaion(RA) or just returns local report
+	bool isRA		= 1;
+	string spid       	= 2;
+	string subscriptionKey 	= 3;
+	uint32 product    	= 4;
+	uint32 quoteType	= 5;
     }
 
     Execute exec = 1;
