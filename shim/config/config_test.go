@@ -16,10 +16,8 @@ sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
     socket = "/run/containerd/containerd.sock"
 
 [enclave_runtime]
-
     [enclave_runtime.occlum]
-        build_image = "docker.io/occlum/occlum:0.12.0-ubuntu18.04"
-
+        enclave_runtime_path = "/opt/occlum/build/lib/libocclum-pal.so"
     [enclave_runtime.graphene]
 `
 

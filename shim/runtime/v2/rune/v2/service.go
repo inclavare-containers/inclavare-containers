@@ -338,25 +338,25 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 
 	/*//FIXME debug
 	if carrierKind == "occlum" {
-		//if err != nil {
-		//	logrus.Errorf("rune Create NewContainer error: %++v", err)
-		if _, err := os.Stat(r.Bundle); err == nil {
-			path := "/tmp/rune-container-test/runc-rootfs"
-			os.RemoveAll(path)
-			os.MkdirAll(path, 0644)
-			args := []string{
-				"-r", r.Bundle, path,
+		if err != nil {
+			//	logrus.Errorf("rune Create NewContainer error: %++v", err)
+			if _, err := os.Stat(r.Bundle); err == nil {
+				path := "/tmp/rune-container-test/runc-rootfs"
+				os.RemoveAll(path)
+				os.MkdirAll(path, 0644)
+				args := []string{
+					"-r", r.Bundle, path,
+				}
+				if b, err := exec.Command("cp", args...).CombinedOutput(); err != nil {
+					logrus.Errorf("failed to copy bundles. error:%s, %v", string(b), err)
+				}
+				logrus.Infof("copy runc bundle %s to %s", r.Bundle, path)
+				time.Sleep(time.Minute)
+			} else {
+				logrus.Infof("bundle dir is not exist.", r.Bundle)
 			}
-			if b, err := exec.Command("cp", args...).CombinedOutput(); err != nil {
-				logrus.Errorf("failed to copy bundles. error:%s, %v", string(b), err)
-			}
-			logrus.Infof("copy runc bundle %s to %s", r.Bundle, path)
-			time.Sleep(time.Minute)
-		} else {
-			logrus.Infof("bundle dir is not exist.", r.Bundle)
+			return nil, err
 		}
-		return nil, err
-		//}
 	}*/
 
 	logrus.Debugf("Create: create container time cost: %d", (time.Now().Sub(timeStart))/time.Second)
