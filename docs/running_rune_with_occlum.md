@@ -155,7 +155,7 @@ You need to specify a set of parameters to `docker run` in order to use `rune`, 
 export OCCLUM_INSTANCE_DIR=occlum-app
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
-  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so.0 \
+  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
   -e ENCLAVE_RUNTIME_ARGS=${OCCLUM_INSTANCE_DIR} \
   ${Occlum_application_image}
 ```
