@@ -22,14 +22,14 @@ cd $DEBBUILD_DIR && tar zcfP $TARBALL_NAME $PACKAGE-$VERSION
 
 # check the go version
 if ! [ -x "$(command -v go)" ]; then
-  echo 'Error: go is not installed. Please install Go 1.14 and above'
+  echo 'Error: go is not installed. Please install Go 1.13 and above'
   exit 1
 fi
 
-NEED_GO_VERSION=14
+NEED_GO_VERSION=13
 CURRENT_GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//g' | sed 's/\./ /g' | awk '{print $2}')
 if [ $CURRENT_GO_VERSION -lt $NEED_GO_VERSION  ]; then
-  echo 'Error: go version is less than 1.14.0. Please install Go 1.14 and above'
+  echo 'Error: go version is less than 1.13.0. Please install Go 1.13 and above'
   exit
 fi
 

@@ -1,113 +1,122 @@
-# Create a confidential computing Kubernetes cluster with inclavare-containers
+# Create a confidential computing Kubernetes cluster with inclavare-containers based on Occlum
 
-This page shows how to create a single control-plane Kubernetes and install the software required to run rune containers with Occlum in a Kubernetes cluster.
-
+This page shows how to create a single control-plane Kubernetes and install the software required to run confidential computing containers with Occlum in the Kubernetes cluster.
 ## Before you begin
 
 - A machine with Intel SGX hardware support.
 - Make sure you have one of the following operating systems:
    - Ubuntu 18.04 server 64bits
    - CentOS 8.1 64bits
-- Download the packages or binaries corresponding to your operating system from the [releases page](https://github.com/alibaba/inclavare-containers/releases). 
-
-| Module Name | CentOS | Ubuntu |
-| --- | --- | --- |
-| occlum-pal | occlum-pal-${version}.el8.x86_64.rpm | occlum-pal_${version}_amd64.deb    |
-| shim-rune | shim-rune-${version}.el8.x86_64.rpm | shim-rune_${version}_amd64.deb |
-| rune | rune-${version}.el8.x86_64.rpm  | rune_${version}_amd64.deb |
-
+   
 ## Objectives
 
 - Install the Intel SGX software stack.
-- Install kernel module enable-rdfsbase and occlum-pal for Occlum.
-- Create a single control-plane Kubernetes cluster for running rune containers with Occlum.
-
+- Install the Occlum software stack.
+- Create a single control-plane Kubernetes cluster for running confidential computing containers with Occlum.
 
 ## Instructions
 
-### 1. Install Linux SGX software stack
+### 1. Add inclavare-containers repository
+
+- On CentOS
+
+```bash
+cat << EOF >/etc/yum.repos.d/inclavare-containers.repo
+[inclavare-containers]
+name=inclavare-containers
+enabled=1
+baseurl=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
+gpgcakey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+EOF
+```
+
+- On Ubuntu
+
+```bash
+# install gnupg and wget
+sudo apt-get install -y gnupg wget
+
+# add the repository to your sources
+echo 'deb [arch=amd64] https://mirrors.openanolis.org/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list
+
+# add the key to the list of trusted keys used by the apt to authenticate packages
+wget -qO - https://mirrors.openanolis.org/inclavare-containers/deb-repo/DEB-GPG-KEY.key  | sudo apt-key add -
+
+# update the apt
+sudo apt-get update
+```
+
+### 2. Install Linux SGX software stack
 The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, and Intel SGX PSW. 
-Please follow [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.9.1/docs/Intel_SGX_Installation_Guide_Linux_2.9.1_Open_Source.pdf) to install SGX driver, SDK and PSW, the recommended version is 2.9.1.
+Please follow [Intel SGX Installation Guide Linux 2.11](https://download.01.org/intel-sgx/sgx-linux/2.11/docs/Intel_SGX_Installation_Guide_Linux_2.11_Open_Source.pdf) to install SGX driver, SDK and PSW, the recommended version is 2.11.
                                                                              
 Note that you should install the OOT SGX driver that without ECDSA attestation.
 
-### 2. Install Occlum software stack
-[Occlum](https://github.com/occlum/occlum) is the only enclave runtime supported by shim-rune currently. `enable-rdfsdbase` and `occlum-pal`  are used by Occlum.<br />
-`enable-rdfsdbase` is a Linux kernel module that enables RDFSBASE, WRFSBASE, RDGSBASE, WRGSBASE instructions on x86.
-`occlum-pal` is used to interface with OCI Runtime rune, allowing invoking Occlum through well-defined [Enclave Runtime APL API v2](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/spec_v2.md). 
+### 3. Install Occlum software stack
+[Occlum](https://github.com/occlum/occlum) is the only enclave runtime supported by shim-rune currently. 
+`enable-rdfsdbase` is a Linux kernel module which enables Occlum to use rdfsbase-family instructions in enclaves.
 
 - Step 1. Install kernel module enable-rdfsdbase
 
     Please follow the [documentation](https://github.com/occlum/enable_rdfsbase) to install `enable-rdfsdbase`.
 
-- Step 2. Install package libsga-uae-service
+- Step 2. Install package libsgx-uae-service
     
-    `libsga-uae-service` is used by occlum-pal, go to the SGX RPM local repo and run the following command:
+    `libsgx-uae-service` package is required by occlum, install libsgx-uae-service use the following command:
     - On CentOS
     ```bash
-    sudo rpm -ivh libsgx-uae-service-2.9.101.2-1.el8.x86_64.rpm
+    sudo yum install libsgx-uae-service
     ```
   
     - On Ubuntu
     ```
-    wget https://download.01.org/intel-sgx/sgx-linux/2.9.1/distro/ubuntu18.04-server/debian_pkgs/libs/libsgx-uae-service/libsgx-uae-service_2.9.101.2-xenial1_amd64.deb -O libsgx-uae-service_2.9.101.2-xenial1_amd64.deb
-    sudo dpkg -i libsgx-uae-service_2.9.101.2-xenial1_amd64.deb
+    sudo apt-get install libsgx-uae-service
     ```
     
-- Step 3. Install occlum-pal
+- Step 3. Install occlum
    - On CentOS
     ```bash
-    version=0.15.1-1
-    sudo rpm -ivh occlum-pal-${version}.el8.x86_64.rpm
+    sudo yum install occlum
     ```
 
    - On Ubuntu
     ```bash
-    version=0.15.1-1
-    sudo dpkg -i occlum-pal_${version}_amd64.deb
+    sudo apt-get install occlum
     ```
 
-### 3. Install runc and rune
-`runc` and `rune` are CLI tools for spawning and running containers according to the OCI specification. The codebase of the `rune` is a fork of [runc](https://github.com/opencontainers/runc), so `rune` can be used as `runc` if enclave is not configured or available. The difference between them is `rune` can run a so-called enclave which is referred to as protected execution environment, preventing the untrusted entity from accessing the sensitive and confidential assets in use in containers.<br />
+### 4. Install rune
+`rune` is a CLI tools for spawning and running containers according to the OCI specification. The codebase of the `rune` is a fork of [runc](https://github.com/opencontainers/runc), so `rune` can be used as `runc` if enclave is not configured or available. The difference between them is `rune` can run a so-called enclave which is referred to as protected execution environment, preventing the untrusted entity from accessing the sensitive and confidential assets in use in containers.<br />
 <br />
+Install rune use the following commands:
 
-- Step1. Download the `runc` binary and save to path `/usr/bin/runc`
-    ```bash
-    wget https://github.com/opencontainers/runc/releases/download/v1.0.0-rc90/runc.amd64 -O /usr/bin/runc
-    chmod +x /usr/bin/runc
-    ```
+- On CentOS
+```bash
+sudo yum install rune
+```
 
-- Step 2. Download and install the `rune` package
-   - On CentOS
-    ```bash
-    version=0.4.0-1
-    sudo yum install -y libseccomp
-    sudo rpm -ivh rune-${version}.el8.x86_64.rpm
-    ```
-
-   - On Ubuntu
-    ```bash
-    version=0.4.0-1
-    sudo dpkg -i rune_${version}_amd64.deb
-    ```
+- On Ubuntu
+```bash
+sudo apt-get install rune
+```
 
 
-### 4. Install shim-rune
+### 5. Install shim-rune
 `shim-rune` resides in between `containerd` and `rune`, conducting enclave signing and management beyond the normal `shim` basis. `shim-rune` and `rune` can compose a basic enclave containerization stack for the cloud-native ecosystem.
 
 - On CentOS
     ```bash
-    version=0.4.0-1
-    sudo rpm -ivh shim-rune-${version}.el8.x86_64.rpm
+    sudo yum install shim-rune
     ```
 
 - On Ubuntu
     ```bash
-    version=0.4.0-1
-    sudo dpkg -i shim-rune_${version}_amd64.deb
+    sudo apt-get install shim-rune
     ```
 
-### 5. Install and configure containerd
+### 6. Install and configure containerd
 containerd is an industry-standard container runtime with an emphasis on simplicity, robustness and portability. It is available as a daemon for Linux and Windows, which can manage the complete container lifecycle of its host system: image transfer and storage, container execution and supervision, low-level storage and network attachments, etc.<br />You can download one of the containerd binaries on the [Download](https://containerd.io/downloads/) page.
 
 - Step 1. Download and install containerd-1.3.4 as follows:
@@ -154,10 +163,11 @@ containerd is an industry-standard container runtime with an emphasis on simplic
       [plugins.cri]
         sandbox_image = "registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.1"
         [plugins.cri.containerd]
+          default_runtime_name = "rune"
           snapshotter = "overlayfs"
           [plugins.cri.containerd.default_runtime]
-            runtime_type = "io.containerd.runtime.v1.linux"
-            runtime_engine = "/usr/bin/runc"
+            runtime_type = "io.containerd.rune.v2"
+            runtime_engine = "/usr/bin/rune"
             runtime_root = ""
           [plugins.cri.containerd.runtimes.rune]
             runtime_type = "io.containerd.rune.v2"
@@ -170,14 +180,7 @@ containerd is an industry-standard container runtime with an emphasis on simplic
     sudo systemctl restart containerd.service
     ```
 
-- Step 5. Download the Occlum SDK image (Optional)
-
-    It is recommended to download the occlum SDK image in advance, which is configured in the filed `enclave_runtime.occlum.build_image` in `/etc/inclavare-containers/config.toml` . This image will be used when creating pods. Note that downloading this image in advance can save the container launch time.  <br />Run the following command to download the Occlum SDK image:
-    ```bash
-    ctr image pull docker.io/occlum/occlum:0.15.1-ubuntu18.04
-    ```
-
-### 6. Create a single control-plane Kubernetes cluster with kubeadm
+### 7. Create a single control-plane Kubernetes cluster with kubeadm
 
 - Step 1. Set the kernel parameters
 
@@ -328,18 +331,9 @@ containerd is an industry-standard container runtime with an emphasis on simplic
     kube-system   kube-scheduler-izuf68q2tx28s7tel52vb0z            1/1     Running   0          20s
     ```
 
-### 7. Configure RuntimeClass
+### 8. Configure RuntimeClass
 
-- Step 1. Apply the following two yaml files to create `runc` and `rune` RuntimeClass objects
-    ```yaml
-    cat << EOF | kubectl apply -f -
-    apiVersion: node.k8s.io/v1beta1
-    handler: runc
-    kind: RuntimeClass
-    metadata:
-      name: runc
-    EOF
-    ```
+- Step 1. Apply the following yaml files to create `rune` RuntimeClass object
 
     ```yaml
     cat << EOF | kubectl apply -f -
@@ -351,13 +345,12 @@ containerd is an industry-standard container runtime with an emphasis on simplic
     EOF
     ```
 
-- Step 2. Make sure the `runc` and `rune` RuntimeClass objects are created
+- Step 2. Make sure the `rune` RuntimeClass object is created
 
-    List the runtimeClasses with command `kubectl get runtimeclass`  and the output should like this:
+    List the runtimeClasses with command `kubectl get runtimeclass` and the output should like this:
     ```
     $ kubectl get runtimeclass
     NAME   CREATED AT
-    runc   2020-05-06T06:57:51Z
     rune   2020-05-06T06:57:48Z
     ```
 

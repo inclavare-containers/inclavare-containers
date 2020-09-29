@@ -18,7 +18,7 @@ This page shows how to develop a "Hello World" application, build a "Hello World
 ## Instructions
 
 ### 1. Create a Pod with occlum SDK image
-Occlum supports running any executable binaries that are based on [musl libc](https://www.musl-libc.org/). It does not support Glibc. A good way to develop occlum applications is in an occlum SDK container.
+Occlum supports running any executable binaries that are based on [musl libc](https://www.musl-libc.org/). It does not support Glibc. A good way to develop occlum applications is in an occlum SDK container.
 You can choose one suitable occlum SDK image from the list in [this page](https://hub.docker.com/r/occlum/occlum/tags), the version of the Occlum SDK image must be same as the occlum version listed in release page.
 
 - Step 1. Apply the following yaml file
@@ -37,14 +37,14 @@ You can choose one suitable occlum SDK image from the list in [this page](https:
       - command:
         - sleep
         - infinity
-        image: docker.io/occlum/occlum:0.15.1-centos8.1
+        image: docker.io/occlum/occlum:0.16.0-centos8.1
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
         name: occlum-app-builder
     EOF
     ```
-    This will create a Pod with image `docker.io/occlum/occlum:0.15.1-centos8.1` and the filed `securityContext.privileged` should be set to `true`  in order to build and push docker image in container.<br />
+    This will create a Pod with image `docker.io/occlum/occlum:0.16.0-centos8.1` and the filed `securityContext.privileged` should be set to `true`  in order to build and push docker image in container.<br />
 
 - Step 2. Wait for the pod status to `Ready`
 
@@ -112,7 +112,7 @@ If you were to write an SGX Hello World project using some SGX SDK, the project 
     mkdir occlum_context && cd occlum_context
     occlum init
     ```
-    The `occlum init` command creates in the current working directory a new directory named `.occlum`, which contains the compile-time and run-time state of Occlum. Each Occlum context should be used for a single instance of an application; multiple applications or different instances of a single application should use different Occlum contexts.<br />
+    The `occlum init` command creates the compile-time and run-time state of Occlum in the current working directory. The `occlum new` command does basically the same thing but in a new instance diretory. Each Occlum instance directory should be used for a single instance of an application; multiple applications or different instances of a single application should use different Occlum instances.
 
 - Step 5. Generate a secure Occlum FS image and Occlum SGX enclave via `occlum build`
     ```bash

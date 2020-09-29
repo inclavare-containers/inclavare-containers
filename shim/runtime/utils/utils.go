@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"crypto/rand"
-	"encoding/hex"
+	"crypto/md5"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -51,13 +51,6 @@ func CopyFile(src, dst string, bufferSize int64) error {
 	return err
 }
 
-// GenerateID generates a random unique id.
-func GenerateID() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return hex.EncodeToString(b)
-}
-
 // ExecCommand executes the cmd with args
 func ExecCommand(cmd string, arg ...string) ([]byte, error) {
 	b, err := exec.Command(cmd, arg...).CombinedOutput()
@@ -65,4 +58,15 @@ func ExecCommand(cmd string, arg ...string) ([]byte, error) {
 		return nil, fmt.Errorf("%s %s", string(b), err)
 	}
 	return b, nil
+}
+
+func Md5File(file string) (string, error) {
+	if _, err := os.Stat(file); err != nil {
+		return "", err
+	}
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", md5.Sum(bytes)), nil
 }

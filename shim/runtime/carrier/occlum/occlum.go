@@ -17,8 +17,6 @@ import (
 	"github.com/alibaba/inclavare-containers/shim/runtime/utils"
 	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/containerd/containerd"
-	"github.com/containerd/containerd/cio"
-	"github.com/containerd/containerd/cmd/ctr/commands"
 	"github.com/containerd/containerd/runtime/v2/task"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
@@ -253,51 +251,4 @@ func setLogLevel(level string) {
 	default:
 		logrus.SetLevel(logrus.InfoLevel)
 	}
-}
-
-func (c *occlum) execTask(args ...string) error {
-	container := *c.task.container
-	t := *c.task.task
-	if container == nil || t == nil {
-		return fmt.Errorf("task is not exist")
-	}
-	spec, err := container.Spec(c.context)
-	if err != nil {
-		logrus.Errorf("execTask: get container spec failed. error: %++v", err)
-		return err
-	}
-	pspec := spec.Process
-	pspec.Terminal = false
-	pspec.Args = args
-
-	cioOpts := []cio.Opt{cio.WithStdio, cio.WithFIFODir("/run/containerd/fifo")}
-	ioCreator := cio.NewCreator(cioOpts...)
-	process, err := t.Exec(c.context, utils.GenerateID(), pspec, ioCreator)
-	if err != nil {
-		logrus.Errorf("execTask: exec process in task failed. error: %++v", err)
-		return err
-	}
-	defer process.Delete(c.context)
-	statusC, err := process.Wait(c.context)
-	if err != nil {
-		return err
-	}
-	sigc := commands.ForwardAllSignals(c.context, process)
-	defer commands.StopCatch(sigc)
-
-	if err := process.Start(c.context); err != nil {
-		logrus.Errorf("execTask: start process failed. error: %++v", err)
-		return err
-	}
-	status := <-statusC
-	code, _, err := status.Result()
-	if err != nil {
-		logrus.Errorf("execTask: exec process failed. error: %++v", err)
-		return err
-	}
-	if code != 0 {
-		return fmt.Errorf("process exit abnormaly. exitCode: %d, error: %++v", code, status.Error())
-	}
-	logrus.Debugf("execTask: exec successfully.")
-	return nil
 }
