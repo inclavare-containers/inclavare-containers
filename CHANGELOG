@@ -1,3 +1,10 @@
+# 2020-09-01 v0.4.0
+- Provide RA-TLS PoC
+- Implement Enclave Pooling Manager framework
+- Provide Dragonwell 11 (LTS for OpenJDK 11) reference image
+- Support Occlum 0.15.1
+- Enhance skeleton enclave runtime
+
 # 2020-07-30 v0.3.0
 - Support the creation of a Confidential Computing Kubernetes Cluster
 - Support IAS V4 API
