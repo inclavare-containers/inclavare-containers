@@ -1,3 +1,11 @@
+# 2020-09-29 v0.4.1
+- Refresh RA-TLS PoC
+- Don't use Occlum SDK image to launch enclave containers
+- Update Golang reference image
+- Support Occlum 0.16.0
+- Enhance skeleton enclave runtime
+- Use RPM/DEB repository to maintain binary packages
+
 # 2020-09-01 v0.4.0
 - Provide RA-TLS PoC
 - Implement Enclave Pooling Manager framework
