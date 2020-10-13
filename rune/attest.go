@@ -45,6 +45,10 @@ Where "<container-id>" is the name for the instance of the container`,
 			Name:  "linkable",
 			Usage: "specify the EPID signatures policy type",
 		},
+		cli.StringFlag{
+			Name:  "reportFile",
+			Usage: "path to the output report file(in the ${bundle}/rootfs) containing the corresponding REPORT(currently only using to save the local report)",
+		},
 	},
 	Action: func(context *cli.Context) error {
 		if err := revisePidFile(context); err != nil {
@@ -145,6 +149,7 @@ func getAttestProcess(context *cli.Context, bundle string) (*specs.Process, erro
 
 	p.Env = append(p.Env, "SPID"+envSeparator+context.String("spid"))
 	p.Env = append(p.Env, "SUBSCRIPTION_KEY"+envSeparator+context.String("subscription-key"))
+	p.Env = append(p.Env, "REPORT_FILE"+envSeparator+context.String("reportFile"))
 
 	isProductEnclave := strconv.Itoa(int(sgx.DebugEnclave))
 	if context.Bool("product") {

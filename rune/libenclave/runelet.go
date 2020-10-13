@@ -320,6 +320,16 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 		err = fmt.Errorf(resp.Attest.Error)
 	}
 
+	reportFile := os.Getenv("REPORT_FILE")
+	if reportFile != "" {
+		err := ioutil.WriteFile(reportFile, resp.Attest.LocalReport, 0664)
+		if err != nil {
+			return 1, err
+		}
+
+		logrus.Infof("target enclave's report file %s saved", reportFile)
+	}
+
 	return resp.Attest.ExitCode, err
 }
 
