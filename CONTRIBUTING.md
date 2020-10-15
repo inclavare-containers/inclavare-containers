@@ -1,9 +1,82 @@
-# Contribution Guidelines
-Contributions should be made via pull requests. Pull requests will be reviewed by one or more maintainers and merged when acceptable.
+# Contribution to Inclavare Containers
 
-## Commit message
+Welcome to join Inclavare Containers project. Here's links to the primary ways to contribute to the Inclavare Containers project as an external contributor:
 
-### Format
+- [Reporting security issues](#reporting-security-issues)
+- [Reporting general issues](#reporting-general-issues)
+- [Pull Requests](#pull-requests)
+- [Engage to help anything](#engage-to-help-anything)
+
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) before making contribution.
+
+## Reporting security issues
+
+We take security issues seriously and discourage anyone to spread security issues. If you find a security issue in Inclavare Containers, please do not discuss it in public and even do not open a public issue. Instead we encourage you to send us a private email to 
+[security@inclavare-containers.io](mailto:security@inclavare-containers.io) to report the security issue.
+
+## Reporting general issues
+
+Any Inclavare Containers user can potentially be a contributor. If you have any feedback for the project, feel free to open an issue via [NEW ISSUE](https://github.com/alibaba/inclavare-containers/issues/new).
+
+Since Inclavare Containers development will be collaborated in a distributed manner, we appreciate **WELL-WRITTEN**, **DETAILED**, **EXPLICIT** issue reports. To make communication more efficient, we suggest everyone to search if your issue is an existing one before filing a new issue. If you find it to be existing, please append your details in the issue comments.
+
+There are lot of cases for which you could open an issue:
+
+- Bug report
+- Feature request
+- Performance issues
+- Feature proposal
+- Feature design
+- Help wanted
+- Doc incomplete
+- Test improvement
+- Any questions about the project, and so on
+
+Please remind that when filing a new issue, do remove the sensitive data from your post. Sensitive data could be password, secret key, network locations, private business data and so on.
+
+## Pull Requests 
+
+Pull requests are the primary mechanism we use to change Inclavare Containers. Pull requests will be reviewed by one or more maintainers and merged when acceptable.
+
+Before submitting a PR, we suggest you could take a look at the PR rules here.
+
+- [Workspace Preparation](#workspace-preparation)
+- [Branch Definition](#branch-definition)
+- [Commit Rules](#commit-rules)
+- [PR Description](#pr-description)
+
+### Workspace Preparation
+
+We assume you have a GitHub ID already, then you could finish the preparation in the following steps:
+
+1. **FORK** Inclavare Containers to your repository. To make this work, you just need to click the button `Fork` in top-right corner of [Inclavare Containers](https://github.com/alibaba/inclavare-containers) main page. Then you will end up with your repository in `https://github.com/<username>/inclavare-containers`, in which `username` is your GitHub ID.
+2. **CLONE** your own repository to develop locally. Use `git clone https://github.com/<username>/inclavare-containers.git` to clone repository to your local machine. Then you can create new branches to finish the change you wish to make.
+3. **Set Remote** upstream to be Inclavare Containers using the following two commands:
+
+```bash
+git remote add upstream https://github.com/alibaba/inclavare-containers.git
+git remote set-url --push upstream no-pushing
+```
+
+With this remote setting, you can check your git remote configuration like this:
+
+```
+$ git remote -v
+origin     https://github.com/<username>/inclavare-containers.git (fetch)
+origin     https://github.com/<username>/inclavare-containers.git (push)
+upstream   https://github.com/alibaba/Inclavare Containers.git (fetch)
+upstream   no-pushing (push)
+```
+
+With above, we can easily synchronize local branches with upstream branches.
+
+### Branch Definition
+
+Right now we assume every contribution via pull request is for the `master` branch in Inclavare Containers. There are several other branches such as rc branches, release branches and backport branches. Before officially releasing a version, we may checkout a rc (release candidate) branch for more testings. When officially releasing a version, there may be a release branch before tagging which will be deleted after tagging. When backporting some fixes to existing released version, we will checkout backport branches.
+
+### Commit Rules
+
+#### Commit Message
 
 The commit messages should answer two questions: what changed and why this change was made. The subject line should feature the what and the commit body should describe the why, e.g:
 
@@ -34,7 +107,7 @@ If the change affects many subsystems, you can use ```*``` instead, like ```*:``
 
 The message of commit body should describe why the change was made and how the code works at the high level.
 
-### Sign your work 
+#### Sign your work 
 
 A DCO sign-off is a line placed at the end of a commit message containing a contributor's signature.
 In adding this, the contributor certifies that they have the right to contribute the material.
@@ -104,3 +177,24 @@ Date:   Thu Feb 2 11:41:15 2018 -0800
 
 Notice the `Author` and `Signed-off-by` lines match. If they don't,
 the PR will be rejected by the automated DCO check.
+
+### PR Description
+
+PR is the only way to make change to Inclavare Containers project. To help reviewers, we actually encourage contributors to make PR description as detailed as possible.
+
+## Engage to help anything
+
+GitHub is the primary place for Inclavare Containers contributors to collaborate. Although contributions via PR is an explicit way to help, we still call for any other types of helps.
+
+- Reply to other's issues if you could;
+- Help solve other user's problems;
+- Help review other's PR design;
+- Help review other's codes in PR;
+- Discuss about Inclavare Containers to make things clearer;
+- Advocate Inclavare Containers technology beyond GitHub;
+- Write blogs on Inclavare Containers, and so on.
+
+In a word, **ANY HELP CAN BE A CONTRIBUTION.**
+
+# Credits
+Some contents in this documents have been borrowed from [OpenYurt](https://github.com/alibaba/openyurt/blob/master/CONTRIBUTING.md) project.
