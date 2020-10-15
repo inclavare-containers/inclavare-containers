@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/cgroups/systemd"
 	"github.com/opencontainers/runc/libcontainer/configs"
@@ -29,7 +30,7 @@ import (
 var errEmptyID = errors.New("container id cannot be empty")
 
 // loadFactory returns the configured factory instance for execing containers.
-func loadFactory(context *cli.Context) (libcontainer.Factory, error) {
+func loadFactory(context *cli.Context) (libenclave.Factory, error) {
 	root := context.GlobalString("root")
 	abs, err := filepath.Abs(root)
 	if err != nil {
@@ -38,23 +39,23 @@ func loadFactory(context *cli.Context) (libcontainer.Factory, error) {
 
 	// We default to cgroupfs, and can only use systemd if the system is a
 	// systemd box.
-	cgroupManager := libcontainer.Cgroupfs
+	cgroupManager := libenclave.Cgroupfs
 	rootlessCg, err := shouldUseRootlessCgroupManager(context)
 	if err != nil {
 		return nil, err
 	}
 	if rootlessCg {
-		cgroupManager = libcontainer.RootlessCgroupfs
+		cgroupManager = libenclave.RootlessCgroupfs
 	}
 	if context.GlobalBool("systemd-cgroup") {
 		if systemd.IsRunningSystemd() {
-			cgroupManager = libcontainer.SystemdCgroups
+			cgroupManager = libenclave.SystemdCgroups
 		} else {
 			return nil, fmt.Errorf("systemd cgroup flag passed, but systemd support for managing cgroups is not available")
 		}
 	}
 
-	intelRdtManager := libcontainer.IntelRdtFs
+	intelRdtManager := libenclave.IntelRdtFs
 	if !intelrdt.IsCatEnabled() && !intelrdt.IsMbaEnabled() {
 		intelRdtManager = nil
 	}
@@ -71,15 +72,15 @@ func loadFactory(context *cli.Context) (libcontainer.Factory, error) {
 		newgidmap = ""
 	}
 
-	return libcontainer.New(abs, cgroupManager, intelRdtManager,
-		libcontainer.CriuPath(context.GlobalString("criu")),
-		libcontainer.NewuidmapPath(newuidmap),
-		libcontainer.NewgidmapPath(newgidmap))
+	return libenclave.New(abs, cgroupManager, intelRdtManager,
+		libenclave.CriuPath(context.GlobalString("criu")),
+		libenclave.NewuidmapPath(newuidmap),
+		libenclave.NewgidmapPath(newgidmap))
 }
 
 // getContainer returns the specified container instance by loading it from state
 // with the default factory.
-func getContainer(context *cli.Context) (libcontainer.Container, error) {
+func getContainer(context *cli.Context) (libenclave.Container, error) {
 	id := context.Args().First()
 	if id == "" {
 		return nil, errEmptyID
@@ -103,13 +104,13 @@ func getDefaultImagePath(context *cli.Context) string {
 	return filepath.Join(cwd, "checkpoint")
 }
 
-// newProcess returns a new libcontainer Process with the arguments from the
+// newProcess returns a new libenclave Process with the arguments from the
 // spec and stdio from the current process.
-func newProcess(p specs.Process, init bool, logLevel string) (*libcontainer.Process, error) {
-	lp := &libcontainer.Process{
+func newProcess(p specs.Process, init bool, logLevel string) (*libenclave.Process, error) {
+	lp := &libenclave.Process{
 		Args: p.Args,
 		Env:  p.Env,
-		// TODO: fix libcontainer's API to better support uid/gid in a typesafe way.
+		// TODO: fix libenclave's API to better support uid/gid in a typesafe way.
 		User:            fmt.Sprintf("%d:%d", p.User.UID, p.User.GID),
 		Cwd:             p.Cwd,
 		Label:           p.SelinuxLabel,
@@ -136,7 +137,7 @@ func newProcess(p specs.Process, init bool, logLevel string) (*libcontainer.Proc
 		lp.AdditionalGroups = append(lp.AdditionalGroups, strconv.FormatUint(uint64(gid), 10))
 	}
 	for _, rlimit := range p.Rlimits {
-		rl, err := createLibContainerRlimit(rlimit)
+		rl, err := createlibenclaveRlimit(rlimit)
 		if err != nil {
 			return nil, err
 		}
@@ -145,14 +146,14 @@ func newProcess(p specs.Process, init bool, logLevel string) (*libcontainer.Proc
 	return lp, nil
 }
 
-func destroy(container libcontainer.Container) {
+func destroy(container libenclave.Container) {
 	if err := container.Destroy(); err != nil {
 		logrus.Error(err)
 	}
 }
 
 // setupIO modifies the given process config according to the options.
-func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, detach bool, sockpath string) (*tty, error) {
+func setupIO(process *libenclave.Process, rootuid, rootgid int, createTTY, detach bool, sockpath string) (*tty, error) {
 	if createTTY {
 		process.Stdin = nil
 		process.Stdout = nil
@@ -206,7 +207,7 @@ func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, det
 // createPidFile creates a file with the processes pid inside it atomically
 // it creates a temp file with the paths filename + '.' infront of it
 // then renames the file
-func createPidFile(path string, process *libcontainer.Process) error {
+func createPidFile(path string, process *libenclave.Process) error {
 	pid, err := process.Pid()
 	if err != nil {
 		return err
@@ -227,7 +228,7 @@ func createPidFile(path string, process *libcontainer.Process) error {
 	return os.Rename(tmpName, path)
 }
 
-func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcontainer.Container, error) {
+func createContainer(context *cli.Context, id string, spec *specs.Spec, action CtAct) (libenclave.Container, error) {
 	rootlessCg, err := shouldUseRootlessCgroupManager(context)
 	if err != nil {
 		return nil, err
@@ -241,15 +242,40 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec) (libcont
 		RootlessEUID:     os.Geteuid() != 0,
 		RootlessCgroups:  rootlessCg,
 	})
+
 	if err != nil {
 		return nil, err
 	}
+
+	enclaveConfig := libenclave.CreateEnclaveConfig(spec, config)
+
+	if enclaveConfig != nil {
+		rcwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		cwd, err := filepath.Abs(rcwd)
+		if err != nil {
+			return nil, err
+		}
+		c := config.Cgroups
+
+		libenclave.CreateLibenclaveMount(cwd, config)
+		libenclave.CreateEnclaveDeviceConfig(&config.Devices, enclaveConfig.Enclave.Type)
+		libenclave.CreateEnclaveCgroupConfig(&c.Resources.Devices, enclaveConfig.Enclave.Type)
+
+		if err := libenclave.ValidateEnclave(enclaveConfig); err != nil {
+			return nil, err
+		}
+	}
+
+	detached := context.Bool("detach") || (action == CT_ACT_CREATE)
 
 	factory, err := loadFactory(context)
 	if err != nil {
 		return nil, err
 	}
-	return factory.Create(id, config)
+	return factory.Create(id, config, enclaveConfig, detached)
 }
 
 type runner struct {
@@ -261,7 +287,7 @@ type runner struct {
 	preserveFDs     int
 	pidFile         string
 	consoleSocket   string
-	container       libcontainer.Container
+	container       libenclave.Container
 	action          CtAct
 	notifySocket    *notifySocket
 	criuOpts        *libcontainer.CriuOpts
@@ -305,10 +331,6 @@ func (r *runner) run(config *specs.Process) (int, error) {
 	var (
 		detach = r.detach || (r.action == CT_ACT_CREATE)
 	)
-
-	if detach {
-		process.Detached = true
-	}
 
 	// Setting up IO is a two stage process. We need to modify process to deal
 	// with detaching containers, and then we get a tty after the container has
@@ -366,7 +388,7 @@ func (r *runner) destroy() {
 	}
 }
 
-func (r *runner) terminate(p *libcontainer.Process) {
+func (r *runner) terminate(p *libenclave.Process) {
 	_ = p.Signal(unix.SIGKILL)
 	_, _ = p.Wait()
 }
@@ -433,7 +455,7 @@ func startContainer(context *cli.Context, spec *specs.Spec, action CtAct, criuOp
 		}
 	}
 
-	container, err := createContainer(context, id, spec)
+	container, err := createContainer(context, id, spec, action)
 	if err != nil {
 		return -1, err
 	}

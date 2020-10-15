@@ -1,8 +1,8 @@
-package libenclave // import "github.com/opencontainers/runc/libenclave"
+package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
-	"github.com/opencontainers/runc/libcontainer/configs"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/configs"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"net"
 	"os/user"
 )

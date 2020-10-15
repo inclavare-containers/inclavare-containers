@@ -181,7 +181,7 @@ func createLogConfig(context *cli.Context) logs.Config {
 	}
 	level := context.GlobalString("log-level")
 	if len(level) > 0 {
-		config.LogLevel, _ = logs.ParseLogLevel(level)
+		config.LogLevel, _ = parseLogLevel(level)
 	} else if context.GlobalBool("debug") {
 		config.LogLevel = logrus.DebugLevel
 	}

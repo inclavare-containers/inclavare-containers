@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/opencontainers/runc/libcontainer"
+	"github.com/inclavare-containers/rune/libenclave"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
+	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/opencontainers/runc/libcontainer/utils"
-	"github.com/opencontainers/runc/libenclave/attestation/sgx"
-	_ "github.com/opencontainers/runc/libenclave/attestation/sgx/ias"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
 )
@@ -72,13 +72,13 @@ func attestProcess(context *cli.Context) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	if status == libcontainer.Stopped {
+	if status == libenclave.Stopped {
 		return -1, fmt.Errorf("cannot attest a container that has stopped")
 	}
 
-	config := container.Config()
+	config := container.EnclaveConfig()
 	if config.Enclave == nil {
-		return -1, fmt.Errorf("Attest command: container.Config.Enclave is null")
+		return -1, fmt.Errorf("Attest command: container.EnclaveConfig is null")
 	}
 
 	state, err := container.State()

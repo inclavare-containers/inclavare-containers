@@ -1,4 +1,4 @@
-package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
+package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 
 /*
 #include <stdlib.h>
@@ -15,8 +15,7 @@ import "C"
 
 import (
 	"fmt"
-	"github.com/opencontainers/runc/libcontainer/nsenter"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"unsafe"
 )
 
@@ -26,7 +25,7 @@ type enclaveRuntimePalApiV3 struct {
 func (pal *enclaveRuntimePalApiV3) getLocalReport(targetInfo []byte) ([]byte, error) {
 	var ret C.int
 	reportBufSize := int32(intelsgx.ReportLength)
-	sym := nsenter.SymAddrPalGetLocalReport()
+	sym := symAddrPalGetLocalReport()
 
 	report := make([]byte, reportBufSize)
 	var pTargetInfo unsafe.Pointer = nil

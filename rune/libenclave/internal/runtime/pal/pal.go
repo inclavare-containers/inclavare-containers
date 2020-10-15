@@ -1,7 +1,7 @@
-package enclave_runtime_pal // import "github.com/opencontainers/runc/libenclave/internal/runtime/pal"
+package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 
 import (
-	"github.com/opencontainers/runc/libenclave/configs"
+	"github.com/inclavare-containers/rune/libenclave/configs"
 )
 
 type enclaveRuntimePal struct {

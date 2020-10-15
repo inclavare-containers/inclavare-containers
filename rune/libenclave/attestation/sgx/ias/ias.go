@@ -1,4 +1,4 @@
-package ias // import "github.com/opencontainers/runc/libenclave/attestation/sgx/ias"
+package ias // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	//pb "github.com/opencontainers/runc/libenclave/attestation/proto"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
+	//pb "github.com/inclavare-containers/rune/libenclave/attestation/proto"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"io"
 	"math/rand"

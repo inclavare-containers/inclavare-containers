@@ -1,4 +1,4 @@
-package sgx // import "github.com/opencontainers/runc/libenclave/attestation/sgx"
+package sgx // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 
 // RA Type
 const (

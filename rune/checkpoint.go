@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -59,7 +60,7 @@ checkpointed.`,
 		if err != nil {
 			return err
 		}
-		if status == libcontainer.Created || status == libcontainer.Stopped {
+		if status == libenclave.Created || status == libenclave.Stopped {
 			fatalf("Container cannot be checkpointed in %s state", status.String())
 		}
 		options := criuOptions(context)

@@ -8,13 +8,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/urfave/cli"
 
 	"golang.org/x/sys/unix"
 )
 
-func killContainer(container libcontainer.Container) error {
+func killContainer(container libenclave.Container) error {
 	_ = container.Signal(unix.SIGKILL, false)
 	for i := 0; i < 100; i++ {
 		time.Sleep(100 * time.Millisecond)
@@ -56,7 +57,7 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 		if err != nil {
 			if lerr, ok := err.(libcontainer.Error); ok && lerr.Code() == libcontainer.ContainerNotExists {
 				// if there was an aborted start or something of the sort then the container's directory could exist but
-				// libcontainer does not see it because the state.json file inside that directory was never created.
+				// libenclave does not see it because the state.json file inside that directory was never created.
 				path := filepath.Join(context.GlobalString("root"), id)
 				if e := os.RemoveAll(path); e != nil {
 					fmt.Fprintf(os.Stderr, "remove %s: %v\n", path, e)
@@ -72,9 +73,9 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 			return err
 		}
 		switch s {
-		case libcontainer.Stopped:
+		case libenclave.Stopped:
 			destroy(container)
-		case libcontainer.Created:
+		case libenclave.Created:
 			return killContainer(container)
 		default:
 			if force {

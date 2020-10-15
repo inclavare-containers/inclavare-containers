@@ -45,7 +45,7 @@ func checkArgs(context *cli.Context, expected, checkType int) error {
 	return nil
 }
 
-// fatal prints the error's details if it is a libcontainer specific error type
+// fatal prints the error's details if it is a libenclave specific error type
 // then exits the program with an exit status of 1.
 func fatal(err error) {
 	// make sure the error is written to the logger

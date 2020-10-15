@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/opencontainers/runc/libcontainer"
+	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
 )
@@ -95,7 +95,7 @@ func notifySocketStart(context *cli.Context, notifySocketHost, id string) (*noti
 	return notifySocket, nil
 }
 
-func (n *notifySocket) waitForContainer(container libcontainer.Container) error {
+func (n *notifySocket) waitForContainer(container libenclave.Container) error {
 	s, err := container.State()
 	if err != nil {
 		return err
