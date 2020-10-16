@@ -1960,6 +1960,7 @@ func (c *linuxContainer) currentState() (*State, error) {
 		BaseState: BaseState{
 			ID:                   c.ID(),
 			Config:               *c.config,
+			EnclaveConfig:        *c.enclaveConfig,
 			InitProcessPid:       pid,
 			InitProcessStartTime: startTime,
 			Created:              c.created,

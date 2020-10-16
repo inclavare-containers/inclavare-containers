@@ -63,6 +63,9 @@ type BaseState struct {
 
 	// Config is the container's configuration.
 	Config configs.Config `json:"config"`
+
+	// EnclaveConfig is the container's configuration about Enclave information.
+	EnclaveConfig enclaveConfigs.EnclaveConfig `json:"enclave_config"`
 }
 
 // BaseContainer is a libenclave container object.
