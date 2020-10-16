@@ -1,4 +1,4 @@
-package intelsgx // import "github.com/inclavare-containers/rune/libenclave/intelsgx"
+package preload // import "github.com/inclavare-containers/rune/libenclave/intelsgx/preload"
 
 /*
 #cgo linux LDFLAGS: -ldl
@@ -32,6 +32,6 @@ func preloadSgxPswLib() {
 	loadLibrary("libsgx_launch.so.1")
 }
 
-func init() {
+func PreloadLib() {
 	preloadSgxPswLib()
 }
