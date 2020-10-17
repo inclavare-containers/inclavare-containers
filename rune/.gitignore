@@ -2,6 +2,4 @@ vendor/pkg
 /rune
 /rune-*
 contrib/cmd/recvtty/recvtty
-man/man8
-release
 liberpal-skeleton*.so
