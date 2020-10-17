@@ -313,7 +313,6 @@ func (l *LinuxFactory) Load(id string) (Container, error) {
 		initProcessStartTime: state.InitProcessStartTime,
 		id:                   id,
 		config:               &state.Config,
-		enclaveConfig:        &state.EnclaveConfig,
 		initPath:             l.InitPath,
 		initArgs:             l.InitArgs,
 		criuPath:             l.CriuPath,
@@ -323,6 +322,10 @@ func (l *LinuxFactory) Load(id string) (Container, error) {
 		root:                 containerRoot,
 		created:              state.Created,
 	}
+	if state.EnclaveConfig.Enclave != nil {
+		c.enclaveConfig = &state.EnclaveConfig
+	}
+
 	c.state = &loadedState{c: c}
 	if err := c.refreshState(); err != nil {
 		return nil, err

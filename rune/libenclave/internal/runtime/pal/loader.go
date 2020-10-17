@@ -23,7 +23,7 @@ var fptr_pal_get_local_report unsafe.Pointer
 func Loadbinary(path string) {
 	dl := C.dlopen(C.CString(path), C.RTLD_NOW)
 	if dl == nil {
-		C.perror(C.CString("failed to load library "))
+		C.perror(C.CString("failed to load library " + path))
 	}
 
 	fptr_pal_get_version = C.dlsym(dl, C.CString("pal_get_version"))

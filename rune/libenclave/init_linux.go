@@ -16,6 +16,7 @@ import (
 
 	"github.com/containerd/console"
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx/preload"
 	"github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/configs"
@@ -77,14 +78,6 @@ type initer interface {
 	Init() error
 }
 
-func isInitRunelet() bool {
-	initType := os.Getenv("_LIBCONTAINER_INITTYPE")
-	if initType == "" {
-		return false
-	}
-	return !strings.EqualFold(initType, "standard")
-}
-
 func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd int, logPipe *os.File, logLevel string, agentPipe *os.File) (initer, error) {
 	var config *initConfig
 	if err := json.NewDecoder(pipe).Decode(&config); err != nil {
@@ -96,15 +89,19 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 
 	if config.EnclaveConfig != nil {
 		var name string
-		if isInitRunelet() {
+		switch t {
+		case initStandard:
 			name = "init-runelet"
-		} else {
+			// Due to the design of runelet, the Enclave Runtime PAL is loaded
+			// in host but launched in container. Shared libraries dependent
+			// by Enclave Runtime PAL are preloaded prior to switch into container.
+			preload.PreloadLib()
+			enclave_runtime_pal.Loadbinary(config.EnclaveConfig.Enclave.Path)
+		case initSetns:
 			name = "runelet"
 		}
 		/* For debugging. */
 		unix.Prctl(unix.PR_SET_NAME, uintptr(unsafe.Pointer(&name)), 0, 0, 0)
-
-		enclave_runtime_pal.Loadbinary(config.EnclaveConfig.Enclave.Path)
 	}
 
 	switch t {

@@ -1960,7 +1960,6 @@ func (c *linuxContainer) currentState() (*State, error) {
 		BaseState: BaseState{
 			ID:                   c.ID(),
 			Config:               *c.config,
-			EnclaveConfig:        *c.enclaveConfig,
 			InitProcessPid:       pid,
 			InitProcessStartTime: startTime,
 			Created:              c.created,
@@ -1971,6 +1970,10 @@ func (c *linuxContainer) currentState() (*State, error) {
 		NamespacePaths:      make(map[configs.NamespaceType]string),
 		ExternalDescriptors: externalDescriptors,
 	}
+	if c.enclaveConfig != nil {
+		state.BaseState.EnclaveConfig = *c.enclaveConfig
+	}
+
 	if pid > 0 {
 		for _, ns := range c.config.Namespaces {
 			state.NamespacePaths[ns.Type] = ns.GetPath(pid)
