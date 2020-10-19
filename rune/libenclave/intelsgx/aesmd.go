@@ -328,9 +328,9 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	}
 
 	quote := resp.GetQuote.GetQuote()
-	if len(quote) < QuoteLength || len(quote) != SgxMaxQuoteLength {
+	if len(quote) != SgxMaxQuoteLength {
 		return nil, fmt.Errorf("invalid length of quote: (returned %d, expected %d)",
-			len(quote), QuoteLength)
+			len(quote), SgxMaxQuoteLength)
 	}
 
 	q := &Quote{}
