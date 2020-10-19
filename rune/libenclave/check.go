@@ -196,6 +196,11 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		}
 	}
 
+	// rune will work as runc because enclave is not configured.
+	if etype == "" {
+		return nil
+	}
+
 	path := filterOut(env, "ENCLAVE_RUNTIME_PATH")
 	if path == "" {
 		path = libenclaveUtils.SearchLabels(config.Labels, "enclave.runtime.path")
@@ -255,23 +260,20 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		}
 	}
 
-	if etype != "" {
-		enclave := &enclaveConfigs.Enclave{
-			Type:                  etype,
-			Path:                  path,
-			Args:                  args,
-			IsProductEnclave:      sgxEnclaveType,
-			RaType:                enclaveRaType,
-			RaEpidSpid:            raEpidSpid,
-			RaEpidSubscriptionKey: raEpidSubscriptionKey,
-			RaEpidIsLinkable:      raEpidIsLinkable,
-		}
-		enclaveConfig := &enclaveConfigs.EnclaveConfig{
-			Enclave: enclave,
-		}
-		return enclaveConfig
+	enclave := &enclaveConfigs.Enclave{
+		Type:                  etype,
+		Path:                  path,
+		Args:                  args,
+		IsProductEnclave:      sgxEnclaveType,
+		RaType:                enclaveRaType,
+		RaEpidSpid:            raEpidSpid,
+		RaEpidSubscriptionKey: raEpidSubscriptionKey,
+		RaEpidIsLinkable:      raEpidIsLinkable,
 	}
-	return nil
+	enclaveConfig := &enclaveConfigs.EnclaveConfig{
+		Enclave: enclave,
+	}
+	return enclaveConfig
 }
 
 func ValidateEnclave(config *enclaveConfigs.EnclaveConfig) error {

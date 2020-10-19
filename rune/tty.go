@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/containerd/console"
-	"github.com/inclavare-containers/rune/libenclave"
+	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/utils"
 )
 
@@ -32,7 +32,7 @@ func (t *tty) copyIO(w io.Writer, r io.ReadCloser) {
 
 // setup pipes for the process so that advanced features like c/r are able to easily checkpoint
 // and restore the process's IO without depending on a host specific path or device
-func setupProcessPipes(p *libenclave.Process, rootuid, rootgid int) (*tty, error) {
+func setupProcessPipes(p *libcontainer.Process, rootuid, rootgid int) (*tty, error) {
 	i, err := p.InitializeIO(rootuid, rootgid)
 	if err != nil {
 		return nil, err
@@ -64,14 +64,14 @@ func setupProcessPipes(p *libenclave.Process, rootuid, rootgid int) (*tty, error
 	return t, nil
 }
 
-func inheritStdio(process *libenclave.Process) error {
+func inheritStdio(process *libcontainer.Process) error {
 	process.Stdin = os.Stdin
 	process.Stdout = os.Stdout
 	process.Stderr = os.Stderr
 	return nil
 }
 
-func (t *tty) recvtty(process *libenclave.Process, socket *os.File) (Err error) {
+func (t *tty) recvtty(process *libcontainer.Process, socket *os.File) (Err error) {
 	f, err := utils.RecvFd(socket)
 	if err != nil {
 		return err

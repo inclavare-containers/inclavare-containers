@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unsafe"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
@@ -35,26 +36,9 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Add some definition in message.go
-
-// list of known message types we want to send to bootstrap program
-// The number is randomly chosen to not conflict with known netlink types
-const (
-	InitMsg          uint16 = 62000
-	CloneFlagsAttr   uint16 = 27281
-	NsPathsAttr      uint16 = 27282
-	UidmapAttr       uint16 = 27283
-	GidmapAttr       uint16 = 27284
-	SetgroupAttr     uint16 = 27285
-	OomScoreAdjAttr  uint16 = 27286
-	RootlessEUIDAttr uint16 = 27287
-	UidmapPathAttr   uint16 = 27288
-	GidmapPathAttr   uint16 = 27289
-)
-
 const stdioFdCount = 3
 
-type linuxContainer struct {
+type linuxEnclaveContainer struct {
 	id                   string
 	root                 string
 	config               *configs.Config
@@ -75,121 +59,46 @@ type linuxContainer struct {
 	created              time.Time
 }
 
-// State represents a running container's state
-type State struct {
-	BaseState
-
-	// Platform specific fields below here
-
-	// Specified if the container was started under the rootless mode.
-	// Set to true if BaseState.Config.RootlessEUID && BaseState.Config.RootlessCgroups
-	Rootless bool `json:"rootless"`
-
-	// Path to all the cgroups setup for a container. Key is cgroup subsystem name
-	// with the value as the path.
-	CgroupPaths map[string]string `json:"cgroup_paths"`
-
-	// NamespacePaths are filepaths to the container's namespaces. Key is the namespace type
-	// with the value as the path.
-	NamespacePaths map[configs.NamespaceType]string `json:"namespace_paths"`
-
-	// Container's standard descriptors (std{in,out,err}), needed for checkpoint and restore
-	ExternalDescriptors []string `json:"external_descriptors,omitempty"`
-
-	// Intel RDT "resource control" filesystem path
-	IntelRdtPath string `json:"intel_rdt_path"`
-}
-
-// Container is a libenclave container object.
-//
-// Each container is thread-safe within the same process. Since a container can
-// be destroyed by a separate process, any function may return that the container
-// was not found.
-type Container interface {
-	BaseContainer
-
-	// Methods below here are platform specific
-
-	// Checkpoint checkpoints the running container's state to disk using the criu(8) utility.
-	//
-	// errors:
-	// Systemerror - System error.
-	Checkpoint(criuOpts *libcontainer.CriuOpts) error
-
-	// Restore restores the checkpointed container to a running state using the criu(8) utility.
-	//
-	// errors:
-	// Systemerror - System error.
-	Restore(process *Process, criuOpts *libcontainer.CriuOpts) error
-
-	// If the Container state is RUNNING or CREATED, sets the Container state to PAUSING and pauses
-	// the execution of any user processes. Asynchronously, when the container finished being paused the
-	// state is changed to PAUSED.
-	// If the Container state is PAUSED, do nothing.
-	//
-	// errors:
-	// ContainerNotExists - Container no longer exists,
-	// ContainerNotRunning - Container not running or created,
-	// Systemerror - System error.
-	Pause() error
-
-	// If the Container state is PAUSED, resumes the execution of any user processes in the
-	// Container before setting the Container state to RUNNING.
-	// If the Container state is RUNNING, do nothing.
-	//
-	// errors:
-	// ContainerNotExists - Container no longer exists,
-	// ContainerNotPaused - Container is not paused,
-	// Systemerror - System error.
-	Resume() error
-
-	// NotifyOOM returns a read-only channel signaling when the container receives an OOM notification.
-	//
-	// errors:
-	// Systemerror - System error.
-	NotifyOOM() (<-chan struct{}, error)
-
-	// NotifyMemoryPressure returns a read-only channel signaling when the container reaches a given pressure level
-	//
-	// errors:
-	// Systemerror - System error.
-	NotifyMemoryPressure(level PressureLevel) (<-chan struct{}, error)
+type EnclaveState struct {
+	libcontainer.State
+	EnclaveConfig enclaveConfigs.EnclaveConfig `json:"enclave_config"`
 }
 
 // ID returns the container's unique ID
-func (c *linuxContainer) ID() string {
+func (c *linuxEnclaveContainer) ID() string {
 	return c.id
 }
 
 // Config returns the container's configuration
-func (c *linuxContainer) Config() configs.Config {
+func (c *linuxEnclaveContainer) Config() configs.Config {
 	return *c.config
 }
 
-func (c *linuxContainer) EnclaveConfig() enclaveConfigs.EnclaveConfig {
+func (c *linuxEnclaveContainer) EnclaveConfig() enclaveConfigs.EnclaveConfig {
 
 	return *c.enclaveConfig
 
 }
-func (c *linuxContainer) Status() (Status, error) {
+func (c *linuxEnclaveContainer) Status() (libcontainer.Status, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.currentStatus()
 }
 
-func (c *linuxContainer) State() (*State, error) {
+func (c *linuxEnclaveContainer) State() (*libcontainer.State, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
-	return c.currentState()
+	enclaveState, err := c.currentState()
+	return (*libcontainer.State)(unsafe.Pointer(enclaveState)), err
 }
 
-func (c *linuxContainer) OCIState() (*specs.State, error) {
+func (c *linuxEnclaveContainer) OCIState() (*specs.State, error) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.currentOCIState()
 }
 
-func (c *linuxContainer) Processes() ([]int, error) {
+func (c *linuxEnclaveContainer) Processes() ([]int, error) {
 	pids, err := c.cgroupManager.GetAllPids()
 	if err != nil {
 		return nil, newSystemErrorWithCause(err, "getting all container pids from cgroups")
@@ -197,7 +106,7 @@ func (c *linuxContainer) Processes() ([]int, error) {
 	return pids, nil
 }
 
-func (c *linuxContainer) Stats() (*libcontainer.Stats, error) {
+func (c *linuxEnclaveContainer) Stats() (*libcontainer.Stats, error) {
 	var (
 		err   error
 		stats = &libcontainer.Stats{}
@@ -223,14 +132,14 @@ func (c *linuxContainer) Stats() (*libcontainer.Stats, error) {
 	return stats, nil
 }
 
-func (c *linuxContainer) Set(config configs.Config) error {
+func (c *linuxEnclaveContainer) Set(config configs.Config) error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	status, err := c.currentStatus()
 	if err != nil {
 		return err
 	}
-	if status == Stopped {
+	if status == libcontainer.Stopped {
 		return newGenericError(fmt.Errorf("container not running"), libcontainer.ContainerNotRunning)
 	}
 	if err := c.cgroupManager.Set(&config); err != nil {
@@ -255,7 +164,7 @@ func (c *linuxContainer) Set(config configs.Config) error {
 	return err
 }
 
-func (c *linuxContainer) Start(process *Process) error {
+func (c *linuxEnclaveContainer) Start(process *libcontainer.Process) error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if process.Init {
@@ -272,7 +181,7 @@ func (c *linuxContainer) Start(process *Process) error {
 	return nil
 }
 
-func (c *linuxContainer) Run(process *Process) error {
+func (c *linuxEnclaveContainer) Run(process *libcontainer.Process) error {
 	if err := c.Start(process); err != nil {
 		return err
 	}
@@ -282,13 +191,13 @@ func (c *linuxContainer) Run(process *Process) error {
 	return nil
 }
 
-func (c *linuxContainer) Exec() error {
+func (c *linuxEnclaveContainer) Exec() error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.exec()
 }
 
-func (c *linuxContainer) exec() error {
+func (c *linuxEnclaveContainer) exec() error {
 	path := filepath.Join(c.root, execFifoFilename)
 	pid := c.initProcess.pid()
 	blockingFifoOpenCh := awaitFifoOpen(path)
@@ -360,8 +269,10 @@ type openResult struct {
 	err  error
 }
 
-func (c *linuxContainer) start(process *Process) error {
-	parent, err := c.newParentProcess(process)
+func (c *linuxEnclaveContainer) start(process *libcontainer.Process) error {
+
+	enclaveProcess := (*EnclaveProcess)(unsafe.Pointer(process))
+	parent, err := c.newParentProcess(enclaveProcess)
 	if err != nil {
 		return newSystemErrorWithCause(err, "creating new parent process")
 	}
@@ -375,7 +286,7 @@ func (c *linuxContainer) start(process *Process) error {
 	}
 	// generate a timestamp indicating when the container was started
 	c.created = time.Now().UTC()
-	if process.Init {
+	if enclaveProcess.Init {
 		c.state = &createdState{
 			c: c,
 		}
@@ -403,7 +314,7 @@ func (c *linuxContainer) start(process *Process) error {
 	return nil
 }
 
-func (c *linuxContainer) Signal(s os.Signal, all bool) error {
+func (c *linuxEnclaveContainer) Signal(s os.Signal, all bool) error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if all {
@@ -414,7 +325,7 @@ func (c *linuxContainer) Signal(s os.Signal, all bool) error {
 		return err
 	}
 	// to avoid a PID reuse attack
-	if status == Running || status == Created || status == Paused {
+	if status == libcontainer.Running || status == libcontainer.Created || status == libcontainer.Paused {
 		if err := c.initProcess.signal(s); err != nil {
 			return newSystemErrorWithCause(err, "signaling init process")
 		}
@@ -423,7 +334,7 @@ func (c *linuxContainer) Signal(s os.Signal, all bool) error {
 	return newGenericError(fmt.Errorf("container not running"), libcontainer.ContainerNotRunning)
 }
 
-func (c *linuxContainer) createExecFifo() error {
+func (c *linuxEnclaveContainer) createExecFifo() error {
 	rootuid, err := c.Config().HostRootUID()
 	if err != nil {
 		return err
@@ -446,7 +357,7 @@ func (c *linuxContainer) createExecFifo() error {
 	return os.Chown(fifoName, rootuid, rootgid)
 }
 
-func (c *linuxContainer) deleteExecFifo() {
+func (c *linuxEnclaveContainer) deleteExecFifo() {
 	fifoName := filepath.Join(c.root, execFifoFilename)
 	os.Remove(fifoName)
 }
@@ -455,7 +366,7 @@ func (c *linuxContainer) deleteExecFifo() {
 // container cannot access the statedir (and the FIFO itself remains
 // un-opened). It then adds the FifoFd to the given exec.Cmd as an inherited
 // fd, with _LIBCONTAINER_FIFOFD set to its fd number.
-func (c *linuxContainer) includeExecFifo(cmd *exec.Cmd) error {
+func (c *linuxEnclaveContainer) includeExecFifo(cmd *exec.Cmd) error {
 	fifoName := filepath.Join(c.root, execFifoFilename)
 	fifoFd, err := unix.Open(fifoName, unix.O_PATH|unix.O_CLOEXEC, 0)
 	if err != nil {
@@ -468,7 +379,7 @@ func (c *linuxContainer) includeExecFifo(cmd *exec.Cmd) error {
 	return nil
 }
 
-func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
+func (c *linuxEnclaveContainer) newParentProcess(p *EnclaveProcess) (parentProcess, error) {
 	parentInitPipe, childInitPipe, err := utils.NewSockPair("init")
 	if err != nil {
 		return nil, newSystemErrorWithCause(err, "creating new init pipe")
@@ -519,7 +430,7 @@ func (c *linuxContainer) newParentProcess(p *Process) (parentProcess, error) {
 	return c.newInitProcess(p, cmd, messageSockPair, logFilePair)
 }
 
-func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File) *exec.Cmd {
+func (c *linuxEnclaveContainer) commandTemplate(p *EnclaveProcess, childInitPipe *os.File, childLogPipe *os.File, agentPipe *os.File) *exec.Cmd {
 	cmd := exec.Command(c.initPath, c.initArgs[1:]...)
 	cmd.Args[0] = c.initArgs[0]
 	cmd.Stdin = p.Stdin
@@ -567,7 +478,7 @@ func (c *linuxContainer) commandTemplate(p *Process, childInitPipe *os.File, chi
 	return cmd
 }
 
-func (c *linuxContainer) newInitProcess(p *Process, cmd *exec.Cmd, messageSockPair, logFilePair filePair) (*initProcess, error) {
+func (c *linuxEnclaveContainer) newInitProcess(p *EnclaveProcess, cmd *exec.Cmd, messageSockPair, logFilePair filePair) (*initProcess, error) {
 	cmd.Env = append(cmd.Env, "_LIBCONTAINER_INITTYPE="+string(initStandard))
 	nsMaps := make(map[configs.NamespaceType]string)
 	for _, ns := range c.config.Namespaces {
@@ -596,7 +507,7 @@ func (c *linuxContainer) newInitProcess(p *Process, cmd *exec.Cmd, messageSockPa
 	return init, nil
 }
 
-func (c *linuxContainer) newSetnsProcess(p *Process, cmd *exec.Cmd, messageSockPair, logFilePair filePair) (*setnsProcess, error) {
+func (c *linuxEnclaveContainer) newSetnsProcess(p *EnclaveProcess, cmd *exec.Cmd, messageSockPair, logFilePair filePair) (*setnsProcess, error) {
 	cmd.Env = append(cmd.Env, "_LIBCONTAINER_INITTYPE="+string(initSetns))
 	state, err := c.currentState()
 	if err != nil {
@@ -608,6 +519,7 @@ func (c *linuxContainer) newSetnsProcess(p *Process, cmd *exec.Cmd, messageSockP
 	if err != nil {
 		return nil, err
 	}
+
 	return &setnsProcess{
 		cmd:             cmd,
 		cgroupPaths:     c.cgroupManager.GetPaths(),
@@ -621,7 +533,7 @@ func (c *linuxContainer) newSetnsProcess(p *Process, cmd *exec.Cmd, messageSockP
 	}, nil
 }
 
-func (c *linuxContainer) newInitConfig(process *Process) *initConfig {
+func (c *linuxEnclaveContainer) newInitConfig(process *EnclaveProcess) *initConfig {
 	cfg := &initConfig{
 		Config:           c.config,
 		Args:             process.Args,
@@ -659,13 +571,13 @@ func (c *linuxContainer) newInitConfig(process *Process) *initConfig {
 	return cfg
 }
 
-func (c *linuxContainer) Destroy() error {
+func (c *linuxEnclaveContainer) Destroy() error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	return c.state.destroy()
 }
 
-func (c *linuxContainer) Pause() error {
+func (c *linuxEnclaveContainer) Pause() error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	status, err := c.currentStatus()
@@ -673,7 +585,7 @@ func (c *linuxContainer) Pause() error {
 		return err
 	}
 	switch status {
-	case Running, Created:
+	case libcontainer.Running, libcontainer.Created:
 		if err := c.cgroupManager.Freeze(configs.Frozen); err != nil {
 			return err
 		}
@@ -684,14 +596,14 @@ func (c *linuxContainer) Pause() error {
 	return newGenericError(fmt.Errorf("container not running or created: %s", status), libcontainer.ContainerNotRunning)
 }
 
-func (c *linuxContainer) Resume() error {
+func (c *linuxEnclaveContainer) Resume() error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	status, err := c.currentStatus()
 	if err != nil {
 		return err
 	}
-	if status != Paused {
+	if status != libcontainer.Paused {
 		return newGenericError(fmt.Errorf("container not paused"), libcontainer.ContainerNotPaused)
 	}
 	if err := c.cgroupManager.Freeze(configs.Thawed); err != nil {
@@ -702,7 +614,7 @@ func (c *linuxContainer) Resume() error {
 	})
 }
 
-func (c *linuxContainer) NotifyOOM() (<-chan struct{}, error) {
+func (c *linuxEnclaveContainer) NotifyOOM() (<-chan struct{}, error) {
 	// XXX(cyphar): This requires cgroups.
 	if c.config.RootlessCgroups {
 		logrus.Warn("getting OOM notifications may fail if you don't have the full access to cgroups")
@@ -710,7 +622,7 @@ func (c *linuxContainer) NotifyOOM() (<-chan struct{}, error) {
 	return notifyOnOOM(c.cgroupManager.GetPaths())
 }
 
-func (c *linuxContainer) NotifyMemoryPressure(level PressureLevel) (<-chan struct{}, error) {
+func (c *linuxEnclaveContainer) NotifyMemoryPressure(level libcontainer.PressureLevel) (<-chan struct{}, error) {
 	// XXX(cyphar): This requires cgroups.
 	if c.config.RootlessCgroups {
 		logrus.Warn("getting memory pressure notifications may fail if you don't have the full access to cgroups")
@@ -720,7 +632,7 @@ func (c *linuxContainer) NotifyMemoryPressure(level PressureLevel) (<-chan struc
 
 var criuFeatures *criurpc.CriuFeatures
 
-func (c *linuxContainer) checkCriuFeatures(criuOpts *libcontainer.CriuOpts, rpcOpts *criurpc.CriuOpts, criuFeat *criurpc.CriuFeatures) error {
+func (c *linuxEnclaveContainer) checkCriuFeatures(criuOpts *libcontainer.CriuOpts, rpcOpts *criurpc.CriuOpts, criuFeat *criurpc.CriuFeatures) error {
 
 	var t criurpc.CriuReqType
 	t = criurpc.CriuReqType_FEATURE_CHECK
@@ -841,7 +753,7 @@ func compareCriuVersion(criuVersion int, minVersion int) error {
 var criuVersionRPC *criurpc.CriuVersion
 
 // checkCriuVersion checks Criu version greater than or equal to minVersion
-func (c *linuxContainer) checkCriuVersion(minVersion int) error {
+func (c *linuxEnclaveContainer) checkCriuVersion(minVersion int) error {
 
 	// If the version of criu has already been determined there is no need
 	// to ask criu for the version again. Use the value from c.criuVersion.
@@ -898,7 +810,7 @@ func (c *linuxContainer) checkCriuVersion(minVersion int) error {
 
 const descriptorsFilename = "descriptors.json"
 
-func (c *linuxContainer) addCriuDumpMount(req *criurpc.CriuReq, m *configs.Mount) {
+func (c *linuxEnclaveContainer) addCriuDumpMount(req *criurpc.CriuReq, m *configs.Mount) {
 	mountDest := m.Destination
 	if strings.HasPrefix(mountDest, c.config.Rootfs) {
 		mountDest = mountDest[len(c.config.Rootfs):]
@@ -911,7 +823,7 @@ func (c *linuxContainer) addCriuDumpMount(req *criurpc.CriuReq, m *configs.Mount
 	req.Opts.ExtMnt = append(req.Opts.ExtMnt, extMnt)
 }
 
-func (c *linuxContainer) addMaskPaths(req *criurpc.CriuReq) error {
+func (c *linuxEnclaveContainer) addMaskPaths(req *criurpc.CriuReq) error {
 	for _, path := range c.config.MaskPaths {
 		fi, err := os.Stat(fmt.Sprintf("/proc/%d/root/%s", c.initProcess.pid(), path))
 		if err != nil {
@@ -953,7 +865,7 @@ func waitForCriuLazyServer(r *os.File, status string) error {
 	return nil
 }
 
-func (c *linuxContainer) handleCriuConfigurationFile(rpcOpts *criurpc.CriuOpts) {
+func (c *linuxEnclaveContainer) handleCriuConfigurationFile(rpcOpts *criurpc.CriuOpts) {
 	// CRIU will evaluate a configuration starting with release 3.11.
 	// Settings in the configuration file will overwrite RPC settings.
 	// Look for annotations. The annotation 'org.criu.config'
@@ -979,7 +891,7 @@ func (c *linuxContainer) handleCriuConfigurationFile(rpcOpts *criurpc.CriuOpts) 
 	}
 }
 
-func (c *linuxContainer) Checkpoint(criuOpts *libcontainer.CriuOpts) error {
+func (c *linuxEnclaveContainer) Checkpoint(criuOpts *libcontainer.CriuOpts) error {
 	c.m.Lock()
 	defer c.m.Unlock()
 
@@ -1205,7 +1117,7 @@ func (c *linuxContainer) Checkpoint(criuOpts *libcontainer.CriuOpts) error {
 	return nil
 }
 
-func (c *linuxContainer) addCriuRestoreMount(req *criurpc.CriuReq, m *configs.Mount) {
+func (c *linuxEnclaveContainer) addCriuRestoreMount(req *criurpc.CriuReq, m *configs.Mount) {
 	mountDest := m.Destination
 	if strings.HasPrefix(mountDest, c.config.Rootfs) {
 		mountDest = mountDest[len(c.config.Rootfs):]
@@ -1218,7 +1130,7 @@ func (c *linuxContainer) addCriuRestoreMount(req *criurpc.CriuReq, m *configs.Mo
 	req.Opts.ExtMnt = append(req.Opts.ExtMnt, extMnt)
 }
 
-func (c *linuxContainer) restoreNetwork(req *criurpc.CriuReq, criuOpts *libcontainer.CriuOpts) {
+func (c *linuxEnclaveContainer) restoreNetwork(req *criurpc.CriuReq, criuOpts *libcontainer.CriuOpts) {
 	for _, iface := range c.config.Networks {
 		switch iface.Type {
 		case "veth":
@@ -1241,7 +1153,7 @@ func (c *linuxContainer) restoreNetwork(req *criurpc.CriuReq, criuOpts *libconta
 // makeCriuRestoreMountpoints makes the actual mountpoints for the
 // restore using CRIU. This function is inspired from the code in
 // rootfs_linux.go
-func (c *linuxContainer) makeCriuRestoreMountpoints(m *configs.Mount) error {
+func (c *linuxEnclaveContainer) makeCriuRestoreMountpoints(m *configs.Mount) error {
 	switch m.Device {
 	case "cgroup":
 		// No mount point(s) need to be created:
@@ -1292,7 +1204,7 @@ func isPathInPrefixList(path string, prefix []string) bool {
 // runc modifies the rootfs to add mountpoints which do not exist.
 // This function also creates missing mountpoints as long as they
 // are not on top of a tmpfs, as CRIU will restore tmpfs content anyway.
-func (c *linuxContainer) prepareCriuRestoreMounts(mounts []*configs.Mount) error {
+func (c *linuxEnclaveContainer) prepareCriuRestoreMounts(mounts []*configs.Mount) error {
 	// First get a list of a all tmpfs mounts
 	tmpfs := []string{}
 	for _, m := range mounts {
@@ -1314,7 +1226,7 @@ func (c *linuxContainer) prepareCriuRestoreMounts(mounts []*configs.Mount) error
 	return nil
 }
 
-func (c *linuxContainer) Restore(process *Process, criuOpts *libcontainer.CriuOpts) error {
+func (c *linuxEnclaveContainer) Restore(process *libcontainer.Process, criuOpts *libcontainer.CriuOpts) error {
 	c.m.Lock()
 	defer c.m.Unlock()
 
@@ -1499,7 +1411,7 @@ func (c *linuxContainer) Restore(process *Process, criuOpts *libcontainer.CriuOp
 	return c.criuSwrk(process, req, criuOpts, true, extraFiles)
 }
 
-func (c *linuxContainer) criuApplyCgroups(pid int, req *criurpc.CriuReq) error {
+func (c *linuxEnclaveContainer) criuApplyCgroups(pid int, req *criurpc.CriuReq) error {
 	// XXX: Do we need to deal with this case? AFAIK criu still requires root.
 	if err := c.cgroupManager.Apply(pid); err != nil {
 		return err
@@ -1526,7 +1438,7 @@ func (c *linuxContainer) criuApplyCgroups(pid int, req *criurpc.CriuReq) error {
 	return nil
 }
 
-func (c *linuxContainer) criuSwrk(process *Process, req *criurpc.CriuReq, opts *libcontainer.CriuOpts, applyCgroups bool, extraFiles []*os.File) error {
+func (c *linuxEnclaveContainer) criuSwrk(process *libcontainer.Process, req *criurpc.CriuReq, opts *libcontainer.CriuOpts, applyCgroups bool, extraFiles []*os.File) error {
 	fds, err := unix.Socketpair(unix.AF_LOCAL, unix.SOCK_SEQPACKET|unix.SOCK_CLOEXEC, 0)
 	if err != nil {
 		return err
@@ -1746,7 +1658,9 @@ func unlockNetwork(config *configs.Config) error {
 	return nil
 }
 
-func (c *linuxContainer) criuNotifications(resp *criurpc.CriuResp, process *Process, cmd *exec.Cmd, opts *libcontainer.CriuOpts, fds []string, oob []byte) error {
+func (c *linuxEnclaveContainer) criuNotifications(resp *criurpc.CriuResp, process *libcontainer.Process, cmd *exec.Cmd, opts *libcontainer.CriuOpts, fds []string, oob []byte) error {
+	enclaveProcess := (*EnclaveProcess)((unsafe.Pointer(process)))
+
 	notify := resp.GetNotify()
 	if notify == nil {
 		return fmt.Errorf("invalid response: %s", resp.String())
@@ -1793,7 +1707,7 @@ func (c *linuxContainer) criuNotifications(resp *criurpc.CriuResp, process *Proc
 		if err != nil {
 			return err
 		}
-		process.ops = r
+		enclaveProcess.ops = r
 		if err := c.state.transition(&restoredState{
 			imageDir: opts.ImagesDirectory,
 			c:        c,
@@ -1824,14 +1738,14 @@ func (c *linuxContainer) criuNotifications(resp *criurpc.CriuResp, process *Proc
 		defer master.Close()
 
 		// While we can access console.master, using the API is a good idea.
-		if err := utils.SendFd(process.ConsoleSocket, master.Name(), master.Fd()); err != nil {
+		if err := utils.SendFd(enclaveProcess.ConsoleSocket, master.Name(), master.Fd()); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *linuxContainer) updateState(process parentProcess) (*State, error) {
+func (c *linuxEnclaveContainer) updateState(process parentProcess) (*EnclaveState, error) {
 	if process != nil {
 		c.initProcess = process
 	}
@@ -1846,7 +1760,7 @@ func (c *linuxContainer) updateState(process parentProcess) (*State, error) {
 	return state, nil
 }
 
-func (c *linuxContainer) saveState(s *State) error {
+func (c *linuxEnclaveContainer) saveState(s *EnclaveState) error {
 	f, err := os.Create(filepath.Join(c.root, stateFilename))
 	if err != nil {
 		return err
@@ -1855,22 +1769,22 @@ func (c *linuxContainer) saveState(s *State) error {
 	return utils.WriteJSON(f, s)
 }
 
-func (c *linuxContainer) deleteState() error {
+func (c *linuxEnclaveContainer) deleteState() error {
 	return os.Remove(filepath.Join(c.root, stateFilename))
 }
 
-func (c *linuxContainer) currentStatus() (Status, error) {
+func (c *linuxEnclaveContainer) currentStatus() (libcontainer.Status, error) {
 	if err := c.refreshState(); err != nil {
 		return -1, err
 	}
-	return c.state.status(), nil
+	return (libcontainer.Status)(c.state.status()), nil
 }
 
 // refreshState needs to be called to verify that the current state on the
 // container is what is true.  Because consumers of libenclave can use it
 // out of process we need to verify the container's status based on runtime
 // information and not rely on our in process info.
-func (c *linuxContainer) refreshState() error {
+func (c *linuxEnclaveContainer) refreshState() error {
 	paused, err := c.isPaused()
 	if err != nil {
 		return err
@@ -1880,35 +1794,35 @@ func (c *linuxContainer) refreshState() error {
 	}
 	t := c.runType()
 	switch t {
-	case Created:
+	case libcontainer.Created:
 		return c.state.transition(&createdState{c: c})
-	case Running:
+	case libcontainer.Running:
 		return c.state.transition(&runningState{c: c})
 	}
 	return c.state.transition(&stoppedState{c: c})
 }
 
-func (c *linuxContainer) runType() Status {
+func (c *linuxEnclaveContainer) runType() libcontainer.Status {
 	if c.initProcess == nil {
-		return Stopped
+		return libcontainer.Stopped
 	}
 	pid := c.initProcess.pid()
 	stat, err := system.Stat(pid)
 	if err != nil {
-		return Stopped
+		return libcontainer.Stopped
 	}
 	if stat.StartTime != c.initProcessStartTime || stat.State == system.Zombie || stat.State == system.Dead {
-		return Stopped
+		return libcontainer.Stopped
 	}
 	// We'll create exec fifo and blocking on it after container is created,
 	// and delete it after start container.
 	if _, err := os.Stat(filepath.Join(c.root, execFifoFilename)); err == nil {
-		return Created
+		return libcontainer.Created
 	}
-	return Running
+	return libcontainer.Running
 }
 
-func (c *linuxContainer) isPaused() (bool, error) {
+func (c *linuxEnclaveContainer) isPaused() (bool, error) {
 	var fcg, filename, pausedState string
 
 	if !cgroups.IsCgroup2UnifiedMode() {
@@ -1941,7 +1855,7 @@ func (c *linuxContainer) isPaused() (bool, error) {
 	return bytes.Equal(bytes.TrimSpace(data), []byte(pausedState)), nil
 }
 
-func (c *linuxContainer) currentState() (*State, error) {
+func (c *linuxEnclaveContainer) currentState() (*EnclaveState, error) {
 	var (
 		startTime           uint64
 		externalDescriptors []string
@@ -1956,24 +1870,24 @@ func (c *linuxContainer) currentState() (*State, error) {
 	if err != nil {
 		intelRdtPath = ""
 	}
-	state := &State{
-		BaseState: BaseState{
-			ID:                   c.ID(),
-			Config:               *c.config,
-			InitProcessPid:       pid,
-			InitProcessStartTime: startTime,
-			Created:              c.created,
-		},
-		Rootless:            c.config.RootlessEUID && c.config.RootlessCgroups,
-		CgroupPaths:         c.cgroupManager.GetPaths(),
-		IntelRdtPath:        intelRdtPath,
-		NamespacePaths:      make(map[configs.NamespaceType]string),
-		ExternalDescriptors: externalDescriptors,
-	}
+	state := &EnclaveState{
+		State: libcontainer.State{
+			BaseState: libcontainer.BaseState{
+				ID:                   c.ID(),
+				Config:               *c.config,
+				InitProcessPid:       pid,
+				InitProcessStartTime: startTime,
+				Created:              c.created,
+			},
+			Rootless:            c.config.RootlessEUID && c.config.RootlessCgroups,
+			CgroupPaths:         c.cgroupManager.GetPaths(),
+			IntelRdtPath:        intelRdtPath,
+			NamespacePaths:      make(map[configs.NamespaceType]string),
+			ExternalDescriptors: externalDescriptors,
+		}}
 	if c.enclaveConfig != nil {
-		state.BaseState.EnclaveConfig = *c.enclaveConfig
+		state.EnclaveConfig = *c.enclaveConfig
 	}
-
 	if pid > 0 {
 		for _, ns := range c.config.Namespaces {
 			state.NamespacePaths[ns.Type] = ns.GetPath(pid)
@@ -1991,7 +1905,7 @@ func (c *linuxContainer) currentState() (*State, error) {
 	return state, nil
 }
 
-func (c *linuxContainer) currentOCIState() (*specs.State, error) {
+func (c *linuxEnclaveContainer) currentOCIState() (*specs.State, error) {
 	bundle, annotations := utils.Annotations(c.config.Labels)
 	state := &specs.State{
 		Version:     specs.Version,
@@ -2004,7 +1918,7 @@ func (c *linuxContainer) currentOCIState() (*specs.State, error) {
 		return nil, err
 	}
 	state.Status = status.String()
-	if status != Stopped {
+	if status != libcontainer.Stopped {
 		if c.initProcess != nil {
 			state.Pid = c.initProcess.pid()
 		}
@@ -2014,7 +1928,7 @@ func (c *linuxContainer) currentOCIState() (*specs.State, error) {
 
 // orderNamespacePaths sorts namespace paths into a list of paths that we
 // can setns in order.
-func (c *linuxContainer) orderNamespacePaths(namespaces map[configs.NamespaceType]string) ([]string, error) {
+func (c *linuxEnclaveContainer) orderNamespacePaths(namespaces map[configs.NamespaceType]string) ([]string, error) {
 	paths := []string{}
 	for _, ns := range configs.NamespaceTypes() {
 
@@ -2062,13 +1976,13 @@ func encodeIDMapping(idMap []configs.IDMap) ([]byte, error) {
 // such as one that uses nsenter package to bootstrap the container's
 // init process correctly, i.e. with correct namespaces, uid/gid
 // mapping etc.
-func (c *linuxContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.NamespaceType]string) (io.Reader, error) {
+func (c *linuxEnclaveContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.NamespaceType]string) (io.Reader, error) {
 	// create the netlink message
-	r := nl.NewNetlinkRequest(int(InitMsg), 0)
+	r := nl.NewNetlinkRequest(int(libcontainer.InitMsg), 0)
 
 	// write cloneFlags
 	r.AddData(&libcontainer.Int32msg{
-		Type:  CloneFlagsAttr,
+		Type:  libcontainer.CloneFlagsAttr,
 		Value: uint32(cloneFlags),
 	})
 
@@ -2079,7 +1993,7 @@ func (c *linuxContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.Na
 			return nil, err
 		}
 		r.AddData(&libcontainer.Bytemsg{
-			Type:  NsPathsAttr,
+			Type:  libcontainer.NsPathsAttr,
 			Value: []byte(strings.Join(nsPaths, ",")),
 		})
 	}
@@ -2091,7 +2005,7 @@ func (c *linuxContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.Na
 		if len(c.config.UidMappings) > 0 {
 			if c.config.RootlessEUID && c.newuidmapPath != "" {
 				r.AddData(&libcontainer.Bytemsg{
-					Type:  UidmapPathAttr,
+					Type:  libcontainer.UidmapPathAttr,
 					Value: []byte(c.newuidmapPath),
 				})
 			}
@@ -2100,7 +2014,7 @@ func (c *linuxContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.Na
 				return nil, err
 			}
 			r.AddData(&libcontainer.Bytemsg{
-				Type:  UidmapAttr,
+				Type:  libcontainer.UidmapAttr,
 				Value: b,
 			})
 		}
@@ -2112,18 +2026,18 @@ func (c *linuxContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.Na
 				return nil, err
 			}
 			r.AddData(&libcontainer.Bytemsg{
-				Type:  GidmapAttr,
+				Type:  libcontainer.GidmapAttr,
 				Value: b,
 			})
 			if c.config.RootlessEUID && c.newgidmapPath != "" {
 				r.AddData(&libcontainer.Bytemsg{
-					Type:  GidmapPathAttr,
+					Type:  libcontainer.GidmapPathAttr,
 					Value: []byte(c.newgidmapPath),
 				})
 			}
 			if requiresRootOrMappingTool(c.config) {
 				r.AddData(&libcontainer.Boolmsg{
-					Type:  SetgroupAttr,
+					Type:  libcontainer.SetgroupAttr,
 					Value: true,
 				})
 			}
@@ -2133,14 +2047,14 @@ func (c *linuxContainer) bootstrapData(cloneFlags uintptr, nsMaps map[configs.Na
 	if c.config.OomScoreAdj != nil {
 		// write oom_score_adj
 		r.AddData(&libcontainer.Bytemsg{
-			Type:  OomScoreAdjAttr,
+			Type:  libcontainer.OomScoreAdjAttr,
 			Value: []byte(fmt.Sprintf("%d", *c.config.OomScoreAdj)),
 		})
 	}
 
 	// write rootless
 	r.AddData(&libcontainer.Boolmsg{
-		Type:  RootlessEUIDAttr,
+		Type:  libcontainer.RootlessEUIDAttr,
 		Value: c.config.RootlessEUID,
 	})
 

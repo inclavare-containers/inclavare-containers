@@ -19,7 +19,6 @@ import (
 	"github.com/opencontainers/runc/libcontainer/logs"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
-
 	"golang.org/x/sys/unix"
 )
 
@@ -66,7 +65,7 @@ type setnsProcess struct {
 	intelRdtPath    string
 	config          *initConfig
 	fds             []string
-	process         *Process
+	process         *EnclaveProcess
 	bootstrapData   io.Reader
 }
 
@@ -266,9 +265,9 @@ type initProcess struct {
 	config          *initConfig
 	manager         cgroups.Manager
 	intelRdtManager intelrdt.Manager
-	container       *linuxContainer
+	container       *linuxEnclaveContainer
 	fds             []string
-	process         *Process
+	process         *EnclaveProcess
 	bootstrapData   io.Reader
 	sharePidns      bool
 }
@@ -623,47 +622,4 @@ func getPipeFds(pid int) ([]string, error) {
 		fds[i] = target
 	}
 	return fds, nil
-}
-
-// InitializeIO creates pipes for use with the process's stdio and returns the
-// opposite side for each. Do not use this if you want to have a pseudoterminal
-// set up for you by libenclave (TODO: fix that too).
-// TODO: This is mostly unnecessary, and should be handled by clients.
-func (p *Process) InitializeIO(rootuid, rootgid int) (i *IO, err error) {
-	var fds []uintptr
-	i = &IO{}
-	// cleanup in case of an error
-	defer func() {
-		if err != nil {
-			for _, fd := range fds {
-				unix.Close(int(fd))
-			}
-		}
-	}()
-	// STDIN
-	r, w, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
-	fds = append(fds, r.Fd(), w.Fd())
-	p.Stdin, i.Stdin = r, w
-	// STDOUT
-	if r, w, err = os.Pipe(); err != nil {
-		return nil, err
-	}
-	fds = append(fds, r.Fd(), w.Fd())
-	p.Stdout, i.Stdout = w, r
-	// STDERR
-	if r, w, err = os.Pipe(); err != nil {
-		return nil, err
-	}
-	fds = append(fds, r.Fd(), w.Fd())
-	p.Stderr, i.Stderr = w, r
-	// change ownership of the pipes in case we are in a user namespace
-	for _, fd := range fds {
-		if err := unix.Fchown(int(fd), rootuid, rootgid); err != nil {
-			return nil, err
-		}
-	}
-	return i, nil
 }

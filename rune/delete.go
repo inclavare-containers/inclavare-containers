@@ -8,14 +8,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/urfave/cli"
 
 	"golang.org/x/sys/unix"
 )
 
-func killContainer(container libenclave.Container) error {
+func killContainer(container libcontainer.Container) error {
 	_ = container.Signal(unix.SIGKILL, false)
 	for i := 0; i < 100; i++ {
 		time.Sleep(100 * time.Millisecond)
@@ -73,9 +72,9 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 			return err
 		}
 		switch s {
-		case libenclave.Stopped:
+		case libcontainer.Stopped:
 			destroy(container)
-		case libenclave.Created:
+		case libcontainer.Created:
 			return killContainer(container)
 		default:
 			if force {
