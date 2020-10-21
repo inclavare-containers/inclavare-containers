@@ -94,6 +94,8 @@ The format can be described more formally:
 <BLANK LINE>
 <why this change was made>
 <BLANK LINE>
+<FIX LINE>
+<BLANK LINE>
 <SOB LINE>
 ```
 
@@ -106,6 +108,8 @@ The first letter of <what changed> is lowercase, without ending with a full stop
 If the change affects many subsystems, you can use ```*``` instead, like ```*:``` 
 
 The message of commit body should describe why the change was made and how the code works at the high level.
+
+`<FIX LINE>` is optional. Please write the issue number at `<FIX LINE>` when your commit fixes an issue on Inclavare Containers project. Once the commit is submitted, the issue of Inclavare Containers project will be automatically closed.
 
 #### Sign your work 
 
