@@ -11,6 +11,7 @@ int pal_get_version(void)
 	return 2;
 }
 
+/* *INDENT-OFF* */
 int pal_init(pal_attr_t *attr)
 {
 	return __pal_init(attr);
@@ -25,6 +26,7 @@ int pal_exec(pal_exec_args *attr)
 {
 	return wait4child(attr);
 }
+/* *INDENT-ON* */
 
 int pal_kill(int pid, int sig)
 {

@@ -2,8 +2,10 @@
 /*
  * Copyright(c) 2016-19 Intel Corporation.
  */
+/* *INDENT-OFF* */
 #ifndef _UAPI_ASM_X86_SGX_H
 #define _UAPI_ASM_X86_SGX_H
+/* *INDENT-ON* */
 
 #include <linux/types.h>
 #include <linux/ioctl.h>
@@ -15,7 +17,7 @@
  * sequence of ENCLS[EEXTEND] operations.
  */
 enum sgx_page_flags {
-	SGX_PAGE_MEASURE	= 0x01,
+	SGX_PAGE_MEASURE = 0x01,
 };
 
 #define	SGX_LEAF	0x12
@@ -38,7 +40,8 @@ enum sgx_page_flags {
 #define	XSAVEC_SHIFT	1
 
 /* XSAVE Feature Request Mask */
-#define	SGX_XFRM_LEGACY	0x0000000000000003ULL     /* Legacy XFRM which includes the basic feature bits required by SGX, x87 state(0x01) and SSE state(0x02) */
+#define	SGX_XFRM_LEGACY	0x0000000000000003ULL
+						/* Legacy XFRM which includes the basic feature bits required by SGX, x87 state(0x01) and SSE state(0x02) */
 
 #define SGX_MAGIC 0xA4
 
@@ -60,8 +63,8 @@ enum sgx_page_flags {
  *                             %SGX_IOC_ENCLAVE_CREATE ioctl
  * @src:	address for the SECS page data
  */
-struct sgx_enclave_create  {
-	__u64	src;
+struct sgx_enclave_create {
+	__u64 src;
 };
 
 /**
@@ -75,12 +78,12 @@ struct sgx_enclave_create  {
  * @count:	number of bytes added (multiple of the page size)
  */
 struct sgx_enclave_add_pages {
-	__u64	src;
-	__u64	offset;
-	__u64	length;
-	__u64	secinfo;
-	__u64	flags;
-	__u64	count;
+	__u64 src;
+	__u64 offset;
+	__u64 length;
+	__u64 secinfo;
+	__u64 flags;
+	__u64 count;
 };
 
 /**
@@ -92,10 +95,10 @@ struct sgx_enclave_add_pages {
  * @mrmask:     bitmask for the 256 byte chunks that are to be measured
  */
 struct sgx_enclave_add_pages_with_mrmask {
-	__u64	addr;
-	__u64	src;
-	__u64	secinfo;
-	__u16	mrmask;
+	__u64 addr;
+	__u64 src;
+	__u64 secinfo;
+	__u16 mrmask;
 } __attribute__((__packed__));
 
 /**
@@ -104,7 +107,7 @@ struct sgx_enclave_add_pages_with_mrmask {
  * @sigstruct:	address for the SIGSTRUCT data
  */
 struct sgx_enclave_init {
-	__u64	sigstruct;
+	__u64 sigstruct;
 };
 
 /**
@@ -115,9 +118,9 @@ struct sgx_enclave_init {
  * @einittoken: EINITTOKEN
  */
 struct sgx_enclave_init_with_token {
-	__u64	addr;
-	__u64	sigstruct;
-	__u64	einittoken;
+	__u64 addr;
+	__u64 sigstruct;
+	__u64 einittoken;
 } __attribute__((__packed__));
 
 /**
@@ -126,7 +129,7 @@ struct sgx_enclave_init_with_token {
  * @attribute_fd:	file handle of the attribute file in the securityfs
  */
 struct sgx_enclave_set_attribute {
-	__u64	attribute_fd;
+	__u64 attribute_fd;
 };
 
 /**
@@ -161,13 +164,17 @@ struct sgx_enclave_exception {
  * @ret:	0 on success (EEXIT), -EFAULT on an exception
  * @e:		Pointer to struct sgx_enclave_exception (as provided by caller)
  */
+/* *INDENT-OFF* */
 typedef int (*sgx_enclave_exit_handler_t)(long rdi, long rsi, long rdx,
 					  long ursp, long r8, long r9,
 					  void *tcs, int ret,
 					  struct sgx_enclave_exception *e);
 
 void get_sgx_xfrm_by_cpuid(uint64_t *xfrm);
+/* *INDENT-ON* */
 uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm);
 uint32_t get_sgx_miscselect_by_cpuid(void);
 bool is_launch_control_supported(void);
-#endif /* _UAPI_ASM_X86_SGX_H */
+/* *INDENT-OFF* */
+#endif   /* _UAPI_ASM_X86_SGX_H */
+/* *INDENT-ON* */
