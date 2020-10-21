@@ -30,3 +30,9 @@ The PAL API will evolve. You can submit proposal for the extension of PAL API. W
 |      |           | pal_exec           | 
 | delete | pal_destroy | pal_destroy |
 | kill |  |  pal_kill |
+
+## Enclave Runtime Programming Guide
+
+If you want to develop a PAL for your enclave runtime, please refer to [Enclave Runtime Programming Guide](https://github.com/alibaba/inclavare-containers/blob/master/rune/docs/pal_programming_guide.md) for the details.
+
+Current enclave runtime programming guide version is based on PAL API v2.

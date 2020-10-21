@@ -45,7 +45,7 @@ struct pal_opt {
 };
 ```
 
-## 2.2 encalve runtime Library file naming and function naming rules
+## 2.2 enclave runtime Library file naming and function naming rules
 The enclave runtime is generated as a so dynamic library, which is dynamically loaded by rune using dlopen; the enclave runtime needs to export symbols according to the function named in the previous chapter.<br />
 
 # 3. pal interface
