@@ -5,11 +5,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
+	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
@@ -68,23 +70,25 @@ func attestProcess(context *cli.Context) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+
 	status, err := container.Status()
 	if err != nil {
 		return -1, err
 	}
-	if status == libenclave.Stopped {
+	if status == libcontainer.Stopped {
 		return -1, fmt.Errorf("cannot attest a container that has stopped")
-	}
-
-	config := container.EnclaveConfig()
-	if config.Enclave == nil {
-		return -1, fmt.Errorf("Attest command: container.EnclaveConfig is null")
 	}
 
 	state, err := container.State()
 	if err != nil {
 		return -1, err
 	}
+
+	enclaveState := (*libenclave.EnclaveState)(unsafe.Pointer(state))
+	if enclaveState.EnclaveConfig.Enclave == nil {
+		return -1, fmt.Errorf("Attest command: container.EnclaveConfig is null")
+	}
+
 	bundle := utils.SearchLabels(state.Config.Labels, "bundle")
 	p, err := getAttestProcess(context, bundle)
 	if err != nil {

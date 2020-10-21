@@ -1,12 +1,9 @@
 package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
-	"fmt"
 	"io"
-	"math"
 	"os"
 
-	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/configs"
 )
 
@@ -18,7 +15,7 @@ type processOperations interface {
 
 // Process specifies the configuration and IO for a process inside
 // a container.
-type Process struct {
+type EnclaveProcess struct {
 	// The command to be run followed by any arguments.
 	Args []string
 
@@ -81,38 +78,4 @@ type Process struct {
 	LogLevel string
 
 	AgentPipe *os.File
-}
-
-// Wait waits for the process to exit.
-// Wait releases any resources associated with the Process
-func (p Process) Wait() (*os.ProcessState, error) {
-	if p.ops == nil {
-		return nil, newGenericError(fmt.Errorf("invalid process"), libcontainer.NoProcessOps)
-	}
-	return p.ops.wait()
-}
-
-// Pid returns the process ID
-func (p Process) Pid() (int, error) {
-	// math.MinInt32 is returned here, because it's invalid value
-	// for the kill() system call.
-	if p.ops == nil {
-		return math.MinInt32, newGenericError(fmt.Errorf("invalid process"), libcontainer.NoProcessOps)
-	}
-	return p.ops.pid(), nil
-}
-
-// Signal sends a signal to the Process.
-func (p Process) Signal(sig os.Signal) error {
-	if p.ops == nil {
-		return newGenericError(fmt.Errorf("invalid process"), libcontainer.NoProcessOps)
-	}
-	return p.ops.signal(sig)
-}
-
-// IO holds the process's STDIO
-type IO struct {
-	Stdin  io.WriteCloser
-	Stdout io.ReadCloser
-	Stderr io.ReadCloser
 }

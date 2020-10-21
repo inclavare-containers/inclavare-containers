@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/inclavare-containers/rune/libenclave"
+	"github.com/opencontainers/runc/libcontainer"
 	"github.com/urfave/cli"
 )
 
@@ -31,7 +31,7 @@ your host.`,
 			return err
 		}
 		switch status {
-		case libenclave.Created:
+		case libcontainer.Created:
 			notifySocket, err := notifySocketStart(context, os.Getenv("NOTIFY_SOCKET"), container.ID())
 			if err != nil {
 				return err
@@ -43,9 +43,9 @@ your host.`,
 				return notifySocket.waitForContainer(container)
 			}
 			return nil
-		case libenclave.Stopped:
+		case libcontainer.Stopped:
 			return errors.New("cannot start a container that has stopped")
-		case libenclave.Running:
+		case libcontainer.Running:
 			return errors.New("cannot start an already running container")
 		default:
 			return fmt.Errorf("cannot start a container in the %s state\n", status)

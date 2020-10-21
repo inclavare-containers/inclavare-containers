@@ -13,7 +13,7 @@ import (
 
 	"encoding/json"
 
-	"github.com/inclavare-containers/rune/libenclave"
+	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/user"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/urfave/cli"
@@ -114,7 +114,7 @@ To list containers created using a non-default value for "--root":
 }
 
 func getContainers(context *cli.Context) ([]containerState, error) {
-	factory, err := loadFactory(context)
+	factory, err := loadFactory(context, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func getContainers(context *cli.Context) ([]containerState, error) {
 				continue
 			}
 			pid := state.BaseState.InitProcessPid
-			if containerStatus == libenclave.Stopped {
+			if containerStatus == libcontainer.Stopped {
 				pid = 0
 			}
 			bundle, annotations := utils.Annotations(state.Config.Labels)

@@ -4,6 +4,7 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
 	"fmt"
+	"github.com/opencontainers/runc/libcontainer"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,14 +13,6 @@ import (
 )
 
 const oomCgroupName = "memory"
-
-type PressureLevel uint
-
-const (
-	LowPressure PressureLevel = iota
-	MediumPressure
-	CriticalPressure
-)
 
 func registerMemoryEvent(cgDir string, evName string, arg string) (<-chan struct{}, error) {
 	evFile, err := os.Open(filepath.Join(cgDir, evName))
@@ -75,13 +68,13 @@ func notifyOnOOM(paths map[string]string) (<-chan struct{}, error) {
 	return registerMemoryEvent(dir, "memory.oom_control", "")
 }
 
-func notifyMemoryPressure(paths map[string]string, level PressureLevel) (<-chan struct{}, error) {
+func notifyMemoryPressure(paths map[string]string, level libcontainer.PressureLevel) (<-chan struct{}, error) {
 	dir := paths[oomCgroupName]
 	if dir == "" {
 		return nil, fmt.Errorf("path %q missing", oomCgroupName)
 	}
 
-	if level > CriticalPressure {
+	if level > libcontainer.CriticalPressure {
 		return nil, fmt.Errorf("invalid pressure level %d", level)
 	}
 

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/inclavare-containers/rune/libenclave"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/intelrdt"
@@ -47,7 +46,7 @@ information is displayed once every 5 seconds.`,
 		if err != nil {
 			return err
 		}
-		if status == libenclave.Stopped {
+		if status == libcontainer.Stopped {
 			return fmt.Errorf("container with id %s is not running", container.ID())
 		}
 		var (

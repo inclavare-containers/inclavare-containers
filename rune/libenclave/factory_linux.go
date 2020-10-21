@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime/debug"
 	"strconv"
+	"unsafe"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
@@ -35,10 +36,10 @@ const (
 
 var idRegex = regexp.MustCompile(`^[\w+-\.]+$`)
 
-// InitArgs returns an options func to configure a LinuxFactory with the
+// InitArgs returns an options func to configure a LinuxEnclaveFactory with the
 // provided init binary path and arguments.
-func InitArgs(args ...string) func(*LinuxFactory) error {
-	return func(l *LinuxFactory) (err error) {
+func InitArgs(args ...string) func(*LinuxEnclaveFactory) error {
+	return func(l *LinuxEnclaveFactory) (err error) {
 		if len(args) > 0 {
 			// Resolve relative paths to ensure that its available
 			// after directory changes.
@@ -71,16 +72,16 @@ func getUnifiedPath(paths map[string]string) string {
 	return path
 }
 
-func systemdCgroupV2(l *LinuxFactory, rootless bool) error {
+func systemdCgroupV2(l *LinuxEnclaveFactory, rootless bool) error {
 	l.NewCgroupsManager = func(config *configs.Cgroup, paths map[string]string) cgroups.Manager {
 		return systemd.NewUnifiedManager(config, getUnifiedPath(paths), rootless)
 	}
 	return nil
 }
 
-// SystemdCgroups is an options func to configure a LinuxFactory to return
+// SystemdCgroups is an options func to configure a LinuxEnclaveFactory to return
 // containers that use systemd to create and manage cgroups.
-func SystemdCgroups(l *LinuxFactory) error {
+func SystemdCgroups(l *LinuxEnclaveFactory) error {
 	if !systemd.IsRunningSystemd() {
 		return fmt.Errorf("systemd not running on this host, can't use systemd as cgroups manager")
 	}
@@ -99,7 +100,7 @@ func SystemdCgroups(l *LinuxFactory) error {
 	return nil
 }
 
-func cgroupfs2(l *LinuxFactory, rootless bool) error {
+func cgroupfs2(l *LinuxEnclaveFactory, rootless bool) error {
 	l.NewCgroupsManager = func(config *configs.Cgroup, paths map[string]string) cgroups.Manager {
 		m, err := fs2.NewManager(config, getUnifiedPath(paths), rootless)
 		if err != nil {
@@ -110,10 +111,10 @@ func cgroupfs2(l *LinuxFactory, rootless bool) error {
 	return nil
 }
 
-// Cgroupfs is an options func to configure a LinuxFactory to return containers
+// Cgroupfs is an options func to configure a LinuxEnclaveFactory to return containers
 // that use the native cgroups filesystem implementation to create and manage
 // cgroups.
-func Cgroupfs(l *LinuxFactory) error {
+func Cgroupfs(l *LinuxEnclaveFactory) error {
 	if cgroups.IsCgroup2UnifiedMode() {
 		return cgroupfs2(l, false)
 	}
@@ -126,13 +127,13 @@ func Cgroupfs(l *LinuxFactory) error {
 	return nil
 }
 
-// RootlessCgroupfs is an options func to configure a LinuxFactory to return
+// RootlessCgroupfs is an options func to configure a LinuxEnclaveFactory to return
 // containers that use the native cgroups filesystem implementation to create
 // and manage cgroups. The difference between RootlessCgroupfs and Cgroupfs is
 // that RootlessCgroupfs can transparently handle permission errors that occur
 // during rootless container (including euid=0 in userns) setup (while still allowing cgroup usage if
 // they've been set up properly).
-func RootlessCgroupfs(l *LinuxFactory) error {
+func RootlessCgroupfs(l *LinuxEnclaveFactory) error {
 	if cgroups.IsCgroup2UnifiedMode() {
 		return cgroupfs2(l, true)
 	}
@@ -146,10 +147,10 @@ func RootlessCgroupfs(l *LinuxFactory) error {
 	return nil
 }
 
-// IntelRdtfs is an options func to configure a LinuxFactory to return
+// IntelRdtfs is an options func to configure a LinuxEnclaveFactory to return
 // containers that use the Intel RDT "resource control" filesystem to
 // create and manage Intel RDT resources (e.g., L3 cache, memory bandwidth).
-func IntelRdtFs(l *LinuxFactory) error {
+func IntelRdtFs(l *LinuxEnclaveFactory) error {
 	l.NewIntelRdtManager = func(config *configs.Config, id string, path string) intelrdt.Manager {
 		return &intelrdt.IntelRdtManager{
 			Config: config,
@@ -160,8 +161,8 @@ func IntelRdtFs(l *LinuxFactory) error {
 	return nil
 }
 
-// TmpfsRoot is an option func to mount LinuxFactory.Root to tmpfs.
-func TmpfsRoot(l *LinuxFactory) error {
+// TmpfsRoot is an option func to mount LinuxEnclaveFactory.Root to tmpfs.
+func TmpfsRoot(l *LinuxEnclaveFactory) error {
 	mounted, err := mountinfo.Mounted(l.Root)
 	if err != nil {
 		return err
@@ -174,10 +175,10 @@ func TmpfsRoot(l *LinuxFactory) error {
 	return nil
 }
 
-// CriuPath returns an option func to configure a LinuxFactory with the
+// CriuPath returns an option func to configure a LinuxEnclaveFactory with the
 // provided criupath
-func CriuPath(criupath string) func(*LinuxFactory) error {
-	return func(l *LinuxFactory) error {
+func CriuPath(criupath string) func(*LinuxEnclaveFactory) error {
+	return func(l *LinuxEnclaveFactory) error {
 		l.CriuPath = criupath
 		return nil
 	}
@@ -185,18 +186,23 @@ func CriuPath(criupath string) func(*LinuxFactory) error {
 
 // New returns a linux based container factory based in the root directory and
 // configures the factory with the provided option funcs.
-func New(root string, options ...func(*LinuxFactory) error) (Factory, error) {
+func New(root string, enclaveConfig *enclaveConfigs.EnclaveConfig, detached bool, options ...func(*LinuxEnclaveFactory) error) (libcontainer.Factory, error) {
 	if root != "" {
 		if err := os.MkdirAll(root, 0700); err != nil {
 			return nil, newGenericError(err, libcontainer.SystemError)
 		}
 	}
-	l := &LinuxFactory{
-		Root:      root,
-		InitPath:  "/proc/self/exe",
-		InitArgs:  []string{os.Args[0], "init"},
-		Validator: validate.New(),
-		CriuPath:  "criu",
+
+	l := &LinuxEnclaveFactory{
+		LinuxFactory: libcontainer.LinuxFactory{
+			Root:      root,
+			InitPath:  "/proc/self/exe",
+			InitArgs:  []string{os.Args[0], "init"},
+			Validator: validate.New(),
+			CriuPath:  "criu",
+		},
+		enclaveConfig: enclaveConfig,
+		detached:      detached,
 	}
 	Cgroupfs(l)
 	for _, opt := range options {
@@ -210,69 +216,30 @@ func New(root string, options ...func(*LinuxFactory) error) (Factory, error) {
 	return l, nil
 }
 
-// LinuxFactory implements the default factory interface for linux based systems.
-type LinuxFactory struct {
-	// Root directory for the factory to store state.
-	Root string
-
-	// InitPath is the path for calling the init responsibilities for spawning
-	// a container.
-	InitPath string
-
-	// InitArgs are arguments for calling the init responsibilities for spawning
-	// a container.
-	InitArgs []string
-
-	// CriuPath is the path to the criu binary used for checkpoint and restore of
-	// containers.
-	CriuPath string
-
-	// New{u,g}uidmapPath is the path to the binaries used for mapping with
-	// rootless containers.
-	NewuidmapPath string
-	NewgidmapPath string
-
-	// Validator provides validation to container configurations.
-	Validator validate.Validator
-
-	// NewCgroupsManager returns an initialized cgroups manager for a single container.
-	NewCgroupsManager func(config *configs.Cgroup, paths map[string]string) cgroups.Manager
-
-	// NewIntelRdtManager returns an initialized Intel RDT manager for a single container.
-	NewIntelRdtManager func(config *configs.Config, id string, path string) intelrdt.Manager
+// LinuxEnclaveFactory implements the default factory interface for linux based systems.
+type LinuxEnclaveFactory struct {
+	libcontainer.LinuxFactory
+	enclaveConfig *enclaveConfigs.EnclaveConfig
+	detached      bool
 }
 
-func (l *LinuxFactory) Create(id string, config *configs.Config, enclaveConfig *enclaveConfigs.EnclaveConfig, detached bool) (Container, error) {
-	if l.Root == "" {
-		return nil, newGenericError(fmt.Errorf("invalid root"), libcontainer.ConfigInvalid)
-	}
-	if err := l.validateID(id); err != nil {
+func (l *LinuxEnclaveFactory) Create(id string, config *configs.Config) (libcontainer.Container, error) {
+	lf := (*libcontainer.LinuxFactory)(unsafe.Pointer(l))
+	lc, err := lf.Create(id, config)
+	if err != nil {
 		return nil, err
-	}
-	if err := l.Validator.Validate(config); err != nil {
-		return nil, newGenericError(err, libcontainer.ConfigInvalid)
 	}
 	containerRoot, err := securejoin.SecureJoin(l.Root, id)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := os.Stat(containerRoot); err == nil {
-		return nil, newGenericError(fmt.Errorf("container with id exists: %v", id), libcontainer.IdInUse)
-	} else if !os.IsNotExist(err) {
-		return nil, newGenericError(err, libcontainer.SystemError)
-	}
-	if err := os.MkdirAll(containerRoot, 0711); err != nil {
-		return nil, newGenericError(err, libcontainer.SystemError)
-	}
-	if err := os.Chown(containerRoot, unix.Geteuid(), unix.Getegid()); err != nil {
-		return nil, newGenericError(err, libcontainer.SystemError)
-	}
-	c := &linuxContainer{
-		id:            id,
+
+	c := &linuxEnclaveContainer{
+		id:            lc.ID(),
 		root:          containerRoot,
 		config:        config,
-		enclaveConfig: enclaveConfig,
-		detached:      detached,
+		enclaveConfig: l.enclaveConfig,
+		detached:      l.detached,
 		initPath:      l.InitPath,
 		initArgs:      l.InitArgs,
 		criuPath:      l.CriuPath,
@@ -287,7 +254,7 @@ func (l *LinuxFactory) Create(id string, config *configs.Config, enclaveConfig *
 	return c, nil
 }
 
-func (l *LinuxFactory) Load(id string) (Container, error) {
+func (l *LinuxEnclaveFactory) Load(id string) (libcontainer.Container, error) {
 	if l.Root == "" {
 		return nil, newGenericError(fmt.Errorf("invalid root"), libcontainer.ConfigInvalid)
 	}
@@ -308,7 +275,7 @@ func (l *LinuxFactory) Load(id string) (Container, error) {
 		processStartTime: state.InitProcessStartTime,
 		fds:              state.ExternalDescriptors,
 	}
-	c := &linuxContainer{
+	c := &linuxEnclaveContainer{
 		initProcess:          r,
 		initProcessStartTime: state.InitProcessStartTime,
 		id:                   id,
@@ -336,13 +303,13 @@ func (l *LinuxFactory) Load(id string) (Container, error) {
 	return c, nil
 }
 
-func (l *LinuxFactory) Type() string {
+func (l *LinuxEnclaveFactory) Type() string {
 	return "libenclave"
 }
 
 // StartInitialization loads a container by opening the pipe fd from the parent to read the configuration and state
 // This is a low level implementation detail of the reexec and should not be consumed externally
-func (l *LinuxFactory) StartInitialization() (err error) {
+func (l *LinuxEnclaveFactory) StartInitialization() (err error) {
 	var (
 		pipefd, fifofd int
 		consoleSocket  *os.File
@@ -434,7 +401,7 @@ func (l *LinuxFactory) StartInitialization() (err error) {
 	return i.Init()
 }
 
-func (l *LinuxFactory) loadState(root, id string) (*State, error) {
+func (l *LinuxEnclaveFactory) loadState(root, id string) (*EnclaveState, error) {
 	stateFilePath, err := securejoin.SecureJoin(root, stateFilename)
 	if err != nil {
 		return nil, err
@@ -447,14 +414,14 @@ func (l *LinuxFactory) loadState(root, id string) (*State, error) {
 		return nil, newGenericError(err, libcontainer.SystemError)
 	}
 	defer f.Close()
-	var state *State
+	var state *EnclaveState
 	if err := json.NewDecoder(f).Decode(&state); err != nil {
 		return nil, newGenericError(err, libcontainer.SystemError)
 	}
 	return state, nil
 }
 
-func (l *LinuxFactory) validateID(id string) error {
+func (l *LinuxEnclaveFactory) validateID(id string) error {
 	if !idRegex.MatchString(id) || string(os.PathSeparator)+id != utils.CleanPath(string(os.PathSeparator)+id) {
 		return newGenericError(fmt.Errorf("invalid id format: %v", id), libcontainer.InvalidIdFormat)
 	}
@@ -462,19 +429,19 @@ func (l *LinuxFactory) validateID(id string) error {
 	return nil
 }
 
-// NewuidmapPath returns an option func to configure a LinuxFactory with the
+// NewuidmapPath returns an option func to configure a LinuxEnclaveFactory with the
 // provided ..
-func NewuidmapPath(newuidmapPath string) func(*LinuxFactory) error {
-	return func(l *LinuxFactory) error {
+func NewuidmapPath(newuidmapPath string) func(*LinuxEnclaveFactory) error {
+	return func(l *LinuxEnclaveFactory) error {
 		l.NewuidmapPath = newuidmapPath
 		return nil
 	}
 }
 
-// NewgidmapPath returns an option func to configure a LinuxFactory with the
+// NewgidmapPath returns an option func to configure a LinuxEnclaveFactory with the
 // provided ..
-func NewgidmapPath(newgidmapPath string) func(*LinuxFactory) error {
-	return func(l *LinuxFactory) error {
+func NewgidmapPath(newgidmapPath string) func(*LinuxEnclaveFactory) error {
+	return func(l *LinuxEnclaveFactory) error {
 		l.NewgidmapPath = newgidmapPath
 		return nil
 	}

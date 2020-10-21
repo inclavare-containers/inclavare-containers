@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/inclavare-containers/rune/libenclave"
+	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/cgroups/systemd"
 	"github.com/opencontainers/runc/libcontainer/configs"
@@ -30,7 +31,7 @@ import (
 var errEmptyID = errors.New("container id cannot be empty")
 
 // loadFactory returns the configured factory instance for execing containers.
-func loadFactory(context *cli.Context) (libenclave.Factory, error) {
+func loadFactory(context *cli.Context, enclaveConfig *enclaveConfigs.EnclaveConfig, detached bool) (libcontainer.Factory, error) {
 	root := context.GlobalString("root")
 	abs, err := filepath.Abs(root)
 	if err != nil {
@@ -72,7 +73,7 @@ func loadFactory(context *cli.Context) (libenclave.Factory, error) {
 		newgidmap = ""
 	}
 
-	return libenclave.New(abs, cgroupManager, intelRdtManager,
+	return libenclave.New(abs, enclaveConfig, detached, cgroupManager, intelRdtManager,
 		libenclave.CriuPath(context.GlobalString("criu")),
 		libenclave.NewuidmapPath(newuidmap),
 		libenclave.NewgidmapPath(newgidmap))
@@ -80,12 +81,12 @@ func loadFactory(context *cli.Context) (libenclave.Factory, error) {
 
 // getContainer returns the specified container instance by loading it from state
 // with the default factory.
-func getContainer(context *cli.Context) (libenclave.Container, error) {
+func getContainer(context *cli.Context) (libcontainer.Container, error) {
 	id := context.Args().First()
 	if id == "" {
 		return nil, errEmptyID
 	}
-	factory, err := loadFactory(context)
+	factory, err := loadFactory(context, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +107,8 @@ func getDefaultImagePath(context *cli.Context) string {
 
 // newProcess returns a new libenclave Process with the arguments from the
 // spec and stdio from the current process.
-func newProcess(p specs.Process, init bool, logLevel string) (*libenclave.Process, error) {
-	lp := &libenclave.Process{
+func newProcess(p specs.Process, init bool, logLevel string) (*libcontainer.Process, error) {
+	lp := &libcontainer.Process{
 		Args: p.Args,
 		Env:  p.Env,
 		// TODO: fix libenclave's API to better support uid/gid in a typesafe way.
@@ -146,14 +147,14 @@ func newProcess(p specs.Process, init bool, logLevel string) (*libenclave.Proces
 	return lp, nil
 }
 
-func destroy(container libenclave.Container) {
+func destroy(container libcontainer.Container) {
 	if err := container.Destroy(); err != nil {
 		logrus.Error(err)
 	}
 }
 
 // setupIO modifies the given process config according to the options.
-func setupIO(process *libenclave.Process, rootuid, rootgid int, createTTY, detach bool, sockpath string) (*tty, error) {
+func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, detach bool, sockpath string) (*tty, error) {
 	if createTTY {
 		process.Stdin = nil
 		process.Stdout = nil
@@ -207,7 +208,7 @@ func setupIO(process *libenclave.Process, rootuid, rootgid int, createTTY, detac
 // createPidFile creates a file with the processes pid inside it atomically
 // it creates a temp file with the paths filename + '.' infront of it
 // then renames the file
-func createPidFile(path string, process *libenclave.Process) error {
+func createPidFile(path string, process *libcontainer.Process) error {
 	pid, err := process.Pid()
 	if err != nil {
 		return err
@@ -228,7 +229,7 @@ func createPidFile(path string, process *libenclave.Process) error {
 	return os.Rename(tmpName, path)
 }
 
-func createContainer(context *cli.Context, id string, spec *specs.Spec, action CtAct) (libenclave.Container, error) {
+func createContainer(context *cli.Context, id string, spec *specs.Spec, action CtAct) (libcontainer.Container, error) {
 	rootlessCg, err := shouldUseRootlessCgroupManager(context)
 	if err != nil {
 		return nil, err
@@ -242,13 +243,11 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec, action C
 		RootlessEUID:     os.Geteuid() != 0,
 		RootlessCgroups:  rootlessCg,
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
 	enclaveConfig := libenclave.CreateEnclaveConfig(spec, config)
-
 	if enclaveConfig != nil {
 		rcwd, err := os.Getwd()
 		if err != nil {
@@ -270,12 +269,12 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec, action C
 	}
 
 	detached := context.Bool("detach") || (action == CT_ACT_CREATE)
-
-	factory, err := loadFactory(context)
+	factory, err := loadFactory(context, enclaveConfig, detached)
 	if err != nil {
 		return nil, err
 	}
-	return factory.Create(id, config, enclaveConfig, detached)
+
+	return factory.Create(id, config)
 }
 
 type runner struct {
@@ -287,7 +286,7 @@ type runner struct {
 	preserveFDs     int
 	pidFile         string
 	consoleSocket   string
-	container       libenclave.Container
+	container       libcontainer.Container
 	action          CtAct
 	notifySocket    *notifySocket
 	criuOpts        *libcontainer.CriuOpts
@@ -388,7 +387,7 @@ func (r *runner) destroy() {
 	}
 }
 
-func (r *runner) terminate(p *libenclave.Process) {
+func (r *runner) terminate(p *libcontainer.Process) {
 	_ = p.Signal(unix.SIGKILL)
 	_, _ = p.Wait()
 }
