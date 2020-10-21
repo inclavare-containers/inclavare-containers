@@ -1,7 +1,9 @@
 There are still non-trivial number of systems without FLC support.
 
 # Prerequisite
-- Apply the patch `0001-sgx-Support-SGX1-machine-even-without-FLC-support.patch` to [v33 SGX in-tree driver](https://github.com/haitaohuang/linux-sgx-2/tree/v33).
+- Choose either SGX DCAP or in-tree Linux driver to use.
+  * Apply the patch `0001-SGX-DCAP-Linux-Driver-Support-SGX1-machine-even-without-FLC-s.patch` to [SGX DCAP Linux driver](https://github.com/intel/SGXDataCenterAttestationPrimitives).
+- * Apply the patch `0001-sgx-Support-SGX1-machine-even-without-FLC-support.patch` to [v33 SGX in-tree driver](https://github.com/haitaohuang/linux-sgx-2/tree/v33).
 - Apply the patch `0001-psw-Support-SGX1-machine-with-SGX-in-tree-driver.patch` to [Intel SGX SDK 2.10](https://github.com/intel/linux-sgx/tree/sgx_2.10) or higher.
 
 # Validation
