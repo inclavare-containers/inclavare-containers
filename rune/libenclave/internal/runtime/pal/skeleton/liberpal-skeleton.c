@@ -15,9 +15,9 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 25
-#include <sys/types.h>
+#  include <sys/types.h>
 #else
-#include <sys/sysmacros.h>
+#  include <sys/sysmacros.h>
 #endif
 #include "defines.h"
 #include "sgx_call.h"
@@ -63,7 +63,8 @@ static bool is_sgx_device(const char *dev)
 	return false;
 }
 
-__attribute__((constructor)) static void detect_driver_type(void)
+__attribute__((constructor))
+static void detect_driver_type(void)
 {
 	if (is_sgx_device("/dev/isgx")) {
 		sgx_dev_path = "/dev/isgx";
@@ -94,14 +95,15 @@ static uint64_t create_enclave_range(int dev_fd, uint64_t size)
 		return 0;
 	}
 
-	uint64_t base = ((uint64_t)area + size - 1) & ~(size - 1);
-	munmap(area, base - (uint64_t)area);
-	munmap((void *)(base + size), (uint64_t)area + size - base);
+	uint64_t base = ((uint64_t) area + size - 1) & ~(size - 1);
+	munmap(area, base - (uint64_t) area);
+	munmap((void *) (base + size), (uint64_t) area + size - base);
 
 	if (is_oot_driver) {
-		if (mprotect((void *)base, size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
+		if (mprotect
+		    ((void *) base, size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
 			perror("mprotect");
-			munmap((void *)base, size);
+			munmap((void *) base, size);
 			return 0;
 		}
 	}
@@ -125,10 +127,11 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	secs->xfrm = xfrm;
 
 	secs->miscselect = get_sgx_miscselect_by_cpuid();
-	secs->ssa_frame_size = sgx_calc_ssaframesize(secs->miscselect, secs->xfrm);
+	secs->ssa_frame_size =
+		sgx_calc_ssaframesize(secs->miscselect, secs->xfrm);
 
 	uint64_t enclave_size = bin_size + PAGE_SIZE * secs->ssa_frame_size;
-	for (secs->size = PAGE_SIZE; secs->size < enclave_size; )
+	for (secs->size = PAGE_SIZE; secs->size < enclave_size;)
 		secs->size <<= 1;
 
 	uint64_t base = create_enclave_range(dev_fd, secs->size);
@@ -136,17 +139,16 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 		return false;
 
 	secs->base = base;
-	ioc.src = (unsigned long)secs;
+	ioc.src = (unsigned long) secs;
 	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
 	if (rc) {
 		fprintf(stderr, "ECREATE failed rc=%d, err=%d.\n", rc, errno);
-		munmap((void *)secs->base, secs->size);
+		munmap((void *) secs->base, secs->size);
 		return false;
 	}
 
 	return true;
 }
-
 
 static bool encl_add_pages_with_mrmask(int dev_fd, uint64_t addr, void *data,
 				       unsigned long length, uint64_t flags)
@@ -158,10 +160,12 @@ static bool encl_add_pages_with_mrmask(int dev_fd, uint64_t addr, void *data,
 	memset(&secinfo, 0, sizeof(secinfo));
 	secinfo.flags = flags;
 
-	ioc.src = (uint64_t)data;
+	ioc.src = (uint64_t) data;
 	ioc.addr = addr;
-	ioc.secinfo = (unsigned long)&secinfo;
+	ioc.secinfo = (unsigned long) &secinfo;
+	/* *INDENT-OFF* */
 	ioc.mrmask = (__u16)-1;
+	/* *INDENT-ON* */
 
 	uint64_t added_size = 0;
 	while (added_size < length) {
@@ -189,10 +193,10 @@ static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 	memset(&secinfo, 0, sizeof(secinfo));
 	secinfo.flags = flags;
 
-	ioc.src = (uint64_t)data;
+	ioc.src = (uint64_t) data;
 	ioc.offset = addr;
 	ioc.length = length;
-	ioc.secinfo = (unsigned long)&secinfo;
+	ioc.secinfo = (unsigned long) &secinfo;
 	ioc.flags = SGX_PAGE_MEASURE;
 
 	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_ADD_PAGES, &ioc);
@@ -209,7 +213,7 @@ static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 	return true;
 }
 
-static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size, 
+static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		       struct sgx_sigstruct *sigstruct,
 		       struct sgx_einittoken *token)
 {
@@ -239,15 +243,18 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	tcs->ssa_offset = bin_size;
 
 	if (is_oot_driver) {
-		if (!encl_add_pages_with_mrmask(dev_fd, secs->base, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+		if (!encl_add_pages_with_mrmask
+		    (dev_fd, secs->base, bin, PAGE_SIZE, SGX_SECINFO_TCS))
 			goto out_map;
 
-		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
-						bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
+		if (!encl_add_pages_with_mrmask
+		    (dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
+		     bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
 			goto out_map;
 
-		if (!encl_add_pages_with_mrmask(dev_fd, secs->base + bin_size, ssa_frame,
-						PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
+		if (!encl_add_pages_with_mrmask
+		    (dev_fd, secs->base + bin_size, ssa_frame,
+		     PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
 			goto out_map;
 	} else {
 		if (!encl_add_pages(dev_fd, 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
@@ -258,19 +265,20 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 			goto out_map;
 
 		if (!encl_add_pages(dev_fd, tcs->ssa_offset, ssa_frame,
-				    PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
+				    PAGE_SIZE * secs->ssa_frame_size,
+				    SGX_REG_PAGE_FLAGS))
 			goto out_map;
 	}
 
 	if (is_oot_driver || no_sgx_flc) {
 		struct sgx_enclave_init_with_token ioc;
 		ioc.addr = secs->base;
-		ioc.sigstruct = (uint64_t)sigstruct;
-		ioc.einittoken = (uint64_t)token;
+		ioc.sigstruct = (uint64_t) sigstruct;
+		ioc.einittoken = (uint64_t) token;
 		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT_WITH_TOKEN, &ioc);
 	} else {
 		struct sgx_enclave_init ioc;
-		ioc.sigstruct = (uint64_t)sigstruct;
+		ioc.sigstruct = (uint64_t) sigstruct;
 		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT, &ioc);
 	}
 
@@ -284,7 +292,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	else {
 		void *rc;
 
-		rc = mmap((void *)secs->base, PAGE_SIZE,
+		rc = mmap((void *) secs->base, PAGE_SIZE,
 			  PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED,
 			  dev_fd, 0);
 		if (rc == MAP_FAILED) {
@@ -292,10 +300,10 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 			goto out_map;
 		}
 
-		rc = mmap((void *)secs->base + PAGE_SIZE,
-			  bin_size + PAGE_SIZE * (secs->ssa_frame_size -1),
-			  PROT_READ | PROT_WRITE | PROT_EXEC, MAP_FIXED | MAP_SHARED,
-			  dev_fd, 0);
+		rc = mmap((void *) secs->base + PAGE_SIZE,
+			  bin_size + PAGE_SIZE * (secs->ssa_frame_size - 1),
+			  PROT_READ | PROT_WRITE | PROT_EXEC,
+			  MAP_FIXED | MAP_SHARED, dev_fd, 0);
 		if (rc == MAP_FAILED) {
 			perror("mmap text & data");
 			goto out_map;
@@ -308,12 +316,13 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	return true;
 out_map:
 	free(ssa_frame);
-	munmap((void *)secs->base, secs->size);
+	munmap((void *) secs->base, secs->size);
 out_dev_fd:
 	close(dev_fd);
 	return false;
 }
 
+/* *INDENT-OFF* */
 static bool get_file_size(const char *path, off_t *bin_size)
 {
 	struct stat sb;
@@ -339,7 +348,7 @@ static bool encl_data_map(const char *path, void **bin, off_t *bin_size)
 	int fd;
 
 	fd = open(path, O_RDONLY);
-	if (fd == -1)  {
+	if (fd == -1) {
 		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
 		return false;
 	}
@@ -347,7 +356,8 @@ static bool encl_data_map(const char *path, void **bin, off_t *bin_size)
 	if (!get_file_size(path, bin_size))
 		goto err_out;
 
-	*bin = mmap(NULL, *bin_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+	*bin = mmap(NULL, *bin_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd,
+		    0);
 	if (*bin == MAP_FAILED) {
 		fprintf(stderr, "mmap() %s failed, errno=%d.\n", path, errno);
 		goto err_out;
@@ -360,13 +370,14 @@ err_out:
 	close(fd);
 	return false;
 }
+/* *INDENT-ON* */
 
 static bool load_sigstruct(const char *path, void *sigstruct)
 {
 	int fd;
 
 	fd = open(path, O_RDONLY);
-	if (fd == -1)  {
+	if (fd == -1) {
 		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
 		return false;
 	}
@@ -387,13 +398,13 @@ static bool load_token(const char *path, void *token)
 	int fd;
 
 	fd = open(path, O_RDONLY);
-	if (fd == -1)  {
+	if (fd == -1) {
 		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
 		return false;
 	}
 
 	if (read(fd, token, sizeof(struct sgx_einittoken)) !=
-		sizeof(struct sgx_einittoken)) {
+	    sizeof(struct sgx_einittoken)) {
 		fprintf(stderr, "read() %s failed, errno=%d.\n", path, errno);
 		close(fd);
 		return false;
@@ -436,6 +447,7 @@ static void parse_args(const char *args)
 	free(a);
 }
 
+/* *INDENT-OFF* */
 int __pal_init(pal_attr_t *attr)
 {
 	struct sgx_sigstruct sigstruct;
@@ -449,8 +461,8 @@ int __pal_init(pal_attr_t *attr)
 			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 	if (tcs_busy == MAP_FAILED)
 		return -EINVAL;
-	*(uint8_t *)tcs_busy = 0;
-	
+	*(uint8_t *) tcs_busy = 0;
+
 	if (!encl_data_map(IMAGE, &bin, &bin_size))
 		return -ENOENT;
 
@@ -465,7 +477,7 @@ int __pal_init(pal_attr_t *attr)
 	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token))
 		return -EINVAL;
 
-	initialized = true;	
+	initialized = true;
 
 	return 0;
 }
@@ -489,21 +501,22 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 	memcpy(&pal_stdio, stdio, sizeof(pal_stdio_fds));
 
 	uint64_t result = 0;
-	int ret = SGX_ENTER_1_ARG(ECALL_MAGIC, (void *)secs.base, &result);
+	int ret = SGX_ENTER_1_ARG(ECALL_MAGIC, (void *) secs.base, &result);
 	if (ret) {
 		fprintf(fp, "failed to initialize enclave\n");
 		fclose(fp);
 		return ret;
 	}
 	if (result != INIT_MAGIC) {
-		fprintf(fp, "Unexpected result: 0x%lx != 0x%lx\n", result, INIT_MAGIC);
+		fprintf(fp, "Unexpected result: 0x%lx != 0x%lx\n", result,
+			INIT_MAGIC);
 		fclose(fp);
 		return -1;
 	}
 
 	for (int i = 0; argv[i]; i++) {
-		if (!strcmp(argv[i], "wait_timeout") && argv[i+1]) {
-			wait_timeout = atoi(argv[i+1]);
+		if (!strcmp(argv[i], "wait_timeout") && argv[i + 1]) {
+			wait_timeout = atoi(argv[i + 1]);
 			if (wait_timeout > 0)
 				sleep(wait_timeout);
 			break;
@@ -522,7 +535,8 @@ int __pal_create_process(pal_create_process_args *args)
 {
 	int pid;
 
-	if (args == NULL || args->path == NULL || args->argv == NULL || args->pid == NULL || args->stdio == NULL) {
+	if (args == NULL || args->path == NULL || args->argv == NULL ||
+	    args->pid == NULL || args->stdio == NULL) {
 		return -1;
 	}
 
@@ -530,7 +544,8 @@ int __pal_create_process(pal_create_process_args *args)
 	 * between parent and child process, so simply launching __pal_exec() directly here.
 	 */
 	if (is_oot_driver) {
-		return __pal_exec(args->path, args->argv, args->stdio, &exit_code);
+		return __pal_exec(args->path, args->argv, args->stdio,
+				  &exit_code);
 	}
 
 	FILE *fp = fdopen(args->stdio->stderr, "w");
@@ -549,7 +564,8 @@ int __pal_create_process(pal_create_process_args *args)
 	} else if (pid == 0) {
 		int exit_code, ret;
 
-		ret = __pal_exec(args->path, args->argv, args->stdio, &exit_code);
+		ret = __pal_exec(args->path, args->argv, args->stdio,
+				 &exit_code);
 		exit(ret ? ret : exit_code);
 	} else
 		*args->pid = pid;
@@ -567,7 +583,8 @@ int wait4child(pal_exec_args *attr)
 	}
 
 	if (!initialized) {
-		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		fprintf(stderr,
+			"Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
 
@@ -583,30 +600,37 @@ int wait4child(pal_exec_args *attr)
 
 	return 0;
 }
+/* *INDENT-ON* */
 
-int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int* report_len)
+int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report,
+			   int *report_len)
 {
 	uint8_t report_data[64] = { 0, };
 	struct sgx_report report_align;
 	int ret;
 
 	if (!initialized) {
-		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		fprintf(stderr,
+			"Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
 
-	if (targetinfo == NULL || targetinfo_len != sizeof(struct sgx_target_info)) {
-		fprintf(stderr, "Input parameter targetinfo is NULL or targentinfo_len != sizeof(struct sgx_target_info)!\n");
+	if (targetinfo == NULL ||
+	    targetinfo_len != sizeof(struct sgx_target_info)) {
+		fprintf(stderr,
+			"Input parameter targetinfo is NULL or targentinfo_len != sizeof(struct sgx_target_info)!\n");
 		return -1;
 	}
 
-	if (report == NULL || report_len == NULL || *report_len < SGX_REPORT_SIZE) {
-		fprintf(stderr, "Input parameter report is NULL or report_len is not enough!\n");
+	if (report == NULL || report_len == NULL ||
+	    *report_len < SGX_REPORT_SIZE) {
+		fprintf(stderr,
+			"Input parameter report is NULL or report_len is not enough!\n");
 		return -1;
 	}
 
-	ret = SGX_ENTER_3_ARGS(ECALL_REPORT, (void *)secs.base, targetinfo,
-						report_data, &report_align);
+	ret = SGX_ENTER_3_ARGS(ECALL_REPORT, (void *) secs.base, targetinfo,
+			       report_data, &report_align);
 	if (ret) {
 		fprintf(stderr, "failed to get report\n");
 		return ret;
@@ -623,7 +647,8 @@ int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, i
 int __pal_kill(int pid, int sig)
 {
 	if (!initialized) {
-		fprintf(stderr, "Enclave runtime skeleton uninitialized yet!\n");
+		fprintf(stderr,
+			"Enclave runtime skeleton uninitialized yet!\n");
 		return -1;
 	}
 

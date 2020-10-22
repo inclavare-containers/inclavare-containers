@@ -11,7 +11,7 @@ static void *memcpy(void *dest, const void *src, size_t n)
 	size_t i;
 
 	for (i = 0; i < n; i++)
-		((char *)dest)[i] = ((char *)src)[i];
+		((char *) dest)[i] = ((char *) src)[i];
 
 	return dest;
 }
@@ -25,6 +25,7 @@ static int encl_init(void *dst)
 	return 0;
 }
 
+/* *INDENT-OFF* */
 static int encl_get_report(const struct sgx_target_info *target_info,
 			   const uint8_t *report_data,
 			   struct sgx_report *report)
@@ -47,8 +48,9 @@ static int encl_get_report(const struct sgx_target_info *target_info,
 
 	return 0;
 }
+/* *INDENT-ON* */
 
 unsigned long enclave_call_table[MAX_ECALLS] = {
-	(unsigned long)encl_init,
-	(unsigned long)encl_get_report,
+	(unsigned long) encl_init,
+	(unsigned long) encl_get_report,
 };

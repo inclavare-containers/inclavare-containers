@@ -8,6 +8,7 @@
 static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 {
 #if defined(__x86_64__)
+	/* *INDENT-OFF* */
 	asm volatile ("cpuid"
 		      : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
 		      : "0" (*eax), "2" (*ecx)
@@ -18,6 +19,7 @@ static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 		      : "=a" (*eax), "=r" (*ebx), "=c" (*ecx), "=d" (*edx)
 		      : "0" (*eax), "2" (*ecx)
 		      : "memory");
+	/* *INDENT-ON* */
 #endif
 }
 
@@ -39,11 +41,13 @@ static inline uint64_t xgetbv(uint32_t index)
 {
 	uint32_t eax, edx;
 
+	/* *INDENT-OFF* */
 	asm volatile(".byte 0x0f,0x01,0xd0" /* xgetbv */
 		     : "=a" (eax), "=d" (edx)
 		     : "c" (index));
+	/* *INDENT-ON* */
 
-	return eax + ((uint64_t)edx << 32);
+	return eax + ((uint64_t) edx << 32);
 }
 
 static inline uint64_t get_xcr0()
@@ -53,7 +57,7 @@ static inline uint64_t get_xcr0()
 
 static uint64_t try_get_xcr0()
 {
-	int cpu_info[4] = {0, 0, 0, 0};
+	int cpu_info[4] = { 0, 0, 0, 0 };
 
 	// Check if xgetbv instruction is supported.
 	__cpuid(cpu_info, 1);
@@ -69,19 +73,21 @@ static uint64_t try_get_xcr0()
 
 	// If x-feature is supported and enabled by OS, we need make sure it is also supported in enclave.
 	__cpuidex(cpu_info, SGX_LEAF, 1);
-	return (get_xcr0() & (((uint64_t)cpu_info[3] << 32) | cpu_info[2]));
+	return (get_xcr0() & (((uint64_t) cpu_info[3] << 32) | cpu_info[2]));
 }
 
+/* *INDENT-OFF* */
 void get_sgx_xfrm_by_cpuid(uint64_t *xfrm)
 {
 	*xfrm = try_get_xcr0();
 }
+/* *INDENT-ON* */
 
 uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm)
 {
 	uint32_t xsave_offset;
 	uint32_t size_max = PAGE_SIZE;
-	int cpu_info[4] = {0, 0, 0, 0};
+	int cpu_info[4] = { 0, 0, 0, 0 };
 	uint32_t size;
 	int i;
 
@@ -104,7 +110,7 @@ uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm)
 
 uint32_t get_sgx_miscselect_by_cpuid(void)
 {
-	int cpu_info[4] = {0, 0, 0, 0};
+	int cpu_info[4] = { 0, 0, 0, 0 };
 
 	__cpuidex(cpu_info, SGX_CPUID, 0);
 
@@ -113,7 +119,7 @@ uint32_t get_sgx_miscselect_by_cpuid(void)
 
 bool is_launch_control_supported(void)
 {
-	int cpu_info[4] = {0, 0, 0, 0};
+	int cpu_info[4] = { 0, 0, 0, 0 };
 
 	__cpuidex(cpu_info, CPUIID_EXTENDED_FEATURE_FLAGS, 0);
 

@@ -2,9 +2,10 @@
 /*
  * Copyright(c) 2016-19 Intel Corporation.
  */
-
+/* *INDENT-OFF* */
 #ifndef SGX_CALL_H
 #define SGX_CALL_H
+/* *INDENT-ON* */
 
 #define ECALL_MAGIC		0
 #define ECALL_REPORT		1
@@ -14,6 +15,7 @@
 
 #define INIT_MAGIC		0xdeadfacedeadbeefUL
 
+/* *INDENT-OFF* */
 #ifndef __ASSEMBLER__
 
 #define SGX_ENTER_1_ARG(ecall_num, tcs, a0) \
@@ -55,3 +57,4 @@
 #endif
 
 #endif /* SGX_CALL_H */
+/* *INDENT-ON* */

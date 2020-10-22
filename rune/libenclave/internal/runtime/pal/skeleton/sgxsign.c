@@ -31,7 +31,7 @@ static bool check_crypto_errors(void)
 	int line;
 	char str[256];
 
-	for ( ; ; ) {
+	for (;;) {
 		if (ERR_peek_error() == 0)
 			break;
 
@@ -51,6 +51,7 @@ static void exit_usage(const char *program)
 	exit(1);
 }
 
+/* *INDENT-OFF* */
 static inline const BIGNUM *get_modulus(RSA *key)
 {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -62,6 +63,7 @@ static inline const BIGNUM *get_modulus(RSA *key)
 	return n;
 #endif
 }
+/* *INDENT-ON* */
 
 static RSA *load_sign_key(const char *path)
 {
@@ -110,7 +112,9 @@ enum mrtags {
 	MREEXTEND = 0x00444E4554584545,
 };
 
+/* *INDENT-OFF* */
 static bool mrenclave_update(EVP_MD_CTX *ctx, const void *data)
+/* *INDENT-ON* */
 {
 	if (!EVP_DigestUpdate(ctx, data, 64)) {
 		fprintf(stderr, "digest update failed\n");
@@ -120,11 +124,12 @@ static bool mrenclave_update(EVP_MD_CTX *ctx, const void *data)
 	return true;
 }
 
+/* *INDENT-OFF* */
 static bool mrenclave_commit(EVP_MD_CTX *ctx, uint8_t *mrenclave)
 {
 	unsigned int size;
 
-	if (!EVP_DigestFinal_ex(ctx, (unsigned char *)mrenclave, &size)) {
+	if (!EVP_DigestFinal_ex(ctx, (unsigned char *) mrenclave, &size)) {
 		fprintf(stderr, "digest commit failed\n");
 		return false;
 	}
@@ -136,6 +141,7 @@ static bool mrenclave_commit(EVP_MD_CTX *ctx, uint8_t *mrenclave)
 
 	return true;
 }
+/* *INDENT-ON* */
 
 struct mrecreate {
 	uint64_t tag;
@@ -144,13 +150,16 @@ struct mrecreate {
 	uint8_t reserved[44];
 } __attribute__((__packed__));
 
-
-static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size, uint32_t miscselect, uint64_t xfrm, uint32_t * ssa_frame_size)
+/* *INDENT-OFF* */
+static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size,
+			      uint32_t miscselect, uint64_t xfrm,
+			      uint32_t *ssa_frame_size)
+/* *INDENT-ON* */
 {
 	struct mrecreate mrecreate;
 	uint64_t encl_size;
 
-	for (encl_size = PAGE_SIZE; encl_size < blob_size; )
+	for (encl_size = PAGE_SIZE; encl_size < blob_size;)
 		encl_size <<= 1;
 
 	memset(&mrecreate, 0, sizeof(mrecreate));
@@ -168,11 +177,13 @@ static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size, uint32_t misc
 struct mreadd {
 	uint64_t tag;
 	uint64_t offset;
-	uint64_t flags; /* SECINFO flags */
+	uint64_t flags;		/* SECINFO flags */
 	uint8_t reserved[40];
 } __attribute__((__packed__));
 
+/* *INDENT-OFF* */
 static bool mrenclave_eadd(EVP_MD_CTX *ctx, uint64_t offset, uint64_t flags)
+/* *INDENT-ON* */
 {
 	struct mreadd mreadd;
 
@@ -190,7 +201,9 @@ struct mreextend {
 	uint8_t reserved[48];
 } __attribute__((__packed__));
 
+/* *INDENT-OFF* */
 static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
+/* *INDENT-ON* */
 {
 	struct mreextend mreextend;
 	int i;
@@ -229,7 +242,10 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
  * enclave as the signing tool is used at the moment only for the launch
  * enclave, which is pass-through (everything gets a token).
  */
-static bool measure_encl(const char *path, uint8_t *mrenclave, uint32_t miscselect, uint64_t xfrm)
+/* *INDENT-OFF* */
+static bool measure_encl(const char *path, uint8_t *mrenclave,
+			 uint32_t miscselect, uint64_t xfrm)
+/* *INDENT-ON* */
 {
 	FILE *file;
 	struct stat sb;
@@ -272,7 +288,8 @@ static bool measure_encl(const char *path, uint8_t *mrenclave, uint32_t miscsele
 	struct sgx_tcs *tcs = bin;
 	tcs->ssa_offset = sb.st_size;
 
-	if (!mrenclave_ecreate(ctx, sb.st_size, miscselect, xfrm, &ssa_frame_size))
+	if (!mrenclave_ecreate
+	    (ctx, sb.st_size, miscselect, xfrm, &ssa_frame_size))
 		goto out;
 
 	for (offset = 0; offset < sb.st_size; offset += PAGE_SIZE) {
@@ -288,13 +305,14 @@ static bool measure_encl(const char *path, uint8_t *mrenclave, uint32_t miscsele
 		memcpy(data, bin + offset, PAGE_SIZE);
 
 		if (!mrenclave_eextend(ctx, offset, data))
-		goto out;
+			goto out;
 	}
 
 	memset(data, 0, sizeof(data));
 
 	flags = SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X;
-	for (offset = sb.st_size; offset < sb.st_size + PAGE_SIZE * ssa_frame_size;
+	for (offset = sb.st_size;
+	     offset < sb.st_size + PAGE_SIZE * ssa_frame_size;
 	     offset += PAGE_SIZE) {
 		if (!mrenclave_eadd(ctx, offset, flags))
 			goto out;
@@ -327,8 +345,10 @@ out:
  * stored in big-endian format so that it can be further passed to OpenSSL
  * libcrypto functions.
  */
+/* *INDENT-OFF* */
 static bool sign_encl(const struct sgx_sigstruct *sigstruct, RSA *key,
 		      uint8_t *signature)
+/* *INDENT-ON* */
 {
 	struct sgx_sigstruct_payload payload;
 	unsigned int siglen;
@@ -338,7 +358,7 @@ static bool sign_encl(const struct sgx_sigstruct *sigstruct, RSA *key,
 	memcpy(&payload.header, &sigstruct->header, sizeof(sigstruct->header));
 	memcpy(&payload.body, &sigstruct->body, sizeof(sigstruct->body));
 
-	SHA256((unsigned char *)&payload, sizeof(payload), digest);
+	SHA256((unsigned char *) &payload, sizeof(payload), digest);
 
 	ret = RSA_sign(NID_sha256, digest, SHA256_DIGEST_LENGTH, signature,
 		       &siglen, key);
@@ -365,6 +385,7 @@ static void free_q1q2_ctx(struct q1q2_ctx *ctx)
 	BN_free(ctx->q2);
 }
 
+/* *INDENT-OFF* */
 static bool alloc_q1q2_ctx(const uint8_t *s, const uint8_t *m,
 			   struct q1q2_ctx *ctx)
 {
@@ -427,6 +448,7 @@ out:
 	free_q1q2_ctx(&ctx);
 	return false;
 }
+/* *INDENT-ON* */
 
 static bool save_sigstruct(const struct sgx_sigstruct *sigstruct,
 			   const char *path)
@@ -445,21 +467,22 @@ static bool save_sigstruct(const struct sgx_sigstruct *sigstruct,
 
 int main(int argc, char **argv)
 {
-	uint64_t header1[2] = {0x000000E100000006, 0x0000000000010000};
-	uint64_t header2[2] = {0x0000006000000101, 0x0000000100000060};
+	uint64_t header1[2] = { 0x000000E100000006, 0x0000000000010000 };
+	uint64_t header2[2] = { 0x0000006000000101, 0x0000000100000060 };
 	uint64_t xfrm;
 	struct sgx_sigstruct ss;
 	const char *program;
 	int opt;
 	RSA *sign_key;
 	bool enclave_debug = true;
-	char* const short_options = "p";
-	struct option long_options = {"product", 0, NULL, 'p'};
+	char *const short_options = "p";
+	struct option long_options = { "product", 0, NULL, 'p' };
 
 	program = argv[0];
 
 	do {
-		opt = getopt_long(argc, argv, short_options, &long_options, NULL);
+		opt = getopt_long(argc, argv, short_options, &long_options,
+				  NULL);
 		switch (opt) {
 		case 'p':
 			enclave_debug = false;
@@ -477,17 +500,17 @@ int main(int argc, char **argv)
 	if (argc < 3)
 		exit_usage(program);
 
-        memset(&ss, 0, sizeof(ss));
-        ss.header.header1[0] = header1[0];
-        ss.header.header1[1] = header1[1];
-        ss.header.header2[0] = header2[0];
-        ss.header.header2[1] = header2[1];
-        ss.exponent = 3;
+	memset(&ss, 0, sizeof(ss));
+	ss.header.header1[0] = header1[0];
+	ss.header.header1[1] = header1[1];
+	ss.header.header2[0] = header2[0];
+	ss.header.header2[1] = header2[1];
+	ss.exponent = 3;
 
 #ifndef CONFIG_EINITTOKENKEY
-        ss.body.attributes = SGX_ATTR_MODE64BIT;
+	ss.body.attributes = SGX_ATTR_MODE64BIT;
 #else
-        ss.body.attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_EINITTOKENKEY;
+	ss.body.attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_EINITTOKENKEY;
 #endif
 	if (enclave_debug)
 		ss.body.attributes |= SGX_ATTR_DEBUG;
@@ -508,7 +531,8 @@ int main(int argc, char **argv)
 
 	BN_bn2bin(get_modulus(sign_key), ss.modulus);
 
-	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm))
+	if (!measure_encl
+	    (argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm))
 		goto out;
 
 	if (!sign_encl(&ss, sign_key, ss.signature))

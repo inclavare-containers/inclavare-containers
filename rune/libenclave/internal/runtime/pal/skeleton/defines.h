@@ -2,9 +2,10 @@
 /*
  * Copyright(c) 2016-19 Intel Corporation.
  */
-
+/* *INDENT-OFF* */
 #ifndef DEFINES_H
 #define DEFINES_H
+/* *INDENT-ON* */
 
 #include <stdint.h>
 
@@ -15,4 +16,6 @@
 #include "arch.h"
 #include "sgx.h"
 
+/* *INDENT-OFF* */
 #endif /* DEFINES_H */
+/* *INDENT-ON* */
