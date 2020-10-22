@@ -1,8 +1,8 @@
-package attestation // import "github.com/opencontainers/runc/libenclave/attestation"
+package attestation // import "github.com/inclavare-containers/rune/libenclave/attestation"
 
 import (
 	"fmt"
-	"github.com/opencontainers/runc/libenclave/attestation/sgx/ias"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 	"github.com/sirupsen/logrus"
 )
 

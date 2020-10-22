@@ -2,8 +2,8 @@ package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"fmt"
-	_ "github.com/opencontainers/runc/libenclave/attestation"
-	"github.com/opencontainers/runc/libenclave/intelsgx"
+	_ "github.com/inclavare-containers/rune/libenclave/attestation"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"io"

@@ -1,4 +1,4 @@
-package intelsgx // import "github.com/opencontainers/runc/libenclave/intelsgx"
+package intelsgx // import "github.com/inclavare-containers/rune/libenclave/intelsgx"
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/go-restruct/restruct"
 	"github.com/golang/protobuf/proto"
-	pb "github.com/opencontainers/runc/libenclave/intelsgx/proto"
+	pb "github.com/inclavare-containers/rune/libenclave/intelsgx/proto"
 	"github.com/sirupsen/logrus"
 	"net"
 )
@@ -328,9 +328,9 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	}
 
 	quote := resp.GetQuote.GetQuote()
-	if len(quote) < QuoteLength || len(quote) != SgxMaxQuoteLength {
+	if len(quote) != SgxMaxQuoteLength {
 		return nil, fmt.Errorf("invalid length of quote: (returned %d, expected %d)",
-			len(quote), QuoteLength)
+			len(quote), SgxMaxQuoteLength)
 	}
 
 	q := &Quote{}
