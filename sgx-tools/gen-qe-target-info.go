@@ -1,7 +1,7 @@
 package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
-	"github.com/opencontainers/runc/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"io/ioutil"

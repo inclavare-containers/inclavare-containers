@@ -1,9 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/alibaba/inclavare-containers/rune v0.0.0-20200527123028-5b951e6d3bb0 h1:PyVmCYLADfHIwOEhnRW+QWea4jJikmsb0YxzwWlKvag=
-github.com/alibaba/inclavare-containers/rune v0.0.0-20200527123028-5b951e6d3bb0/go.mod h1:J0bOgJ9XXn/Q5kOys2btdg+YRAY2XWuWlwisNwjKANg=
-github.com/alibaba/inclavare-containers/rune v0.0.0-20200910122807-fd8d2f54e423 h1:h0rECk67gd0CxmHYnaHPH1RbhRjto2hlC3KuOo/Vzfc=
-github.com/alibaba/inclavare-containers/rune v0.0.0-20200910122807-fd8d2f54e423/go.mod h1:/CbCa9fzRq4l68afAO4pcpNdgNkQFQOAhdwSFWz7S1s=
+github.com/alibaba/inclavare-containers/rune v0.0.0-20201022105457-b72af047bfaa h1:QDlieIs5GsT4Vc/DMqg4nYt8l0BGw01iNhclsrcJpag=
+github.com/alibaba/inclavare-containers/rune v0.0.0-20201022105457-b72af047bfaa/go.mod h1:tx2hUVXFfivWqbNeRkSMLpl5Z+uEZpgzyTDGi0ktsRI=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5/go.mod h1:TrMrLQfeENAPYPRsJuq3jsqdlRh3lvi6trTZJG8+tho=
 github.com/cilium/ebpf v0.0.0-20200319110858-a7172c01168f/go.mod h1:XT+cAw5wfvsodedcijoh1l9cf7v1x9FlFB/3VmF/O8s=
@@ -47,6 +45,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.3 h1:CE8S1cTafDpPvMhIxNJ
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/moby/sys/mountinfo v0.1.3/go.mod h1:w2t2Avltqx8vE7gX5l+QiBKxODu2TX0+Syr3h52Tw4o=
 github.com/mrunalp/fileutils v0.0.0-20171103030105-7d4729fb3618/go.mod h1:x8F1gnqOkIEiO4rqoeEEEqQbo7HjGMTvyoq3gej4iT0=
+github.com/opencontainers/runc v0.0.0-20200429081546-85c44b190e42 h1:FLe8oJTozW3s6qti/hgsGicHVWpkQq5H8UKSKKObLmU=
+github.com/opencontainers/runc v0.0.0-20200429081546-85c44b190e42/go.mod h1:J0bOgJ9XXn/Q5kOys2btdg+YRAY2XWuWlwisNwjKANg=
 github.com/opencontainers/runtime-spec v1.0.2/go.mod h1:jwyrGlmzljRJv/Fgzds9SsS/C5hL+LL3ko9hs6T5lQ0=
 github.com/opencontainers/selinux v1.4.0/go.mod h1:yTcKuYAh6R95iDpefGLQaPaRwJFwyzAJufJyiTt7s0g=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
