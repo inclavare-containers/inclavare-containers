@@ -22,6 +22,7 @@
 #include "defines.h"
 #include "sgx_call.h"
 #include "liberpal-skeleton.h"
+#include "aesm.h"
 
 #define PAGE_SIZE  4096
 
@@ -30,7 +31,6 @@
 
 #define IMAGE		"encl.bin"
 #define SIGSTRUCT	"encl.ss"
-#define TOKEN		"encl.token"
 
 static struct sgx_secs secs;
 static pal_stdio_fds pal_stdio;
@@ -393,27 +393,6 @@ static bool load_sigstruct(const char *path, void *sigstruct)
 	return true;
 }
 
-static bool load_token(const char *path, void *token)
-{
-	int fd;
-
-	fd = open(path, O_RDONLY);
-	if (fd == -1) {
-		fprintf(stderr, "open() %s failed, errno=%d.\n", path, errno);
-		return false;
-	}
-
-	if (read(fd, token, sizeof(struct sgx_einittoken)) !=
-	    sizeof(struct sgx_einittoken)) {
-		fprintf(stderr, "read() %s failed, errno=%d.\n", path, errno);
-		close(fd);
-		return false;
-	}
-
-	close(fd);
-	return true;
-}
-
 static void check_opts(const char *opt)
 {
 	if (!strcmp(opt, "no-sgx-flc"))
@@ -470,7 +449,7 @@ int __pal_init(pal_attr_t *attr)
 		return -ENOENT;
 
 	if (!is_launch_control_supported()) {
-		if (!load_token(TOKEN, &token))
+		if (!get_launch_token(&sigstruct, &token))
 			return -ENOENT;
 	}
 

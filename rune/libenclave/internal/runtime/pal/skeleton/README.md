@@ -5,11 +5,6 @@ Note that this code base is inspired by [v28 SGX in-tree driver](https://patchwo
 ---
 
 # Run skeleton with Docker
-## Install sgx-tools
-Refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/sgx-tools/README.md).
-
-Note that this step is only required when using SGX out-of-tree driver.
-
 ## Build liberpal-skeleton
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
@@ -30,8 +25,6 @@ WORKDIR /run/rune
 COPY encl.bin .
 COPY encl.elf .
 COPY encl.ss .
-# if any
-COPY encl.token .
 EOF
 docker build . -t skeleton-enclave
 ```
