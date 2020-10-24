@@ -2,7 +2,6 @@
 ## explicit
 github.com/checkpoint-restore/go-criu/rpc
 # github.com/cilium/ebpf v0.0.0-20200319110858-a7172c01168f
-## explicit
 github.com/cilium/ebpf
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/internal
@@ -28,7 +27,6 @@ github.com/docker/go-units
 github.com/go-restruct/restruct
 github.com/go-restruct/restruct/expr
 # github.com/godbus/dbus/v5 v5.0.3
-## explicit
 github.com/godbus/dbus/v5
 # github.com/golang/protobuf v1.3.5
 ## explicit
@@ -41,7 +39,7 @@ github.com/moby/sys/mountinfo
 # github.com/mrunalp/fileutils v0.0.0-20171103030105-7d4729fb3618
 ## explicit
 github.com/mrunalp/fileutils
-# github.com/opencontainers/runc v0.0.0-20200429081546-85c44b190e42
+# github.com/opencontainers/runc v0.0.0-20200429033603-85c44b190e42
 ## explicit
 github.com/opencontainers/runc/libcontainer
 github.com/opencontainers/runc/libcontainer/apparmor
@@ -80,7 +78,6 @@ github.com/pkg/errors
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
 # github.com/seccomp/libseccomp-golang v0.9.1
-## explicit
 github.com/seccomp/libseccomp-golang
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
@@ -106,5 +103,3 @@ golang.org/x/sys/windows
 # golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# google.golang.org/grpc v1.29.1
-## explicit
