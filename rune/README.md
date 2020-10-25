@@ -23,7 +23,7 @@ make
 sudo make install
 ```
 
-`rune` will be installed to `/usr/local/sbin/rune` on your system.
+`rune` will be installed to `/usr/local/bin/rune` on your system.
 
 # Using rune
 

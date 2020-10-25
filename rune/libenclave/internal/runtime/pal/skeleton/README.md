@@ -49,7 +49,7 @@ Add the `rune` OCI runtime configuration in dockerd config file, e.g, `/etc/dock
 {
 	"runtimes": {
 		"rune": {
-			"path": "/usr/local/sbin/rune",
+			"path": "/usr/local/bin/rune",
 			"runtimeArgs": []
 		}
 	}
