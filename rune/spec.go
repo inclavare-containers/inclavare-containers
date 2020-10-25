@@ -83,6 +83,10 @@ created by an unprivileged user.
 		}
 		spec := specconv.Example()
 		spec.Process.Cwd = "/var/run/rune"
+		spec.Root = &specs.Root{
+			Path:     "rootfs",
+			Readonly: false,
+		}
 		spec.Hostname = "rune"
 		spec.Annotations = map[string]string{
 			"enclave.type":         "intelSgx",
