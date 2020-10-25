@@ -80,7 +80,7 @@ After build Inclavare Containers on your system, you can use the following comma
 sudo make install
 ```
 
-`rune` will be installed to `/usr/local/sbin/rune` on your system. `shim-rune` will be installed to `/usr/local/bin/containerd-shim-rune-v2`. `sgx-tools` will be installed to `/usr/local/bin/sgx-tools`.
+`rune` will be installed to `/usr/local/bin/rune` on your system. `shim-rune` will be installed to `/usr/local/bin/containerd-shim-rune-v2`. `sgx-tools` will be installed to `/usr/local/bin/sgx-tools`.
 
 If you don't want to build and install Inclavare Containers from latest source code. We also provide RPM/DEB repository to help you install Inclavare Containers quickly. Please see the [steps about how to configure repository](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#1-add-inclavare-containers-repository) firstly. Then you can run the following command to install Inclavare Containers on your system.
 
@@ -115,7 +115,7 @@ Add the assocated configurations for `rune` in dockerd config file, e.g, `/etc/d
 }
 ```
 
-then restart dockerd on your system. If you install Inclavare Containers based on source code, please specify the path of rune as `/usr/local/sbin/rune` instead.
+then restart dockerd on your system. If you install Inclavare Containers based on source code, please specify the path of rune as `/usr/local/bin/rune` instead.
 
 You can check whether `rune` is correctly enabled or not with:
 
