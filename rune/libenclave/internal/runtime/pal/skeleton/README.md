@@ -74,6 +74,16 @@ where:
 - @ENCLAVE_PATH: specify the path to enclave runtime to launch.
 - @ENCLAVE_ARGS: specify the specific arguments to enclave runtime, seperated by the comma.
 
+In order to measure the overhead of enclave launch time, we add a `memory-size` parameter for skeleton and `-m` option for `sgxsign` tool.
+
+`memory-size` parameter and `-m` option should be the same value to specify the memory size of enclave to launch. For example, if `memory-size` is `40960`, skeleton will launch enclave with `40960` bytes of memory size.
+
+If you want to launch enclave with a specific value, you should add `-m ${SIZE}` option with `sgxsign` tool to specify the memory size of enclave to launch. In addition, You must specify `memory-size` in `ENCLAVE_RUNTIME_ARGS` with the same number.
+
+```shell
+ENCLAVE_RUNTIME_ARGS="debug,memory-size=${SIZE}"
+```
+
 ---
 
 # Run skeleton OCI bundle
@@ -116,6 +126,8 @@ where:
 - @enclave.type: specify the type of enclave hardware to use, such as intelSgx.
 - @enclave.runtime.path: specify the path to enclave runtime to launch.
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, seperated by the comma.
+
+Note that if you add `-m ${SIZE}` when signing your enclave image with `sgxsign` tool. You must specify `memory-size=${SIZE}` in "enclave.runtime.args`.
 
 ## Run skeleton
 Assuming you have an OCI bundle from the previous step you can execute the container in this way.

@@ -151,22 +151,18 @@ struct mrecreate {
 } __attribute__((__packed__));
 
 /* *INDENT-OFF* */
-static bool mrenclave_ecreate(EVP_MD_CTX *ctx, uint64_t blob_size,
-			      uint32_t miscselect, uint64_t xfrm,
-			      uint32_t *ssa_frame_size)
+static bool mrenclave_ecreate(EVP_MD_CTX * ctx, uint32_t ssa_frame_size,
+			      uint64_t encl_size)
 /* *INDENT-ON* */
 {
 	struct mrecreate mrecreate;
-	uint64_t encl_size;
-
-	for (encl_size = PAGE_SIZE; encl_size < blob_size;)
-		encl_size <<= 1;
 
 	memset(&mrecreate, 0, sizeof(mrecreate));
 	mrecreate.tag = MRECREATE;
-	mrecreate.ssaframesize = sgx_calc_ssaframesize(miscselect, xfrm);
-	*ssa_frame_size = mrecreate.ssaframesize;
-	mrecreate.size = encl_size;
+	mrecreate.ssaframesize = ssa_frame_size;
+
+	for (mrecreate.size = PAGE_SIZE; mrecreate.size < encl_size;)
+		mrecreate.size <<= 1;
 
 	if (!EVP_DigestInit_ex(ctx, EVP_sha256(), NULL))
 		return false;
@@ -244,7 +240,8 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
  */
 /* *INDENT-OFF* */
 static bool measure_encl(const char *path, uint8_t *mrenclave,
-			 uint32_t miscselect, uint64_t xfrm)
+			 uint32_t miscselect, uint64_t xfrm,
+			 uint64_t max_enclave_size)
 /* *INDENT-ON* */
 {
 	FILE *file;
@@ -278,6 +275,18 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 		goto out;
 	}
 
+	ssa_frame_size = sgx_calc_ssaframesize(miscselect, xfrm);
+	uint64_t encl_size = sb.st_size + PAGE_SIZE * ssa_frame_size;
+	if (max_enclave_size) {
+		if (max_enclave_size < encl_size) {
+			fprintf(stderr,
+				"Invalid enclave size %lu, please set enclave size large than %lu.\n",
+				max_enclave_size, encl_size);
+			return false;
+		}
+		encl_size = max_enclave_size;
+	}
+
 	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
 			 fileno(file), 0);
 	if (bin == MAP_FAILED) {
@@ -288,8 +297,7 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	struct sgx_tcs *tcs = bin;
 	tcs->ssa_offset = sb.st_size;
 
-	if (!mrenclave_ecreate
-	    (ctx, sb.st_size, miscselect, xfrm, &ssa_frame_size))
+	if (!mrenclave_ecreate(ctx, ssa_frame_size, encl_size))
 		goto out;
 
 	for (offset = 0; offset < sb.st_size; offset += PAGE_SIZE) {
@@ -311,9 +319,10 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	memset(data, 0, sizeof(data));
 
 	flags = SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X;
-	for (offset = sb.st_size;
-	     offset < sb.st_size + PAGE_SIZE * ssa_frame_size;
-	     offset += PAGE_SIZE) {
+
+	if (encl_size % PAGE_SIZE)
+		encl_size = (encl_size / PAGE_SIZE + 1) * PAGE_SIZE;
+	for (offset = sb.st_size; offset < encl_size; offset += PAGE_SIZE) {
 		if (!mrenclave_eadd(ctx, offset, flags))
 			goto out;
 
@@ -475,18 +484,25 @@ int main(int argc, char **argv)
 	int opt;
 	RSA *sign_key;
 	bool enclave_debug = true;
-	char *const short_options = "p";
-	struct option long_options = { "product", 0, NULL, 'p' };
+	uint64_t max_enclave_size = 0;
+	char *const short_options = "pm:";
+	struct option long_options[] = {
+		{"product", no_argument, NULL, 'p'},
+		{"memory-size", required_argument, NULL, 'm'},
+		{0, 0, 0, 0}
+	};
 
 	program = argv[0];
 
 	do {
-		opt = getopt_long(argc, argv, short_options, &long_options,
+		opt = getopt_long(argc, argv, short_options, long_options,
 				  NULL);
 		switch (opt) {
 		case 'p':
 			enclave_debug = false;
 			break;
+		case 'm':
+			max_enclave_size = atoi(optarg);
 		case -1:
 			break;
 		default:
@@ -532,7 +548,8 @@ int main(int argc, char **argv)
 	BN_bn2bin(get_modulus(sign_key), ss.modulus);
 
 	if (!measure_encl
-	    (argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm))
+	    (argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm,
+	     max_enclave_size))
 		goto out;
 
 	if (!sign_encl(&ss, sign_key, ss.signature))
