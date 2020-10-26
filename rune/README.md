@@ -115,3 +115,6 @@ Assuming you have an OCI bundle from the previous step you can execute the conta
 cd "$HOME/rune_workdir/rune-container"
 sudo rune run ${Occlum_application_container_name}
 ```
+
+# Credits
+Some codes in rune have been borrowed from [runc](https://github.com/opencontainers/runc) project.
