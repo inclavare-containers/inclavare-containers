@@ -1,0 +1,16 @@
+/lkvm
+/lkvm-static
+/vm
+*.o
+*.d
+*.swp
+/cscope.*
+tags
+tests/boot/boot_test.iso
+tests/boot/rootfs/
+guest/init
+guest/pre_init
+guest/init_stage2
+KVMTOOLS-VERSION-FILE
+/x86/bios/bios.bin
+/x86/bios/bios.bin.elf
