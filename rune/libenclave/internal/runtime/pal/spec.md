@@ -26,6 +26,7 @@ The PAL API will evolve. You can submit proposal for the extension of PAL API. W
 |	   | pal_init |  pal_init |
 |      |  pal_exec | pal_create_process |
 |	  |                | pal_exec |
+|      | pal_destroy | pal_destroy | 
 | exec | pal_exec  | pal_create_process |
 |      |           | pal_exec           | 
 | delete | pal_destroy | pal_destroy |
