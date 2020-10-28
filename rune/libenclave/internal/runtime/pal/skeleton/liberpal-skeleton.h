@@ -5,13 +5,27 @@
 
 #include <stdbool.h>
 
+#define	PAGE_SIZE	4096
+#define	IMAGE		"encl.bin"
+#define	SIGSTRUCT	"encl.ss"
+
+extern struct sgx_secs secs;
 extern bool is_oot_driver;
 extern bool debugging;
+extern int enclave_fd;
+extern void *tcs_busy;
+extern bool initialized;
 
 typedef struct {
 	const char *args;
 	const char *log_level;
-} pal_attr_t;
+} pal_attr_v1_t;
+
+typedef struct {
+	pal_attr_v1_t attr_v1;
+	int fd;
+	int addr;
+} pal_attr_v3_t;
 
 typedef struct {
 	int stdin, stdout, stderr;
@@ -30,8 +44,10 @@ typedef struct {
 	int *exit_value;
 } pal_exec_args;
 
+int encl_init();
+void parse_args(const char *args);
 /* *INDENT-OFF* */
-int __pal_init(pal_attr_t *attr);
+int __pal_init_v1(pal_attr_v1_t *attr);
 int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code);
 int __pal_create_process(pal_create_process_args *args);
 int wait4child(pal_exec_args *attr);

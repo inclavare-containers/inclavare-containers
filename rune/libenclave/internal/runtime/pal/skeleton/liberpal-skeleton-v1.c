@@ -6,9 +6,9 @@ int pal_get_version(void)
 }
 
 /* *INDENT-OFF* */
-int pal_init(pal_attr_t *attr)
+int pal_init(pal_attr_v1_t *attr)
 {
-	return __pal_init(attr);
+	return __pal_init_v1(attr);
 }
 
 int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)

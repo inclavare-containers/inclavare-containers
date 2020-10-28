@@ -24,17 +24,12 @@
 #include "liberpal-skeleton.h"
 #include "aesm.h"
 
-#define PAGE_SIZE  4096
-
 #define SGX_REG_PAGE_FLAGS \
 	(SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X)
 
-#define IMAGE		"encl.bin"
-#define SIGSTRUCT	"encl.ss"
-
-static struct sgx_secs secs;
+struct sgx_secs secs;
 static pal_stdio_fds pal_stdio;
-static bool initialized = false;
+bool initialized = false;
 static int exit_code;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
@@ -46,7 +41,7 @@ bool is_oot_driver;
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
  * intends to exit.
  */
-static int enclave_fd = -1;
+int enclave_fd = -1;
 void *tcs_busy;
 
 static bool is_sgx_device(const char *dev)
@@ -401,7 +396,7 @@ static void check_opts(const char *opt)
 		debugging = true;
 }
 
-static void parse_args(const char *args)
+void parse_args(const char *args)
 {
 	char *a = strdup(args);
 	if (!a)
@@ -426,21 +421,12 @@ static void parse_args(const char *args)
 	free(a);
 }
 
-/* *INDENT-OFF* */
-int __pal_init(pal_attr_t *attr)
+int encl_init()
 {
 	struct sgx_sigstruct sigstruct;
 	struct sgx_einittoken token;
 	off_t bin_size;
 	void *bin;
-
-	parse_args(attr->args);
-
-	tcs_busy = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
-			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-	if (tcs_busy == MAP_FAILED)
-		return -EINVAL;
-	*(uint8_t *) tcs_busy = 0;
 
 	if (!encl_data_map(IMAGE, &bin, &bin_size))
 		return -ENOENT;
@@ -455,6 +441,26 @@ int __pal_init(pal_attr_t *attr)
 
 	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token))
 		return -EINVAL;
+
+	return 0;
+}
+
+/* *INDENT-OFF* */
+int __pal_init_v1(pal_attr_v1_t *attr)
+{
+	int ret;
+
+	parse_args(attr->args);
+
+	tcs_busy = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	if (tcs_busy == MAP_FAILED)
+		return -EINVAL;
+	*(uint8_t *) tcs_busy = 0;
+
+	ret = encl_init();
+	if (ret != 0)
+		return ret;
 
 	initialized = true;
 

@@ -12,9 +12,9 @@ int pal_get_version(void)
 }
 
 /* *INDENT-OFF* */
-int pal_init(pal_attr_t *attr)
+int pal_init(pal_attr_v1_t *attr)
 {
-	return __pal_init(attr);
+	return __pal_init_v1(attr);
 }
 
 int pal_create_process(pal_create_process_args *args)
