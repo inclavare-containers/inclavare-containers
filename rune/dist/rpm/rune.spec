@@ -5,7 +5,7 @@
 %global PROJECT inclavare-containers
 
 Name: rune
-Version: 0.4.1
+Version: 0.5.0
 Release: %{centos_base_release}%{?dist}
 Summary: CLI tool for spawning and running enclaves in containers according to the OCI specification.  
 
@@ -60,6 +60,9 @@ install -p -m 644 %{name}/LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{ve
 %{_bindir}/%{name}
 
 %changelog
+* Wed Oct 28 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.5.0
+- Update to version 0.5.0
+
 * Wed Sep 23 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.4.1
 - Update to version 0.4.1
 
