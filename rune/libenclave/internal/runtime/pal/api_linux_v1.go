@@ -2,6 +2,7 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 
 /*
 #include <stdlib.h>
+#include "skeleton/liberpal-skeleton.h"
 
 static int palGetVersion(void *sym)
 {
@@ -10,16 +11,12 @@ static int palGetVersion(void *sym)
 
 static int palInitV1(void *sym, const char *args, const char *log_level)
 {
-	typedef struct {
-		const char*     instance_dir;
-		const char*     log_level;
-	} pal_attr_t;
-	pal_attr_t attr = {
+	pal_attr_v1_t attr = {
 		args,
 		log_level,
 	};
 
-	return ((int (*)(pal_attr_t *))sym)(&attr);
+	return ((int (*)(pal_attr_v1_t *))sym)(&attr);
 }
 
 static int palExecV1(void *sym, const char *exe, const char *argv[],

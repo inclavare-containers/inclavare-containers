@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <linux/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include "liberpal-skeleton.h"
 #include "sgx_call.h"
 #include "defines.h"
@@ -16,9 +17,33 @@ int pal_get_version(void)
 }
 
 /* *INDENT-OFF* */
-int pal_init(pal_attr_t *attr)
+int pal_init(pal_attr_v3_t *attr)
 {
-	return __pal_init(attr);
+	int ret;
+
+	parse_args(attr->attr_v1.args);
+
+	tcs_busy = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
+			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	if (tcs_busy == MAP_FAILED)
+		return -EINVAL;
+	*(uint8_t *) tcs_busy = 0;
+
+	if (attr->fd != -1) {
+		enclave_fd = attr->fd;
+		secs.base = attr->addr;
+		initialized = true;
+		return 0;
+	}
+
+	ret = encl_init();
+	if (ret != 0)
+		return ret;
+
+	initialized = true;
+
+	return 0;
+
 }
 
 int pal_create_process(pal_create_process_args *args)
