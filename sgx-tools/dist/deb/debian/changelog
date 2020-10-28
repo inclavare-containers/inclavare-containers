@@ -1,3 +1,9 @@
+sgx-tools (0.5.0-1) unstable; urgency=low
+
+  * Update to version 0.5.0.
+
+ -- Shirong Hao <shirong@linux.alibaba.com>  Wed, 28 Oct 2020 13:48:35 +0000
+
 sgx-tools (0.4.1-1) unstable; urgency=low
 
   * Initial release.
