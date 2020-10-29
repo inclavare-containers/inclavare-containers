@@ -641,7 +641,7 @@ int __pal_kill(int pid, int sig)
 	return 0;
 }
 
-int __pal_destory(void)
+int __pal_destroy(void)
 {
 	FILE *fp = fdopen(pal_stdio.stderr, "w");
 	if (!fp)
