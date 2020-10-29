@@ -3,9 +3,10 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 /*
 #include <stdlib.h>
 #include <errno.h>
+#include <stdint.h>
 #include "skeleton/liberpal-skeleton.h"
 
-static int palInitV3(void *sym, const char *args, const char *log_level, int fd, int addr)
+static int palInitV3(void *sym, const char *args, const char *log_level, int fd, int64_t addr)
 {
 	pal_attr_v3_t attr_v3 = {
 		args,
@@ -36,7 +37,7 @@ import (
 type enclaveRuntimePalApiV3 struct {
 }
 
-func (api *enclaveRuntimePalApiV3) init(args string, logLevel string, fd int, addr int) error {
+func (api *enclaveRuntimePalApiV3) init(args string, logLevel string, fd int, addr int64) error {
 	logrus.Debugf("pal init() called with args %s", args)
 
 	a := C.CString(args)
@@ -46,7 +47,7 @@ func (api *enclaveRuntimePalApiV3) init(args string, logLevel string, fd int, ad
 	defer C.free(unsafe.Pointer(l))
 
 	f := C.int(fd)
-	r := C.int(addr)
+	r := C.long(addr)
 
 	sym := symAddrPalInit()
 	ret := C.palInitV3(sym, a, l, f, r)

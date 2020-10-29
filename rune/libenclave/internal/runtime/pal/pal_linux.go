@@ -3,20 +3,31 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/go-restruct/restruct"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
 	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
+	"github.com/inclavare-containers/rune/libenclave/epm"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
+	"strings"
+
 	"log"
 	"os"
 )
 
 const (
-	palApiVersion = 3
+	palApiVersion        = 3
+	InvalidEpmID  string = "InvalidEPMID"
 )
 
 func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
+	var enclaveinfo *v1alpha1.Enclave
+	var err error
+	var addr int64 = 0
+	var fd int = -1
+
+	pal.enclavePoolID = InvalidEpmID
 	api := &enclaveRuntimePalApiV1{}
 	ver := api.get_version()
 	if ver > palApiVersion {
@@ -24,6 +35,28 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	}
 	pal.version = ver
 
+	/* FIXME: If EPM provides epm existence detect API, the static check will be substituted. Enclave pool
+	 * will be distinguished by pal.Type and Pal.subType once subType can be provided by new PAL interface
+	 * in future.
+	 */
+	if strings.Contains(args, "epm") {
+		/* enclaveinfo.Layout retrieves from /proc/pid/mmaps, in file mmaps /dev/sgx/enclave mmaping
+		 * address is sorted from low address to high one. So layout[0].Addr will be minimum.
+		 */
+		enclaveinfo = epm.GetEnclave()
+		if enclaveinfo != nil {
+			epm.SgxMmap(*enclaveinfo)
+			addr = enclaveinfo.Layout[0].Addr
+			fd = int(enclaveinfo.Fd)
+		}
+		api := &enclaveRuntimePalApiV3{}
+		err = api.init(args, logLevel, fd, addr)
+		if err == nil {
+			ID := epm.SavePreCache()
+			pal.enclavePoolID = ID
+		}
+		return err
+	}
 	return api.init(args, logLevel)
 }
 
@@ -48,6 +81,10 @@ func (pal *enclaveRuntimePal) Kill(pid int, sig int) error {
 
 func (pal *enclaveRuntimePal) Destroy() error {
 	api := &enclaveRuntimePalApiV1{}
+
+	if pal.enclavePoolID != InvalidEpmID {
+		epm.SaveEnclave(pal.enclavePoolID)
+	}
 	return api.destroy()
 }
 
