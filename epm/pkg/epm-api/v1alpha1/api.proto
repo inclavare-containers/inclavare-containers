@@ -28,6 +28,8 @@ service EnclavePoolManager {
     rpc GetCache(GetCacheRequest) returns (GetCacheResponse) {}
     // SaveCache represents save the data to a cache directory and record the cache metadata
     rpc SaveCache(SaveCacheRequest) returns (SaveCacheResponse) {}
+    // SaveFinalCache represents save the enclave info which can be used instantly
+    rpc SaveFinalCache(SaveCacheRequest) returns (SaveCacheResponse) {}
     // ListCache represents list part of or all of the cache metadata
     rpc ListCache(ListCacheRequest) returns (ListCacheResponse) {}
     // DeleteCache represents delete the specified cached data and remove the corresponding cache metadata
