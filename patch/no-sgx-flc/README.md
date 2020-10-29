@@ -8,6 +8,8 @@ There are still non-trivial number of systems without FLC support.
   * Note: [Occlum](https://github.com/occlum/occlum) has a modified Intel SGX SDK repository named [`occlum/linux-sgx`](https://github.com/occlum/linux-sgx). So if not applying the patch `0001-psw-Support-SGX1-machine-with-SGX-in-tree-driver.patch` to `occlum/linux-sgx`, `Occlum` can't work with the `DCAP` or `in-tree` SGX Linux driver.
 
 # Validation
+- Successfully run the [`SampleEnclave`](https://github.com/intel/linux-sgx/tree/master/SampleCode/SampleEnclave) sample code
+with `export LD_LIBRARY_PATH=/opt/intel/sgxpsw/aesm/:$LD_LIBRARY_PATH` as the precondition.
 - Successfully run [sgx-tools](https://github.com/alibaba/inclavare-containers/tree/master/sgx-tools#test) to generate a launch token.
 - Successfully run [skeleton bundle](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/README.md).
   * Note: specify `"enclave.runtime.args": "no-sgx-flc"` in config.json is required.
