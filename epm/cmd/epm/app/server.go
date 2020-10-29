@@ -13,6 +13,7 @@ import (
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum"
+	"github.com/alibaba/inclavare-containers/epm/pkg/epm/enclave-cache-pool/enclavepool"
 	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
@@ -54,6 +55,12 @@ func runServer(opts *options.Options, stopCh <-chan struct{}) error {
 	server.RegisterCachePoolManager(bundleCache0)
 	server.RegisterCachePoolManager(bundleCache1)
 	server.RegisterCachePoolManager(bundleCache2)
+
+	enclmanager := enclavepool.NewEnclaveCacheManager(cfg.Root)
+	enclmanager1 := enclavepool.NewEnclaveCacheOcclumManager(cfg.Root)
+	// register process cache pool manager to the manager server
+	server.RegisterCachePoolManager(enclmanager)
+	server.RegisterCachePoolManager(enclmanager1)
 
 	// start the grpc server with the server options
 	s := grpc.NewServer(serverOpts...)

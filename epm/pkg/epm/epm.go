@@ -11,7 +11,6 @@ import (
 
 // EnclavePoolManagerServer represents the service that manages the enclave pools
 type EnclavePoolManagerServer struct {
-	v1alpha1.UnimplementedEnclavePoolManagerServer
 	// cachePools containers the mapping of the cache type and enclave pool
 	cachePools map[string]EnclavePool
 }
@@ -37,6 +36,19 @@ func (s *EnclavePoolManagerServer) SaveCache(ctx context.Context, req *v1alpha1.
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	if err := manager.SaveCache(req.SourcePath, cache); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &v1alpha1.SaveCacheResponse{Ok: true}, nil
+}
+
+// SaveCache saves the data to a cache directory and record the cache metadata
+func (s *EnclavePoolManagerServer) SaveFinalCache(ctx context.Context, req *v1alpha1.SaveCacheRequest) (*v1alpha1.SaveCacheResponse, error) {
+	cache := req.Cache
+	manager, err := s.getCachePoolManager(cache.Type)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	if err := manager.SaveFinalCache(cache.ID); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	return &v1alpha1.SaveCacheResponse{Ok: true}, nil

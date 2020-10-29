@@ -18,6 +18,8 @@ type EnclavePool interface {
 	GetCache(ID string) (*v1alpha1.Cache, error)
 	// SaveCache saves the data to a cache directory and record the cache metadata
 	SaveCache(sourcePath string, cache *v1alpha1.Cache) error
+	// SaveFinalCache save the final enclave cache info
+	SaveFinalCache(ID string) error
 	// ListCache lists part of or all of the cache metadata
 	ListCache(lastCacheID string, limit int32) ([]*v1alpha1.Cache, error)
 	// DeleteCache deletes the specified cached data and remove the corresponding cache metadata
@@ -32,6 +34,7 @@ type EnclavePool interface {
 type DefaultEnclavePool struct {
 	Root          string
 	Type          string
+	Enclaveinfo   map[int]*v1alpha1.Enclave
 	CacheMetadata *cache_metadata.Metadata
 }
 
@@ -76,6 +79,10 @@ func (d *DefaultEnclavePool) SaveCache(sourcePath string, cache *v1alpha1.Cache)
 	cache.Size = size
 	cache.Created = time.Now().Unix()
 	return d.CacheMetadata.SaveCache(d.GetPoolType(), cache.ID, cache)
+}
+
+func (d *DefaultEnclavePool) SaveFinalCache(ID string) error {
+	return nil
 }
 
 func (d *DefaultEnclavePool) ListCache(lastCacheID string, limit int32) ([]*v1alpha1.Cache, error) {
