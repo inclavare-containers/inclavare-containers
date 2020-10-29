@@ -19,5 +19,5 @@ int pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 
 int pal_destroy(void)
 {
-	return __pal_destory();
+	return __pal_destroy();
 }

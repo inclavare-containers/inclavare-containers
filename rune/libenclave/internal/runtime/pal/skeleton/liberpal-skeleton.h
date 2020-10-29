@@ -55,7 +55,7 @@ int wait4child(pal_exec_args *attr);
 int __pal_get_local_report(void *targetinfo, int targetinfo_len,
 			   void *report, int *report_len);
 int __pal_kill(int pid, int sig);
-int __pal_destory(void);
+int __pal_destroy(void);
 
 /* *INDENT-OFF* */
 #endif

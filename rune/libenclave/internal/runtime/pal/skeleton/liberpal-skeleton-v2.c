@@ -35,5 +35,5 @@ int pal_kill(int pid, int sig)
 
 int pal_destroy(void)
 {
-	return __pal_destory();
+	return __pal_destroy();
 }
