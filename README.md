@@ -100,6 +100,10 @@ sudo apt-get install rune shim-rune sgx-tools
 
 Inclavare Containers can be integrated with dockerd and containerd.
 
+The former targets using docker to deploy Inclavare Containers. Specifically, you need to install the preferred enclave runtime when building container images, and then launch the enclave runtime through `rune` and [enclave runtime specific PAL](docs/design/terminology.md#enclave-runtime-pal).
+
+The latter targets using K8s to deploy Inclavare Containers. In this scenario, `shim-rune` and `rune` can compose an enclave containerization stack, so enclave runtime is not required and installed when building container images, providing with the same experience as ordinary containers.
+
 ## dockerd
 
 Add the assocated configurations for `rune` in dockerd config file, e.g, `/etc/docker/daemon.json`, on your system.
@@ -136,20 +140,24 @@ Add the assocated configurations for shim-rune in containerd config file, e.g, `
 
 then restart containerd on your system.
 
-# Running
+# Deployment
 
-[The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how Inclavare Containers works. Currently, web application demos based on OpenJDK 11, [Dragonwell](http://dragonwell-jdk.io/), and Golang are provided.
+Inclavare Containers can be deployed with dockerd and containerd.
 
-# Tutorials
+## dockerd
 
-## Confidential Computing Kubernetes Cluster
+### Occlum LibOS
+
+Please refer to [this guide](docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md) to run [Occlum](https://github.com/occlum/occlum) with `rune` and docker.
+
+### WebAssembly Micro Runtime (WAMR)
+
+Please refer to [this guide](https://github.com/bytecodealliance/wasm-micro-runtime/tree/main/product-mini/platforms/linux-sgx/enclave-sample/App#wamr-as-an-enclave-runtime-for-rune) to run [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) with `rune`.
+
+## containerd
 
 Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_kubernetes_cluster.md) to deploy an enclave container in a Kubernetes cluster.
 
-## Occlum LibOS
+[The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11, [Dragonwell](http://dragonwell-jdk.io/), and Golang are provided.
 
-Please refer to [this guide](docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md) to run [Occlum](https://github.com/occlum/occlum) with `rune`.
-
-## WebAssembly Micro Runtime (WAMR)
-
-Please refer to [this guide](https://github.com/bytecodealliance/wasm-micro-runtime/tree/main/product-mini/platforms/linux-sgx/enclave-sample/App#wamr-as-an-enclave-runtime-for-rune) to run [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) with `rune`.
+**All reference container images don't contain enclave runtime. They are only used for the deployment with containerd.**
