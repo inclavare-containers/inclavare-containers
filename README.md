@@ -34,7 +34,7 @@ The major components of Inclavare Containers are:
 - enclave runtime  
   The backend of `rune` is a component called enclave runtime, which is responsible for loading and running trusted and protected applications inside enclaves. The interface between `rune` and enclave runtime is [Enclave Runtime PAL API](rune/libenclave/internal/runtime/pal/spec.md), which allows invoking enclave runtime through well-defined functions. The softwares for confidential computing may benefit from this interface to interact with cloud-native ecosystem.  
   
-  One typical class of enclave runtime implementations is based on Library OSes. Currently, the recommended enclave runtime interacting with `rune` is [Occlum](https://github.com/occlum/occlum), a memory-safe, multi-process Library OS for Intel SGX.  
+  One typical class of enclave runtime implementations is based on Library OSes. Currently, the recommended enclave runtime interacting with `rune` is [Occlum](https://github.com/occlum/occlum), a memory-safe, multi-process Library OS for Intel SGX.  And another typical class of enclave runtime is [WebAssembly Micro Runtime (WAMR)](https://github.com/bytecodealliance/wasm-micro-runtime) with Intel SGX, a standalone WebAssembly (WASM) runtime with a small footprint, including a VM core, an application framework and a dynamic management for WASM applications.
   
   In addition, you can write your own enclave runtime with any programming language and SDK (e.g, [Intel SGX SDK](https://github.com/intel/linux-sgx)) you prefer as long as it implements Enclave Runtime PAL API.
 
@@ -88,7 +88,7 @@ If you don't want to build and install Inclavare Containers from latest source c
 
 ```shell
 sudo yum install rune shim-rune sgx-tools
-``` 
+```
 
 - On Ubuntu 18.04 server
 
@@ -149,3 +149,7 @@ Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_
 ## Occlum LibOS
 
 Please refer to [this guide](docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md) to run [Occlum](https://github.com/occlum/occlum) with `rune`.
+
+## WebAssembly Micro Runtime (WAMR)
+
+Please refer to [this guide](https://github.com/bytecodealliance/wasm-micro-runtime/tree/main/product-mini/platforms/linux-sgx/enclave-sample/App#wamr-as-an-enclave-runtime-for-rune) to run [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) with `rune`.

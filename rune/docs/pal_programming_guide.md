@@ -1,7 +1,7 @@
 # Enclave Runtime Programming Guide v2
 
 # 1. Background
-The enclave runtime currently supported by runE is occlum. In order to facilitate other libos programs to run in runE, a set of enclave rumtime API interfaces is defined. Libos only needs to support this set of API interfaces to run as an enclave runtime in runE.
+The enclave runtime currently supported by runE are occlum and WAMR (WebAssembly Micro Runtime). In order to facilitate other libos programs to run in runE, a set of enclave rumtime API interfaces is defined. Libos only needs to support this set of API interfaces to run as an enclave runtime in runE.
 
 # 2. enclave runtime in runE
 runE enclave runtime is bounded by the enclave runtime pal API layer, below the API layer is runE, above the API layer is the enclave runtime, and the operating mode is libos.

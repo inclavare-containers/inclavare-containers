@@ -49,6 +49,12 @@ Please refer to [this tutorial](libenclave/internal/runtime/pal/skeleton/README.
 
 Please refer to [this tutorial](../docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md) for more details.
 
+### WebAssembly Micro Runtime (WAMR)
+
+[WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) is a standalone WebAssembly (WASM) runtime with a small footprint, including a VM core, an application framework and a dynamic management for WASM applications.
+
+Please refer to [this tutorial](https://github.com/bytecodealliance/wasm-micro-runtime/tree/main/product-mini/platforms/linux-sgx/enclave-sample/App#wamr-as-an-enclave-runtime-for-rune) for more details.
+
 # Developement
 
 ## Running OCI bundle
@@ -117,4 +123,5 @@ sudo rune run ${Occlum_application_container_name}
 ```
 
 # Credits
+
 Some codes in rune have been borrowed from [runc](https://github.com/opencontainers/runc) project.

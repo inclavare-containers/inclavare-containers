@@ -11,7 +11,7 @@ This API defines the function calls beutween Enclave Runtime PAL and init-runele
 The implementer of Enclave Runtime PAL API, on behalf of Enclave Runtime.
 
 # Enclave Runtime
-The implementer of enclave. Occlum and Graphene-SGX are all the so-called Enclave Runtime.
+The implementer of enclave. Occlum, Graphene-SGX and WAMR (WebAssembly Micro Runtime) are all the so-called Enclave Runtime.
 
 # Enclave Application
 The actual running entity inside Enclave Runtime.
