@@ -5,7 +5,8 @@ import (
 )
 
 type enclaveRuntimePal struct {
-	version uint32
+	version       uint32
+	enclavePoolID string
 }
 
 func StartInitialization(config *configs.InitEnclaveConfig) (*enclaveRuntimePal, error) {
