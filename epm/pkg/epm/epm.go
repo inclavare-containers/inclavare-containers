@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/golang/glog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -19,12 +20,15 @@ type EnclavePoolManagerServer struct {
 func (s *EnclavePoolManagerServer) GetCache(ctx context.Context, req *v1alpha1.GetCacheRequest) (*v1alpha1.GetCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	cache, err := manager.GetCache(req.ID)
 	if err != nil {
+		glog.Errorf("get cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	glog.Infof("get cache successfully. request: %++v", req)
 	return &v1alpha1.GetCacheResponse{Cache: cache}, nil
 }
 
@@ -33,11 +37,14 @@ func (s *EnclavePoolManagerServer) SaveCache(ctx context.Context, req *v1alpha1.
 	cache := req.Cache
 	manager, err := s.getCachePoolManager(cache.Type)
 	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", cache.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	if err := manager.SaveCache(req.SourcePath, cache); err != nil {
+		glog.Errorf("save cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	glog.Infof("save cache successfully. request: %++v", req)
 	return &v1alpha1.SaveCacheResponse{Ok: true}, nil
 }
 
@@ -58,12 +65,15 @@ func (s *EnclavePoolManagerServer) SaveFinalCache(ctx context.Context, req *v1al
 func (s *EnclavePoolManagerServer) ListCache(ctx context.Context, req *v1alpha1.ListCacheRequest) (*v1alpha1.ListCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	caches, err := manager.ListCache(req.LastCacheID, req.Limit)
 	if err != nil {
+		glog.Errorf("list cache failed. error: %++v", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	glog.Infof("list caches successfully. request: %++v", req)
 	return &v1alpha1.ListCacheResponse{Caches: caches}, nil
 }
 
@@ -71,11 +81,14 @@ func (s *EnclavePoolManagerServer) ListCache(ctx context.Context, req *v1alpha1.
 func (s *EnclavePoolManagerServer) DeleteCache(ctx context.Context, req *v1alpha1.DeleteCacheRequest) (*v1alpha1.DeleteCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	if err := manager.DeleteCache(req.ID); err != nil {
+		glog.Errorf("delete cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	glog.Infof("delete cache successfully. request: %++v", req)
 	return &v1alpha1.DeleteCacheResponse{Ok: true}, nil
 }
 
@@ -83,11 +96,14 @@ func (s *EnclavePoolManagerServer) DeleteCache(ctx context.Context, req *v1alpha
 func (s *EnclavePoolManagerServer) LoadCache(ctx context.Context, req *v1alpha1.LoadCacheRequest) (*v1alpha1.LoadCacheResponse, error) {
 	manager, err := s.getCachePoolManager(req.Type)
 	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	if err := manager.LoadCache(req.ID, req.TargetPath); err != nil {
+		glog.Errorf("load cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	glog.Infof("load cache successfully. request: %++v", req)
 	return &v1alpha1.LoadCacheResponse{Ok: true}, nil
 }
 

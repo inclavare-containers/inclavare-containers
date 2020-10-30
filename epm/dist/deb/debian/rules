@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+BUILD_ROOT := $(CURDIR)/debian/epm
+BUILD_DIR := /usr/local/bin
+LICENSE := /usr/share/licenses/epm
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	GOOS=linux make binaries -C epm
+override_dh_auto_install:
+	install -d -p $(BUILD_ROOT)$(BUILD_DIR)
+	install -p -m 755 $(CURDIR)/epm/bin/epm $(BUILD_ROOT)$(BUILD_DIR)
+	install -d -p $(BUILD_ROOT)$(LICENSE)
+	install -p -m 644 $(CURDIR)/epm/LICENSE $(BUILD_ROOT)$(LICENSE)
+override_dh_usrlocal:
+

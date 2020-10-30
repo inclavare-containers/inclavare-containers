@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_BundleCach0Manager_SaveCache(t *testing.T) {
+func Test_BundleCache0Manager_SaveCache(t *testing.T) {
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "001"
-	m := NewBundleCach0Manager("/tmp/test/epm", metadata)
+	m := NewBundleCache0Manager("/tmp/test/epm", metadata)
 	sourcePath := "/tmp/test/src/rune"
 	cache := &v1alpha1.Cache{
 		Type:   string(types.BundleCache0PoolType),
@@ -39,12 +39,12 @@ func Test_BundleCach0Manager_SaveCache(t *testing.T) {
 	assert.Equal(t, "HW", string(b))
 }
 
-func Test_BundleCach1Manager_SaveCache(t *testing.T) {
+func Test_BundleCache1Manager_SaveCache(t *testing.T) {
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "x001"
-	m := NewBundleCach1Manager("/tmp/test/epm", metadata)
-	sourcePath := "/tmp/test/src/rune"
+	m := NewBundleCache1Manager("/tmp/test/epm", metadata)
+	sourcePath := "/tmp/test/srcsrc/rune"
 	parent := &v1alpha1.Cache{
 		Type:   string(types.BundleCache0PoolType),
 		Parent: nil,
@@ -71,11 +71,11 @@ func Test_BundleCach1Manager_SaveCache(t *testing.T) {
 	assert.Equal(t, "built", string(b))
 }
 
-func Test_BundleCach2Manager_SaveCache(t *testing.T) {
+func Test_BundleCache2Manager_SaveCache(t *testing.T) {
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "xxx001"
-	m := NewBundleCach2Manager("/tmp/test/epm", metadata)
+	m := NewBundleCache2Manager("/tmp/test/epm", metadata)
 	sourcePath := "/tmp/test/src/rune"
 	ancestor := &v1alpha1.Cache{
 		Type:   string(types.BundleCache0PoolType),
@@ -111,7 +111,7 @@ func Test_LoadBundleCache0(t *testing.T) {
 	assert.Nil(t, err)
 	ID := "001"
 	sourcePath := "/tmp/test/src/rune"
-	m := NewBundleCach0Manager("/tmp/test/epm", metadata)
+	m := NewBundleCache0Manager("/tmp/test/epm", metadata)
 	cache := &v1alpha1.Cache{
 		Type:   string(types.BundleCache0PoolType),
 		Parent: nil,
@@ -145,7 +145,7 @@ func Test_LoadCacheAll(t *testing.T) {
 	sourcePath := "/tmp/test/src/rune"
 	root := "/tmp/test/epm"
 	m0ID := "001"
-	m0 := NewBundleCach0Manager(root, metadata)
+	m0 := NewBundleCache0Manager(root, metadata)
 	m0Cache := &v1alpha1.Cache{
 		Type:   m0.Type,
 		Parent: nil,
@@ -158,7 +158,7 @@ func Test_LoadCacheAll(t *testing.T) {
 	assert.Nil(t, err)
 
 	m1ID := "x001"
-	m1 := NewBundleCach1Manager(root, metadata)
+	m1 := NewBundleCache1Manager(root, metadata)
 	m1Cache := &v1alpha1.Cache{
 		Type:   m1.Type,
 		Parent: nil,
@@ -171,7 +171,7 @@ func Test_LoadCacheAll(t *testing.T) {
 	assert.Nil(t, err)
 
 	m2ID := "xxx001"
-	m2 := NewBundleCach2Manager(root, metadata)
+	m2 := NewBundleCache2Manager(root, metadata)
 	m2Cache := &v1alpha1.Cache{
 		Type:   m2.Type,
 		Parent: nil,
@@ -199,4 +199,38 @@ func Test_LoadCacheAll(t *testing.T) {
 	b, err = ioutil.ReadFile(filepath.Join(targetPath, constants.OcclumSGXModeFileName))
 	assert.Nil(t, err)
 	assert.Equal(t, "HW", string(b))
+}
+
+func Test_BundleCache0Manager_GetCache(t *testing.T) {
+	t.Skip()
+	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/epm.db", time.Second*5)
+	assert.Nil(t, err)
+	m := NewBundleCache1Manager("/tmp/test/epm", metadata)
+	caches, err := m.CacheMetadata.ListCache(string(types.BundleCache0PoolType), "", 10)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(caches))
+	for _, c := range caches {
+		fmt.Printf("type:= %s, key:= %s, cache:= %++v\n", c.Type, c.ID, c)
+	}
+
+	caches, err = m.CacheMetadata.ListCache(string(types.BundleCache1PoolType), "", 10)
+	assert.Nil(t, err)
+	//assert.Equal(t, 1, len(caches))
+	for _, c := range caches {
+		fmt.Printf("type:= %s, key:= %s, cache:= %++v\n", c.Type, c.ID, c)
+	}
+
+	/*ID := "test001"
+	cache := &v1alpha1.Cache{
+		Type: string(types.BundleCache1PoolType),
+		ID:   ID,
+		Parent: &v1alpha1.Cache{
+			Type: string(types.BundleCache0PoolType),
+			ID:   "408fbccd943bb",
+		},
+	}
+	err = m.SaveCache("/tmp/f8e9696f895741aae5c034cf063806f28fa4809d37f789056cd90c6026c9f120/rootfs/run/rune", cache)
+	if err != nil {
+		t.Fatal(err)
+	}*/
 }

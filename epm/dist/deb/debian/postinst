@@ -1,0 +1,17 @@
+#!/bin/sh
+
+EPM_CONFIG_DIR=/etc/epm
+
+mkdir -p $EPM_CONFIG_DIR
+cat << EOF > $EPM_CONFIG_DIR/config.toml
+root = "/var/local/epm"
+db_path = "/etc/epm/epm.db"
+db_timeout = 10
+
+[grpc]
+  address = "/etc/epm/epm.sock"
+  uid = 0
+  gid = 0
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+EOF
