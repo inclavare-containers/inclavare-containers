@@ -37,14 +37,14 @@ You can choose one suitable occlum SDK image from the list in [this page](https:
       - command:
         - sleep
         - infinity
-        image: docker.io/occlum/occlum:0.16.0-centos8.1
+        image: docker.io/occlum/occlum:0.17.0-centos8.1
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
         name: occlum-app-builder
     EOF
     ```
-    This will create a Pod with image `docker.io/occlum/occlum:0.16.0-centos8.1` and the filed `securityContext.privileged` should be set to `true`  in order to build and push docker image in container.<br />
+    This will create a Pod with image `docker.io/occlum/occlum:0.17.0-centos8.1` and the filed `securityContext.privileged` should be set to `true`  in order to build and push docker image in container.<br />
 
 - Step 2. Wait for the pod status to `Ready`
 
