@@ -23,6 +23,7 @@
 #include "sgx_call.h"
 #include "liberpal-skeleton.h"
 #include "aesm.h"
+#include "../kvmtool/libvmm.h"
 
 #define SGX_REG_PAGE_FLAGS \
 	(SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X)
@@ -38,6 +39,11 @@ static int wait_timeout;
 uint64_t max_enclave_size = 0;
 bool debugging = false;
 bool is_oot_driver;
+bool backend_kvm = false;
+struct kvm *kvm_vm;
+static const char *kvm_kernel;
+static const char *kvm_rootfs;
+static const char *kvm_init;
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
  * intends to exit.
@@ -449,6 +455,14 @@ static void check_opts(const char *opt)
 		debugging = true;
 	else if (strstr(opt, "enclave-size")) {
 		max_enclave_size = atoi(strchr(opt, '=') + 1);
+	} else if (!strcmp(opt, "backend-kvm")) {
+		backend_kvm = true;
+	} else if (!strncmp(opt, "kvm-kernel=", 11)) {
+		kvm_kernel = strdup(opt + 11);
+	} else if (!strncmp(opt, "kvm-rootfs=", 11)) {
+		kvm_rootfs = strdup(opt + 11);
+	} else if (!strncmp(opt, "kvm-init=", 9)) {
+		kvm_init = strdup(opt + 9);
 	}
 }
 
@@ -508,6 +522,31 @@ int __pal_init_v1(pal_attr_v1_t *attr)
 	int ret;
 
 	parse_args(attr->args);
+
+	if (backend_kvm) {
+		if (!kvm_kernel || !kvm_rootfs)
+			return -EINVAL;
+
+		kvm_vm = libvmm_create_vm();
+		if (kvm_vm == NULL)
+			return -EFAULT;
+
+		/* TODO: config it, 256M, 1 vcpu, initrd, CID */
+		libvmm_vm_set_memory(kvm_vm, 256);
+		libvmm_vm_set_cpus(kvm_vm, 1);
+		libvmm_vm_set_kernel(kvm_vm, kvm_kernel, NULL);
+		libvmm_vm_set_rootfs(kvm_vm, kvm_rootfs);
+		if (kvm_init)
+			libvmm_vm_set_init(kvm_vm, kvm_init);
+		libvmm_vm_set_vsock(kvm_vm, 3333);
+
+		ret = libvmm_vm_init(kvm_vm);
+		if (ret < 0)
+			return ret;
+
+		initialized = true;
+		return 0;
+	}
 
 	tcs_busy = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -582,6 +621,9 @@ int __pal_create_process(pal_create_process_args *args)
 	    args->pid == NULL || args->stdio == NULL) {
 		return -1;
 	}
+
+	if (backend_kvm)
+		return 0;
 
 	/* SGX out-of-tree driver disallows the creation of shared enclave mapping
 	 * between parent and child process, so simply launching __pal_exec() directly here.
@@ -658,6 +700,10 @@ int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report,
 		return -1;
 	}
 
+	if (backend_kvm)
+		/* No implementation */
+		return 0;
+
 	if (targetinfo == NULL ||
 	    targetinfo_len != sizeof(struct sgx_target_info)) {
 		fprintf(stderr,
@@ -695,6 +741,9 @@ int __pal_kill(int pid, int sig)
 		return -1;
 	}
 
+	if (backend_kvm)
+		return 0;	/* TODO: libvmm_vm_kill(kvm_vm); */
+
 	/* No implementation */
 	return 0;
 }
@@ -712,6 +761,10 @@ int __pal_destroy(void)
 	}
 
 	fclose(fp);
+
+	if (backend_kvm)
+		return libvmm_vm_exit(kvm_vm);
+
 	close(enclave_fd);
 
 	return 0;

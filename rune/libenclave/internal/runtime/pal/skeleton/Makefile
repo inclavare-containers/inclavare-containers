@@ -4,7 +4,7 @@ endif
 
 OUTPUT ?= ./
 HOST_CFLAGS := -Wall -Werror -g -fPIC -z noexecstack \
-	       -Wno-unused-const-variable -std=gnu11
+	       -Wno-unused-const-variable -std=gnu11 -I../kvmtool/include
 ENCL_CFLAGS := -Wall -Werror -static -nostdlib -nostartfiles -fPIC \
 	       -fno-stack-protector -mrdrnd -std=gnu11
 HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
@@ -15,14 +15,19 @@ TEST_CUSTOM_PROGS := $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss $(OUTPUT)/aesm.pb-c.c 
 
 all: $(TEST_CUSTOM_PROGS)
 
+libvmm:
+	$(MAKE) -C ../kvmtool all
+
+../kvmtool/libvmm.a: libvmm
+
 $(OUTPUT)/liberpal-skeleton-v1.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v1.o $(OUTPUT)/liberpal-skeleton.o $(OUTPUT)/sgxutils.o $(OUTPUT)/aesm.o $(OUTPUT)/aesm.pb-c.o
 	$(CC) $(HOST_LDFLAGS) -o $@ $^ -lprotobuf-c
 
 $(OUTPUT)/liberpal-skeleton-v1.o: liberpal-skeleton-v1.c liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
-$(OUTPUT)/liberpal-skeleton-v2.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v2.o $(OUTPUT)/liberpal-skeleton.o $(OUTPUT)/sgxutils.o $(OUTPUT)/aesm.o $(OUTPUT)/aesm.pb-c.o
-	$(CC) $(HOST_LDFLAGS) -o $@ $^ -lprotobuf-c
+$(OUTPUT)/liberpal-skeleton-v2.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v2.o $(OUTPUT)/liberpal-skeleton.o $(OUTPUT)/sgxutils.o $(OUTPUT)/aesm.o $(OUTPUT)/aesm.pb-c.o ../kvmtool/libvmm.a
+	$(CC) $(HOST_LDFLAGS) -o $@ $^ -lprotobuf-c -lutil
 
 $(OUTPUT)/liberpal-skeleton-v2.o: liberpal-skeleton-v2.c liberpal-skeleton.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
