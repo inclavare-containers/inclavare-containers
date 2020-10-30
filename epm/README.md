@@ -23,10 +23,12 @@ ls -l /usr/local/bin/epm
 
 ### Step 2: Configuration
 
-The Configuration file of epm MUST BE placed into `/etc/epm/config.toml`
+The Configuration file of epm MUST BE placed into `/var/epm/config.toml`
 
 ```toml
 root = "/var/local/epm"
+db_path = "/var/local/epm/epm.db"
+db_timeout = 10
 
 [grpc]
   address = "/var/run/containerd/containerd.sock"
