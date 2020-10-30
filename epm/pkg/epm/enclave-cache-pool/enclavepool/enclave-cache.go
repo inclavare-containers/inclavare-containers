@@ -1,7 +1,6 @@
 package enclavepool
 
 import (
-	"fmt"
 	"sync"
 	"syscall"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm/enclave-cache-pool/types"
 	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/sirupsen/logrus"
 )
 
 var mut sync.Mutex
@@ -50,7 +50,7 @@ func (d *EnclaveCacheManager) DeleteEnclave(nr int) {
 func (d *EnclaveCacheManager) GetEnclave() *v1alpha1.Enclave {
 	for _, v := range EnclavePoolStore {
 		if v == nil {
-			fmt.Println("Enclave Pool is empty")
+			logrus.Infof("Enclave Pool is empty")
 		}
 		return v
 	}
@@ -99,13 +99,13 @@ func (d *EnclaveCacheManager) GetCache(ID string) (*v1alpha1.Cache, error) {
 	fd := enclaveinfo.Fd
 	err = utils.SendFd("/var/run/sock/"+cache.ID, int(fd))
 	if err != nil {
-		fmt.Println("send fd to epm client failure!", err)
+		logrus.Warnf("send fd to epm client failure!", err)
 	}
 	d.DeleteEnclave(int(fd))
 
 	err = syscall.Close(int(fd))
 	if err != nil {
-		fmt.Println("Close enclave fd failure in GetCache!", err, fd)
+		logrus.Warnf("Close enclave fd failure in GetCache!", err)
 	}
 	return &cache, err
 }
