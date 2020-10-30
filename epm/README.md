@@ -18,35 +18,27 @@ git clone https://github.com/alibaba/inclavare-containers.git
 cd epm
 GOOS=linux make binaries
 make install
-ls -l /usr/local/bin/epm
+ls -l /usr/bin/epm
 ```
 
 ### Step 2: Configuration
 
-The Configuration file of epm MUST BE placed into `/var/epm/config.toml`
+The Configuration file of epm must be placed into `/run/epm/config.toml`
 
 ```toml
 root = "/var/local/epm"
-db_path = "/var/local/epm/epm.db"
+db_path = "/etc/epm/epm.db"
 db_timeout = 10
 
 [grpc]
-  address = "/var/run/containerd/containerd.sock"
+  address = "/run/epm/epm.sock"
   uid = 0
   gid = 0
   max_recv_message_size = 16777216
   max_send_message_size = 16777216
-
-[cache_pools]
-  [cache_pools.bundle-cache-pool_occlum_cache0]
-    type = "bundle-cache-pool.occlum.cache0"
-  [cache_pools.bundle-cache-pool_occlum_cache1]
-    type = "bundle-cache-pool.occlum.cache1"
-  [cache_pools.bundle-cache-pool_occlum_cache2]
-    type = "bundle-cache-pool.occlum.cache2"
 ```
 
 ## Run the epm
 ```bash
-/bin/bash /usr/local/bin/epm
+/bin/bash /usr/local/bin/epm --config=/run/epm/config.toml --stderrthreshold=0
 ```

@@ -8,24 +8,28 @@ import "google/protobuf/any.proto";
 message Cache {
     // Type represents the type of enclave pool
     string type = 1;
+    // SubType represents the subtype of enclave pool which represents a more find-grained pool
+    string subType = 2;
     // ID represents the id of the cache and the id is unique in the same type of enclave pool
-    string ID = 2;
+    string ID = 3;
     // SavePath represents the absolute path to store the cache
-    string savePath = 3;
+    string savePath = 4;
     // Parent represents the parent cache of the current cache, if do not have a parent the value is nil
-    Cache parent = 4;
+    Cache parent = 5;
     // Size represents the size in bytes of the cache
-    int64 size = 5;
+    int64 size = 6;
     // Created represents the creation time of the cache which is the number of seconds elapsed since January 1, 1970 UTC
-    int64 created = 6;
+    int64 created = 7;
     // Options is an optional field which can extend any type of data structure
-    google.protobuf.Any options = 7;
+    google.protobuf.Any options = 8;
 }
 
 // EnclavePoolManager represents an enclave pool
 service EnclavePoolManager {
-    // GetCache represents get the specified cache metadata
+    // GetCache represents get the specified cache from pool
     rpc GetCache(GetCacheRequest) returns (GetCacheResponse) {}
+    // PickCache represents pick a suitable cache from pool
+    rpc PickCache(PickCacheRequest) returns (PickCacheResponse){}
     // SaveCache represents save the data to a cache directory and record the cache metadata
     rpc SaveCache(SaveCacheRequest) returns (SaveCacheResponse) {}
     // SaveFinalCache represents save the enclave info which can be used instantly
@@ -47,6 +51,19 @@ message GetCacheRequest {
 }
 
 message GetCacheResponse {
+    // Cache represents the response cache metadata
+    Cache cache = 1;
+}
+
+// PickCacheRequest
+message PickCacheRequest {
+    // Type represents the type of enclave pool
+    string type = 1;
+    // ID represents the id of the cache
+    string ID = 2;
+}
+
+message PickCacheResponse {
     // Cache represents the response cache metadata
     Cache cache = 1;
 }

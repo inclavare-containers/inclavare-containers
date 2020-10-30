@@ -31,13 +31,11 @@ import (
 // runE main flow.
 func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, error) {
 	timeStart := time.Now()
-	ts := time.Now()
 	var err error
 	var carr carrier.Carrier
 
 	defer func() {
 		carr.Cleanup()
-		logrus.Debugf("carrierMain: total time cost: %d", (time.Now().Sub(ts))/time.Second)
 	}()
 	found, carrierKind, err := getCarrierKind(req.Bundle)
 	if err != nil {
@@ -55,7 +53,9 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 			return nil, err
 		}
 		// mount rootfs
+		timeStart = time.Now()
 		err = mountRootfs(req)
+		logrus.Debugf("carrierMain: mount rootfs time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 		defer unmountRootfs(req)
 		if err != nil {
 			return carr, err
@@ -271,6 +271,7 @@ func unmountOCIOnRootfs(bundle string) error {
 }
 
 func unmountRootfs(req *taskAPI.CreateTaskRequest) error {
+	timeStart := time.Now()
 	rootfs := ""
 	if len(req.Rootfs) > 0 {
 		rootfs = filepath.Join(req.Bundle, "rootfs")
@@ -281,5 +282,6 @@ func unmountRootfs(req *taskAPI.CreateTaskRequest) error {
 	if err2 := mount.UnmountAll(rootfs, 0); err2 != nil {
 		logrus.WithError(err2).Warn("failed to cleanup rootfs mount")
 	}
+	logrus.Debugf("carrierMain: unmount rootfs time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	return nil
 }

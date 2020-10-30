@@ -1,26 +1,26 @@
 package occlum
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
-
 	cache_manager "github.com/alibaba/inclavare-containers/epm/pkg/epm"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/constants"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
+	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
 	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
 )
 
-type BundleCach1Manager struct {
+type BundleCache1Manager struct {
 	cache_manager.DefaultEnclavePool
 }
 
-func NewBundleCach1Manager(root string, metadata *cache_metadata.Metadata) *BundleCach1Manager {
-	return &BundleCach1Manager{
+func NewBundleCache1Manager(root string, metadata *cache_metadata.Metadata) *BundleCache1Manager {
+	return &BundleCache1Manager{
 		DefaultEnclavePool: cache_manager.DefaultEnclavePool{
 			Root:          root,
 			Type:          string(types.BundleCache1PoolType),
@@ -28,14 +28,14 @@ func NewBundleCach1Manager(root string, metadata *cache_metadata.Metadata) *Bund
 		}}
 }
 
-func (d *BundleCach1Manager) GetPoolType() string {
+func (d *BundleCache1Manager) GetPoolType() string {
 	return d.Type
 }
 
-func (d *BundleCach1Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
+func (d *BundleCache1Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
 	savePath, err := d.BuildCacheSavePath(d.Root, cache)
 	if err != nil {
-		return err
+		return fmt.Errorf("build cache save path failed. error: %++v", err)
 	}
 	if err := os.RemoveAll(savePath); err != nil {
 		return nil
@@ -47,8 +47,10 @@ func (d *BundleCach1Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache)
 	sourceDirs := []string{
 		"build/bin/",
 		"build/lib/",
+		"run/",
 	}
 	sourceFiles := []string{
+		"Occlum.json",
 		"build/Enclave.xml",
 		"build/Occlum.json",
 		"build/Occlum.json.protected",
@@ -75,6 +77,7 @@ func (d *BundleCach1Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache)
 	if err := ioutil.WriteFile(filepath.Join(savePath, constants.OcclumStatusFileName), []byte(types.Built), 0644); err != nil {
 		return err
 	}
+
 	os.Remove(filepath.Join(savePath, "build/lib/libocclum-libos.signed.so"))
 
 	size, err := utils.DirSize(savePath)

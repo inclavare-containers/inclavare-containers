@@ -102,8 +102,23 @@ sudo yum install rune
 sudo apt-get install rune
 ```
 
+### 5. Install epm
+`epm` epm is a service that is used to manage the cache pools to optimize the startup time of encalve.<br />
+<br />
+Install epm use the following commands:
 
-### 5. Install shim-rune
+- On CentOS
+```bash
+sudo yum install epm
+```
+
+- On Ubuntu
+```bash
+sudo apt-get install epm
+```
+
+
+### 6. Install shim-rune
 `shim-rune` resides in between `containerd` and `rune`, conducting enclave signing and management beyond the normal `shim` basis. `shim-rune` and `rune` can compose a basic enclave containerization stack for the cloud-native ecosystem.
 
 - On CentOS
@@ -116,7 +131,7 @@ sudo apt-get install rune
     sudo apt-get install shim-rune
     ```
 
-### 6. Install and configure containerd
+### 7. Install and configure containerd
 containerd is an industry-standard container runtime with an emphasis on simplicity, robustness and portability. It is available as a daemon for Linux and Windows, which can manage the complete container lifecycle of its host system: image transfer and storage, container execution and supervision, low-level storage and network attachments, etc.<br />You can download one of the containerd binaries on the [Download](https://containerd.io/downloads/) page.
 
 - Step 1. Download and install containerd-1.3.4 as follows:
@@ -128,7 +143,7 @@ containerd is an industry-standard container runtime with an emphasis on simplic
 
 - Step 2. Configure the containerd.service
 
-    You can use systemd to manage the containerd daemon,  and place the `containerd.service` to  `/etc/systemd/system/containerd.service`.
+    You can use systemd to manage the containerd daemon, and place the `containerd.service` to  `/etc/systemd/system/containerd.service`.
     ```bash
     cat << EOF >/etc/systemd/system/containerd.service
     [Unit]
@@ -165,10 +180,6 @@ containerd is an industry-standard container runtime with an emphasis on simplic
         [plugins.cri.containerd]
           default_runtime_name = "rune"
           snapshotter = "overlayfs"
-          [plugins.cri.containerd.default_runtime]
-            runtime_type = "io.containerd.rune.v2"
-            runtime_engine = "/usr/bin/rune"
-            runtime_root = ""
           [plugins.cri.containerd.runtimes.rune]
             runtime_type = "io.containerd.rune.v2"
     EOF
@@ -180,7 +191,7 @@ containerd is an industry-standard container runtime with an emphasis on simplic
     sudo systemctl restart containerd.service
     ```
 
-### 7. Create a single control-plane Kubernetes cluster with kubeadm
+### 8. Create a single control-plane Kubernetes cluster with kubeadm
 
 - Step 1. Set the kernel parameters
 
@@ -331,7 +342,7 @@ containerd is an industry-standard container runtime with an emphasis on simplic
     kube-system   kube-scheduler-izuf68q2tx28s7tel52vb0z            1/1     Running   0          20s
     ```
 
-### 8. Configure RuntimeClass
+### 9. Configure RuntimeClass
 
 - Step 1. Apply the following yaml files to create `rune` RuntimeClass object
 

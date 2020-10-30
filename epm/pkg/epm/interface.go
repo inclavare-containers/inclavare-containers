@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/glog"
+
 	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
 
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
@@ -131,6 +133,7 @@ func (d *DefaultEnclavePool) GetPoolType() string {
 func (d *DefaultEnclavePool) BuildCacheSavePath(rootDir string, cache *v1alpha1.Cache) (string, error) {
 	caches, err := d.CacheMetadata.GetAncestorCaches(cache)
 	if err != nil {
+		glog.Errorf("BuildCacheSavePath: get ancestor caches failed. cacheID: %s, type: %s, error:%++v", cache.ID, cache.Type, err)
 		return "", err
 	}
 	caches = append([]*v1alpha1.Cache{cache}, caches...)

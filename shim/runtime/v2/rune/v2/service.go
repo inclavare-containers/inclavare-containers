@@ -336,10 +336,10 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	timeStart = time.Now()
 	container, err := runc.NewContainer(ctx, s.platform, r)
 
-	/*//FIXME debug
+	//FIXME debug
 	if carrierKind == "occlum" {
 		if err != nil {
-			//	logrus.Errorf("rune Create NewContainer error: %++v", err)
+			logrus.Errorf("rune Create NewContainer error: %++v", err)
 			if _, err := os.Stat(r.Bundle); err == nil {
 				path := "/tmp/rune-container-test/runc-rootfs"
 				os.RemoveAll(path)
@@ -357,7 +357,7 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 			}
 			return nil, err
 		}
-	}*/
+	}
 
 	logrus.Debugf("Create: create container time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	logrus.Infof("rune.NewContainer success: %s", r.ID)
@@ -407,8 +407,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	})
 
 	logrus.Infof("TaskCreate sent: %s %d", r.ID, container.Pid())
-
-	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	logrus.Debugf("Create: total time cost: %d", (time.Now().Sub(ts))/time.Second)
 	return &taskAPI.CreateTaskResponse{
 		Pid: uint32(container.Pid()),

@@ -3,16 +3,8 @@ db_path = "/var/local/epm/epm.db"
 db_timeout = 10
 
 [grpc]
-  address = "/var/run/epm.sock"
+  address = "/var/run/epm/epm.sock"
   uid = 0
   gid = 0
   max_recv_message_size = 16777216
   max_send_message_size = 16777216
-
-[pools]
-  [pools."bundle-cache.occlum.cache0"]
-    type = "bundle-cache.occlum.cache0"
-  [pools."bundle-cache.occlum.cache1"]
-    type = "bundle-cache.occlum.cache1"
-  [pools."bundle-cache.occlum.cache2"]
-    type = "bundle-cache.occlum.cache2"

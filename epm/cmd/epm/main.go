@@ -23,7 +23,6 @@ func setupSignalHandler() <-chan struct{} {
 	go func() {
 		<-c
 		close(stop)
-		<-c
 		os.Exit(1) // second signal. Exit directly.
 	}()
 

@@ -1,26 +1,26 @@
 package occlum
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
-
 	cache_manager "github.com/alibaba/inclavare-containers/epm/pkg/epm"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/constants"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
+	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
 	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
 )
 
-type BundleCach2Manager struct {
+type BundleCache2Manager struct {
 	cache_manager.DefaultEnclavePool
 }
 
-func NewBundleCach2Manager(root string, metadata *cache_metadata.Metadata) *BundleCach2Manager {
-	return &BundleCach2Manager{
+func NewBundleCache2Manager(root string, metadata *cache_metadata.Metadata) *BundleCache2Manager {
+	return &BundleCache2Manager{
 		DefaultEnclavePool: cache_manager.DefaultEnclavePool{
 			Root:          root,
 			Type:          string(types.BundleCache2PoolType),
@@ -28,14 +28,14 @@ func NewBundleCach2Manager(root string, metadata *cache_metadata.Metadata) *Bund
 		}}
 }
 
-func (d *BundleCach2Manager) GetPoolType() string {
+func (d *BundleCache2Manager) GetPoolType() string {
 	return d.Type
 }
 
-func (d *BundleCach2Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
+func (d *BundleCache2Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
 	savePath, err := d.BuildCacheSavePath(d.Root, cache)
 	if err != nil {
-		return err
+		return fmt.Errorf("build cache save path failed. error: %++v", err)
 	}
 	if err := os.RemoveAll(savePath); err != nil {
 		return nil
