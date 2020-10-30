@@ -9,8 +9,8 @@ import (
 func NewEnclavePoolManagerServer(stopCh <-chan struct{}) *cobra.Command {
 	opts := &options.Options{}
 	cmd := &cobra.Command{
-		Short: "Launch signature server",
-		Long:  "Launch signature server",
+		Short: "Launch epm server",
+		Long:  "Launch epm server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runServer(opts, stopCh)
 		},

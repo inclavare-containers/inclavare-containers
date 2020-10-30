@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/alibaba/inclavare-containers/epm/cmd/epm/app/options"
 	"github.com/alibaba/inclavare-containers/epm/config"
@@ -64,14 +68,21 @@ func runServer(opts *options.Options, stopCh <-chan struct{}) error {
 	// registry and start the cache pool manager server
 	v1alpha1.RegisterEnclavePoolManagerServer(s, &server)
 	// listen and serve
+	if err := os.MkdirAll(filepath.Dir(cfg.GRPC.Address), 0600); err != nil {
+		return err
+	}
+	if err := unix.Unlink(cfg.GRPC.Address); err != nil && !os.IsNotExist(err) {
+		return err
+	}
 	lis, err := net.Listen("unix", cfg.GRPC.Address)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return err
 	}
 	glog.Info("start the epm server...")
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to start epm server: %v", err)
 	}
 	<-stopCh
+
 	return nil
 }

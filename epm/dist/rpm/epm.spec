@@ -58,19 +58,42 @@ db_path = "/etc/epm/epm.db"
 db_timeout = 10
 
 [grpc]
-  address = "/etc/epm/epm.sock"
+  address = "/run/epm/epm.sock"
   uid = 0
   gid = 0
   max_recv_message_size = 16777216
   max_send_message_size = 16777216
 EOF
+cat << EOF > /etc/systemd/system/epm.service
+[Unit]
+Description=epm
+Documentation=https://inclavare-containers.io
+After=network.target
 
+[Service]
+ExecStart=/usr/bin/epm --config /etc/epm/config.toml --stderrthreshold=0
+Restart=always
+RestartSec=5
+Delegate=yes
+KillMode=process
+OOMScoreAdjust=-999
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+mkdir -p /var/local/epm
+systemctl enable epm
+systemctl start epm
 %postun
 rm -f %{EPM_CONFIG_DIR}/config.toml
 
 %files
 %{_defaultlicensedir}/%{name}/LICENSE
-%{EPM_BIN_DIR}/containerd-shim-rune-v2
+%{EPM_BIN_DIR}/epm
 
 %changelog
 * Sun Oct 29 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.0
