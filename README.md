@@ -148,7 +148,7 @@ Inclavare Containers can be deployed with dockerd and containerd.
 
 ### Occlum LibOS
 
-Please refer to [this guide](docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md) to run [Occlum](https://github.com/occlum/occlum) with `rune` and docker.
+Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to run [Occlum](https://github.com/occlum/occlum) with `rune` and docker.
 
 ### WebAssembly Micro Runtime (WAMR)
 
