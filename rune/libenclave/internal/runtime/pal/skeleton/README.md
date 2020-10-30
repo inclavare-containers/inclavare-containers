@@ -124,3 +124,46 @@ Assuming you have an OCI bundle from the previous step you can execute the conta
 cd "$HOME/rune_workdir/rune-container"
 sudo rune run skeleton-enclave-container
 ```
+---
+
+# Enclave share mapping
+Once an enclave is setup, it can be used by mapping enclave fd and enclave EPC address in other processes.
+It saves enclave initialization time. Epm module is implemented including two parts: epm service used to store enclave in enclave pool and epm client used to consume enclave from epm service and produce enclave as well.
+
+## Run epm service
+You can run epm service following with epm [README](https://github.com/alibaba/inclavare-containers/blob/master/epm/README.md).
+
+## Run epm client
+Assuming you have an OCI bundle according to previous steps, please add config into config.json as following:
+
+```shell
+{
+        "destination": "/var/run/containerd/",
+        "type": "bind",
+        "source": "/var/run/containerd/",
+        "options": [
+                "rbind",
+                "rprivate"
+        ]
+},
+{
+        "destination": "/var/run/sock/",
+        "type": "bind",
+        "source": "/var/run/sock/",
+        "options": [
+                "rbind",
+                "rprivate"
+        ]
+}
+
+"annotations": {
+	"enclave.type": "intelSgx",
+	"enclave.runtime.path": "/usr/lib/liberpal-skeleton-v${SKELETON_PAL_VERSION}.so",
+	"enclave.runtime.args": "debug, epm"
+}
+```
+
+```shell
+cd "$HOME/rune_workdir/rune-container"
+sudo rune run skeleton-enclave-container
+```
