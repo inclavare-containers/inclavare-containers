@@ -91,7 +91,7 @@ created by an unprivileged user.
 		spec.Annotations = map[string]string{
 			"enclave.type":         "intelSgx",
 			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v1.so",
-			"enclave.runtime.args": "skeleton,debug",
+			"enclave.runtime.args": "debug",
 		}
 
 		spec.Mounts = append(spec.Mounts, *createLibenclaveMount())
