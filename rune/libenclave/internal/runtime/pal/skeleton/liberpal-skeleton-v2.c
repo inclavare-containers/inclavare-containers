@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "liberpal-skeleton.h"
+#include "../kvmtool/libvmm.h"
 
 int pal_get_version(void)
 {
@@ -24,6 +25,9 @@ int pal_create_process(pal_create_process_args *args)
 
 int pal_exec(pal_exec_args *attr)
 {
+	if (backend_kvm)
+		return libvmm_vm_run(kvm_vm);
+
 	return wait4child(attr);
 }
 /* *INDENT-ON* */

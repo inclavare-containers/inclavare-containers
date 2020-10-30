@@ -16,6 +16,8 @@ extern bool debugging;
 extern int enclave_fd;
 extern void *tcs_busy;
 extern bool initialized;
+extern bool backend_kvm;
+extern struct kvm *kvm_vm;
 
 typedef struct {
 	const char *args;
