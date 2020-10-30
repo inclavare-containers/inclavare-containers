@@ -47,7 +47,7 @@ Please refer to [this tutorial](libenclave/internal/runtime/pal/skeleton/README.
 
 [Occlum](https://github.com/occlum/occlum) is a memory-safe, multi-process library OS for Intel SGX. 
 
-Please refer to [this tutorial](../docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md) for more details.
+Please refer to [this tutorial](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) for more details.
 
 ### WebAssembly Micro Runtime (WAMR)
 
@@ -57,13 +57,11 @@ Please refer to [this tutorial](https://github.com/bytecodealliance/wasm-micro-r
 
 # Developement
 
-## Running OCI bundle
-
-Taking Occlum as example.
+Taking Occlum as example to show how to run OCI bundle.
 
 ## Create container image
 
-Please refer to [this guide](../docs/Running_Occlum_with_Docker_and_OCI_Runtime_rune.md#building-occlum-container-image) to build the Occlum application container image.
+Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md#building-occlum-container-image) to build the Occlum application container image.
 
 ## Creating an OCI bundle
 
@@ -80,7 +78,7 @@ cd rune-container
 mkdir rootfs
 
 # export Occlum application image via Docker into the rootfs directory
-docker export $(docker create ${Occlum_application_image}) | sudo tar -C rootfs -xvf -
+docker export $(docker create occlum-app) | sudo tar -C rootfs -xvf -
 ```
 
 After a root filesystem is populated you just generate a spec in the format of a config.json file inside your bundle. `rune` provides a spec command which is similar to `runc` to generate a template file that you are then able to edit.
@@ -105,7 +103,7 @@ and then configure enclave runtime as following:
   "annotations": {
       "enclave.type": "intelSgx",
       "enclave.runtime.path": "/opt/occlum/build/lib/libocclum-pal.so",
-      "enclave.runtime.args": "occlum-instance"
+      "enclave.runtime.args": "occlum_instance"
   }
 ```
 
