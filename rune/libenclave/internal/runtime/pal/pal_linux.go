@@ -24,7 +24,7 @@ const (
 func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	var enclaveinfo *v1alpha1.Enclave
 	var err error
-	var addr int64 = 0
+	var addr uint64 = 0
 	var fd int = -1
 
 	pal.enclavePoolID = InvalidEpmID
@@ -51,7 +51,7 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 		}
 		api := &enclaveRuntimePalApiV3{}
 		err = api.init(args, logLevel, fd, addr)
-		if err == nil {
+		if fd == -1 && err == nil {
 			ID := epm.SavePreCache()
 			pal.enclavePoolID = ID
 		}

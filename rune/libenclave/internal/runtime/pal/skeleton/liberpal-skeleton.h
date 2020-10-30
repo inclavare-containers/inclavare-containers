@@ -4,6 +4,7 @@
 /* *INDENT-ON* */
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define	PAGE_SIZE	4096
 #define	IMAGE		"encl.bin"
@@ -24,7 +25,7 @@ typedef struct {
 typedef struct {
 	pal_attr_v1_t attr_v1;
 	int fd;
-	int addr;
+	uint64_t addr;
 } pal_attr_v3_t;
 
 typedef struct {
