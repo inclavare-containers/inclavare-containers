@@ -90,7 +90,7 @@ created by an unprivileged user.
 		spec.Hostname = "rune"
 		spec.Annotations = map[string]string{
 			"enclave.type":         "intelSgx",
-			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v1.so",
+			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v2.so",
 			"enclave.runtime.args": "debug",
 		}
 
