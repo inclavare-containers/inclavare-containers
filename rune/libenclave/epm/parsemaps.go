@@ -19,8 +19,8 @@ func GetParseMaps(pid int) *v1alpha1.Enclave {
 
 	for i, maps := range enclavemaps {
 		enclavelayout.Layout[i] = new(v1alpha1.Enclavelayout)
-		enclavelayout.Layout[i].Addr = int64(maps.StartAddr)
-		enclavelayout.Layout[i].Size = int64(maps.EndAddr - maps.StartAddr)
+		enclavelayout.Layout[i].Addr = uint64(maps.StartAddr)
+		enclavelayout.Layout[i].Size = uint64(maps.EndAddr - maps.StartAddr)
 		enclavelayout.Layout[i].Prot = new(v1alpha1.EnclavePerms)
 		enclavelayout.Layout[i].Prot.Read = maps.Perms.Read
 		enclavelayout.Layout[i].Prot.Write = maps.Perms.Write
