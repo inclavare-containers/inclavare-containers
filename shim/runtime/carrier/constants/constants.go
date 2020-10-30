@@ -146,9 +146,22 @@ function copyOcclumLiberaries() {
   popd
 }
 
+function generateEnclaveConfiguration() {
+  occlum_config_path=$1
+  enclave_config_path=$2
+  occlum_instance_dir=$3
+  if [ ! -f ${occlum_config_path} ]; then
+    echo "GenerateEnclaveConfiguration: ${occlum_config_path} is not exist"
+    exit 1
+  fi
+  /opt/occlum/build/bin/gen_internal_conf --user_json ${occlum_config_path} --sdk_xml ${enclave_config_path}  \
+  --fs_mac $(LD_LIBRARY_PATH="/opt/occlum/sgxsdk-tools/sdk_libs" /opt/occlum/build/bin/occlum-protect-integrity show-mac ${occlum_instance_dir}/build/mount/__ROOT/metadata) \
+  --sys_json ${occlum_instance_dir}/build/Occlum.json
+}
+
 function buildUnsignedEnclave(){
-  if [[ "${entry_point}" == "" || "${rootfs}" == "" || "${work_dir}" == "" ]]; then
-    echo "BuildUnsignedEnclave:: the argumentes should not be empty: entry_point, rootfs, work_dir"
+  if [[ "${rootfs}" == "" || "${work_dir}" == "" || "${occlum_config_path}" == "" ]]; then
+    echo "BuildUnsignedEnclave:: the arguments should not be empty: rootfs, work_dir, occlum_config_path"
     exit 1
   fi
   export PATH=$PATH:/opt/occlum/build/bin/
@@ -157,14 +170,10 @@ function buildUnsignedEnclave(){
   pushd ${occlum_workspace}
   # occlum init
   occlum init
-  # replace Occlum.json with user-supplied Occlum.json
-  if [[ "${occlum_config_path}" != "" && -f ${occlum_config_path} ]];then
+  # copy Occlum.json to occlum workspace
+  if [ -f ${occlum_config_path} ];then
     /bin/cp -f ${occlum_config_path} Occlum.json
   fi
-  # set occlum entrypoint
-  # sed -i "s#/bin#${entry_point}#g" Occlum.json
-  # generate the configuration file Enclave.xml that used by enclave from Occlum.json
-  /opt/occlum/build/bin/gen_enclave_conf -i Occlum.json -o Enclave.xml
   # build occlum image
   /bin/bash ${base_dir}/replace_occlum_image.sh ${rootfs} image
   # occlum build
@@ -178,9 +187,35 @@ function buildUnsignedEnclave(){
       popd
     fi
   fi
+  # generate the configuration file Enclave.xml that used by enclave from Occlum.json
+  generateEnclaveConfiguration ${occlum_workspace}/Occlum.json ${occlum_workspace}/Enclave.xml ${occlum_workspace}
   mkdir -p ${rootfs}/${work_dir} || true
   rm -fr image
   /bin/cp -fr . ${rootfs}/${work_dir}
+  popd
+  rm -fr ${occlum_workspace}
+}
+
+function buildUnsignedEnclaveWithBundleCache0(){
+  if [[ "${rootfs}" == "" || "${work_dir}" == "" || "${occlum_config_path}" == "" ]]; then
+    echo "BuildUnsignedEnclave:: the arguments should not be empty: rootfs, work_dir, occlum_config_path"
+    exit 1
+  fi
+  export PATH=$PATH:/opt/occlum/build/bin/
+  occlum_instance_dir=${rootfs}/${work_dir}
+  pushd ${occlum_instance_dir}
+  /bin/cp -f ${occlum_config_path} Occlum.json
+  # occlum build
+  occlum build
+  if [ ! -f ./build/lib/libocclum-libos.so ]; then
+    if [ -f ./build/lib/libocclum-libos.so.0 ]; then
+      pushd ./build/lib/
+      ln -s libocclum-libos.so.0 libocclum-libos.so
+      popd
+    fi
+  fi
+  #gen_enclave_conf -i Occlum.json -o Enclave.xml
+  generateEnclaveConfiguration ${occlum_instance_dir}/Occlum.json ${occlum_instance_dir}/Enclave.xml ${occlum_instance_dir}
   popd
 }
 
@@ -189,6 +224,9 @@ function generateSigningMaterial() {
     echo "GenerateSigningMaterial:: the argumentes should not be empty: enclave_config_path, unsigned_encalve_path, unsigned_material_path"
     exit 1
   fi
+  #if [[ -f ${occlum_json_file_path} && ! -f ${enclave_config_path} ]]; then
+  #	/opt/occlum/build/bin/gen_enclave_conf -i ${occlum_json_file_path} -o ${enclave_config_path}
+  #fi
   /opt/intel/sgxsdk/bin/x64/sgx_sign gendata -enclave ${unsigned_encalve_path} -config ${enclave_config_path} -out ${unsigned_material_path}
 }
 
@@ -222,6 +260,9 @@ function doAction(){
   case ${action} in
     buildUnsignedEnclave)
       buildUnsignedEnclave
+      ;;
+	buildUnsignedEnclaveWithBundleCache0)
+      buildUnsignedEnclaveWithBundleCache0
       ;;
     generateSigningMaterial)
       generateSigningMaterial
