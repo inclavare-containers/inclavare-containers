@@ -18,9 +18,7 @@ static void *memcpy(void *dest, const void *src, size_t n)
 
 static int encl_init(void *dst)
 {
-	static uint64_t magic = INIT_MAGIC;
-
-	memcpy(dst, &magic, 8);
+	memcpy(dst, INIT_HELLO, sizeof(INIT_HELLO));
 
 	return 0;
 }

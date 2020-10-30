@@ -7,13 +7,13 @@
 #define SGX_CALL_H
 /* *INDENT-ON* */
 
-#define ECALL_MAGIC		0
+#define ECALL_INIT		0
 #define ECALL_REPORT		1
 #define MAX_ECALLS		2
 
 #define EEXIT			4
 
-#define INIT_MAGIC		0xdeadfacedeadbeefUL
+#define INIT_HELLO		"Hello Inclavare Containers!"
 
 /* *INDENT-OFF* */
 #ifndef __ASSEMBLER__
