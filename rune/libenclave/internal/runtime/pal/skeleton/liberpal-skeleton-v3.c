@@ -29,7 +29,7 @@ int pal_init(pal_attr_v3_t *attr)
 		return -EINVAL;
 	*(uint8_t *) tcs_busy = 0;
 
-	if (attr->fd != -1) {
+	if (attr->fd != -1 && attr->addr != 0) {
 		enclave_fd = attr->fd;
 		secs.base = attr->addr;
 		initialized = true;
