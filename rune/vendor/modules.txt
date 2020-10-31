@@ -1,4 +1,4 @@
-# github.com/alibaba/inclavare-containers/epm v0.0.0-20201029021258-812423e64792
+# github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
 ## explicit
 github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1
 # github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5

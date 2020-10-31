@@ -3,7 +3,7 @@ module github.com/inclavare-containers/rune
 go 1.14
 
 require (
-	github.com/alibaba/inclavare-containers/epm v0.0.0-20201029021258-812423e64792
+	github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
 	github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5
 	github.com/containerd/console v1.0.0
 	github.com/coreos/go-systemd/v22 v22.0.0
