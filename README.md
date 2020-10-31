@@ -112,14 +112,14 @@ Add the assocated configurations for `rune` in dockerd config file, e.g, `/etc/d
 {
         "runtimes": {
                 "rune": {
-                        "path": "/usr/bin/rune",
+                        "path": "/usr/local/bin/rune",
                         "runtimeArgs": []
                 }
         }
 }
 ```
 
-then restart dockerd on your system. If you install Inclavare Containers based on source code, please specify the path of rune as `/usr/local/bin/rune` instead.
+then restart dockerd on your system.
 
 You can check whether `rune` is correctly enabled or not with:
 

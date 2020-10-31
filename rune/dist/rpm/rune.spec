@@ -3,6 +3,7 @@
 
 %global PROTOBUF_VERSION 1.3.5
 %global PROJECT inclavare-containers
+%global BIN_DIR /usr/local/bin
 
 Name: rune
 Version: 0.5.0
@@ -49,15 +50,15 @@ make
 popd
 
 %install
-install -d -p %{buildroot}%{_bindir}
-install -p -m 755 %{name}/%{name} %{buildroot}%{_bindir}
+install -d -p %{buildroot}%{BIN_DIR}
+install -p -m 755 %{name}/%{name} %{buildroot}%{BIN_DIR}
 
 install -d -p %{buildroot}%{_defaultlicensedir}/%{name}-%{version}
 install -p -m 644 %{name}/LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{version}
 
 %files
 %{_defaultlicensedir}/%{name}-%{version}/LICENSE
-%{_bindir}/%{name}
+%{BIN_DIR}/%{name}
 
 %changelog
 * Wed Oct 28 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.5.0
