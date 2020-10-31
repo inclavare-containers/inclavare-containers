@@ -9,8 +9,8 @@ message Enclave {
 }
 
 message Enclavelayout {
-	int64 addr = 1;
-	int64 size = 2;
+	uint64 addr = 1;
+	uint64 size = 2;
 	EnclavePerms prot = 3;
 }
 
