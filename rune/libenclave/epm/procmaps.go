@@ -5,8 +5,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+/* Once enclave is stored into pool, its pathname will be /sgx/enclave in
+ * /proc/[epm pid]/fd and provide to rune side. When storing the enclave
+ * into pool again from rune side, it need obtain enclave fd and enclave maps
+ * info correctly by this kind of pathname.
+ */
 const (
-	EnclavePath = "/dev/sgx/enclave"
+	EnclavePath     = "/dev/sgx/enclave"
+	EnclavePathPool = "/sgx/enclave"
 )
 
 func GetEnclProcMaps(pid int) ([]*procfs.ProcMap, error) {
@@ -28,7 +34,8 @@ func GetEnclProcMaps(pid int) ([]*procfs.ProcMap, error) {
 	}
 
 	for idx := range maps {
-		if maps[idx].Pathname == EnclavePath {
+		pathname := maps[idx].Pathname
+		if pathname == EnclavePath || pathname == EnclavePathPool {
 			enclprocmaps = append(enclprocmaps, maps[idx])
 		}
 	}
@@ -53,7 +60,7 @@ func GetEnclaveFd(pid int) (int, error) {
 	}
 
 	for fd, n := range names {
-		if n == EnclavePath {
+		if n == EnclavePath || n == EnclavePathPool {
 			return int(fd), err
 		}
 	}
