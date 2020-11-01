@@ -6,6 +6,9 @@ Note that this code base is inspired by [v28 SGX in-tree driver](https://patchwo
 
 # Run skeleton with Docker
 ## Build liberpal-skeleton
+
+`skeleton` depends on `protobuf-c` compiler. Please refer to [this step](https://github.com/protobuf-c/protobuf-c#building) to install it on your platform.
+
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 make
