@@ -485,10 +485,10 @@ int main(int argc, char **argv)
 	RSA *sign_key;
 	bool enclave_debug = true;
 	uint64_t max_enclave_size = 0;
-	char *const short_options = "pm:";
+	char *const short_options = "ps:";
 	struct option long_options[] = {
 		{"product", no_argument, NULL, 'p'},
-		{"memory-size", required_argument, NULL, 'm'},
+		{"enclave-size", required_argument, NULL, 's'},
 		{0, 0, 0, 0}
 	};
 
@@ -501,7 +501,7 @@ int main(int argc, char **argv)
 		case 'p':
 			enclave_debug = false;
 			break;
-		case 'm':
+		case 's':
 			max_enclave_size = atoi(optarg);
 		case -1:
 			break;

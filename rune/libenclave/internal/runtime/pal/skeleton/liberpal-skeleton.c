@@ -447,7 +447,7 @@ static void check_opts(const char *opt)
 		no_sgx_flc = true;
 	else if (!strcmp(opt, "debug"))
 		debugging = true;
-	else if (strstr(opt, "memory-size")) {
+	else if (strstr(opt, "enclave-size")) {
 		max_enclave_size = atoi(strchr(opt, '=') + 1);
 	}
 }
