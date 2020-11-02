@@ -5,7 +5,8 @@ Essentially, it is init process inside container. In runc, init process eventual
 init-runelet is created by `rune create`, and runelet process on behalf of enclave application is created by `rune exec`.
 
 # Enclave Runtime PAL API
-This API defines the function calls beutween Enclave Runtime PAL and init-runelet.
+
+This API defines the function calls between Enclave Runtime PAL and init-runelet.
 
 # Enclave Runtime PAL
 The implementer of Enclave Runtime PAL API, on behalf of Enclave Runtime.
