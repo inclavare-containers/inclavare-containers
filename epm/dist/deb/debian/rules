@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 BUILD_ROOT := $(CURDIR)/debian/epm
-BUILD_DIR := /usr/local/bin
+BUILD_DIR := /usr/bin
 LICENSE := /usr/share/licenses/epm
 
 %:

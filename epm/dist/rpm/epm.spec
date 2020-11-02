@@ -90,6 +90,8 @@ systemctl enable epm
 systemctl start epm
 %postun
 rm -f %{EPM_CONFIG_DIR}/config.toml
+systemctl disable epm
+systemctl stop epm
 
 %files
 %{_defaultlicensedir}/%{name}/LICENSE

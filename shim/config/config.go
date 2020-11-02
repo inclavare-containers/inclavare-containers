@@ -22,8 +22,9 @@ type Graphene struct {
 }
 
 type EnclaveRuntime struct {
-	Occlum   Occlum   `toml:"occlum"`
-	Graphene Graphene `toml:"graphene"`
+	SignatureMethod string   `toml:"signature_method"`
+	Occlum          Occlum   `toml:"occlum"`
+	Graphene        Graphene `toml:"graphene"`
 }
 
 type Config struct {
