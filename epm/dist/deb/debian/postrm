@@ -2,3 +2,5 @@
 
 EPM_CONFIG_DIR=/etc/epm
 rm -f $EPM_CONFIG_DIR/config.toml
+systemctl disable epm
+systemctl stop epm

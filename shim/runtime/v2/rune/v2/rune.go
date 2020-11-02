@@ -47,6 +47,14 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 		return emptycarr, nil
 	}
 
+	var cfg shim_config.Config
+	if _, err := toml.DecodeFile(constants.ConfigurationPath, &cfg); err != nil {
+		return nil, err
+	}
+	if cfg.EnclaveRuntime.SignatureMethod == constants.SignatureMethodClient {
+		return carr, nil
+	}
+
 	switch carrierKind {
 	case rune.Occlum:
 		if carr, err = occlum.NewOcclumCarrier(s.context, req.Bundle); err != nil {

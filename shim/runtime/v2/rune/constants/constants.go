@@ -12,3 +12,8 @@ const (
 	EnvKeyImageDigest        = "IMAGE_DIGEST"
 	RuneDefaultWorkDirectory = "/run/rune"
 )
+
+const (
+	SignatureMethodServer = "server"
+	SignatureMethodClient = "client"
+)

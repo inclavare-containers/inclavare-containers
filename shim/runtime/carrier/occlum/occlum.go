@@ -225,9 +225,9 @@ func (o *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carr
 	dataDir := filepath.Join(req.Bundle, dataDirName)
 	signingMaterial = filepath.Join(rootfsDir, o.workDirectory, "enclave_sig.dat")
 	args.Config = filepath.Join(rootfsDir, o.workDirectory, "build/Enclave.xml")
-	if o.bundleCacheConfig.cacheLevel == types.BundleCache1PoolType {
-		return
-	}
+	//if o.bundleCacheConfig.cacheLevel == types.BundleCache1PoolType {
+	//	return
+	//}
 	cmdArgs := []string{
 		filepath.Join(dataDir, carrierScriptFileName),
 		"--action", "generateSigningMaterial",
