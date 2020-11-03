@@ -1,6 +1,6 @@
 #!/bin/sh
 
-EPM_CONFIG_DIR /etc/epm
+EPM_CONFIG_DIR=/etc/epm
 
 mkdir -p $EPM_CONFIG_DIR
 cat << EOF > $EPM_CONFIG_DIR/config.toml
