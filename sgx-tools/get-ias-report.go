@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/go-restruct/restruct"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -31,10 +30,6 @@ For example, get remote attestation report from IAS according to quote file:
 		cli.StringFlag{
 			Name:  "ias-report",
 			Usage: "path to the output IAS report file containing IAS report",
-		},
-		cli.BoolFlag{
-			Name:  "product",
-			Usage: "specify whether using production attestation service",
 		},
 		cli.StringFlag{
 			Name:  "spid",
@@ -64,11 +59,6 @@ For example, get remote attestation report from IAS according to quote file:
 		subscriptionKey := context.String("subscription-key")
 		if subscriptionKey == "" {
 			return fmt.Errorf("subscription-key argument cannot be empty")
-		}
-
-		var product uint32 = sgx.DebugEnclave
-		if context.Bool("product") {
-			product = sgx.ProductEnclave
 		}
 
 		if context.GlobalBool("verbose") {
@@ -104,6 +94,11 @@ For example, get remote attestation report from IAS according to quote file:
 			return err
 		}
 
+		product, err := IsProductEnclave(q.ReportBody)
+		if err != nil {
+			return err
+		}
+
 		// get IAS remote attestation report
 		p := parseAttestParameters(spid, subscriptionKey, product)
 		challenger, err := attestation.NewChallenger("sgx-epid", p)
@@ -131,15 +126,14 @@ For example, get remote attestation report from IAS according to quote file:
 	SkipArgReorder: true,
 }
 
-func parseAttestParameters(spid string, subscriptionKey string, product uint32) map[string]string {
+func parseAttestParameters(spid string, subscriptionKey string, product bool) map[string]string {
 	p := make(map[string]string)
 
 	p["spid"] = spid
 	p["subscription-key"] = subscriptionKey
-	if product == sgx.ProductEnclave {
+	p["service-class"] = "dev"
+	if product {
 		p["service-class"] = "product"
-	} else if product == sgx.DebugEnclave {
-		p["service-class"] = "dev"
 	}
 
 	return p
