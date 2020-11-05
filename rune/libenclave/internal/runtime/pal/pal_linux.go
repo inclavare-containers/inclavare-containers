@@ -109,7 +109,7 @@ func parseAttestParameters(spid string, subscriptionKey string, product bool) ma
 	return p
 }
 
-func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey string, isProduct uint32, quoteType uint32) ([]byte, error) {
+func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey string, quoteType uint32) ([]byte, error) {
 	if pal.GetLocalReport == nil {
 		return nil, nil
 	}
