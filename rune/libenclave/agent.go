@@ -163,7 +163,6 @@ func handleRequest(conn net.Conn, id int) {
 		resp.Attest = &pb.AgentServiceResponse_Attest{}
 		localReport, err := enclaveRuntime.LaunchAttestation(req.Attest.IsRA, req.Attest.Spid,
 			req.Attest.SubscriptionKey,
-			req.Attest.Product,
 			req.Attest.QuoteType)
 		if err != nil {
 			resp.Attest.Error = fmt.Sprint(err)

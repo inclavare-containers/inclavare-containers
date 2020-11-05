@@ -12,7 +12,7 @@ import (
 
 type EnclaveRuntime interface {
 	Init(args string, logLevel string) error
-	Attest(bool, string, string, uint32, uint32) ([]byte, error)
+	Attest(bool, string, string, uint32) ([]byte, error)
 	Exec(cmd []string, envp []string, stdio [3]*os.File) (int32, error)
 	Kill(sig int, pid int) error
 	Destroy() error
@@ -49,10 +49,10 @@ func StartInitialization(config *configs.InitEnclaveConfig, logLevel string) (*E
 	return rt, nil
 }
 
-func (rt *EnclaveRuntimeWrapper) LaunchAttestation(isRA bool, spid string, subscriptionKey string, product uint32, quoteType uint32) ([]byte, error) {
+func (rt *EnclaveRuntimeWrapper) LaunchAttestation(isRA bool, spid string, subscriptionKey string, quoteType uint32) ([]byte, error) {
 	logrus.Debugf("attesting enclave runtime")
 
-	return rt.runtime.Attest(isRA, spid, subscriptionKey, product, quoteType)
+	return rt.runtime.Attest(isRA, spid, subscriptionKey, quoteType)
 }
 
 func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, stdio [3]*os.File) (int32, error) {
