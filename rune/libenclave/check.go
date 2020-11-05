@@ -220,23 +220,13 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		raType = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_type")
 	}
 
-	var enclaveRaType, sgxEnclaveType, raEpidIsLinkable uint32 = sgx.UnknownRaType, sgx.InvalidEnclaveType, intelsgx.InvalidQuoteSignatureType
+	var enclaveRaType, raEpidIsLinkable uint32 = sgx.UnknownRaType, intelsgx.InvalidQuoteSignatureType
 	var raEpidSpid, raEpidSubscriptionKey string
 	if raType != "" {
 		if strings.EqualFold(raType, "EPID") {
 			enclaveRaType = sgx.EPID
 		} else if strings.EqualFold(raType, "DCAP") {
 			enclaveRaType = sgx.DCAP
-		}
-
-		isProductEnclave := filterOut(env, "ENCLAVE_IS_PRODUCT_ENCLAVE")
-		if isProductEnclave == "" {
-			isProductEnclave = libenclaveUtils.SearchLabels(config.Labels, "enclave.is_product_enclave")
-		}
-		if strings.EqualFold(isProductEnclave, "false") {
-			sgxEnclaveType = sgx.DebugEnclave
-		} else if strings.EqualFold(isProductEnclave, "true") {
-			sgxEnclaveType = sgx.ProductEnclave
 		}
 
 		raEpidSpid = filterOut(env, "ENCLAVE_RA_EPID_SPID")
@@ -264,7 +254,6 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		Type:                  etype,
 		Path:                  path,
 		Args:                  args,
-		IsProductEnclave:      sgxEnclaveType,
 		RaType:                enclaveRaType,
 		RaEpidSpid:            raEpidSpid,
 		RaEpidSubscriptionKey: raEpidSubscriptionKey,
@@ -294,10 +283,6 @@ func ValidateEnclave(config *enclaveConfigs.EnclaveConfig) error {
 	}
 
 	if config.Enclave.RaType != sgx.UnknownRaType {
-		if config.Enclave.IsProductEnclave == sgx.InvalidEnclaveType {
-			return fmt.Errorf("Unsupported enclave.is_product_enclave Configuration!\n")
-		}
-
 		if config.Enclave.RaEpidSpid == "" {
 			return fmt.Errorf("The enclave.attestation.ra_epid_spid Configuration isn't set!\n")
 		}

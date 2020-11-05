@@ -6,10 +6,3 @@ const (
 	EPID
 	DCAP
 )
-
-// RA Enclave Type
-const (
-	InvalidEnclaveType = iota
-	DebugEnclave
-	ProductEnclave
-)
