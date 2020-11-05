@@ -1,5 +1,10 @@
 package intelsgx // import "github.com/inclavare-containers/rune/libenclave/intelsgx"
 
+import (
+	"fmt"
+	"unsafe"
+)
+
 var (
 	sgx1Supported           bool = false
 	sgx2Supported           bool = false
@@ -203,4 +208,17 @@ func GetExtendedSGXFeatures() uint32 {
 // Get the max enclave size value
 func GetMaxEnclaveSizeBits() uint32 {
 	return maxEnclaveSizeBits
+}
+
+// Check whether the enclave is a product enclave or not
+func IsProductEnclave(reportBody ReportBody) (bool, error) {
+	if unsafe.Sizeof(reportBody) != ReportBodyLength {
+		return false, fmt.Errorf("len(report) is not %d, but %d", ReportBodyLength, unsafe.Sizeof(reportBody))
+	}
+
+	if reportBody.Attributes[0]&0x02 != 0x0 {
+		return false, nil
+	}
+
+	return false, nil
 }
