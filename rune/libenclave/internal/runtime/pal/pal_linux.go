@@ -6,7 +6,6 @@ import (
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/go-restruct/restruct"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 	"github.com/inclavare-containers/rune/libenclave/epm"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
@@ -97,21 +96,20 @@ func (pal *enclaveRuntimePal) GetLocalReport(targetInfo []byte) ([]byte, error) 
 	return nil, fmt.Errorf("unsupported pal api version %d", pal.version)
 }
 
-func parseAttestParameters(spid string, subscriptionKey string, product uint32) map[string]string {
+func parseAttestParameters(spid string, subscriptionKey string, product bool) map[string]string {
 	p := make(map[string]string)
 
 	p["spid"] = spid
 	p["subscription-key"] = subscriptionKey
-	if product == sgx.ProductEnclave {
+	p["service-class"] = "dev"
+	if product {
 		p["service-class"] = "product"
-	} else if product == sgx.DebugEnclave {
-		p["service-class"] = "dev"
 	}
 
 	return p
 }
 
-func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey string, product uint32, quoteType uint32) ([]byte, error) {
+func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey string, isProduct uint32, quoteType uint32) ([]byte, error) {
 	if pal.GetLocalReport == nil {
 		return nil, nil
 	}
@@ -151,6 +149,11 @@ func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey str
 
 	q := &intelsgx.Quote{}
 	if err := restruct.Unpack(quote, binary.LittleEndian, &q); err != nil {
+		return nil, err
+	}
+
+	product, err := intelsgx.IsProductEnclave(q.ReportBody)
+	if err != nil {
 		return nil, err
 	}
 
