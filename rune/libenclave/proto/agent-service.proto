@@ -17,8 +17,7 @@ message AgentServiceRequest{
 	bool isRA		= 1;
 	string spid       	= 2;
 	string subscriptionKey 	= 3;
-	uint32 product    	= 4;
-	uint32 quoteType	= 5;
+	uint32 quoteType	= 4;
     }
 
     Execute exec = 1;
