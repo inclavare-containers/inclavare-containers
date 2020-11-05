@@ -229,15 +229,6 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 		return 1, fmt.Errorf("casting to UnixConn faild")
 	}
 
-	sgxEnclaveType := os.Getenv("PRODUCT")
-	isProductEnclave, err := strconv.ParseUint(sgxEnclaveType, 10, 32)
-	if err != nil {
-		return 1, fmt.Errorf("Invalid sgxEnclaveType Configuration, error = %v!\n", err)
-	}
-	if isProductEnclave != sgx.DebugEnclave && isProductEnclave != sgx.ProductEnclave {
-		return 1, fmt.Errorf("Unsupported is_product_enclave Configuration %v!\n", sgxEnclaveType)
-	}
-
 	quoteType := os.Getenv("QUOTE_TYPE")
 	raEpidQuoteType, err := strconv.ParseUint(quoteType, 10, 32)
 	if err != nil {
@@ -258,7 +249,6 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 		IsRA:            isRA,
 		Spid:            os.Getenv("SPID"),
 		SubscriptionKey: os.Getenv("SUBSCRIPTION_KEY"),
-		Product:         (uint32)(isProductEnclave),
 		QuoteType:       (uint32)(raEpidQuoteType),
 	}
 
