@@ -8,7 +8,6 @@ import (
 	"unsafe"
 
 	"github.com/inclavare-containers/rune/libenclave"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/opencontainers/runc/libcontainer"
@@ -30,10 +29,6 @@ Where "<container-id>" is the name for the instance of the container`,
 		cli.BoolFlag{
 			Name:  "isRA",
 			Usage: "specify whether to get the remote or local report",
-		},
-		cli.BoolFlag{
-			Name:  "product",
-			Usage: "specify whether using production attestation service",
 		},
 		cli.StringFlag{
 			Name:  "spid",
@@ -154,12 +149,6 @@ func getAttestProcess(context *cli.Context, bundle string) (*specs.Process, erro
 	p.Env = append(p.Env, "SPID"+envSeparator+context.String("spid"))
 	p.Env = append(p.Env, "SUBSCRIPTION_KEY"+envSeparator+context.String("subscription-key"))
 	p.Env = append(p.Env, "REPORT_FILE"+envSeparator+context.String("reportFile"))
-
-	isProductEnclave := strconv.Itoa(int(sgx.DebugEnclave))
-	if context.Bool("product") {
-		isProductEnclave = strconv.Itoa(int(sgx.ProductEnclave))
-	}
-	p.Env = append(p.Env, "PRODUCT"+envSeparator+isProductEnclave)
 
 	quoteType := strconv.Itoa(int(intelsgx.QuoteSignatureTypeUnlinkable))
 	if context.Bool("linkable") {
