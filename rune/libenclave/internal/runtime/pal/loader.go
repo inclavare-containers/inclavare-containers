@@ -9,6 +9,7 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 import "C"
 
 import (
+	"github.com/sirupsen/logrus"
 	"unsafe"
 )
 
@@ -23,7 +24,7 @@ var fptr_pal_get_local_report unsafe.Pointer
 func Loadbinary(path string) {
 	dl := C.dlopen(C.CString(path), C.RTLD_NOW)
 	if dl == nil {
-		C.perror(C.CString("failed to load library " + path))
+		logrus.Fatal("failed to load %s, dlerror: %s", path, C.GoString(C.dlerror()))
 	}
 
 	fptr_pal_get_version = C.dlsym(dl, C.CString("pal_get_version"))
