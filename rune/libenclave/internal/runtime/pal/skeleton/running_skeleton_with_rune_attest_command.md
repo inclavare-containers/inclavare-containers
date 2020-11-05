@@ -49,7 +49,7 @@ rune --debug attest skeleton-enclave-container
 You can type the following command to use `rune attest` command with skeleton in another shell to get IAS report:
 
 ```shell
-rune --debug attest --isRA --product=false \
+rune --debug attest --isRA \
 		--linkable=false \
 		--spid=${EPID_SPID} \
 		--subscription-key=${EPID_SUBSCRIPTION_KEY} \
@@ -58,7 +58,6 @@ rune --debug attest --isRA --product=false \
 
 where:
 - @isRA: specify the type of report is local or remote report.
-- @product: specify the type of enclave is in product mode or debug mode.
 - @linkable: specify the type of `EPID` is `linkable` or `unlinkable`.
 - @spid: specify the `SPID`.
 - @subscription-key: specify the `Subscription Key`.
