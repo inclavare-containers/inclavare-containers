@@ -139,6 +139,11 @@ Assuming you have an OCI bundle from the previous step you can execute the conta
 cd "$HOME/rune_workdir/rune-container"
 sudo rune run skeleton-enclave-container
 ```
+
+## Run skeleton with rune attest command
+
+`rune attest` command can get the local report or IAS report of enclave runtimes, you can refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/running_skeleton_with_rune_attest_command.md) to run skeleton with `rune attest` command.
+
 ---
 
 # Enclave share mapping
