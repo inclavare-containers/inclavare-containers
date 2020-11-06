@@ -10,7 +10,7 @@ import (
 
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/specconv"
-	"github.com/opencontainers/runtime-spec/specs-go"
+	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
 )
 
@@ -95,6 +95,7 @@ created by an unprivileged user.
 		}
 
 		spec.Mounts = append(spec.Mounts, *createLibenclaveMount())
+		spec.Linux.Namespaces = setDefaultNamespace()
 
 		rootless := context.Bool("rootless")
 		if rootless {
@@ -163,5 +164,22 @@ func createLibenclaveMount() *specs.Mount {
 		Type:        "bind",
 		Source:      "/var/run/aesmd",
 		Options:     []string{"rbind", "rprivate"},
+	}
+}
+
+func setDefaultNamespace() []specs.LinuxNamespace {
+	return []specs.LinuxNamespace{
+		{
+			Type: specs.PIDNamespace,
+		},
+		{
+			Type: specs.IPCNamespace,
+		},
+		{
+			Type: specs.UTSNamespace,
+		},
+		{
+			Type: specs.MountNamespace,
+		},
 	}
 }
