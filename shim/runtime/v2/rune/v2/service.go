@@ -337,7 +337,7 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	container, err := runc.NewContainer(ctx, s.platform, r)
 
 	//FIXME debug
-	if carrierKind == "occlum" {
+	/*if carrierKind == "occlum" {
 		if err != nil {
 			logrus.Errorf("rune Create NewContainer error: %++v", err)
 			if _, err := os.Stat(r.Bundle); err == nil {
@@ -357,7 +357,7 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 			}
 			return nil, err
 		}
-	}
+	}*/
 
 	logrus.Debugf("Create: create container time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	logrus.Infof("rune.NewContainer success: %s", r.ID)
