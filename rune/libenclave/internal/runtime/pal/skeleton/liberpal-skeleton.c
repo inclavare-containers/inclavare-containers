@@ -523,9 +523,11 @@ int __pal_init_v1(pal_attr_v1_t *attr)
 	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) secs.base, result);
 	if (ret) {
 		fprintf(stderr, "failed to initialize enclave\n");
+		free(result);
 		return ret;
 	}
 	puts(result);
+	free(result);
 
 	initialized = true;
 
