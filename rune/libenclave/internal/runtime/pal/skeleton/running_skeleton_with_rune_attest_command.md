@@ -6,8 +6,8 @@ This guide will guide you how to use remote attestation based on SGX in skeleton
 - Build rune according to [this guide](https://github.com/alibaba/inclavare-containers#rune).
 - Register a `SPID` and `Subscription Key` of [IAS](https://api.portal.trustedservices.intel.com/EPID-attestation) to get IAS report(optional). After the registration, Intel will respond with a SPID which is needed to communicate with IAS.
 
-# Run skeleton bundle with `rune`
-Before using `rune attest` command, you must ensure your skeleton container/bundles(such as skeleton-enclave-container) running by setting `"wait_timeout","100"` of `process.args` in config.json as following:
+# Configure skeleton bundle
+- Before using `rune attest` command, you must ensure your skeleton container/bundles(such as skeleton-enclave-container) running by setting `"wait_timeout","100"` of `process.args` in config.json as following:
 ```json
 "process": {
 	"args": [
@@ -16,7 +16,7 @@ Before using `rune attest` command, you must ensure your skeleton container/bund
 }
 ```
 
-Only `liberpal-skeleton-v3.so` supports `rune attest` command. So you also need to configure enclave runtime as following:
+- Only `liberpal-skeleton-v3.so` supports `rune attest` command. So you also need to configure enclave runtime as following:
 ```json
 "annotations": {
       "enclave.type": "intelSgx",
@@ -25,6 +25,25 @@ Only `liberpal-skeleton-v3.so` supports `rune attest` command. So you also need 
 }
 ```
 
+- If you want to use `rune attest` command to get IAS report, you also need to **`delete`** the `network` namespace configuration in your `config.json` to ensure you run skeleton in host network mode. After doing this, your `namespaces` is as following without the `network` type namespace:
+```json
+                "namespaces": [
+                        {
+                                "type": "pid"
+                        },
+                        {
+                                "type": "ipc"
+                        },
+                        {
+                                "type": "uts"
+                        },
+                        {
+                                "type": "mount"
+                        }
+                ],
+```
+
+# Run skeleton bundle with `rune`
 Then you can run your skeleton containers by typing the following commands:
 
 ```shell
