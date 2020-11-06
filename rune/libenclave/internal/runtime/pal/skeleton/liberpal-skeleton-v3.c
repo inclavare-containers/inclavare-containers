@@ -20,6 +20,7 @@ int pal_get_version(void)
 int pal_init(pal_attr_v3_t *attr)
 {
 	int ret;
+	char *result;
 
 	parse_args(attr->attr_v1.args);
 
@@ -32,18 +33,31 @@ int pal_init(pal_attr_v3_t *attr)
 	if (attr->fd != -1 && attr->addr != 0) {
 		enclave_fd = attr->fd;
 		secs.base = attr->addr;
-		initialized = true;
-		return 0;
+		goto out;
 	}
 
 	ret = encl_init();
 	if (ret != 0)
 		return ret;
 
+out:
+	result = malloc(sizeof(INIT_HELLO));
+	if (!result) {
+		fprintf(stderr, "fail to malloc INIT_HELLO\n");
+		return -ENOMEM;
+	}
+	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) secs.base, result);
+	if (ret) {
+		fprintf(stderr, "failed to initialize enclave\n");
+		free(result);
+		return ret;
+	}
+	puts(result);
+	free(result);
+
 	initialized = true;
 
 	return 0;
-
 }
 
 int pal_create_process(pal_create_process_args *args)
