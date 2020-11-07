@@ -1,6 +1,6 @@
 # epm
 
-epm is a service that is used to manage the cache pools to optimize the startup time of encalve.
+epm is a service that is used to manage the cache pools to optimize the startup time of enclave.
 
 
 ## Build requirements
@@ -18,7 +18,7 @@ git clone https://github.com/alibaba/inclavare-containers.git
 cd epm
 GOOS=linux make binaries
 make install
-ls -l /usr/bin/epm
+ls -l /usr/local/bin/epm
 ```
 
 ### Step 2: Configuration
