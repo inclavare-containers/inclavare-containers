@@ -43,6 +43,9 @@ The major components of Inclavare Containers are:
 - sgx-tools  
   sgx-tools is a CLI tool, used to interact Intel SGX AESM service to retrieve various materials such as launch token, quoting enclave's target information, enclave quote and remote attestation report from IAS. Refer to [this tutorial](sgx-tools/README.md) for the details about its usage.
 
+- epm  
+  epm is a service that is used to manage the cache pools to optimize the startup time of enclave. Refer to [this tutorial](epm/README.md) for the details about its usage.
+
 # Roadmap
 
 Please refer to [Inclavare Containers Roadmap](ROADMAP.md) for the details. This document outlines the development roadmap for the Inclavare Containers project.
@@ -68,7 +71,7 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.5
 
 3. Build Inclavare Containers
 ```shell
-# build rune, shim-rune and sgx-tools
+# build rune, shim-rune, epm and sgx-tools
 make
 ```
 
@@ -80,20 +83,20 @@ After build Inclavare Containers on your system, you can use the following comma
 sudo make install
 ```
 
-`rune` will be installed to `/usr/local/bin/rune` on your system. `shim-rune` will be installed to `/usr/local/bin/containerd-shim-rune-v2`. `sgx-tools` will be installed to `/usr/local/bin/sgx-tools`.
+`rune` will be installed to `/usr/local/bin/rune` on your system. `shim-rune` will be installed to `/usr/local/bin/containerd-shim-rune-v2`. `epm` will be installed to `/usr/local/bin/epm`. `sgx-tools` will be installed to `/usr/local/bin/sgx-tools`.
 
 If you don't want to build and install Inclavare Containers from latest source code. We also provide RPM/DEB repository to help you install Inclavare Containers quickly. Please see the [steps about how to configure repository](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#1-add-inclavare-containers-repository) firstly. Then you can run the following command to install Inclavare Containers on your system.
 
 - On CentOS 8.1
 
 ```shell
-sudo yum install rune shim-rune sgx-tools
+sudo yum install rune shim-rune epm sgx-tools
 ```
 
 - On Ubuntu 18.04 server
 
 ```
-sudo apt-get install rune shim-rune sgx-tools
+sudo apt-get install rune shim-rune epm sgx-tools
 ```
 
 # Integrating
