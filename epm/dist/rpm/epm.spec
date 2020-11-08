@@ -2,7 +2,7 @@
 %define _debugsource_template %{nil}
 
 %global PROJECT inclavare-containers
-%global EPM_BIN_DIR /usr/bin
+%global EPM_BIN_DIR /usr/local/bin
 %global EPM_CONFIG_DIR /etc/epm
 # to skip no build id error
 %undefine _missing_build_ids_terminate_build
@@ -71,7 +71,7 @@ Documentation=https://inclavare-containers.io
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/epm --config /etc/epm/config.toml --stderrthreshold=0
+ExecStart=/usr/local/bin/epm --config /etc/epm/config.toml --stderrthreshold=0
 Restart=always
 RestartSec=5
 Delegate=yes
