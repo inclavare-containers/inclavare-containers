@@ -110,7 +110,7 @@ sudo apt-get install rune
 ```
 
 ### 5. Install epm
-`epm` epm is a service that is used to manage the cache pools to optimize the startup time of encalve.<br />
+`epm` epm is a service that is used to manage the cache pools to optimize the startup time of enclave.<br />
 <br />
 Install epm use the following commands:
 

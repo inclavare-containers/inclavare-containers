@@ -1,6 +1,6 @@
 # epm
 
-epm is a service that is used to manage the cache pools to optimize the startup time of encalve.
+epm is a service that is used to manage the cache pools to optimize the startup time of enclave.
 
 
 ## Build requirements
