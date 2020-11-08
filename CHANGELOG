@@ -1,3 +1,10 @@
+# 2020-11-08 v0.5.0
+- Implement bundle cache
+- Implement enclave instant launch
+- WAMR enclave runtime support
+- Decouple from runc
+- Support Occlum 0.17.0
+
 # 2020-09-29 v0.4.1
 - Refresh RA-TLS PoC
 - Don't use Occlum SDK image to launch enclave containers
