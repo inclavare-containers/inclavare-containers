@@ -22,7 +22,7 @@ Documentation=https://inclavare-containers.io
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/epm --config /etc/epm/config.toml --stderrthreshold=0
+ExecStart=/usr/local/bin/epm --config /etc/epm/config.toml --stderrthreshold=0
 Restart=always
 RestartSec=5
 Delegate=yes
