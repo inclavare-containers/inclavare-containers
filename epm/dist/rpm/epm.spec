@@ -19,7 +19,7 @@ Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 ExclusiveArch: x86_64
 
 %description
-epm is a service that is used to manage the cache pools to optimize the startup time of encalve.
+epm is a service that is used to manage the cache pools to optimize the startup time of enclave.
 
 %prep
 %setup -q -n %{PROJECT}-%{version}

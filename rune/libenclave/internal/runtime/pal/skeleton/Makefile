@@ -57,7 +57,7 @@ $(OUTPUT)/encl.bin: $(OUTPUT)/encl.elf $(OUTPUT)/sgxsign
 $(OUTPUT)/encl.elf: encl.lds encl.c encl_bootstrap.S
 	$(CC) $(ENCL_CFLAGS) -T $^ -o $@
 
-# If you want to sign a production encalve, you need add '-p' args in sgxsign. In addition, for Intel SGX1 without FLC, please replace signing_key with the product signature key applied to Intel.
+# If you want to sign a production enclave, you need add '-p' args in sgxsign. In addition, for Intel SGX1 without FLC, please replace signing_key with the product signature key applied to Intel.
 $(OUTPUT)/signing_key.pem:
 	openssl genrsa -3 -out $@ 3072
 
