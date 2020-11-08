@@ -520,6 +520,11 @@ int __pal_init_v1(pal_attr_v1_t *attr)
 		return ret;
 
 	char *result = malloc(sizeof(INIT_HELLO));
+	if (!result) {
+		fprintf(stderr, "fail to malloc INIT_HELLO\n");
+		return -ENOMEM;
+	}
+
 	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) secs.base, result);
 	if (ret) {
 		fprintf(stderr, "failed to initialize enclave\n");
