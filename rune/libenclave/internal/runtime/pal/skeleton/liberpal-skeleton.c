@@ -145,7 +145,16 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	if (!base)
 		return false;
 
+/* If macro ZEROPAGE_MAPPING is defined, enclave will be mapped to
+ * zero address in process. It need to set sysctl vm.mmap_min_addr
+ * to zero firstly.
+ */
+#ifdef ZEROPAGE_MAPPING
+	secs->base = 0;
+#else
 	secs->base = base;
+#endif
+
 	ioc.src = (unsigned long) secs;
 	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
 	if (rc) {
