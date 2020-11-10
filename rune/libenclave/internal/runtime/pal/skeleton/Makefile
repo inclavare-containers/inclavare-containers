@@ -93,5 +93,6 @@ EXTRA_CLEAN := \
 
 clean:
 	rm -f ${EXTRA_CLEAN}
+	$(MAKE) -C ../kvmtool clean
 
 .PHONY: clean all
