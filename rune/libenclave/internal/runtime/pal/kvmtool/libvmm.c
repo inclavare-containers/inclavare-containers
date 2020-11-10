@@ -100,23 +100,24 @@ int libvmm_vm_init(struct kvm *vm)
     static char cmdline[BUFSIZ];
     int ret;
 
-    strncat(cmdline, KERNEL_COMMANDLINE_COMMON, sizeof(cmdline));
+    strncat(cmdline, KERNEL_COMMANDLINE_COMMON, sizeof(cmdline) - 1);
     if (vm->cfg.custom_rootfs) {
         strncat(cmdline,
                     " rw"
                     " rootflags=trans=virtio,version=9p2000.L,cache=loose"
                     " rootfstype=9p",
-                    sizeof(cmdline));
+                    sizeof(cmdline) - 1);
     } else if (vm->cfg.initrd_filename) {
-        strncat(cmdline, " root=/dev/vda rw", sizeof(cmdline));
+        strncat(cmdline, " root=/dev/vda rw", sizeof(cmdline) - 1);
     } else {
         return -EINVAL;
     }
 
     if (vm->cfg.real_init) {
-        strncat(cmdline, " init=", sizeof(cmdline));
-        strncat(cmdline, vm->cfg.real_init, sizeof(cmdline));
+        strncat(cmdline, " init=", sizeof(cmdline) - 1);
+        strncat(cmdline, vm->cfg.real_init, sizeof(cmdline) - 1);
     }
+    cmdline[sizeof(cmdline) - 1] = '\0';
 
     vm->cfg.real_cmdline = cmdline;
 
