@@ -28,6 +28,13 @@
 #define SGX_REG_PAGE_FLAGS \
 	(SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X)
 
+struct enclave_info {
+	uint64_t mmap_base;
+	uint64_t mmap_size;
+	uint64_t encl_base;
+	uint64_t encl_size;
+};
+
 struct sgx_secs secs;
 static pal_stdio_fds pal_stdio;
 bool initialized = false;
@@ -78,48 +85,49 @@ static void detect_driver_type(void)
 	is_oot_driver = false;
 }
 
-static uint64_t create_enclave_range(int dev_fd, uint64_t size)
+static int create_enclave_range(int dev_fd, const uint64_t mmap_size,
+				struct enclave_info *encl_info)
 {
-	void *area;
 	int fd;
 	int flags = MAP_SHARED;
+	int prot = PROT_READ | PROT_WRITE | PROT_EXEC;
+	uint64_t encl_size = pow2(mmap_size);
 
 	if (is_oot_driver) {
 		fd = dev_fd;
 	} else {
 		fd = -1;
+		prot = PROT_NONE;
 		flags |= MAP_ANONYMOUS;
 	}
 
-	area = mmap(NULL, size * 2, PROT_NONE, flags, fd, 0);
-	if (area == MAP_FAILED) {
+	void *mmap_addr = mmap(NULL, encl_size * 2, prot, flags, fd, 0);
+	if (mmap_addr == MAP_FAILED) {
 		perror("mmap");
-		return 0;
+		return -1;
 	}
 
-	uint64_t base = ((uint64_t) area + size - 1) & ~(size - 1);
-	munmap(area, base - (uint64_t) area);
-	munmap((void *) (base + size), (uint64_t) area + size - base);
+	/* Unmap unused areas */
+	uint64_t mmap_base;
+	mmap_base = ((uint64_t) mmap_addr + encl_size - 1) & ~(encl_size - 1);
+	munmap(mmap_addr, mmap_base - (uint64_t) mmap_addr);
+	munmap((void *) (mmap_base + mmap_size),
+	       (uint64_t) mmap_addr + encl_size * 2 - (mmap_base + mmap_size));
 
-	if (is_oot_driver) {
-		if (mprotect
-		    ((void *) base, size, PROT_READ | PROT_WRITE | PROT_EXEC)) {
-			perror("mprotect");
-			munmap((void *) base, size);
-			return 0;
-		}
-	}
+	encl_info->mmap_base = mmap_base;
+	encl_info->mmap_size = mmap_size;
+	encl_info->encl_base = mmap_base;
+	encl_info->encl_size = encl_size;
 
-	return base;
+	return 0;
 }
 
 static bool encl_create(int dev_fd, unsigned long bin_size,
-			struct sgx_secs *secs, uint64_t max_mmap_size)
+			struct sgx_secs *secs, struct enclave_info *encl_info,
+			uint64_t max_mmap_size)
 {
 	struct sgx_enclave_create ioc;
-	int rc;
 	uint64_t xfrm;
-	uint64_t encl_size;
 
 	memset(secs, 0, sizeof(*secs));
 	secs->attributes = SGX_ATTR_MODE64BIT;
@@ -133,31 +141,40 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	secs->ssa_frame_size =
 		sgx_calc_ssaframesize(secs->miscselect, secs->xfrm);
 
-	encl_size = bin_size + PAGE_SIZE * secs->ssa_frame_size;
+	uint64_t mmap_size = bin_size + PAGE_SIZE * secs->ssa_frame_size;
 	if (max_mmap_size) {
-		if (max_mmap_size < encl_size) {
+		if (max_mmap_size < mmap_size) {
 			fprintf(stderr,
 				"Invalid enclave mmap size %lu, "
 				"set enclave mmap size larger than %lu.\n",
-				max_mmap_size, encl_size);
+				max_mmap_size, mmap_size);
 			return false;
 		}
-		encl_size = max_mmap_size;
+		mmap_size = max_mmap_size;
 	}
 
-	for (secs->size = PAGE_SIZE; secs->size < encl_size;)
-		secs->size <<= 1;
+	if (mmap_size % PAGE_SIZE)
+		mmap_size = (mmap_size / PAGE_SIZE + 1) * PAGE_SIZE;
 
-	uint64_t base = create_enclave_range(dev_fd, secs->size);
-	if (!base)
+	if (create_enclave_range(dev_fd, mmap_size, encl_info) < 0)
 		return false;
 
-	secs->base = base;
+	printf("enclave range [%#016lx, %#016lx], length %ld-byte\n",
+	       encl_info->encl_base,
+	       encl_info->encl_base + encl_info->encl_size - 1,
+	       encl_info->encl_size);
+	printf("enclave mmap [%#016lx, %#016lx], length %ld-byte\n",
+	       encl_info->mmap_base,
+	       encl_info->mmap_base + encl_info->mmap_size - 1,
+	       encl_info->mmap_size);
+
+	secs->base = encl_info->encl_base;
+	secs->size = encl_info->encl_size;
 	ioc.src = (unsigned long) secs;
-	rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
+	int rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
 	if (rc) {
 		fprintf(stderr, "ECREATE failed rc=%d, err=%d.\n", rc, errno);
-		munmap((void *) secs->base, secs->size);
+		munmap((void *) encl_info->mmap_base, mmap_size);
 		return false;
 	}
 
@@ -229,7 +246,8 @@ static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 
 static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		       struct sgx_sigstruct *sigstruct,
-		       struct sgx_einittoken *token, uint64_t max_mmap_size)
+		       struct sgx_einittoken *token,
+		       struct enclave_info *encl_info, uint64_t max_mmap_size)
 {
 	int dev_fd;
 	int rc;
@@ -244,7 +262,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	if (!(sigstruct->body.attributes & SGX_ATTR_DEBUG))
 		enclave_debug = false;
 
-	if (!encl_create(dev_fd, bin_size, secs, max_mmap_size))
+	if (!encl_create(dev_fd, bin_size, secs, encl_info, max_mmap_size))
 		goto out_dev_fd;
 
 	uint64_t *ssa_frame = valloc(PAGE_SIZE * secs->ssa_frame_size);
@@ -276,52 +294,57 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 
 	if (is_oot_driver) {
 		if (!encl_add_pages_with_mrmask
-		    (dev_fd, secs->base, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+		    (dev_fd, encl_info->mmap_base, bin, PAGE_SIZE,
+		     SGX_SECINFO_TCS))
 			goto out_map;
 
 		if (!encl_add_pages_with_mrmask
-		    (dev_fd, secs->base + PAGE_SIZE, bin + PAGE_SIZE,
+		    (dev_fd, encl_info->mmap_base + PAGE_SIZE, bin + PAGE_SIZE,
 		     bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
 			goto out_map;
 
 		if (!encl_add_pages_with_mrmask
-		    (dev_fd, secs->base + bin_size, ssa_frame,
+		    (dev_fd, encl_info->mmap_base + bin_size, ssa_frame,
 		     PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
 			goto out_map;
 
 		if (max_mmap_size) {
 			if (!encl_add_pages_with_mrmask
 			    (dev_fd,
-			     secs->base + bin_size +
+			     encl_info->mmap_base + bin_size +
 			     PAGE_SIZE * secs->ssa_frame_size, add_memory,
 			     add_size, SGX_REG_PAGE_FLAGS))
 				goto out_add;
 		}
 	} else {
-		if (!encl_add_pages(dev_fd, 0, bin, PAGE_SIZE, SGX_SECINFO_TCS))
+		if (!encl_add_pages
+		    (dev_fd, encl_info->mmap_base, bin, PAGE_SIZE,
+		     SGX_SECINFO_TCS))
 			goto out_map;
 
-		if (!encl_add_pages(dev_fd, PAGE_SIZE, bin + PAGE_SIZE,
-				    bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
-			goto out_map;
-
-		if (!encl_add_pages(dev_fd, tcs->ssa_offset, ssa_frame,
-				    PAGE_SIZE * secs->ssa_frame_size,
+		if (!encl_add_pages(dev_fd, encl_info->mmap_base + PAGE_SIZE,
+				    bin + PAGE_SIZE, bin_size - PAGE_SIZE,
 				    SGX_REG_PAGE_FLAGS))
 			goto out_map;
 
+		if (!encl_add_pages
+		    (dev_fd, encl_info->mmap_base + tcs->ssa_offset, ssa_frame,
+		     PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
+			goto out_map;
+
 		if (max_mmap_size) {
-			if (!encl_add_pages
-			    (dev_fd,
-			     bin_size + PAGE_SIZE * secs->ssa_frame_size,
-			     add_memory, add_size, SGX_REG_PAGE_FLAGS))
+			if (!encl_add_pages(dev_fd,
+					    encl_info->mmap_base + bin_size +
+					    PAGE_SIZE * secs->ssa_frame_size,
+					    add_memory, add_size,
+					    SGX_REG_PAGE_FLAGS))
 				goto out_add;
 		}
 	}
 
 	if (is_oot_driver || no_sgx_flc) {
 		struct sgx_enclave_init_with_token ioc;
-		ioc.addr = secs->base;
+		ioc.addr = encl_info->mmap_base;
 		ioc.sigstruct = (uint64_t) sigstruct;
 		ioc.einittoken = (uint64_t) token;
 		rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_INIT_WITH_TOKEN, &ioc);
@@ -341,7 +364,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	else {
 		void *rc;
 
-		rc = mmap((void *) secs->base, PAGE_SIZE,
+		rc = mmap((void *) encl_info->mmap_base, PAGE_SIZE,
 			  PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED,
 			  dev_fd, 0);
 		if (rc == MAP_FAILED) {
@@ -349,7 +372,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 			goto out_map;
 		}
 
-		rc = mmap((void *) secs->base + PAGE_SIZE,
+		rc = mmap((void *) encl_info->mmap_base + PAGE_SIZE,
 			  add_size + bin_size +
 			  PAGE_SIZE * (secs->ssa_frame_size - 1),
 			  PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -368,11 +391,11 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	return true;
 out_map:
 	free(ssa_frame);
-	munmap((void *) secs->base, secs->size);
+	munmap((void *) encl_info->mmap_base, PAGE_SIZE);
 out_add:
 	free(ssa_frame);
 	free(add_memory);
-	munmap((void *) secs->base, secs->size);
+	munmap((void *) encl_info->mmap_base, encl_info->mmap_size);
 out_dev_fd:
 	close(dev_fd);
 	return false;
@@ -493,7 +516,7 @@ void parse_args(const char *args)
 	free(a);
 }
 
-int encl_init()
+int encl_init(struct enclave_info *encl_info)
 {
 	struct sgx_sigstruct sigstruct;
 	struct sgx_einittoken token;
@@ -511,8 +534,8 @@ int encl_init()
 			return -ENOENT;
 	}
 
-	if (!encl_build
-	    (&secs, bin, bin_size, &sigstruct, &token, max_mmap_size))
+	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token,
+			encl_info, max_mmap_size))
 		return -EINVAL;
 
 	return 0;
@@ -556,7 +579,8 @@ int __pal_init_v1(pal_attr_v1_t *attr)
 		return -EINVAL;
 	*(uint8_t *) tcs_busy = 0;
 
-	ret = encl_init();
+	struct enclave_info encl_info;
+	ret = encl_init(&encl_info);
 	if (ret != 0)
 		return ret;
 
@@ -566,7 +590,7 @@ int __pal_init_v1(pal_attr_v1_t *attr)
 		return -ENOMEM;
 	}
 
-	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) secs.base, result);
+	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) encl_info.mmap_base, result);
 	if (ret) {
 		fprintf(stderr, "failed to initialize enclave\n");
 		free(result);

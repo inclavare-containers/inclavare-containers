@@ -160,9 +160,7 @@ static bool mrenclave_ecreate(EVP_MD_CTX * ctx, uint32_t ssa_frame_size,
 	memset(&mrecreate, 0, sizeof(mrecreate));
 	mrecreate.tag = MRECREATE;
 	mrecreate.ssaframesize = ssa_frame_size;
-
-	for (mrecreate.size = PAGE_SIZE; mrecreate.size < encl_size;)
-		mrecreate.size <<= 1;
+	mrecreate.size = encl_size;
 
 	if (!EVP_DigestInit_ex(ctx, EVP_sha256(), NULL))
 		return false;
@@ -248,8 +246,6 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	struct stat sb;
 	EVP_MD_CTX *ctx;
 	uint64_t flags;
-	uint64_t offset;
-	uint8_t data[PAGE_SIZE];
 	int rc;
 	uint32_t ssa_frame_size;
 
@@ -276,17 +272,23 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	}
 
 	ssa_frame_size = sgx_calc_ssaframesize(miscselect, xfrm);
-	uint64_t encl_size = sb.st_size + PAGE_SIZE * ssa_frame_size;
+	uint64_t mmap_size = sb.st_size + PAGE_SIZE * ssa_frame_size;
 	if (max_mmap_size) {
-		if (max_mmap_size < encl_size) {
+		if (max_mmap_size < mmap_size) {
 			fprintf(stderr,
 				"Invalid enclave mmap size %lu, "
 				"please set enclave mmap size large than %lu.\n",
-				max_mmap_size, encl_size);
+				max_mmap_size, mmap_size);
 			return false;
 		}
-		encl_size = max_mmap_size;
+		mmap_size = max_mmap_size;
 	}
+
+	if (mmap_size % PAGE_SIZE)
+		mmap_size = (mmap_size / PAGE_SIZE + 1) * PAGE_SIZE;
+
+	uint64_t encl_offset = 0;
+	uint64_t encl_size = pow2(mmap_size);
 
 	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
 			 fileno(file), 0);
@@ -296,12 +298,18 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	}
 
 	struct sgx_tcs *tcs = bin;
-	tcs->ssa_offset = sb.st_size;
+	/* SSA frame is located behind encl.bin */
+	tcs->ssa_offset = encl_offset + sb.st_size;
+	tcs->entry_offset += encl_offset;
 
 	if (!mrenclave_ecreate(ctx, ssa_frame_size, encl_size))
 		goto out;
 
-	for (offset = 0; offset < sb.st_size; offset += PAGE_SIZE) {
+	/* Load TCS page and encl.bin into enclave */
+	uint64_t offset;
+	uint64_t bin_off = 0;
+	for (offset = encl_offset; offset < encl_offset + sb.st_size;
+	     offset += PAGE_SIZE) {
 		if (!offset)
 			flags = SGX_SECINFO_TCS;
 		else
@@ -311,19 +319,20 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 		if (!mrenclave_eadd(ctx, offset, flags))
 			goto out;
 
-		memcpy(data, bin + offset, PAGE_SIZE);
-
-		if (!mrenclave_eextend(ctx, offset, data))
+		if (!mrenclave_eextend(ctx, offset, bin + bin_off))
 			goto out;
+
+		bin_off += PAGE_SIZE;
 	}
 
+	/* Load SSA frame and padding into enclave */
+	uint8_t data[PAGE_SIZE];
 	memset(data, 0, sizeof(data));
 
 	flags = SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X;
 
-	if (encl_size % PAGE_SIZE)
-		encl_size = (encl_size / PAGE_SIZE + 1) * PAGE_SIZE;
-	for (offset = sb.st_size; offset < encl_size; offset += PAGE_SIZE) {
+	/* offset now begins from SSA frame */
+	for (; offset < encl_offset + mmap_size; offset += PAGE_SIZE) {
 		if (!mrenclave_eadd(ctx, offset, flags))
 			goto out;
 
