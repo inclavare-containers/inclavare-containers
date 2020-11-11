@@ -33,6 +33,7 @@ struct enclave_info {
 	uint64_t mmap_size;
 	uint64_t encl_base;
 	uint64_t encl_size;
+	uint64_t encl_offset;
 };
 
 struct sgx_secs secs;
@@ -58,24 +59,10 @@ static const char *kvm_init;
 int enclave_fd = -1;
 void *tcs_busy;
 
-static bool is_sgx_device(const char *dev)
-{
-	struct stat st;
-	int rc;
-
-	rc = stat(dev, &st);
-	if (!rc) {
-		if ((st.st_mode & S_IFCHR) && (major(st.st_rdev) == 10))
-			return true;
-	}
-
-	return false;
-}
-
 __attribute__((constructor))
 static void detect_driver_type(void)
 {
-	if (is_sgx_device("/dev/isgx")) {
+	if (is_oot_kernel_driver()) {
 		sgx_dev_path = "/dev/isgx";
 		is_oot_driver = true;
 		return;
@@ -85,39 +72,101 @@ static void detect_driver_type(void)
 	is_oot_driver = false;
 }
 
-static int create_enclave_range(int dev_fd, const uint64_t mmap_size,
+/*
+ * In order to prevent from enclave null dereference attack,
+ * the address space up to vm.mmap_min_addr should be included
+ * in enclave range.
+ */
+static int create_enclave_range(int dev_fd, uint64_t mmap_size,
 				struct enclave_info *encl_info)
 {
-	int fd;
+	uint64_t mmap_min_addr;
+
+	if (get_mmap_min_addr(&mmap_min_addr) < 0)
+		return -1;
+
 	int flags = MAP_SHARED;
 	int prot = PROT_READ | PROT_WRITE | PROT_EXEC;
-	uint64_t encl_size = pow2(mmap_size);
+	uint64_t encl_size;
+	void *mmap_addr;
 
-	if (is_oot_driver) {
-		fd = dev_fd;
-	} else {
-		fd = -1;
-		prot = PROT_NONE;
-		flags |= MAP_ANONYMOUS;
+	/* If vm.mmap_min_addr is not configured as 0, OOT driver
+	 * disallows to mmap(0), and thus there is no way to protect
+	 * enclave against null dereference attack.
+	 */
+	if (is_oot_driver && mmap_min_addr) {
+		encl_size = pow2(mmap_size);
+		/* *INDENT-OFF* */
+		mmap_addr = mmap(NULL, encl_size * 2, prot, flags,
+				 dev_fd, 0);
+		/* *INDENT-ON* */
+		if (mmap_addr == MAP_FAILED) {
+			perror("mmap");
+			return -1;
+		}
+
+		printf("WARNING: enclave is vulnerable to null dereference "
+		       "attack. Careful consideration required prior to "
+		       "setting vm.mmap_min_addr=0\n");
+
+		/* Unmap unused areas */
+		uint64_t mmap_base;
+		/* *INDENT-OFF* */
+		mmap_base = ((uint64_t) mmap_addr + encl_size - 1) &
+			    ~(encl_size - 1);
+		/* *INDENT-ON* */
+		munmap(mmap_addr, mmap_base - (uint64_t) mmap_addr);
+
+		/* OOT driver requires VMA is consistent with enclave range
+		 * during EINIT. The tail padding to be unmapped must be
+		 * located at mmap_base + encl_size.
+		 */
+		munmap((void *) (mmap_base + encl_size),
+		       (uint64_t) mmap_addr + encl_size * 2 -
+		       (mmap_base + encl_size));
+
+		encl_info->mmap_base = mmap_base;
+		encl_info->mmap_size = encl_size;
+		encl_info->encl_base = mmap_base;
+		encl_info->encl_size = encl_size;
+		encl_info->encl_offset = 0;
+
+		return 0;
 	}
 
-	void *mmap_addr = mmap(NULL, encl_size * 2, prot, flags, fd, 0);
-	if (mmap_addr == MAP_FAILED) {
-		perror("mmap");
+	uint64_t encl_offset = calc_enclave_offset(mmap_min_addr, true);
+	if (is_oot_driver)
+		printf("WARNING: enclave is not vulnerable to null "
+		       "dereference attack. But setting "
+		       "vm.mmap_min_addr=0 will violate the security "
+		       "requirements of non-enclave application.\n");
+
+	encl_size = pow2(encl_offset + mmap_size);
+	flags |= MAP_FIXED;
+
+	if (is_oot_driver) {
+		/* OOT driver requires VMA is consistent with enclave range
+		 * during EINIT.
+		 */
+		mmap_addr = (void *) 0;
+		mmap_size = encl_size;
+	} else {
+		mmap_addr = (void *) encl_offset;
+		prot = PROT_NONE;
+		flags |= MAP_ANONYMOUS;
+		dev_fd = -1;
+	}
+
+	if (mmap(mmap_addr, mmap_size, prot, flags, dev_fd, 0) == MAP_FAILED) {
+		perror("mmap()");
 		return -1;
 	}
 
-	/* Unmap unused areas */
-	uint64_t mmap_base;
-	mmap_base = ((uint64_t) mmap_addr + encl_size - 1) & ~(encl_size - 1);
-	munmap(mmap_addr, mmap_base - (uint64_t) mmap_addr);
-	munmap((void *) (mmap_base + mmap_size),
-	       (uint64_t) mmap_addr + encl_size * 2 - (mmap_base + mmap_size));
-
-	encl_info->mmap_base = mmap_base;
+	encl_info->mmap_base = (uint64_t) mmap_addr;
 	encl_info->mmap_size = mmap_size;
-	encl_info->encl_base = mmap_base;
+	encl_info->encl_base = 0;
 	encl_info->encl_size = encl_size;
+	encl_info->encl_offset = encl_offset;
 
 	return 0;
 }
@@ -167,6 +216,10 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	       encl_info->mmap_base,
 	       encl_info->mmap_base + encl_info->mmap_size - 1,
 	       encl_info->mmap_size);
+	printf("load area [%#016lx, %#016lx], length %ld-byte\n",
+	       encl_info->encl_base + encl_info->encl_offset,
+	       encl_info->encl_base + encl_info->encl_offset +
+	       encl_info->mmap_size - 1, encl_info->mmap_size);
 
 	secs->base = encl_info->encl_base;
 	secs->size = encl_info->encl_size;
@@ -174,7 +227,7 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	int rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
 	if (rc) {
 		fprintf(stderr, "ECREATE failed rc=%d, err=%d.\n", rc, errno);
-		munmap((void *) encl_info->mmap_base, mmap_size);
+		munmap((void *) encl_info->mmap_base, encl_info->mmap_size);
 		return false;
 	}
 
@@ -268,12 +321,13 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	uint64_t *ssa_frame = valloc(PAGE_SIZE * secs->ssa_frame_size);
 	if (ssa_frame == NULL) {
 		fprintf(stderr, "Failed malloc memory for ssa_frame\n");
-		goto out_map;
+		goto out_encl_create;
 	}
 	memset(ssa_frame, 0, PAGE_SIZE * secs->ssa_frame_size);
 
 	struct sgx_tcs *tcs = bin;
-	tcs->ssa_offset = bin_size;
+	tcs->ssa_offset = encl_info->encl_offset + bin_size;
+	tcs->entry_offset += encl_info->encl_offset;
 
 	uint64_t add_size = 0;
 	if (max_mmap_size) {
@@ -287,59 +341,70 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		if (add_memory == NULL) {
 			fprintf(stderr,
 				"Failed malloc memory for add_memory\n");
-			goto out_add;
+			goto out_encl_create;
 		}
 		memset(add_memory, 0, add_size);
 	}
 
+	uint64_t load_base;
+
 	if (is_oot_driver) {
-		if (!encl_add_pages_with_mrmask
-		    (dev_fd, encl_info->mmap_base, bin, PAGE_SIZE,
-		     SGX_SECINFO_TCS))
-			goto out_map;
+		load_base = encl_info->encl_base + encl_info->encl_offset;
 
-		if (!encl_add_pages_with_mrmask
-		    (dev_fd, encl_info->mmap_base + PAGE_SIZE, bin + PAGE_SIZE,
-		     bin_size - PAGE_SIZE, SGX_REG_PAGE_FLAGS))
-			goto out_map;
+		/* *INDENT-OFF* */
+		if (!encl_add_pages_with_mrmask(dev_fd, load_base, bin,
+						PAGE_SIZE, SGX_SECINFO_TCS))
+			goto out_add_memory;
 
-		if (!encl_add_pages_with_mrmask
-		    (dev_fd, encl_info->mmap_base + bin_size, ssa_frame,
-		     PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
-			goto out_map;
+		if (!encl_add_pages_with_mrmask(dev_fd, load_base + PAGE_SIZE,
+						bin + PAGE_SIZE,
+						bin_size - PAGE_SIZE,
+						SGX_REG_PAGE_FLAGS))
+			goto out_add_memory;
+
+		if (!encl_add_pages_with_mrmask(dev_fd, load_base + bin_size,
+						ssa_frame,
+						PAGE_SIZE * secs->ssa_frame_size,
+						SGX_REG_PAGE_FLAGS))
+			goto out_add_memory;
 
 		if (max_mmap_size) {
-			if (!encl_add_pages_with_mrmask
-			    (dev_fd,
-			     encl_info->mmap_base + bin_size +
-			     PAGE_SIZE * secs->ssa_frame_size, add_memory,
-			     add_size, SGX_REG_PAGE_FLAGS))
-				goto out_add;
+			if (!encl_add_pages_with_mrmask(dev_fd,
+							load_base + bin_size +
+							PAGE_SIZE * secs->ssa_frame_size,
+							add_memory,
+							add_size,
+							SGX_REG_PAGE_FLAGS))
+				goto out_add_memory;
 		}
+		/* *INDENT-ON* */
 	} else {
-		if (!encl_add_pages
-		    (dev_fd, encl_info->mmap_base, bin, PAGE_SIZE,
-		     SGX_SECINFO_TCS))
-			goto out_map;
+		load_base = encl_info->encl_offset;
 
-		if (!encl_add_pages(dev_fd, encl_info->mmap_base + PAGE_SIZE,
+		/* *INDENT-OFF* */
+		if (!encl_add_pages(dev_fd, load_base, bin, PAGE_SIZE,
+				    SGX_SECINFO_TCS))
+			goto out_add_memory;
+
+		if (!encl_add_pages(dev_fd, load_base + PAGE_SIZE,
 				    bin + PAGE_SIZE, bin_size - PAGE_SIZE,
 				    SGX_REG_PAGE_FLAGS))
-			goto out_map;
+			goto out_add_memory;
 
-		if (!encl_add_pages
-		    (dev_fd, encl_info->mmap_base + tcs->ssa_offset, ssa_frame,
-		     PAGE_SIZE * secs->ssa_frame_size, SGX_REG_PAGE_FLAGS))
-			goto out_map;
+		if (!encl_add_pages(dev_fd, load_base + bin_size,
+				    ssa_frame, PAGE_SIZE * secs->ssa_frame_size,
+				    SGX_REG_PAGE_FLAGS))
+			goto out_add_memory;
 
 		if (max_mmap_size) {
 			if (!encl_add_pages(dev_fd,
-					    encl_info->mmap_base + bin_size +
+					    load_base + bin_size +
 					    PAGE_SIZE * secs->ssa_frame_size,
 					    add_memory, add_size,
 					    SGX_REG_PAGE_FLAGS))
-				goto out_add;
+				goto out_add_memory;
 		}
+		/* *INDENT-ON* */
 	}
 
 	if (is_oot_driver || no_sgx_flc) {
@@ -356,45 +421,42 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 
 	if (rc) {
 		printf("EINIT failed rc=%d\n", rc);
-		goto out_map;
+		goto out_add_memory;
 	}
 
-	if (is_oot_driver)
+	if (is_oot_driver) {
 		close(dev_fd);
-	else {
-		void *rc;
+		free(ssa_frame);
 
-		rc = mmap((void *) encl_info->mmap_base, PAGE_SIZE,
-			  PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED,
-			  dev_fd, 0);
-		if (rc == MAP_FAILED) {
-			perror("mmap TCS");
-			goto out_map;
-		}
-
-		rc = mmap((void *) encl_info->mmap_base + PAGE_SIZE,
-			  add_size + bin_size +
-			  PAGE_SIZE * (secs->ssa_frame_size - 1),
-			  PROT_READ | PROT_WRITE | PROT_EXEC,
-			  MAP_FIXED | MAP_SHARED, dev_fd, 0);
-		if (rc == MAP_FAILED) {
-			perror("mmap text & data");
-			if (max_mmap_size)
-				goto out_add;
-			goto out_map;
-		}
-
-		enclave_fd = dev_fd;
+		return true;
 	}
 
+	/* In-tree driver stuffs */
+
+	if (mmap((void *) encl_info->mmap_base, PAGE_SIZE,
+		 PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED,
+		 dev_fd, 0) == MAP_FAILED) {
+		perror("mmap TCS");
+		goto out_add_memory;
+	}
+
+	if (mmap((void *) encl_info->mmap_base + PAGE_SIZE,
+		 add_size + bin_size +
+		 PAGE_SIZE * (secs->ssa_frame_size - 1),
+		 PROT_READ | PROT_WRITE | PROT_EXEC,
+		 MAP_FIXED | MAP_SHARED, dev_fd, 0) == MAP_FAILED) {
+		perror("mmap text & data");
+		goto out_add_memory;
+	}
+
+	enclave_fd = dev_fd;
 	free(ssa_frame);
+
 	return true;
-out_map:
-	free(ssa_frame);
-	munmap((void *) encl_info->mmap_base, PAGE_SIZE);
-out_add:
-	free(ssa_frame);
+
+out_add_memory:
 	free(add_memory);
+out_encl_create:
 	munmap((void *) encl_info->mmap_base, encl_info->mmap_size);
 out_dev_fd:
 	close(dev_fd);
@@ -534,6 +596,7 @@ int encl_init(struct enclave_info *encl_info)
 			return -ENOENT;
 	}
 
+	bin_size = align_up(bin_size, PAGE_SIZE);
 	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token,
 			encl_info, max_mmap_size))
 		return -EINVAL;
@@ -590,7 +653,9 @@ int __pal_init_v1(pal_attr_v1_t *attr)
 		return -ENOMEM;
 	}
 
-	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) encl_info.mmap_base, result);
+	ret = SGX_ENTER_1_ARG(ECALL_INIT,
+			      (void *) encl_info.encl_base +
+			      encl_info.encl_offset, result);
 	if (ret) {
 		fprintf(stderr, "failed to initialize enclave\n");
 		free(result);
@@ -713,8 +778,8 @@ int wait4child(pal_exec_args *attr)
 }
 /* *INDENT-ON* */
 
-int __pal_get_local_report(void *targetinfo, int targetinfo_len, void *report,
-			   int *report_len)
+int __pal_get_local_report(void *targetinfo, int targetinfo_len,
+			   void *report, int *report_len)
 {
 	uint8_t report_data[64] = { 0, };
 	struct sgx_report report_align;

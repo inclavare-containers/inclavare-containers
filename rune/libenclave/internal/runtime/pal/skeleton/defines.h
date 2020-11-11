@@ -8,20 +8,35 @@
 /* *INDENT-ON* */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define __aligned(x) __attribute__((__aligned__(x)))
 #define __packed __attribute__((packed))
 #define static_assert _Static_assert
 
+/* *INDENT-OFF* */
+int get_mmap_min_addr(uint64_t *addr);
+/* *INDENT-ON* */
+uint64_t calc_enclave_offset(uint64_t mmap_min_addr,
+			     bool null_dereference_protection);
+bool is_oot_kernel_driver(void);
+
 #include "arch.h"
 #include "sgx.h"
+
+#define ENCLAVE_GUARD_AREA_SIZE		(16 * 1024 * 1024)
 
 #define pow2(sz) \
 	({ \
 		uint64_t __tmp; \
-		for (__tmp = PAGE_SIZE; __tmp < sz;) \
+		for (__tmp = PAGE_SIZE; __tmp < (sz);) \
 			__tmp <<= 1; \
 		__tmp; \
+	})
+
+#define align_up(sz, a) \
+	({ \
+		(((sz) + (a) - 1) & ~((a) - 1)); \
 	})
 
 /* *INDENT-OFF* */

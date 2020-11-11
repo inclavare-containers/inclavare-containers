@@ -239,7 +239,9 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
 /* *INDENT-OFF* */
 static bool measure_encl(const char *path, uint8_t *mrenclave,
 			 uint32_t miscselect, uint64_t xfrm,
-			 uint64_t max_mmap_size)
+			 uint64_t max_mmap_size,
+			 uint64_t mmap_min_addr,
+			 bool null_dereference_protection)
 /* *INDENT-ON* */
 {
 	FILE *file;
@@ -287,8 +289,9 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	if (mmap_size % PAGE_SIZE)
 		mmap_size = (mmap_size / PAGE_SIZE + 1) * PAGE_SIZE;
 
-	uint64_t encl_offset = 0;
-	uint64_t encl_size = pow2(mmap_size);
+	uint64_t encl_offset = calc_enclave_offset(mmap_min_addr,
+						   !is_oot_kernel_driver());
+	uint64_t encl_size = pow2(encl_offset + mmap_size);
 
 	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
 			 fileno(file), 0);
@@ -298,10 +301,9 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	}
 
 	struct sgx_tcs *tcs = bin;
-	/* SSA frame is located behind encl.bin */
-	tcs->ssa_offset = encl_offset + sb.st_size;
+	/* SSA frame is located right behind encl.bin */
+	tcs->ssa_offset = encl_offset + align_up(sb.st_size, PAGE_SIZE);
 	tcs->entry_offset += encl_offset;
-
 	if (!mrenclave_ecreate(ctx, ssa_frame_size, encl_size))
 		goto out;
 
@@ -310,7 +312,7 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	uint64_t bin_off = 0;
 	for (offset = encl_offset; offset < encl_offset + sb.st_size;
 	     offset += PAGE_SIZE) {
-		if (!offset)
+		if (offset == encl_offset)
 			flags = SGX_SECINFO_TCS;
 		else
 			flags = SGX_SECINFO_REG | SGX_SECINFO_R |
@@ -486,6 +488,13 @@ static bool save_sigstruct(const struct sgx_sigstruct *sigstruct,
 
 int main(int argc, char **argv)
 {
+	uint64_t mmap_min_addr;
+
+	if (get_mmap_min_addr(&mmap_min_addr)) {
+		fprintf(stderr, "failed to get vm.mmap_min_addr\n");
+		return -1;
+	}
+
 	uint64_t header1[2] = { 0x000000E100000006, 0x0000000000010000 };
 	uint64_t header2[2] = { 0x0000006000000101, 0x0000000100000060 };
 	uint64_t xfrm;
@@ -558,10 +567,12 @@ int main(int argc, char **argv)
 
 	BN_bn2bin(get_modulus(sign_key), ss.modulus);
 
-	if (!measure_encl
-	    (argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm,
-	     max_mmap_size))
+	/* *INDENT-OFF* */
+	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect,
+			  ss.body.xfrm, max_mmap_size, mmap_min_addr,
+			  !is_oot_kernel_driver()))
 		goto out;
+	/* *INDENT-ON* */
 
 	if (!sign_encl(&ss, sign_key, ss.signature))
 		goto out;
