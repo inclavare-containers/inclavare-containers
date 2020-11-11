@@ -77,14 +77,14 @@ where:
 - @ENCLAVE_PATH: specify the path to enclave runtime to launch.
 - @ENCLAVE_ARGS: specify the specific arguments to enclave runtime, seperated by the comma.
 
-In order to measure the overhead of enclave launch time, we add the `enclave-size` parameter for skeleton and `-s` option for `sgxsign` tool.
+In order to measure the overhead of enclave launch time, we add the `mmap-size` parameter for skeleton and `-s` option for `sgxsign` tool.
 
-The `enclave-size` parameter and `-s` option should be the same value to specify the memory size of the enclave to launch. For example, if `enclave-size` is `40960`, skeleton will launch an enclave with `40960` bytes of memory size.
+The `mmap-size` parameter and `-s` option should be the same value to specify the memory size of the enclave to launch. For example, if `mmap-size` is `40960`, skeleton will launch an enclave with `40960` bytes of memory size.
 
-If you want to launch an enclave with a specific value, you should add `-s ${SIZE}` option with `sgxsign` tool to specify the memory size of the enclave to launch. In addition, You must specify `enclave-size` in `ENCLAVE_RUNTIME_ARGS` with the same number.
+If you want to launch an enclave with a specific value, you should add `-s ${SIZE}` option with `sgxsign` tool to specify the memory size of the enclave to launch. In addition, You must specify `mmap-size` in `ENCLAVE_RUNTIME_ARGS` with the same number.
 
 ```shell
-ENCLAVE_RUNTIME_ARGS="debug,enclave-size=${SIZE}"
+ENCLAVE_RUNTIME_ARGS="debug,mmap-size=${SIZE}"
 ```
 
 ---
@@ -130,7 +130,7 @@ where:
 - @enclave.runtime.path: specify the path to enclave runtime to launch.
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, seperated by the comma.
 
-Note that if you add `-s ${SIZE}` when signing your enclave image with `sgxsign` tool. You must specify `enclave-size=${SIZE}` in "enclave.runtime.args`.
+Note that if you add `-s ${SIZE}` when signing your enclave image with `sgxsign` tool. You must specify `mmap-size=${SIZE}` in "enclave.runtime.args`.
 
 ## Run skeleton
 Assuming you have an OCI bundle from the previous step you can execute the container in this way.
