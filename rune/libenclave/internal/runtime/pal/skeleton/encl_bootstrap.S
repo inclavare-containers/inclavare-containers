@@ -10,7 +10,7 @@
 
 	.fill	1, 8, 0			# STATE (set by CPU)
 	.fill	1, 8, 0			# FLAGS
-	.quad	encl_ssa		# OSSA
+	.quad	0			# OSSA (set by skeleton)
 	.fill	1, 4, 0			# CSSA (set by CPU)
 	.fill	1, 4, 1			# NSSA
 	.quad	encl_entry		# OENTRY
@@ -98,9 +98,6 @@ err:
 	jmp	2b
 
 	.section ".data", "aw"
-
-encl_ssa:
-	.space 4096
 
 xsave_area:
 	.fill	1, 4, 0x037F		# FCW
