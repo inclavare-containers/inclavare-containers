@@ -16,6 +16,14 @@
 #include "arch.h"
 #include "sgx.h"
 
+#define pow2(sz) \
+	({ \
+		uint64_t __tmp; \
+		for (__tmp = PAGE_SIZE; __tmp < sz;) \
+			__tmp <<= 1; \
+		__tmp; \
+	})
+
 /* *INDENT-OFF* */
 #endif /* DEFINES_H */
 /* *INDENT-ON* */
