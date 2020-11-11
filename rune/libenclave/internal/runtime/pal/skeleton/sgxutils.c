@@ -1,7 +1,14 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <sys/user.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+
 #include "sgx.h"
 #include "defines.h"
 
@@ -124,4 +131,73 @@ bool is_launch_control_supported(void)
 	__cpuidex(cpu_info, CPUIID_EXTENDED_FEATURE_FLAGS, 0);
 
 	return !!(cpu_info[2] & 0x40000000);
+}
+
+/* *INDENT-OFF* */
+int get_mmap_min_addr(uint64_t *addr)
+{
+	int fd = open("/proc/sys/vm/mmap_min_addr", O_RDONLY);
+	if (fd < 0) {
+		perror("open");
+		return -1;
+	}
+
+	char buf[12];
+	ssize_t sz = read(fd, buf, sizeof(buf));
+	close(fd);
+
+	if (sz < 0 || sz == sizeof(buf)) {
+		perror("read");
+		return -1;
+	}
+
+	*addr = (uint64_t) atol((const char *) buf);
+
+	return 0;
+}
+/* *INDENT-ON* */
+
+uint64_t calc_enclave_offset(uint64_t mmap_min_addr,
+			     bool null_dereference_protection)
+{
+	uint64_t encl_offset;
+
+	if (mmap_min_addr) {
+		/* OOT driver cannot enable enclave dereference protection
+		 * if vm.mmap_min_addr is set to non-zero. In this case,
+		 * load_base - encl_base must equal to 0 in order to keep
+		 * consistent between mmap area and enclave range.
+		 */
+		encl_offset = 0;
+		/* But there is no such a restriction for in-tree driver.
+		 * Currently, null_dereference_protection is always true
+		 * if in-tree driver is used.
+		 */
+		if (null_dereference_protection)
+			encl_offset = mmap_min_addr;
+	} else {
+		/* Enable the enclave dereference protection automatically */
+		encl_offset = ENCLAVE_GUARD_AREA_SIZE;
+	}
+
+	return encl_offset;
+}
+
+static bool is_sgx_device(const char *dev)
+{
+	struct stat st;
+	int rc;
+
+	rc = stat(dev, &st);
+	if (!rc) {
+		if ((st.st_mode & S_IFCHR) && (major(st.st_rdev) == 10))
+			return true;
+	}
+
+	return false;
+}
+
+bool is_oot_kernel_driver(void)
+{
+	return is_sgx_device("/dev/isgx");
 }
