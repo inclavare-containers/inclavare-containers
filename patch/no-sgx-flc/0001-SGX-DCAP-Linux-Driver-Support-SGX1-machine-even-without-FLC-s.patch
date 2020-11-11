@@ -1,6 +1,6 @@
-From 92ebb80362a92cce57470f43dc742ee2ed468816 Mon Sep 17 00:00:00 2001
+From f300185294a1ef56570378be34dbda8ea7111c21 Mon Sep 17 00:00:00 2001
 From: "YiLin.Li" <YiLin.Li@linux.alibaba.com>
-Date: Wed, 21 Oct 2020 10:41:54 +0000
+Date: Wed, 11 Nov 2020 12:55:59 +0800
 Subject: [PATCH] Linux Driver: Support SGX1 machine even without FLC support
 
 There are still lots of SGX1 machines without FLC support deployed
@@ -16,8 +16,8 @@ Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
  driver/linux/driver.c                   |  5 ---
  driver/linux/include/uapi/asm/sgx_oot.h | 15 ++++++++
  driver/linux/ioctl.c                    | 63 +++++++++++++++++++++++++++++++++
- driver/linux/main.c                     |  1 -
- 4 files changed, 78 insertions(+), 6 deletions(-)
+ driver/linux/main.c                     |  3 +-
+ 4 files changed, 79 insertions(+), 7 deletions(-)
 
 diff --git a/driver/linux/driver.c b/driver/linux/driver.c
 index 1de2b4d..43db300 100644
@@ -164,14 +164,16 @@ index 1ca7612..6e0335a 100644
  		ret = sgx_ioc_enclave_set_attribute(encl, (void __user *)arg);
  		break;
 diff --git a/driver/linux/main.c b/driver/linux/main.c
-index aae3eba..92b577e 100644
+index facc6ee..fa2cd3c 100644
 --- a/driver/linux/main.c
 +++ b/driver/linux/main.c
-@@ -549,7 +549,6 @@ static bool detect_sgx(struct cpuinfo_x86 *c)
+@@ -534,8 +534,7 @@ static bool detect_sgx(struct cpuinfo_x86 *c)
+     }
  
      if (!(fc & FEAT_CTL_SGX_LC_ENABLED)) {
-         pr_info_once("sgx: The launch control MSRs are not writable\n");
+-        pr_err_once("Locked launch policy not supported\n");
 -        return false;
++        pr_info_once("Locked launch policy not supported\n");
      }
  
      return true;
