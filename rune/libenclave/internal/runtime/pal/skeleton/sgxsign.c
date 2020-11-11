@@ -241,7 +241,7 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
 /* *INDENT-OFF* */
 static bool measure_encl(const char *path, uint8_t *mrenclave,
 			 uint32_t miscselect, uint64_t xfrm,
-			 uint64_t max_enclave_size)
+			 uint64_t max_mmap_size)
 /* *INDENT-ON* */
 {
 	FILE *file;
@@ -277,14 +277,15 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 
 	ssa_frame_size = sgx_calc_ssaframesize(miscselect, xfrm);
 	uint64_t encl_size = sb.st_size + PAGE_SIZE * ssa_frame_size;
-	if (max_enclave_size) {
-		if (max_enclave_size < encl_size) {
+	if (max_mmap_size) {
+		if (max_mmap_size < encl_size) {
 			fprintf(stderr,
-				"Invalid enclave size %lu, please set enclave size large than %lu.\n",
-				max_enclave_size, encl_size);
+				"Invalid enclave mmap size %lu, "
+				"please set enclave mmap size large than %lu.\n",
+				max_mmap_size, encl_size);
 			return false;
 		}
-		encl_size = max_enclave_size;
+		encl_size = max_mmap_size;
 	}
 
 	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
@@ -484,11 +485,11 @@ int main(int argc, char **argv)
 	int opt;
 	RSA *sign_key;
 	bool enclave_debug = true;
-	uint64_t max_enclave_size = 0;
+	uint64_t max_mmap_size = 0;
 	char *const short_options = "ps:";
 	struct option long_options[] = {
 		{"product", no_argument, NULL, 'p'},
-		{"enclave-size", required_argument, NULL, 's'},
+		{"mmap-size", required_argument, NULL, 's'},
 		{0, 0, 0, 0}
 	};
 
@@ -502,7 +503,8 @@ int main(int argc, char **argv)
 			enclave_debug = false;
 			break;
 		case 's':
-			max_enclave_size = atoi(optarg);
+			max_mmap_size = atoi(optarg);
+			break;
 		case -1:
 			break;
 		default:
@@ -549,7 +551,7 @@ int main(int argc, char **argv)
 
 	if (!measure_encl
 	    (argv[1], ss.body.mrenclave, ss.body.miscselect, ss.body.xfrm,
-	     max_enclave_size))
+	     max_mmap_size))
 		goto out;
 
 	if (!sign_encl(&ss, sign_key, ss.signature))
