@@ -82,7 +82,7 @@ Inclavare Containers project uses `indent` to format C codes.
 1. Install `indent`. Please make sure the version of `indent` must be 2.2.12 or higher to get advanced features.
 
 ```shell
-wget -c https://https://ftp.gnu.org/gnu/indent/indent-2.2.12.tar.gz
+wget -c https://ftp.gnu.org/gnu/indent/indent-2.2.12.tar.gz
 tar xzf indent-2.2.12.tar.gz
 cd indent-2.2.12
 ./configure
