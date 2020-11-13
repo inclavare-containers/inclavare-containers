@@ -47,7 +47,15 @@ typedef struct {
 	int *exit_value;
 } pal_exec_args;
 
-int encl_init();
+struct enclave_info {
+	uint64_t mmap_base;
+	uint64_t mmap_size;
+	uint64_t encl_base;
+	uint64_t encl_size;
+	uint64_t encl_offset;
+};
+
+int encl_init(struct enclave_info *encl_info);
 void parse_args(const char *args);
 /* *INDENT-OFF* */
 int __pal_init_v1(pal_attr_v1_t *attr);

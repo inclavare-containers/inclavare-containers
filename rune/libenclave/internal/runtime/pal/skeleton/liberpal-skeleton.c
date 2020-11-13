@@ -28,14 +28,6 @@
 #define SGX_REG_PAGE_FLAGS \
 	(SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X)
 
-struct enclave_info {
-	uint64_t mmap_base;
-	uint64_t mmap_size;
-	uint64_t encl_base;
-	uint64_t encl_size;
-	uint64_t encl_offset;
-};
-
 struct sgx_secs secs;
 static pal_stdio_fds pal_stdio;
 bool initialized = false;
