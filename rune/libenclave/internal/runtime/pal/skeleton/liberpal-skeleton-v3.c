@@ -20,7 +20,6 @@ int pal_get_version(void)
 int pal_init(pal_attr_v3_t *attr)
 {
 	int ret;
-	char *result;
 
 	parse_args(attr->attr_v1.args);
 
@@ -30,32 +29,44 @@ int pal_init(pal_attr_v3_t *attr)
 		return -EINVAL;
 	*(uint8_t *) tcs_busy = 0;
 
+	struct enclave_info encl_info;
+
 	if (attr->fd != -1 && attr->addr != 0) {
 		enclave_fd = attr->fd;
 		secs.base = attr->addr;
-		goto out;
+
+		/* FIXME: EPM needs to return the necessary info to
+		 * fill up encl_info stuffs.
+		 */
+		encl_info.encl_base = secs.base;
+		encl_info.encl_size = 0;
+		encl_info.mmap_base = secs.base;
+		encl_info.mmap_size = 0;
+		encl_info.encl_offset = 0;
+	} else {
+		ret = encl_init(&encl_info);
+		if (ret != 0)
+			return ret;
 	}
 
-	ret = encl_init();
-	if (ret != 0)
-		return ret;
+        char *result = malloc(sizeof(INIT_HELLO));
+        if (!result) {
+                fprintf(stderr, "fail to malloc INIT_HELLO\n");
+                return -ENOMEM;
+        }
 
-out:
-	result = malloc(sizeof(INIT_HELLO));
-	if (!result) {
-		fprintf(stderr, "fail to malloc INIT_HELLO\n");
-		return -ENOMEM;
-	}
-	ret = SGX_ENTER_1_ARG(ECALL_INIT, (void *) secs.base, result);
-	if (ret) {
-		fprintf(stderr, "failed to initialize enclave\n");
-		free(result);
-		return ret;
-	}
-	puts(result);
-	free(result);
+        ret = SGX_ENTER_1_ARG(ECALL_INIT,
+                              (void *) encl_info.encl_base +
+                              encl_info.encl_offset, result);
+        if (ret) {
+                fprintf(stderr, "failed to initialize enclave\n");
+                free(result);
+                return ret;
+        }
+        puts(result);
+        free(result);
 
-	initialized = true;
+        initialized = true;
 
 	return 0;
 }
