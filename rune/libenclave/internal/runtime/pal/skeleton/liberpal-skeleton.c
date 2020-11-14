@@ -37,7 +37,7 @@ struct enclave_info {
 };
 
 struct sgx_secs secs;
-static pal_stdio_fds pal_stdio;
+static pal_stdio_fds pal_stdio = { -1, -1, -1 };
 bool initialized = false;
 static int exit_code;
 static char *sgx_dev_path;
@@ -697,7 +697,7 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 	}
 
 	fprintf(fp, "Enclave runtime skeleton initialization succeeded\n");
-	fclose(fp);
+	fflush(fp);
 
 	*exit_code = 0;
 
@@ -841,17 +841,19 @@ int __pal_kill(int pid, int sig)
 
 int __pal_destroy(void)
 {
-	FILE *fp = fdopen(pal_stdio.stderr, "w");
-	if (!fp)
-		return -1;
+	FILE *fp = stderr;
+
+	if (pal_stdio.stderr != -1) {
+		fp = fdopen(pal_stdio.stderr, "w");
+		if (!fp)
+			return -1;
+	}
 
 	if (!initialized) {
 		fprintf(fp, "Enclave runtime skeleton uninitialized yet!\n");
-		fclose(fp);
+		fflush(fp);
 		return -1;
 	}
-
-	fclose(fp);
 
 	if (backend_kvm)
 		return libvmm_vm_exit(kvm_vm);
