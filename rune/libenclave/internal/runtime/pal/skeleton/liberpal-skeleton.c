@@ -826,9 +826,17 @@ int __pal_get_local_report(void *targetinfo, int targetinfo_len,
 
 int __pal_kill(int pid, int sig)
 {
+	FILE *fp = stderr;
+
+	if (pal_stdio.stderr != -1) {
+		fp = fdopen(pal_stdio.stderr, "w");
+		if (!fp)
+			return -1;
+	}
+
 	if (!initialized) {
-		fprintf(stderr,
-			"Enclave runtime skeleton uninitialized yet!\n");
+		fprintf(fp, "Enclave runtime skeleton uninitialized yet!\n");
+		fflush(fp);
 		return -1;
 	}
 
