@@ -1,6 +1,7 @@
 package enclavepool
 
 import (
+	"path/filepath"
 	"sync"
 	"syscall"
 
@@ -62,18 +63,25 @@ func (d *EnclaveCacheManager) GetPoolType() string {
 	return d.Type
 }
 
+func SaveFd(cacheID string, err *error) {
+	var fd int
+
+	sockpath := filepath.Join("/var/run/sock/", cacheID)
+	fd, *err = utils.RecvFd(sockpath)
+	if fd != -1 {
+		EnclavePoolPreStore[cacheID].Fd = int64(fd)
+	}
+}
+
 // SaveCache represents enclave info will be saved into EnclavePoolStore
 func (d *EnclaveCacheManager) SaveCache(sourcePath string, cache *v1alpha1.Cache) error {
+	var err error
 	var enclaveinfo v1alpha1.Enclave
-	// Get the enclave file descriptor from rune.
-	enclavefd, err := utils.RecvFd("/var/run/sock/" + cache.ID)
-	if err != nil {
-		return err
-	}
 
+	go SaveFd(cache.ID, &err)
 	ptypes.UnmarshalAny(cache.Options, &enclaveinfo)
-	enclaveinfo.Fd = int64(enclavefd)
 	d.PreStoreEnclave(enclaveinfo, cache.ID)
+
 	return err
 }
 
