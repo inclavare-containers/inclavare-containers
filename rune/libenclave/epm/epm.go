@@ -5,11 +5,11 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	"github.com/fsnotify/fsnotify"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -44,7 +44,7 @@ func GetCache(ID string) *v1alpha1.Enclave {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	sockpath := "/var/run/sock/" + ID
+	sockpath := filepath.Join("/var/run/sock", ID)
 	go recvFd(sockpath, &fd)
 
 	Type := "enclave-cache-pool"
@@ -84,39 +84,6 @@ func SaveCache(ID string) {
 	enclaveinfo := &v1alpha1.Enclave{}
 	enclaveinfo = GetParseMaps(os.Getpid())
 
-	unisock := "/var/run/sock/" + ID
-
-	watcher, err := fsnotify.NewWatcher()
-	defer watcher.Close()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				if (event.Op&fsnotify.Create == fsnotify.Create) && (event.Name == unisock) {
-					close(done)
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				logrus.Infof("error:", err)
-			}
-		}
-	}()
-
-	err = watcher.Add("/var/run/sock/")
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
 	cache.Options, err = ptypes.MarshalAny(enclaveinfo)
 	if err != nil {
 		logrus.Fatalf("Marshal encalveinfo failure: %v", err)
@@ -127,7 +94,7 @@ func SaveCache(ID string) {
 
 	c.SaveCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})
 
-	<-done
+	unisock := filepath.Join("/var/run/sock", ID)
 	sendFd(unisock, int(enclaveinfo.Fd))
 }
 
