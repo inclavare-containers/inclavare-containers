@@ -206,8 +206,11 @@ int pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int
 		return -1;
 	}
 
+	int ret;
 	int sgxStatus;
-	enc_wolfSSL_Init(eid, &sgxStatus);
+	sgxStatus = enc_wolfSSL_Init(eid, &ret);
+	if (sgxStatus != SGX_SUCCESS || ret != WOLFSSL_SUCCESS)
+		return -1;
 
 #ifdef SGX_DEBUG
 	enc_wolfSSL_Debugging_ON(eid);
@@ -229,7 +232,6 @@ int pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int
 		return -1;
 	}
 
-	int ret;
 	sgxStatus = enc_create_key_and_x509(eid, &ret, ctx, targetinfo, report);
 	if (sgxStatus != SGX_SUCCESS || ret != SGX_SUCCESS ) {
 		PAL_ERROR("enc_create_key_and_x509 failure");
