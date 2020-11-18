@@ -101,7 +101,7 @@ sudo apt-get install rune shim-rune epm sgx-tools
 
 # Integrating
 
-Inclavare Containers can be integrated with dockerd and containerd.
+Inclavare Containers can be integrated with dockerd, containerd, and [pouchd](https://github.com/alibaba/pouch).
 
 The former targets using docker to deploy Inclavare Containers. Specifically, you need to install the preferred enclave runtime when building container images, and then launch the enclave runtime through `rune` and [enclave runtime specific PAL](docs/design/terminology.md#enclave-runtime-pal).
 
@@ -143,6 +143,37 @@ Add the assocated configurations for shim-rune in containerd config file, e.g, `
 
 then restart containerd on your system.
 
+## pouchd
+
+Add the assocated configurations in pouchd config file, e.g, `/etc/pouch/config.json`, on your system.
+
+```json
+	"add-runtime": {
+		"rune": {
+            		"path": "/usr/local/bin/rune",
+            		"runtimeArgs": null,
+            		"type": "io.containerd.runtime.v1.linux"
+        	},
+		...
+	}	
+```
+
+where:
+- @path: specify the path of OCI Runtime, such as the pach of `rune`.
+- @runtimeArgs: specify the runtimeArgs of the pouchd runtime, such as `--platform`, `--network`.
+- @type: specify the shim template from the following candidates:
+	- io.containerd.runtime.v1.linux: correspond to containerd-shim
+	- io.containerd.rune.v2: correspond to shim-rune
+	- io.containerd.runc.v1/2: correspond to containerd-shim-runc-v1/2
+
+then restart pouchd on your system.
+
+You can check whether `rune` is correctly enabled or not with:
+
+```shell
+pouch info | grep rune
+```
+
 # Deployment
 
 Inclavare Containers can be deployed with dockerd and containerd.
@@ -164,3 +195,21 @@ Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_
 [The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11, [Dragonwell](http://dragonwell-jdk.io/), and Golang are provided.
 
 **All reference container images don't contain enclave runtime. They are only used for the deployment with containerd.**
+
+## pouchd
+
+Please refer to [this guide](https://github.com/alibaba/pouch/blob/master/INSTALLATION.md) to install pouch and refer to [this guide](https://github.com/alibaba/inclavare-containers#pouchd) to configure the runtime of pouchd.
+
+### pouch + pouchd + rune
+
+#### Occlum LibOS
+
+Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to build your Occlum container image. Then run with pouch, pouchd and rune with Occlum container images refer to
+
+```shell
+pouch run -it --rm --runtime=rune \
+  -e ENCLAVE_TYPE=intelSgx \
+  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
+  -e ENCLAVE_RUNTIME_ARGS=occlum_instance \
+  occlum-app
+```
