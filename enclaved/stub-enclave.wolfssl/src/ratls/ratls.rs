@@ -13,10 +13,13 @@ use sgx_tstd::{
     },
     mem::transmute_copy,
     slice::from_raw_parts,
+    env,
+    os::unix::ffi::OsStrExt,
 };
 use crate::ratls::ffi as ratlsffi;
 use std::ptr::slice_from_raw_parts;
 use crate::ratls::ffi::ra_tls_create_report;
+use std::ffi::OsString;
 
 extern "C" {
     pub fn ocall_low_res_time() -> c_int;
@@ -277,20 +280,42 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
         .for_each(|(i, v)| ias_server[i] = *v as ::std::os::raw::c_char);
 
     let mut subscription_key = ['\0' as c_char; 32];
-    // FIXME
-    let subscription_key_str = "YOUR_SUBSCRIPTION_KEY";
+    let subscription_key_str = match env::var_os("EPID_SUBSCRIPTION_KEY") {
+        Some(t) => t,
+        None => {
+            println!("Error: ENV EPID_SUBSCRIPTION_KEY MUST BE SET");
+            rsgx_abort();
+        }
+    };
     subscription_key_str
         .as_bytes()
         .iter()
         .enumerate()
         .for_each(|(i, v)| subscription_key[i] = *v as ::std::os::raw::c_char);
 
+    let spidstr = match env::var_os("SPID") {
+        Some(t) => t,
+        None => {
+            println!("Error: ENV SPID MUST BE SET");
+            rsgx_abort();
+        }
+    };
+    let mut spid: [u8; 16] = Default::default();
+    spid.copy_from_slice(&spidstr.as_bytes()[..16]);
+
+    let mut quote_type = ratlsffi::sgx_quote_sign_type_t_SGX_UNLINKABLE_SIGNATURE; // default
+    env::var_os("QUOTE_TYPE").and_then(|x| -> Option<OsString> {
+        if x == "1" {
+            quote_type = ratlsffi::sgx_quote_sign_type_t_SGX_LINKABLE_SIGNATURE;
+        }
+        None
+    });
+
     let mut opt = ratlsffi::ra_tls_options {
         spid: ratlsffi::sgx_spid_t {
-            // FIXME
-            id: [0x00; 16], // YOUR_SPID
+            id: spid,
         },
-        quote_type: ratlsffi::sgx_quote_sign_type_t_SGX_UNLINKABLE_SIGNATURE,
+        quote_type: quote_type,
         ias_server,
         subscription_key,
     };

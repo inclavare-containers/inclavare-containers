@@ -6,3 +6,4 @@ shim/bin/
 shim/.idea/
 *.rpm
 *.deb
+enclaved/rust-sgx
