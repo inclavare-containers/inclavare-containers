@@ -1,0 +1,23 @@
+enclave {
+    from "sgx_backtrace.edl" import *;
+    from "sgx_tstd.edl" import *;
+    from "sgx_stdio.edl" import *;
+    from "sgx_fs.edl" import *;
+    from "sgx_net.edl" import *;
+    from "sgx_time.edl" import *;
+    from "sgx_tstdc.edl" import *;
+
+    from "wolfssl.edl" import *;
+    from "ra_tls.edl" import *;
+
+    trusted {
+        public void ecall_my_test_print();
+
+    };
+
+    untrusted {
+
+    };
+
+};
+

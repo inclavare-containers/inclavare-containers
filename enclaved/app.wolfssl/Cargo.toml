@@ -1,0 +1,18 @@
+[package]
+name = "enclaved-wolfssl"
+version = "0.1.0"
+authors = ["stormgbs <stormgbs@gmail.com>"]
+#build = "build.rs"
+edition = "2018"
+
+[build-dependencies]
+bindgen = "0.55.1"
+
+[dependencies]
+libc = "0.2"
+sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+
+[patch.'https://github.com/apache/teaclave-sgx-sdk.git']
+sgx_types = { path = "../rust-sgx/sgx_types" }
+sgx_urts = { path = "../rust-sgx/sgx_urts" }

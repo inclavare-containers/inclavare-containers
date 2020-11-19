@@ -42,18 +42,19 @@ EXAMPLE:
 			addr = defaultAddress
 		}
 
-		conn, err := net.Dial("unix", addr)
+		//conn, err := net.Dial("unix", addr)
+		conn, err := net.Dial("tcp", "localhost:3443")
 		if err != nil {
 			return err
 		}
 		defer conn.Close()
 
-		unixConn, ok := conn.(*net.UnixConn)
+		tcpConn, ok := conn.(*net.TCPConn)
 		if !ok {
 			return fmt.Errorf("casting to UnixConn failed")
 		}
 
-		sockfd, err := unixConn.File()
+		sockfd, err := tcpConn.File()
 		if err != nil {
 			return err
 		}
