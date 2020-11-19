@@ -5,7 +5,7 @@
 Enclaved is a coordinator which creates a m-TLS(Mutal Transport Layer Security) connection between stub enclave and 
 other enclaves with remote attestation (aka "[RA-TLS](https://raw.githubusercontent.com/cloud-security-research/sgx-ra-tls/master/whitepaper.pdf)").
 
-Currently, we integrate two implementations for ra-tls based on [mutual-ra(rust-sgx-sdk, recommented)](https://github.com/apache/incubator-teaclave-sgx-sdk/tree/master/samplecode/mutual-ra) and [sgx-ra-tls(wolfssl)](https://github.com/cloud-security-research/sgx-ra-tls).
+Currently, we integrate two implementations for ra-tls based on [mutual-ra(rust-sgx-sdk)](https://github.com/apache/incubator-teaclave-sgx-sdk/tree/master/samplecode/mutual-ra) and [sgx-ra-tls(wolfssl)](https://github.com/cloud-security-research/sgx-ra-tls).
 
 ## Design
 
@@ -33,35 +33,75 @@ yum install -y clang-libs  clang-devel
 brew install clang
 
 git clone https://github.com/alibaba/inclavare-containers.git
-cd enclaved/
+cd inclavare-containers/
+export ROOT_DIR=`pwd`
 
 ```
 
-### enclaved(rust-sgx-sdk)
+### Based On WolfSSL
 
-```
-make
-```
+#### Build
 
-### enclaved(wolfssl)
+* Server(enclaved.wolfssl)
 
-```
-export SPID=<YOUR_SPID>
-export EPID_SUBSCRIPTION_KEY=<YOUR_SUBSCRIPTION_KEY>
-export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE 
+```bash
 
+cd ${ROOT_DIR}/enclaved/
 make -f Makefile.wolfssl
 
 ```
 
-## Run enclaved(rust-sgx-sdk)
+* Client
 
-Before:
-* Save your SPID key into file `enclaved/bin/spid.txt`.
-* Save your IAS API key into file `enclaved/bin/key.txt`.
+```bash
+
+cd ${ROOT_DIR}/ra-tls/
 
 ```
-cd enclaved/bin
+
+#### Run
+
+* Server
+
+```bash
+
+export SPID=<YOUR_SPID>
+export EPID_SUBSCRIPTION_KEY=<YOUR_SUBSCRIPTION_KEY>
+export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE 
+
+${ROOT_DIR}/enclaved/bin/enclaved.wolfssl
+
+```
+
+* Client: 
+
+```bash
+
+${ROOT_DIR}/ra-tls/elv/elv echo helloworld
+
+```
+
+
+### Base On Rust-sgx-sdk
+
+#### Build
+
+```bash
+
+cd ${ROOT_DIR}/enclaved/
+make
+
+```
+
+#### Run
+
+Before:
+* Save your SPID key into file `${ROOT_DIR}/enclaved/bin/spid.txt`.
+* Save your IAS API key into file `${ROOT_DIR}/enclaved/bin/key.txt`.
+
+```
+
+cd ${ROOT_DIR}/enclaved/bin
 
 # Run server
 ./enclaved --server (add --unlink if your spid's type is unlinkable)
