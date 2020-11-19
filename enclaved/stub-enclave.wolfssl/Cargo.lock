@@ -134,7 +134,6 @@ checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 [[package]]
 name = "hashbrown_tstd"
 version = "0.9.0"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 
 [[package]]
 name = "hermit-abi"
@@ -264,12 +263,10 @@ checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 [[package]]
 name = "sgx_alloc"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 
 [[package]]
 name = "sgx_backtrace_sys"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 dependencies = [
  "cc",
  "sgx_build_helper",
@@ -283,12 +280,10 @@ version = "0.1.3"
 [[package]]
 name = "sgx_demangle"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 
 [[package]]
 name = "sgx_libc"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 dependencies = [
  "sgx_types",
 ]
@@ -296,7 +291,6 @@ dependencies = [
 [[package]]
 name = "sgx_tprotected_fs"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 dependencies = [
  "sgx_trts",
  "sgx_types",
@@ -305,7 +299,6 @@ dependencies = [
 [[package]]
 name = "sgx_trts"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 dependencies = [
  "sgx_libc",
  "sgx_types",
@@ -314,7 +307,6 @@ dependencies = [
 [[package]]
 name = "sgx_tstd"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 dependencies = [
  "hashbrown_tstd",
  "sgx_alloc",
@@ -330,7 +322,6 @@ dependencies = [
 [[package]]
 name = "sgx_types"
 version = "1.1.3"
-source = "git+https://github.com/apache/teaclave-sgx-sdk.git#de34d4de097de2cd4bc5985c969c033146fc3c0a"
 
 [[package]]
 name = "sgx_unwind"
@@ -453,89 +444,65 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[patch.unused]]
-name = "sgx_alloc"
-version = "1.1.2"
-
-[[patch.unused]]
 name = "sgx_cov"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_crypto_helper"
-version = "1.1.2"
-
-[[patch.unused]]
-name = "sgx_libc"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_rand"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_rand_derive"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_serialize"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_serialize_derive"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_serialize_derive_internals"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tcrypto"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tcrypto_helper"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tdh"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tkey_exchange"
-version = "1.1.2"
-
-[[patch.unused]]
-name = "sgx_tprotected_fs"
-version = "1.1.2"
-
-[[patch.unused]]
-name = "sgx_trts"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tse"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tseal"
-version = "1.1.2"
-
-[[patch.unused]]
-name = "sgx_tstd"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_tunittest"
-version = "1.1.2"
-
-[[patch.unused]]
-name = "sgx_types"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_ucrypto"
-version = "1.1.2"
+version = "1.1.3"
 
 [[patch.unused]]
 name = "sgx_urts"
-version = "1.1.2"
+version = "1.1.3"
