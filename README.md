@@ -160,7 +160,7 @@ Add the assocated configurations in pouchd config file, e.g, `/etc/pouch/config.
 
 where:
 - @path: specify the path of OCI Runtime, such as the pach of `rune`.
-- @runtimeArgs: specify the runtimeArgs of the pouchd runtime, such as `--platform`, `--network`.
+- @runtimeArgs: specify the arguments of the pouchd runtime, such as `--platform`, `--network`.
 - @type: specify the shim template from the following candidates:
 	- io.containerd.runtime.v1.linux: correspond to containerd-shim
 	- io.containerd.rune.v2: correspond to shim-rune
@@ -176,7 +176,7 @@ pouch info | grep rune
 
 # Deployment
 
-Inclavare Containers can be deployed with dockerd and containerd.
+Inclavare Containers can be deployed with dockerd, containerd, and pouchd.
 
 ## dockerd
 
@@ -204,12 +204,22 @@ Please refer to [this guide](https://github.com/alibaba/pouch/blob/master/INSTAL
 
 #### Occlum LibOS
 
-Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to build your Occlum container image. Then run with pouch, pouchd and rune with Occlum container images refer to
+Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to build your Occlum container image. Then run pouch with Occlum container images refer to
 
 ```shell
 pouch run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
   -e ENCLAVE_RUNTIME_ARGS=occlum_instance \
+  occlum-app
+```
+
+In addition, pouch supports to configure annotation` options to run container image. You can run pouch with annotations instead of environment variables.
+
+```shell
+pouch run -it --rm --runtime=rune \
+  --annotation "enclave.type=intelSgx" \
+  --annotation "enclave.runtime.path=/opt/occlum/build/lib/libocclum-pal.so" \
+  --annotation "enclave.runtime.args=occlum_instance" \
   occlum-app
 ```
