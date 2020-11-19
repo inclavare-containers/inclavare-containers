@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/opencontainers/runc/libcontainer/configs"
+	enclConf "github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/opencontainers/runc/libcontainer/specconv"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
@@ -89,7 +90,7 @@ created by an unprivileged user.
 		}
 		spec.Hostname = "rune"
 		spec.Annotations = map[string]string{
-			"enclave.type":         "intelSgx",
+			"enclave.type":         enclConf.EnclaveTypeIntelSgx,
 			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v2.so",
 			"enclave.runtime.args": "debug",
 		}
