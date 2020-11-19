@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	enclaveHwType string = ""
+	enclaveType string = ""
 )
 
 func IsEnclaveEnabled(e *configs.Enclave) bool {
@@ -16,20 +16,20 @@ func IsEnclaveEnabled(e *configs.Enclave) bool {
 		return false
 	}
 
-	if !IsEnclaveHwEnabled(e.Type) {
+	if !IsProbedEnclaveEnabled(e.Type) {
 		return false
 	}
 
 	return true
 }
 
-// Check whether enclave-based hardware is supported or not
-func IsEnclaveHwEnabled(etype string) bool {
-	if etype == "" && enclaveHwType != "" {
+// Check whether enclave probed is supported or not
+func IsProbedEnclaveEnabled(etype string) bool {
+	if etype == "" && enclaveType != "" {
 		return true
 	}
 
-	return etype == enclaveHwType
+	return etype == enclaveType
 }
 
 func init() {
@@ -39,6 +39,6 @@ func init() {
 	_, _ = net.LookupHost("")
 
 	if intelsgx.IsSgxSupported() {
-		enclaveHwType = configs.EnclaveHwIntelSgx
+		enclaveType = configs.EnclaveTypeIntelSgx
 	}
 }

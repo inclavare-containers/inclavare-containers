@@ -27,7 +27,11 @@ func createLibenclaveMount(cwd string) *configs.Mount {
 	}
 }
 
-func CreateLibenclaveMount(cwd string, config *configs.Config) {
+func CreateLibenclaveMount(cwd string, config *configs.Config, etype string) {
+	if etype != enclaveConfigs.EnclaveTypeIntelSgx {
+		return
+	}
+
 	aesmedMounted := false
 	for _, m := range config.Mounts {
 		if strings.EqualFold(m.Destination, "/var/run/aesmd") || strings.EqualFold(m.Destination, "/run/aesmd") {
@@ -102,7 +106,7 @@ func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *con
 
 func onMatchEnclaveDevice(devices []*configs.Device, names []string, etype string, fn func(n string, i int)) {
 	switch etype {
-	case enclaveConfigs.EnclaveHwIntelSgx:
+	case enclaveConfigs.EnclaveTypeIntelSgx:
 		for _, n := range names {
 			for i, dev := range devices {
 				if dev.Path == n {
@@ -115,7 +119,7 @@ func onMatchEnclaveDevice(devices []*configs.Device, names []string, etype strin
 
 func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 	switch etype {
-	case enclaveConfigs.EnclaveHwIntelSgx:
+	case enclaveConfigs.EnclaveTypeIntelSgx:
 		return []*configs.Device{
 			&configs.Device{
 				Type:  'c',
@@ -149,7 +153,7 @@ func containEnclaveDevice(devices []*configs.Device, s string) bool {
 
 func genEnclavePathTemplate(etype string) []string {
 	switch etype {
-	case enclaveConfigs.EnclaveHwIntelSgx:
+	case enclaveConfigs.EnclaveTypeIntelSgx:
 		return []string{"/dev/isgx", "/dev/sgx/enclave", "/dev/gsgx"}
 	default:
 		return nil
@@ -192,7 +196,7 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 	if etype == "" {
 		etype = libenclaveUtils.SearchLabels(config.Labels, "enclave.type")
 		if etype == "" {
-			etype = enclaveConfigs.EnclaveHwDefault
+			etype = enclaveConfigs.EnclaveTypeNone
 		}
 	}
 

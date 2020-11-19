@@ -16,8 +16,8 @@ type EnclaveConfig struct {
 
 // Define the types of enclave hardware
 const (
-	EnclaveHwDefault  string = ""
-	EnclaveHwIntelSgx string = "intelSgx"
+	EnclaveTypeNone     string = ""
+	EnclaveTypeIntelSgx string = "intelSgx"
 )
 
 type Enclave struct {
