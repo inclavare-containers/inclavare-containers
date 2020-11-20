@@ -52,8 +52,8 @@ func CreateEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
 	})
 }
 
-// Determine whether the device is a Intel SGX enclave device
-func intelSgxDev(device *configs.Device) (*configs.Device, error) {
+// Determine whether the device is a Intel SGX enclave or AWS Nitro Enclaves device
+func enclaveMiscDev(device *configs.Device) (*configs.Device, error) {
 	dev, err := devices.DeviceFromPath(device.Path, "rwm")
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *con
 
 	// Create the enclave devices not explicitly specified
 	for _, d := range exclusiveDevs {
-		dev, err := intelSgxDev(d)
+		dev, err := enclaveMiscDev(d)
 		if err != nil {
 			continue
 		}
@@ -105,13 +105,10 @@ func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *con
 }
 
 func onMatchEnclaveDevice(devices []*configs.Device, names []string, etype string, fn func(n string, i int)) {
-	switch etype {
-	case enclaveConfigs.EnclaveTypeIntelSgx:
-		for _, n := range names {
-			for i, dev := range devices {
-				if dev.Path == n {
-					fn(n, i)
-				}
+	for _, n := range names {
+		for i, dev := range devices {
+			if dev.Path == n {
+				fn(n, i)
 			}
 		}
 	}
@@ -137,6 +134,14 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 				Major: 10,
 			},
 		}
+	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
+		return []*configs.Device{
+			&configs.Device{
+				Type:  'c',
+				Path:  "/dev/nitro_enclaves",
+				Major: 10,
+			},
+		}
 	default:
 		return nil
 	}
@@ -155,14 +160,27 @@ func genEnclavePathTemplate(etype string) []string {
 	switch etype {
 	case enclaveConfigs.EnclaveTypeIntelSgx:
 		return []string{"/dev/isgx", "/dev/sgx/enclave", "/dev/gsgx"}
+	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
+		return []string{"/dev/nitro_enclaves"}
 	default:
 		return nil
 	}
 }
 
 func CreateEnclaveDeviceConfig(devices *[]*configs.Device, etype string) {
+	var mode os.FileMode
+
+	switch etype {
+	case enclaveConfigs.EnclaveTypeIntelSgx:
+		mode = 0666
+	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
+		mode = 0660
+	default:
+		return
+	}
+
 	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
-		dev.FileMode = 0666
+		dev.FileMode = mode
 		dev.Uid = 0
 		dev.Gid = 0
 		*devices = append(*devices, dev)

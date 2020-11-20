@@ -3,6 +3,7 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 import (
 	"github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/nitroenclaves"
 	"net"
 	"os/user"
 )
@@ -40,5 +41,7 @@ func init() {
 
 	if intelsgx.IsSgxSupported() {
 		enclaveType = configs.EnclaveTypeIntelSgx
+	} else if nitroenclaves.IsNitroEnclaves() {
+		enclaveType = configs.EnclaveTypeAwsNitroEnclaves
 	}
 }
