@@ -5,7 +5,7 @@
 Enclaved is a coordinator which creates a m-TLS(Mutal Transport Layer Security) connection between stub enclave and 
 other enclaves with remote attestation (aka "[RA-TLS](https://raw.githubusercontent.com/cloud-security-research/sgx-ra-tls/master/whitepaper.pdf)").
 
-Currently, we integrate two implementations for ra-tls based on [mutual-ra(rust-sgx-sdk)](https://github.com/apache/incubator-teaclave-sgx-sdk/tree/master/samplecode/mutual-ra) and [sgx-ra-tls(wolfssl)](https://github.com/cloud-security-research/sgx-ra-tls).
+Currently, we integrate two implementations for ra-tls based on [sgx-ra-tls(wolfssl)](https://github.com/cloud-security-research/sgx-ra-tls) and  [mutual-ra(rust-sgx-sdk)-DEPRECATED](https://github.com/apache/incubator-teaclave-sgx-sdk/tree/master/samplecode/mutual-ra).
 
 ## Design
 
@@ -81,8 +81,7 @@ ${ROOT_DIR}/ra-tls/elv/elv echo helloworld
 
 ```
 
-
-### Base On Rust-sgx-sdk
+### Base On Rust-sgx-sdk (DEPRECATED)
 
 #### Build
 
