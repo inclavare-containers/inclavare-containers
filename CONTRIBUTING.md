@@ -131,7 +131,6 @@ The format can be described more formally:
 <why this change was made>
 <BLANK LINE>
 <FIX LINE>
-<BLANK LINE>
 <SOB LINE>
 ```
 
@@ -145,7 +144,7 @@ If the change affects many subsystems, you can use ```*``` instead, like ```*:``
 
 The message of commit body should describe why the change was made and how the code works at the high level.
 
-`<FIX LINE>` is optional. Please write the issue number at `<FIX LINE>` when your commit fixes an issue on Inclavare Containers project. Once the commit is submitted, the issue of Inclavare Containers project will be automatically closed.
+`<FIX LINE>` is optional. Please write the issue number at `<FIX LINE>` when your commit fixes an issue on Inclavare Containers project. Once the commit is submitted, the issue of Inclavare Containers project will be automatically closed. For example, `Fixes: #123` means this commit resolves the issue number 123.
 
 #### Sign your work 
 
@@ -212,6 +211,7 @@ Date:   Thu Feb 2 11:41:15 2018 -0800
 
     Update README
 
+    Fixes: #123
     Signed-off-by: Joe Smith <joe.smith@example.com>
 ```
 
