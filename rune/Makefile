@@ -60,7 +60,6 @@ install-bash:
 clean:
 	rm -f rune rune-*
 	rm -f contrib/cmd/recvtty/recvtty
-	rm -f $(PROTOS)
 	make -C libenclave/internal/runtime/pal/skeleton clean
 
 uninstall:
