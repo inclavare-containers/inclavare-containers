@@ -55,22 +55,21 @@ Please refer to [Inclavare Containers Roadmap](ROADMAP.md) for the details. This
 Please follow the command to build Inclavare Containers from the latested source code on your system. 
 
 1. Download the latest source code of Inclavare Containers
+
 ```shell
 mkdir -p "$WORKSPACE"
 cd "$WORKSPACE"
 git clone https://github.com/alibaba/inclavare-containers
 ```
 
-2. Prepare the tools required by Inclavare Containers
-```shell
-cd inclavare-containers
-
-# install Go protobuf plugin for protobuf3
-go get github.com/golang/protobuf/protoc-gen-go@v1.3.5
-```
+2. Install the Dependency required by Inclavare Containers
+- Go version 1.14 or higher.
+- `libseccomp`.
 
 3. Build Inclavare Containers
+
 ```shell
+cd inclavare-containers
 # build rune, shim-rune, epm and sgx-tools
 make
 ```
