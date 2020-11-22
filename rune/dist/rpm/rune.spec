@@ -1,7 +1,6 @@
 %define centos_base_release 1
 %define _debugsource_template %{nil}
 
-%global PROTOBUF_VERSION 1.3.5
 %global PROJECT inclavare-containers
 %global BIN_DIR /usr/local/bin
 
@@ -15,8 +14,6 @@ License: Apache License 2.0
 URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 
-BuildRequires: protobuf >= 3
-BuildRequires: protobuf-compiler
 BuildRequires: libseccomp-devel
 ExclusiveArch: x86_64
 
@@ -41,10 +38,8 @@ if [ $CURRENT_GO_VERSION -lt $NEED_GO_VERSION  ]; then
 fi
 
 export GOPATH=${RPM_BUILD_DIR}/%{PROJECT}-%{version}
-export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"
 export PATH=$PATH:${GOPATH}/bin
 export GO111MODULE=on
-go get github.com/golang/protobuf/protoc-gen-go@v%{PROTOBUF_VERSION}
 pushd %{name}
 make
 popd
@@ -61,6 +56,9 @@ install -p -m 644 %{name}/LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{ve
 %{BIN_DIR}/%{name}
 
 %changelog
+* Sat Nov 21 2020 Yilin Li <YiLin.Li@linux.alibaba.com> - 0.5.0-1
+- Drop unnecessary dependency.
+
 * Wed Oct 28 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.5.0
 - Update to version 0.5.0
 
