@@ -6,7 +6,7 @@
 
 `rune` currently supports the Linux platform with x86-64 architecture only. It must be built with Go version 1.14 or higher.
 
-`rune` depends on protobuf compiler. Please refer to [this step](https://github.com/protocolbuffers/protobuf#protocol-compiler-installation) to install it on your platform. Additionally, `rune` by default enables seccomp support as [runc](https://github.com/opencontainers/runc#building) so you need to install libseccomp on your platform.
+Additionally, `rune` by default enables seccomp support as [runc](https://github.com/opencontainers/runc#building) so you need to install libseccomp on your platform.
 
 ```bash
 # create $WORKSPACE folder
@@ -14,9 +14,6 @@ mkdir -p "$WORKSPACE"
 cd "$WORKSPACE"
 git clone https://github.com/alibaba/inclavare-containers
 cd inclavare-containers/rune
-
-# install Go protobuf plugin for protobuf 3
-go get github.com/golang/protobuf/protoc-gen-go@v1.3.5
 
 # build and install rune
 make
