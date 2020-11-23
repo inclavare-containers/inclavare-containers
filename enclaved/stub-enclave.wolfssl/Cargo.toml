@@ -3,7 +3,7 @@ name = "stub"
 version = "0.1.0"
 authors = ["stormgbs <stormgbs@gmail.com>"]
 edition = "2018"
-#build = "build.rs"
+build = "build.rs"
 
 [lib]
 name = "stubenclave"
