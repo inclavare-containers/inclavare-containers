@@ -60,6 +60,7 @@ use std::string::String;
 use std::io;
 use std::ptr;
 use std::str;
+use std::env;
 use std::io::{Write, Read};
 use std::untrusted::fs;
 use std::vec::Vec;
@@ -72,39 +73,39 @@ use bit_vec::BitVec;
 mod cert;
 mod hex;
 
-pub const DEV_HOSTNAME:&'static str = "api.trustedservices.intel.com";
-pub const SIGRL_SUFFIX:&'static str = "/sgx/dev/attestation/v3/sigrl/";
-pub const REPORT_SUFFIX:&'static str = "/sgx/dev/attestation/v3/report";
+pub const DEV_HOSTNAME: &'static str = "api.trustedservices.intel.com";
+pub const SIGRL_SUFFIX: &'static str = "/sgx/dev/attestation/v3/sigrl/";
+pub const REPORT_SUFFIX: &'static str = "/sgx/dev/attestation/v3/report";
 pub const CERTEXPIRYDAYS: i64 = 90i64;
 
 extern "C" {
-    pub fn ocall_sgx_init_quote ( ret_val : *mut sgx_status_t,
-                  ret_ti  : *mut sgx_target_info_t,
-                  ret_gid : *mut sgx_epid_group_id_t) -> sgx_status_t;
-    pub fn ocall_get_ias_socket ( ret_val : *mut sgx_status_t,
-                  ret_fd  : *mut i32) -> sgx_status_t;
-    pub fn ocall_get_quote (ret_val            : *mut sgx_status_t,
-                p_sigrl            : *const u8,
-                sigrl_len          : u32,
-                p_report           : *const sgx_report_t,
-                quote_type         : sgx_quote_sign_type_t,
-                p_spid             : *const sgx_spid_t,
-                p_nonce            : *const sgx_quote_nonce_t,
-                p_qe_report        : *mut sgx_report_t,
-                p_quote            : *mut u8,
-                maxlen             : u32,
-                p_quote_len        : *mut u32) -> sgx_status_t;
+    pub fn ocall_sgx_init_quote(ret_val: *mut sgx_status_t,
+                                ret_ti: *mut sgx_target_info_t,
+                                ret_gid: *mut sgx_epid_group_id_t) -> sgx_status_t;
+    pub fn ocall_get_ias_socket(ret_val: *mut sgx_status_t,
+                                ret_fd: *mut i32) -> sgx_status_t;
+    pub fn ocall_get_quote(ret_val: *mut sgx_status_t,
+                           p_sigrl: *const u8,
+                           sigrl_len: u32,
+                           p_report: *const sgx_report_t,
+                           quote_type: sgx_quote_sign_type_t,
+                           p_spid: *const sgx_spid_t,
+                           p_nonce: *const sgx_quote_nonce_t,
+                           p_qe_report: *mut sgx_report_t,
+                           p_quote: *mut u8,
+                           maxlen: u32,
+                           p_quote_len: *mut u32) -> sgx_status_t;
 }
 
 
-fn parse_response_attn_report(resp : &[u8]) -> (String, String, String, String){
+fn parse_response_attn_report(resp: &[u8]) -> (String, String, String, String) {
     println!("parse_response_attn_report");
     let mut headers = [httparse::EMPTY_HEADER; 16];
-    let mut respp   = httparse::Response::new(&mut headers);
+    let mut respp = httparse::Response::new(&mut headers);
     let result = respp.parse(resp);
     println!("parse result {:?}", result);
 
-    let msg : &'static str;
+    let msg: &'static str;
 
     match respp.code {
         Some(200) => msg = "OK Operation Successful",
@@ -115,11 +116,14 @@ fn parse_response_attn_report(resp : &[u8]) -> (String, String, String, String){
             a temporary overloading or maintenance). This is a
             temporary state – the same request can be repeated after
             some time. ",
-        _ => {println!("DBG:{}", respp.code.unwrap()); msg = "Unknown error occured"},
+        _ => {
+            println!("DBG:{}", respp.code.unwrap());
+            msg = "Unknown error occured"
+        }
     }
 
     println!("{}", msg);
-    let mut len_num : u32 = 0;
+    let mut len_num: u32 = 0;
 
     let mut sig = String::new();
     let mut cert = String::new();
@@ -128,7 +132,7 @@ fn parse_response_attn_report(resp : &[u8]) -> (String, String, String, String){
     for i in 0..respp.headers.len() {
         let h = respp.headers[i];
         //println!("{} : {}", h.name, str::from_utf8(h.value).unwrap());
-        match h.name{
+        match h.name {
             "Content-Length" => {
                 let len_str = String::from_utf8(h.value.to_vec()).unwrap();
                 len_num = len_str.parse::<u32>().unwrap();
@@ -165,15 +169,15 @@ fn parse_response_attn_report(resp : &[u8]) -> (String, String, String, String){
 }
 
 
-fn parse_response_sigrl(resp : &[u8]) -> Vec<u8> {
+fn parse_response_sigrl(resp: &[u8]) -> Vec<u8> {
     println!("parse_response_sigrl");
     let mut headers = [httparse::EMPTY_HEADER; 16];
-    let mut respp   = httparse::Response::new(&mut headers);
+    let mut respp = httparse::Response::new(&mut headers);
     let result = respp.parse(resp);
     println!("parse result {:?}", result);
     println!("parse response{:?}", respp);
 
-    let msg : &'static str;
+    let msg: &'static str;
 
     match respp.code {
         Some(200) => msg = "OK Operation Successful",
@@ -188,7 +192,7 @@ fn parse_response_sigrl(resp : &[u8]) -> Vec<u8> {
     }
 
     println!("{}", msg);
-    let mut len_num : u32 = 0;
+    let mut len_num: u32 = 0;
 
     for i in 0..respp.headers.len() {
         let h = respp.headers[i];
@@ -220,18 +224,18 @@ pub fn make_ias_client_config() -> rustls::ClientConfig {
 }
 
 
-pub fn get_sigrl_from_intel(fd : c_int, gid : u32) -> Vec<u8> {
+pub fn get_sigrl_from_intel(fd: c_int, gid: u32) -> Vec<u8> {
     println!("get_sigrl_from_intel fd = {:?}", fd);
     let config = make_ias_client_config();
     //let sigrl_arg = SigRLArg { group_id : gid };
     //let sigrl_req = sigrl_arg.to_httpreq();
-    let ias_key = get_ias_api_key();
+    let ias_key = get_ias_api_key().unwrap();
 
     let req = format!("GET {}{:08x} HTTP/1.1\r\nHOST: {}\r\nOcp-Apim-Subscription-Key: {}\r\nConnection: Close\r\n\r\n",
-                        SIGRL_SUFFIX,
-                        gid,
-                        DEV_HOSTNAME,
-                        ias_key);
+                      SIGRL_SUFFIX,
+                      gid,
+                      DEV_HOSTNAME,
+                      ias_key);
     println!("{}", req);
 
     let dns_name = webpki::DNSNameRef::try_from_ascii_str(DEV_HOSTNAME).unwrap();
@@ -260,20 +264,20 @@ pub fn get_sigrl_from_intel(fd : c_int, gid : u32) -> Vec<u8> {
 }
 
 // TODO: support pse
-pub fn get_report_from_intel(fd : c_int, quote : Vec<u8>) -> (String, String, String, String) {
+pub fn get_report_from_intel(fd: c_int, quote: Vec<u8>) -> (String, String, String, String) {
     println!("get_report_from_intel fd = {:?}", fd);
     let config = make_ias_client_config();
     let encoded_quote = base64::encode(&quote[..]);
     let encoded_json = format!("{{\"isvEnclaveQuote\":\"{}\"}}\r\n", encoded_quote);
 
-    let ias_key = get_ias_api_key();
+    let ias_key = get_ias_api_key().unwrap();
 
     let req = format!("POST {} HTTP/1.1\r\nHOST: {}\r\nOcp-Apim-Subscription-Key:{}\r\nContent-Length:{}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n{}",
-                           REPORT_SUFFIX,
-                           DEV_HOSTNAME,
-                           ias_key,
-                           encoded_json.len(),
-                           encoded_json);
+                      REPORT_SUFFIX,
+                      DEV_HOSTNAME,
+                      ias_key,
+                      encoded_json.len(),
+                      encoded_json);
     println!("{}", req);
     let dns_name = webpki::DNSNameRef::try_from_ascii_str(DEV_HOSTNAME).unwrap();
     let mut sess = rustls::ClientSession::new(&Arc::new(config), dns_name);
@@ -297,17 +301,17 @@ pub fn get_report_from_intel(fd : c_int, quote : Vec<u8>) -> (String, String, St
 }
 
 fn as_u32_le(array: &[u8; 4]) -> u32 {
-    ((array[0] as u32) <<  0) +
-    ((array[1] as u32) <<  8) +
-    ((array[2] as u32) << 16) +
-    ((array[3] as u32) << 24)
+    ((array[0] as u32) << 0) +
+        ((array[1] as u32) << 8) +
+        ((array[2] as u32) << 16) +
+        ((array[3] as u32) << 24)
 }
 
 #[allow(const_err)]
 // pub fn create_attestation_report(pub_k: &sgx_ec256_public_t, sign_type: sgx_quote_sign_type_t)
-pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sgx_quote_sign_type_t)
+pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t)
 // pub fn create_attestation_report(mod_size: i32, exp_size: i32, n: &[u8], e: &[u8], sign_type: sgx_quote_sign_type_t)
-    -> Result<(String, String, String, String), sgx_status_t> {
+                                 -> Result<(String, String, String, String), sgx_status_t> {
 
     // Workflow:
     // (1) ocall to get the target_info structure (ti) and epid group id (eg)
@@ -316,9 +320,9 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
     // (3) ocall to sgx_get_quote to generate (*mut sgx-quote_t, uint32_t)
 
     // (1) get ti + eg
-    let mut ti : sgx_target_info_t = sgx_target_info_t::default();
-    let mut eg : sgx_epid_group_id_t = sgx_epid_group_id_t::default();
-    let mut rt : sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
+    let mut ti: sgx_target_info_t = sgx_target_info_t::default();
+    let mut eg: sgx_epid_group_id_t = sgx_epid_group_id_t::default();
+    let mut rt: sgx_status_t = sgx_status_t::SGX_ERROR_UNEXPECTED;
 
     let res = unsafe {
         ocall_sgx_init_quote(&mut rt as *mut sgx_status_t,
@@ -339,7 +343,7 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
     let eg_num = as_u32_le(&eg);
 
     // (1.5) get sigrl
-    let mut ias_sock : i32 = 0;
+    let mut ias_sock: i32 = 0;
 
     let res = unsafe {
         ocall_get_ias_socket(&mut rt as *mut sgx_status_t,
@@ -357,7 +361,7 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
     //println!("Got ias_sock = {}", ias_sock);
 
     // Now sigrl_vec is the revocation list, a vec<u8>
-    let sigrl_vec : Vec<u8> = get_sigrl_from_intel(ias_sock, eg_num);
+    let sigrl_vec: Vec<u8> = get_sigrl_from_intel(ias_sock, eg_num);
 
     // (2) Generate the report
     // Fill ecc256 public key into report_data
@@ -395,24 +399,24 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
 
 
     let rep = match rsgx_create_report(&ti, &report_data) {
-        Ok(r) =>{
+        Ok(r) => {
             println!("Report creation => success {:?}", r.body.mr_signer.m);
             Some(r)
-        },
-        Err(e) =>{
+        }
+        Err(e) => {
             println!("Report creation => failed {:?}", e);
             None
-        },
+        }
     };
 
-    let mut quote_nonce = sgx_quote_nonce_t { rand : [0;16] };
+    let mut quote_nonce = sgx_quote_nonce_t { rand: [0; 16] };
     let mut os_rng = os::SgxRng::new().unwrap();
     os_rng.fill_bytes(&mut quote_nonce.rand);
     println!("rand finished");
     let mut qe_report = sgx_report_t::default();
-    const RET_QUOTE_BUF_LEN : u32 = 2048;
-    let mut return_quote_buf : [u8; RET_QUOTE_BUF_LEN as usize] = [0;RET_QUOTE_BUF_LEN as usize];
-    let mut quote_len : u32 = 0;
+    const RET_QUOTE_BUF_LEN: u32 = 2048;
+    let mut return_quote_buf: [u8; RET_QUOTE_BUF_LEN as usize] = [0; RET_QUOTE_BUF_LEN as usize];
+    let mut quote_len: u32 = 0;
 
     // (3) Generate the quote
     // Args:
@@ -431,13 +435,13 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
         } else {
             (sigrl_vec.as_ptr(), sigrl_vec.len() as u32)
         };
-    let p_report = (&rep.unwrap()) as * const sgx_report_t;
-    let quote_type = sign_type;
+    let p_report = (&rep.unwrap()) as *const sgx_report_t;
 
-    let spid : sgx_spid_t = load_spid("spid.txt");
+    let quote_type = load_quote_type().map_err(|_| sgx_status_t::SGX_ERROR_UNEXPECTED)?;
+    let spid: sgx_spid_t = load_spid().map_err(|_| sgx_status_t::SGX_ERROR_UNEXPECTED)?;
 
     let p_spid = &spid as *const sgx_spid_t;
-    let p_nonce = &quote_nonce as * const sgx_quote_nonce_t;
+    let p_nonce = &quote_nonce as *const sgx_quote_nonce_t;
     let p_qe_report = &mut qe_report as *mut sgx_report_t;
     let p_quote = return_quote_buf.as_mut_ptr();
     let maxlen = RET_QUOTE_BUF_LEN;
@@ -445,16 +449,16 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
 
     let result = unsafe {
         ocall_get_quote(&mut rt as *mut sgx_status_t,
-                p_sigrl,
-                sigrl_len,
-                p_report,
-                quote_type,
-                p_spid,
-                p_nonce,
-                p_qe_report,
-                p_quote,
-                maxlen,
-                p_quote_len)
+                        p_sigrl,
+                        sigrl_len,
+                        p_report,
+                        quote_type,
+                        p_spid,
+                        p_nonce,
+                        p_qe_report,
+                        p_quote,
+                        maxlen,
+                        p_quote_len)
     };
 
     if result != sgx_status_t::SGX_SUCCESS {
@@ -473,13 +477,13 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
         Err(x) => {
             println!("rsgx_verify_report failed with {:?}", x);
             return Err(x);
-        },
+        }
     }
 
     // Check if the qe_report is produced on the same platform
     if ti.mr_enclave.m != qe_report.body.mr_enclave.m ||
-       ti.attributes.flags != qe_report.body.attributes.flags ||
-       ti.attributes.xfrm  != qe_report.body.attributes.xfrm {
+        ti.attributes.flags != qe_report.body.attributes.flags ||
+        ti.attributes.xfrm != qe_report.body.attributes.xfrm {
         println!("qe_report does not match current target_info!");
         return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
     }
@@ -501,7 +505,7 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
     // p_qe_report and report.data to confirm the QUOTE has not be modified and
     // is not a replay. It is optional.
 
-    let mut rhs_vec : Vec<u8> = quote_nonce.rand.to_vec();
+    let mut rhs_vec: Vec<u8> = quote_nonce.rand.to_vec();
     rhs_vec.extend(&return_quote_buf[..quote_len as usize]);
     let rhs_hash = rsgx_sha256_slice(&rhs_vec[..]).unwrap();
     let lhs_hash = &qe_report.body.report_data.d[..32];
@@ -514,7 +518,7 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
         return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
     }
 
-    let quote_vec : Vec<u8> = return_quote_buf[..quote_len as usize].to_vec();
+    let quote_vec: Vec<u8> = return_quote_buf[..quote_len as usize].to_vec();
     let res = unsafe {
         ocall_get_ias_socket(&mut rt as *mut sgx_status_t,
                              &mut ias_sock as *mut i32)
@@ -532,20 +536,36 @@ pub fn create_attestation_report(pub_k: &sgx_rsa3072_public_key_t, sign_type: sg
     Ok((attn_report, sig, cert_ca, cert))
 }
 
-fn load_spid(filename: &str) -> sgx_spid_t {
-    let mut spidfile = fs::File::open(filename).expect("cannot open spid file");
-    let mut contents = String::new();
-    spidfile.read_to_string(&mut contents).expect("cannot read the spid file");
+fn load_quote_type() -> Result<sgx_quote_sign_type_t, &'static str> {
+    let spidstr = env::var_os("QUOTE_TYPE")
+        .ok_or("ENV QUOTE_TYPE MUST BE SET")?
+        .to_str().ok_or("QUOTE_TYPE can not be convert to &str")?
+        .to_string();
 
-    hex::decode_spid(&contents)
+    match spidstr.as_str() {
+        "SGX_UNLINKABLE_SIGNATURE" => Ok(sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE),
+        "SGX_LINKABLE_SIGNATURE" => Ok(sgx_quote_sign_type_t::SGX_LINKABLE_SIGNATURE),
+        _ => Err("bad quote type, valid quote types: [\"SGX_LINKABLE_SIGNATURE\", \"SGX_UNLINKABLE_SIGNATURE\"]")
+    }
 }
 
-fn get_ias_api_key() -> String {
-    let mut keyfile = fs::File::open("key.txt").expect("cannot open ias key file");
-    let mut key = String::new();
-    keyfile.read_to_string(&mut key).expect("cannot read the ias key file");
+fn load_spid() -> Result<sgx_spid_t, &'static str> {
+    let spidstr = env::var_os("SPID")
+        .ok_or("ENV SPID MUST BE SET")?
+        .to_str().ok_or("SPID can not be convert to &str")?
+        .to_string();
 
-    key.trim_end().to_owned()
+    Ok(hex::decode_spid(spidstr))
+}
+
+fn get_ias_api_key() -> Result<String, &'static str> {
+    let spidstr = env::var_os("EPID_SUBSCRIPTION_KEY")
+        .ok_or("ENV EPID_SUBSCRIPTION_KEY MUST BE SET")?
+        .to_str().ok_or("EPID_SUBSCRIPTION_KEY can not be convert to &str")?
+        .trim_end()
+        .to_string();
+
+    Ok(spidstr)
 }
 
 struct ClientAuth {
@@ -554,35 +574,35 @@ struct ClientAuth {
 
 impl ClientAuth {
     fn new(outdated_ok: bool) -> ClientAuth {
-        ClientAuth{ outdated_ok : outdated_ok }
+        ClientAuth { outdated_ok: outdated_ok }
     }
 }
 
 impl rustls::ClientCertVerifier for ClientAuth {
     fn client_auth_root_subjects(&self) -> rustls::DistinguishedNames {
-    rustls::DistinguishedNames::new()
+        rustls::DistinguishedNames::new()
     }
 
     fn verify_client_cert(&self, _certs: &[rustls::Certificate])
-    -> Result<rustls::ClientCertVerified, rustls::TLSError> {
+                          -> Result<rustls::ClientCertVerified, rustls::TLSError> {
         println!("client cert: {:?}", _certs);
-            // This call will automatically verify cert is properly signed
-            match cert::verify_mra_cert(&_certs[0].0) {
-                Ok(()) => {
+        // This call will automatically verify cert is properly signed
+        match cert::verify_mra_cert(&_certs[0].0) {
+            Ok(()) => {
+                return Ok(rustls::ClientCertVerified::assertion());
+            }
+            Err(sgx_status_t::SGX_ERROR_UPDATE_NEEDED) => {
+                if self.outdated_ok {
+                    println!("outdated_ok is set, overriding outdated error");
                     return Ok(rustls::ClientCertVerified::assertion());
-                }
-                Err(sgx_status_t::SGX_ERROR_UPDATE_NEEDED) => {
-                    if self.outdated_ok {
-                        println!("outdated_ok is set, overriding outdated error");
-                        return Ok(rustls::ClientCertVerified::assertion());
-                    } else {
-                        return Err(rustls::TLSError::WebPKIError(webpki::Error::ExtensionValueInvalid));
-                    }
-                }
-                Err(_) => {
+                } else {
                     return Err(rustls::TLSError::WebPKIError(webpki::Error::ExtensionValueInvalid));
                 }
             }
+            Err(_) => {
+                return Err(rustls::TLSError::WebPKIError(webpki::Error::ExtensionValueInvalid));
+            }
+        }
     }
 }
 
@@ -592,17 +612,16 @@ struct ServerAuth {
 
 impl ServerAuth {
     fn new(outdated_ok: bool) -> ServerAuth {
-        ServerAuth{ outdated_ok : outdated_ok }
+        ServerAuth { outdated_ok: outdated_ok }
     }
 }
 
 impl rustls::ServerCertVerifier for ServerAuth {
     fn verify_server_cert(&self,
-              _roots: &rustls::RootCertStore,
-              _certs: &[rustls::Certificate],
-              _hostname: webpki::DNSNameRef,
-              _ocsp: &[u8]) -> Result<rustls::ServerCertVerified, rustls::TLSError> {
-
+                          _roots: &rustls::RootCertStore,
+                          _certs: &[rustls::Certificate],
+                          _hostname: webpki::DNSNameRef,
+                          _ocsp: &[u8]) -> Result<rustls::ServerCertVerified, rustls::TLSError> {
         println!("server cert: {:?}", _certs);
 
         println!("{:?}", fs::File::create("./tls_server.der").unwrap().write(_certs[0].as_ref()));
@@ -628,7 +647,7 @@ impl rustls::ServerCertVerifier for ServerAuth {
 }
 
 #[no_mangle]
-pub extern "C" fn run_server(socket_fd : c_int, sign_type: sgx_quote_sign_type_t) -> sgx_status_t {
+pub extern "C" fn run_server(socket_fd: c_int) -> sgx_status_t {
     let _ = backtrace::enable_backtrace("enclave.signed.so", PrintFormat::Short);
 
     // Generate Keypair
@@ -652,15 +671,15 @@ pub extern "C" fn run_server(socket_fd : c_int, sign_type: sgx_quote_sign_type_t
     let mut iqmp: Vec<u8> = vec![0_u8; mod_size as usize / 2];
 
     rsgx_create_rsa_key_pair(mod_size,
-                                          exp_size,
-                                          n.as_mut_slice(),
-                                          d.as_mut_slice(),
-                                          e.as_mut_slice(),
-                                          p.as_mut_slice(),
-                                          q.as_mut_slice(),
-                                          dmp1.as_mut_slice(),
-                                          dmq1.as_mut_slice(),
-                                          iqmp.as_mut_slice()).unwrap();
+                             exp_size,
+                             n.as_mut_slice(),
+                             d.as_mut_slice(),
+                             e.as_mut_slice(),
+                             p.as_mut_slice(),
+                             q.as_mut_slice(),
+                             dmp1.as_mut_slice(),
+                             dmq1.as_mut_slice(),
+                             iqmp.as_mut_slice()).unwrap();
 
     let cn = n.clone();
     let ce = e.clone();
@@ -699,18 +718,18 @@ pub extern "C" fn run_server(socket_fd : c_int, sign_type: sgx_quote_sign_type_t
         Err(o) => panic!("Expected a Vec of length {} but it was {}", 4, o.len()),
     };
 
-    let pub_k = sgx_rsa3072_public_key_t{
+    let pub_k = sgx_rsa3072_public_key_t {
         modulus: *n_array,
         exponent: *e_array,
     };
 
-    let prv_k = sgx_rsa3072_key_t{
+    let prv_k = sgx_rsa3072_key_t {
         modulus: *n_array,
         d: *d_array,
         e: *e_array,
     };
 
-    let (attn_report, sig, cert_ca, cert) = match create_attestation_report(&pub_k, sign_type) {
+    let (attn_report, sig, cert_ca, cert) = match create_attestation_report(&pub_k) {
         Ok(r) => r,
         Err(e) => {
             println!("Error in create_attestation_report: {:?}", e);
@@ -744,7 +763,7 @@ pub extern "C" fn run_server(socket_fd : c_int, sign_type: sgx_quote_sign_type_t
     let mut conn = TcpStream::new(socket_fd).unwrap();
 
     let mut tls = rustls::Stream::new(&mut sess, &mut conn);
-    let mut plaintext = [0u8;1024]; //Vec::new();
+    let mut plaintext = [0u8; 1024]; //Vec::new();
     match tls.read(&mut plaintext) {
         Ok(_) => println!("Client said: {}", str::from_utf8(&plaintext).unwrap()),
         Err(e) => {
@@ -760,7 +779,7 @@ pub extern "C" fn run_server(socket_fd : c_int, sign_type: sgx_quote_sign_type_t
 
 
 #[no_mangle]
-pub extern "C" fn run_client(socket_fd : c_int, sign_type: sgx_quote_sign_type_t) -> sgx_status_t {
+pub extern "C" fn run_client(socket_fd: c_int) -> sgx_status_t {
     // let _ = backtrace::enable_backtrace("enclave.signed.so", PrintFormat::Short);
     //
     // // Generate Keypair

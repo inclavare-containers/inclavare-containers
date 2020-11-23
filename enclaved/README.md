@@ -67,7 +67,7 @@ cd ${ROOT_DIR}/ra-tls/
 
 export SPID=<YOUR_SPID>
 export EPID_SUBSCRIPTION_KEY=<YOUR_SUBSCRIPTION_KEY>
-export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE 
+export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE (or SGX_LINKABLE_SIGNATURE)
 
 ${ROOT_DIR}/enclaved/bin/enclaved.wolfssl
 
@@ -94,19 +94,17 @@ make
 
 #### Run
 
-Before:
-* Save your SPID key into file `${ROOT_DIR}/enclaved/bin/spid.txt`.
-* Save your IAS API key into file `${ROOT_DIR}/enclaved/bin/key.txt`.
-
 ```
 
-cd ${ROOT_DIR}/enclaved/bin
+export SPID=<YOUR_SPID>
+export EPID_SUBSCRIPTION_KEY=<YOUR_SUBSCRIPTION_KEY>
+export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE (or SGX_LINKABLE_SIGNATURE)
 
 # Run server
-./enclaved --server (add --unlink if your spid's type is unlinkable)
+${ROOT_DIR}/enclaved/bin/enclaved --server
 
 # Run client
-./enclaved --client (add --unlink if your spid's type is unlinkable)
+${ROOT_DIR}/enclaved/bin/enclaved --client
 
 ```
 
