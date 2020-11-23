@@ -13,7 +13,7 @@ fn decode_hex_digit(digit: char) -> u8 {
     }
 }
 
-pub fn decode_spid(hex: &str) -> sgx_spid_t {
+pub fn decode_spid(hex: String) -> sgx_spid_t {
     let mut spid = sgx_spid_t::default();
     let hex = hex.trim();
 
