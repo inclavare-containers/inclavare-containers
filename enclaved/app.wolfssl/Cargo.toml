@@ -2,7 +2,7 @@
 name = "enclaved-wolfssl"
 version = "0.1.0"
 authors = ["stormgbs <stormgbs@gmail.com>"]
-#build = "build.rs"
+build = "build.rs"
 edition = "2018"
 
 [build-dependencies]
