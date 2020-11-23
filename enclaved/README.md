@@ -107,24 +107,3 @@ ${ROOT_DIR}/enclaved/bin/enclaved --server
 ${ROOT_DIR}/enclaved/bin/enclaved --client
 
 ```
-
-# TroubleShootings
-
-* Complie Error: `redefinition of 'struct tm'` 
-
-Error Details:
-
-```
-./../ra-tls/wolfssl/wolfssl/wolfcrypt/wc_port.h:427:12: error: redefinition of 'struct tm'
-  427 |     struct tm {
-      |            ^~
-In file included from stub-enclave.wolfssl/Enclave_t.h:13,
-                 from stub-enclave.wolfssl/Enclave_t.c:1:
-./rust-sgx/common/inc/time.h:76:8: note: originally defined here
-   76 | struct tm {
-      |        ^~
-```
-
-Conflict due to multiple definations between wolfssl and rust-sgx-sdk, we could just comment tm stuct defination in `ra-tls/wolfssl/wolfssl/wolfcrypt/wc_port.h`.
-
-
