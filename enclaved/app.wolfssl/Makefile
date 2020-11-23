@@ -6,7 +6,7 @@ Rust_App_Files := $(wildcard src/*.rs)
 all: $(Rust_App_Name)
 
 $(Rust_App_Name): $(Rust_App_Files)
-	C_INCLUDE_PATH="/opt/intel/sgxsdk/include:../rust-sgx/edl:../../ra-tls/wolfssl:../../ra-tls/sgx-ra-tls" cargo build --release
+	cargo build --release
 	[ ! -d ../bin ] && mkdir ../bin || true
 	cp ./target/release/enclaved-wolfssl ../bin/enclaved.wolfssl
 
