@@ -165,7 +165,7 @@ $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
 ######## Enclave Objects ########
 
 stub-enclave.wolfssl/Enclave_t.o: $(Enclave_EDL_Files)
-	@cc -Wno-implicit-function-declaration -std=c11 -m64 -O0 -g -DSGX_DEBUG -nostdinc -fvisibility=hidden -fpie -fstack-protector -I. -I./rust-sgx/common/inc -I./rust-sgx/edl -I./../ra-tls/wolfssl -I./../ra-tls/wolfssl//wolfcrypt -I/opt/intel/sgxsdk/include -I/opt/intel/sgxsdk/include/tlibc -I/opt/intel/sgxsdk/include/stlport -I/root/go/src/github.com/alibaba/inclavare-containers/ra-tls/sgx-ra-tls -fno-builtin -fno-builtin-printf -I. -DSGX_SDK -DWOLFSSL_SGX -DWOLFSSL_SGX_ATTESTATION -DUSER_TIME -DWOLFSSL_CERT_EXT -c stub-enclave.wolfssl/Enclave_t.c -o stub-enclave.wolfssl/Enclave_t.o
+	@cc -Wno-implicit-function-declaration -std=c11 -m64 -O0 -g -DSGX_DEBUG -nostdinc -fvisibility=hidden -fpie -fstack-protector -I. -I./rust-sgx/common/inc -I./rust-sgx/edl -I./../ra-tls/wolfssl -I./../ra-tls/wolfssl//wolfcrypt -I/opt/intel/sgxsdk/include -I/opt/intel/sgxsdk/include/tlibc -I/opt/intel/sgxsdk/include/stlport -I/root/go/src/github.com/alibaba/inclavare-containers/ra-tls/sgx-ra-tls -fno-builtin -fno-builtin-printf -I. -DSGX_SDK -DWOLFSSL_SGX -DWOLFSSL_SGX_ATTESTATION -DUSER_TIME -DWOLFSSL_CERT_EXT -D_TM_DEFINED -c stub-enclave.wolfssl/Enclave_t.c -o stub-enclave.wolfssl/Enclave_t.o
 	@echo "CC   <=  $<"
 
 $(RustEnclave_Name): enclave stub-enclave.wolfssl/Enclave_t.o
