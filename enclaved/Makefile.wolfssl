@@ -186,5 +186,5 @@ enclave:
 .PHONY: clean
 clean:
 	@rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) stub-enclave.wolfssl/*_t.* app.wolfssl/*_u.* lib/*.a
-	@cd stub-enclave.wolfssl && cargo clean && rm -f Cargo.lock
-	@cd app.wolfssl && cargo clean && rm -f Cargo.lock
+	@$(MAKE) -C stub-enclave.wolfssl clean
+	@$(MAKE) -C app.wolfssl clean
