@@ -277,8 +277,8 @@ fn main() {
                     println!("ecall_wolfSSL_read start ...");
                     let mut buff: &mut [u8; 256] = &mut [0; 256];
                     sgxstatus = ratlsffi::ecall_wolfSSL_read(enclave.geteid(), &mut retval, ssl, buff.as_mut_ptr() as *mut _ as *mut c_void, 256 - 1); //TODO: 256?
-                    if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval != ratlsffi::WOLFSSL_SUCCESS {
-                        if retval == ratlsffi::WOLFSSL_FATAL_ERROR {
+                    if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval <= 0 {
+                        if retval <= 0 {
                             ratlsffi::ecall_wolfSSL_get_error(enclave.geteid(), &mut retval as *mut _, ssl, retval);
                         }
                         panic!("ecall_wolfSSL_read failed: sgx_status={}, retval={}", sgxstatus, retval);
