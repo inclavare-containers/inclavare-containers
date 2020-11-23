@@ -12,3 +12,4 @@ $(Rust_App_Name): $(Rust_App_Files)
 
 clean:
 	@cargo clean
+	@rm -f Enclave_u.o libEnclave_u.a 
