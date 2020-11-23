@@ -618,6 +618,8 @@ pub const POLLWRBAND: u32 = 512;
 pub const POLLERR: u32 = 8;
 pub const POLLHUP: u32 = 16;
 pub const POLLNVAL: u32 = 32;
+pub const _PWD_H: u32 = 1;
+pub const NSS_BUFLEN_PASSWD: u32 = 1024;
 pub const WOLFSSL_GENERAL_ALIGNMENT: u32 = 0;
 pub const AES_MAX_KEY_SIZE: u32 = 256;
 pub const WOLFSSL_MIN_AUTH_TAG_SZ: u32 = 12;
@@ -6808,6 +6810,156 @@ extern "C" {
         __fds: *mut pollfd,
         __nfds: nfds_t,
         __timeout: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct passwd {
+    pub pw_name: *mut ::std::os::raw::c_char,
+    pub pw_passwd: *mut ::std::os::raw::c_char,
+    pub pw_uid: __uid_t,
+    pub pw_gid: __gid_t,
+    pub pw_gecos: *mut ::std::os::raw::c_char,
+    pub pw_dir: *mut ::std::os::raw::c_char,
+    pub pw_shell: *mut ::std::os::raw::c_char,
+}
+#[test]
+fn bindgen_test_layout_passwd() {
+    assert_eq!(
+        ::std::mem::size_of::<passwd>(),
+        48usize,
+        concat!("Size of: ", stringify!(passwd))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<passwd>(),
+        8usize,
+        concat!("Alignment of ", stringify!(passwd))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_name as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_name)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_passwd as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_passwd)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_uid as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_uid)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_gid as *const _ as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_gid)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_gecos as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_gecos)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_dir as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_dir)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<passwd>())).pw_shell as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(passwd),
+            "::",
+            stringify!(pw_shell)
+        )
+    );
+}
+extern "C" {
+    pub fn setpwent();
+}
+extern "C" {
+    pub fn endpwent();
+}
+extern "C" {
+    pub fn getpwent() -> *mut passwd;
+}
+extern "C" {
+    pub fn fgetpwent(__stream: *mut FILE) -> *mut passwd;
+}
+extern "C" {
+    pub fn putpwent(__p: *const passwd, __f: *mut FILE) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn getpwuid(__uid: __uid_t) -> *mut passwd;
+}
+extern "C" {
+    pub fn getpwnam(__name: *const ::std::os::raw::c_char) -> *mut passwd;
+}
+extern "C" {
+    pub fn getpwent_r(
+        __resultbuf: *mut passwd,
+        __buffer: *mut ::std::os::raw::c_char,
+        __buflen: size_t,
+        __result: *mut *mut passwd,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn getpwuid_r(
+        __uid: __uid_t,
+        __resultbuf: *mut passwd,
+        __buffer: *mut ::std::os::raw::c_char,
+        __buflen: size_t,
+        __result: *mut *mut passwd,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn getpwnam_r(
+        __name: *const ::std::os::raw::c_char,
+        __resultbuf: *mut passwd,
+        __buffer: *mut ::std::os::raw::c_char,
+        __buflen: size_t,
+        __result: *mut *mut passwd,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn fgetpwent_r(
+        __stream: *mut FILE,
+        __resultbuf: *mut passwd,
+        __buffer: *mut ::std::os::raw::c_char,
+        __buflen: size_t,
+        __result: *mut *mut passwd,
     ) -> ::std::os::raw::c_int;
 }
 #[repr(C)]
@@ -18141,6 +18293,51 @@ extern "C" {
         waiters: *mut *const ::std::os::raw::c_void,
         total: size_t,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn u_environ_ocall() -> *mut *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn u_getenv_ocall(name: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn u_setenv_ocall(
+        error: *mut ::std::os::raw::c_int,
+        name: *const ::std::os::raw::c_char,
+        value: *const ::std::os::raw::c_char,
+        overwrite: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn u_unsetenv_ocall(
+        error: *mut ::std::os::raw::c_int,
+        name: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn u_chdir_ocall(
+        error: *mut ::std::os::raw::c_int,
+        dir: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn u_getcwd_ocall(
+        error: *mut ::std::os::raw::c_int,
+        buf: *mut ::std::os::raw::c_char,
+        buflen: size_t,
+    ) -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn u_getpwuid_r_ocall(
+        uid: ::std::os::raw::c_uint,
+        pwd: *mut passwd,
+        buf: *mut ::std::os::raw::c_char,
+        buflen: size_t,
+        passwd_result: *mut *mut passwd,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn u_getuid_ocall() -> ::std::os::raw::c_uint;
 }
 extern "C" {
     pub fn ocall_low_res_time(time: *mut ::std::os::raw::c_int);

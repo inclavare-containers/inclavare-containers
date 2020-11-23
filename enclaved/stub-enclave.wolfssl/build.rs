@@ -13,7 +13,10 @@ fn main() {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let ratls_bindings = bindgen::Builder::default().disable_name_namespacing()
+    let ratls_bindings = bindgen::Builder::default()
+        .disable_name_namespacing()
+        .derive_default(true)
+        .derive_debug(true)
         .rust_target(bindgen::RustTarget::Nightly)
         .raw_line("// Generated ra-tls trusted codes.")
         // .raw_line("use sgx_tstd as std;")

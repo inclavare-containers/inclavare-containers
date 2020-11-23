@@ -1536,7 +1536,7 @@ pub type __off_t = ::std::os::raw::c_long;
 pub type __off64_t = ::std::os::raw::c_long;
 pub type __pid_t = ::std::os::raw::c_int;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __fsid_t {
     pub __val: [::std::os::raw::c_int; 2usize],
 }
@@ -1626,7 +1626,7 @@ pub type u_int64_t = ::std::os::raw::c_ulong;
 pub type register_t = ::std::os::raw::c_long;
 pub type __sig_atomic_t = ::std::os::raw::c_int;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __sigset_t {
     pub __val: [::std::os::raw::c_ulong; 16usize],
 }
@@ -1655,7 +1655,7 @@ fn bindgen_test_layout___sigset_t() {
 }
 pub type sigset_t = __sigset_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct timespec {
     pub tv_sec: __time_t,
     pub tv_nsec: __syscall_slong_t,
@@ -1694,7 +1694,7 @@ fn bindgen_test_layout_timespec() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct timeval {
     pub tv_sec: __time_t,
     pub tv_usec: __suseconds_t,
@@ -1735,7 +1735,7 @@ fn bindgen_test_layout_timeval() {
 pub type suseconds_t = __suseconds_t;
 pub type __fd_mask = ::std::os::raw::c_long;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct fd_set {
     pub __fds_bits: [__fd_mask; 16usize],
 }
@@ -1839,6 +1839,11 @@ fn bindgen_test_layout_pthread_attr_t() {
         )
     );
 }
+impl Default for pthread_attr_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __pthread_internal_list {
@@ -1877,6 +1882,11 @@ fn bindgen_test_layout___pthread_internal_list() {
             stringify!(__next)
         )
     );
+}
+impl Default for __pthread_internal_list {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type __pthread_list_t = __pthread_internal_list;
 #[repr(C)]
@@ -2019,6 +2029,11 @@ fn bindgen_test_layout_pthread_mutex_t___pthread_mutex_s() {
         )
     );
 }
+impl Default for pthread_mutex_t___pthread_mutex_s {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[test]
 fn bindgen_test_layout_pthread_mutex_t() {
     assert_eq!(
@@ -2062,6 +2077,11 @@ fn bindgen_test_layout_pthread_mutex_t() {
         )
     );
 }
+impl Default for pthread_mutex_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union pthread_mutexattr_t {
@@ -2101,6 +2121,11 @@ fn bindgen_test_layout_pthread_mutexattr_t() {
             stringify!(__align)
         )
     );
+}
+impl Default for pthread_mutexattr_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -2235,6 +2260,11 @@ fn bindgen_test_layout_pthread_cond_t__bindgen_ty_1() {
         )
     );
 }
+impl Default for pthread_cond_t__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[test]
 fn bindgen_test_layout_pthread_cond_t() {
     assert_eq!(
@@ -2278,6 +2308,11 @@ fn bindgen_test_layout_pthread_cond_t() {
         )
     );
 }
+impl Default for pthread_cond_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union pthread_condattr_t {
@@ -2318,6 +2353,11 @@ fn bindgen_test_layout_pthread_condattr_t() {
         )
     );
 }
+impl Default for pthread_condattr_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type pthread_key_t = ::std::os::raw::c_uint;
 pub type pthread_once_t = ::std::os::raw::c_int;
 #[repr(C)]
@@ -2329,7 +2369,7 @@ pub union pthread_rwlock_t {
     _bindgen_union_align: [u64; 7usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct pthread_rwlock_t__bindgen_ty_1 {
     pub __lock: ::std::os::raw::c_int,
     pub __nr_readers: ::std::os::raw::c_uint,
@@ -2536,6 +2576,11 @@ fn bindgen_test_layout_pthread_rwlock_t() {
         )
     );
 }
+impl Default for pthread_rwlock_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union pthread_rwlockattr_t {
@@ -2575,6 +2620,11 @@ fn bindgen_test_layout_pthread_rwlockattr_t() {
             stringify!(__align)
         )
     );
+}
+impl Default for pthread_rwlockattr_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type pthread_spinlock_t = ::std::os::raw::c_int;
 #[repr(C)]
@@ -2617,6 +2667,11 @@ fn bindgen_test_layout_pthread_barrier_t() {
         )
     );
 }
+impl Default for pthread_barrier_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union pthread_barrierattr_t {
@@ -2656,6 +2711,11 @@ fn bindgen_test_layout_pthread_barrierattr_t() {
             stringify!(__align)
         )
     );
+}
+impl Default for pthread_barrierattr_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn __errno_location() -> *mut ::std::os::raw::c_int;
@@ -3449,7 +3509,7 @@ extern "C" {
     pub fn fdatasync(__fildes: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct flock {
     pub l_type: ::std::os::raw::c_short,
     pub l_whence: ::std::os::raw::c_short,
@@ -3521,7 +3581,7 @@ fn bindgen_test_layout_flock() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct stat {
     pub st_dev: __dev_t,
     pub st_ino: __ino_t,
@@ -3781,6 +3841,11 @@ fn bindgen_test_layout_iovec() {
         )
     );
 }
+impl Default for iovec {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn readv(
         __fd: ::std::os::raw::c_int,
@@ -3823,7 +3888,7 @@ pub const __socket_type_SOCK_NONBLOCK: __socket_type = 2048;
 pub type __socket_type = ::std::os::raw::c_uint;
 pub type sa_family_t = ::std::os::raw::c_ushort;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sockaddr {
     pub sa_family: sa_family_t,
     pub sa_data: [::std::os::raw::c_char; 14usize],
@@ -3910,6 +3975,11 @@ fn bindgen_test_layout_sockaddr_storage() {
             stringify!(__ss_align)
         )
     );
+}
+impl Default for sockaddr_storage {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub const MSG_OOB: ::std::os::raw::c_uint = 1;
 pub const MSG_PEEK: ::std::os::raw::c_uint = 2;
@@ -4025,8 +4095,13 @@ fn bindgen_test_layout_msghdr() {
         )
     );
 }
+impl Default for msghdr {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct cmsghdr {
     pub cmsg_len: size_t,
     pub cmsg_level: ::std::os::raw::c_int,
@@ -4052,7 +4127,7 @@ extern "C" {
 pub const SCM_RIGHTS: ::std::os::raw::c_uint = 1;
 pub type _bindgen_ty_5 = ::std::os::raw::c_uint;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct linger {
     pub l_onoff: ::std::os::raw::c_int,
     pub l_linger: ::std::os::raw::c_int,
@@ -4091,7 +4166,7 @@ fn bindgen_test_layout_linger() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct osockaddr {
     pub sa_family: ::std::os::raw::c_ushort,
     pub sa_data: [::std::os::raw::c_uchar; 14usize],
@@ -4290,7 +4365,7 @@ pub type intmax_t = ::std::os::raw::c_long;
 pub type uintmax_t = ::std::os::raw::c_ulong;
 pub type in_addr_t = u32;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct in_addr {
     pub s_addr: in_addr_t,
 }
@@ -4356,8 +4431,13 @@ fn bindgen_test_layout_ip_opts() {
         )
     );
 }
+impl Default for ip_opts {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ip_mreqn {
     pub imr_multiaddr: in_addr,
     pub imr_address: in_addr,
@@ -4407,7 +4487,7 @@ fn bindgen_test_layout_ip_mreqn() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct in_pktinfo {
     pub ipi_ifindex: ::std::os::raw::c_int,
     pub ipi_spec_dst: in_addr,
@@ -4581,6 +4661,11 @@ fn bindgen_test_layout_in6_addr__bindgen_ty_1() {
         )
     );
 }
+impl Default for in6_addr__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[test]
 fn bindgen_test_layout_in6_addr() {
     assert_eq!(
@@ -4604,6 +4689,11 @@ fn bindgen_test_layout_in6_addr() {
         )
     );
 }
+impl Default for in6_addr {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub static in6addr_any: in6_addr;
 }
@@ -4611,7 +4701,7 @@ extern "C" {
     pub static in6addr_loopback: in6_addr;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sockaddr_in {
     pub sin_family: sa_family_t,
     pub sin_port: in_port_t,
@@ -4743,8 +4833,13 @@ fn bindgen_test_layout_sockaddr_in6() {
         )
     );
 }
+impl Default for sockaddr_in6 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ip_mreq {
     pub imr_multiaddr: in_addr,
     pub imr_interface: in_addr,
@@ -4783,7 +4878,7 @@ fn bindgen_test_layout_ip_mreq() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ip_mreq_source {
     pub imr_multiaddr: in_addr,
     pub imr_interface: in_addr,
@@ -4871,6 +4966,11 @@ fn bindgen_test_layout_ipv6_mreq() {
         )
     );
 }
+impl Default for ipv6_mreq {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct group_req {
@@ -4909,6 +5009,11 @@ fn bindgen_test_layout_group_req() {
             stringify!(gr_group)
         )
     );
+}
+impl Default for group_req {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -4960,8 +5065,13 @@ fn bindgen_test_layout_group_source_req() {
         )
     );
 }
+impl Default for group_source_req {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ip_msfilter {
     pub imsf_multiaddr: in_addr,
     pub imsf_interface: in_addr,
@@ -5103,6 +5213,11 @@ fn bindgen_test_layout_group_filter() {
             stringify!(gf_slist)
         )
     );
+}
+impl Default for group_filter {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn ntohl(__netlong: u32) -> u32;
@@ -5255,6 +5370,11 @@ fn bindgen_test_layout_rpcent() {
         )
     );
 }
+impl Default for rpcent {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn setrpcent(__stayopen: ::std::os::raw::c_int);
 }
@@ -5357,6 +5477,11 @@ fn bindgen_test_layout_netent() {
         )
     );
 }
+impl Default for netent {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn __h_errno_location() -> *mut ::std::os::raw::c_int;
 }
@@ -5437,6 +5562,11 @@ fn bindgen_test_layout_hostent() {
             stringify!(h_addr_list)
         )
     );
+}
+impl Default for hostent {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn sethostent(__stay_open: ::std::os::raw::c_int);
@@ -5611,6 +5741,11 @@ fn bindgen_test_layout_servent() {
         )
     );
 }
+impl Default for servent {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn setservent(__stay_open: ::std::os::raw::c_int);
 }
@@ -5709,6 +5844,11 @@ fn bindgen_test_layout_protoent() {
             stringify!(p_proto)
         )
     );
+}
+impl Default for protoent {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn setprotoent(__stay_open: ::std::os::raw::c_int);
@@ -5971,6 +6111,11 @@ fn bindgen_test_layout_addrinfo() {
         )
     );
 }
+impl Default for addrinfo {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn getaddrinfo(
         __name: *const ::std::os::raw::c_char,
@@ -5997,7 +6142,7 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct winsize {
     pub ws_row: ::std::os::raw::c_ushort,
     pub ws_col: ::std::os::raw::c_ushort,
@@ -6058,7 +6203,7 @@ fn bindgen_test_layout_winsize() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct termio {
     pub c_iflag: ::std::os::raw::c_ushort,
     pub c_oflag: ::std::os::raw::c_ushort,
@@ -6314,7 +6459,7 @@ pub struct WOLFSSL_ASN1_BIT_STRING {
 }
 pub type WOLFSSL_BUF_MEM = *mut ::std::os::raw::c_uchar;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WOLFSSL_ASN1_INTEGER {
     pub data: [::std::os::raw::c_uchar; 20usize],
 }
@@ -6369,13 +6514,18 @@ fn bindgen_test_layout_WOLFSSL_ASN1_TIME() {
         )
     );
 }
+impl Default for WOLFSSL_ASN1_TIME {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct WOLFSSL_EVP_PKEY {
     _unused: [u8; 0],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WOLFSSL_MD4_CTX {
     pub buffer: [::std::os::raw::c_int; 32usize],
 }
@@ -6403,7 +6553,7 @@ fn bindgen_test_layout_WOLFSSL_MD4_CTX() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WOLFSSL_COMP_METHOD {
     pub type_: ::std::os::raw::c_int,
 }
@@ -6431,7 +6581,7 @@ fn bindgen_test_layout_WOLFSSL_COMP_METHOD() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WOLFSSL_X509_LOOKUP_METHOD {
     pub type_: ::std::os::raw::c_int,
 }
@@ -6488,6 +6638,11 @@ fn bindgen_test_layout_WOLFSSL_X509_LOOKUP() {
         )
     );
 }
+impl Default for WOLFSSL_X509_LOOKUP {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct WOLFSSL_X509_STORE {
@@ -6538,8 +6693,13 @@ fn bindgen_test_layout_WOLFSSL_X509_STORE() {
         )
     );
 }
+impl Default for WOLFSSL_X509_STORE {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WOLFSSL_ALERT {
     pub code: ::std::os::raw::c_int,
     pub level: ::std::os::raw::c_int,
@@ -6578,7 +6738,7 @@ fn bindgen_test_layout_WOLFSSL_ALERT() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WOLFSSL_ALERT_HISTORY {
     pub last_rx: WOLFSSL_ALERT,
     pub last_tx: WOLFSSL_ALERT,
@@ -6646,6 +6806,11 @@ fn bindgen_test_layout_WOLFSSL_X509_REVOKED() {
         )
     );
 }
+impl Default for WOLFSSL_X509_REVOKED {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct WOLFSSL_X509_OBJECT {
@@ -6711,6 +6876,11 @@ fn bindgen_test_layout_WOLFSSL_X509_OBJECT__bindgen_ty_1() {
         )
     );
 }
+impl Default for WOLFSSL_X509_OBJECT__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[test]
 fn bindgen_test_layout_WOLFSSL_X509_OBJECT() {
     assert_eq!(
@@ -6733,6 +6903,11 @@ fn bindgen_test_layout_WOLFSSL_X509_OBJECT() {
             stringify!(data)
         )
     );
+}
+impl Default for WOLFSSL_X509_OBJECT {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -6772,6 +6947,11 @@ fn bindgen_test_layout_WOLFSSL_BUFFER_INFO() {
             stringify!(length)
         )
     );
+}
+impl Default for WOLFSSL_BUFFER_INFO {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -6919,6 +7099,11 @@ fn bindgen_test_layout_WOLFSSL_X509_STORE_CTX() {
             stringify!(certs)
         )
     );
+}
+impl Default for WOLFSSL_X509_STORE_CTX {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type WOLFSSL_STRING = *mut ::std::os::raw::c_char;
 pub const AlertDescription_close_notify: AlertDescription = 0;
@@ -8522,6 +8707,11 @@ fn bindgen_test_layout___mbstate_t__bindgen_ty_1() {
         )
     );
 }
+impl Default for __mbstate_t__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[test]
 fn bindgen_test_layout___mbstate_t() {
     assert_eq!(
@@ -8554,6 +8744,11 @@ fn bindgen_test_layout___mbstate_t() {
             stringify!(__value)
         )
     );
+}
+impl Default for __mbstate_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -8594,6 +8789,11 @@ fn bindgen_test_layout__G_fpos_t() {
         )
     );
 }
+impl Default for _G_fpos_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct _G_fpos64_t {
@@ -8632,6 +8832,11 @@ fn bindgen_test_layout__G_fpos64_t() {
             stringify!(__state)
         )
     );
+}
+impl Default for _G_fpos64_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type va_list = __builtin_va_list;
 pub type __gnuc_va_list = __builtin_va_list;
@@ -8690,6 +8895,11 @@ fn bindgen_test_layout__IO_marker() {
             stringify!(_pos)
         )
     );
+}
+impl Default for _IO_marker {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub const __codecvt_result___codecvt_ok: __codecvt_result = 0;
 pub const __codecvt_result___codecvt_partial: __codecvt_result = 1;
@@ -9031,6 +9241,11 @@ fn bindgen_test_layout__IO_FILE() {
             stringify!(_unused2)
         )
     );
+}
+impl Default for _IO_FILE {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -9887,6 +10102,12 @@ extern "C" {
         ssl: *mut WOLFSSL,
         dn: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn helloworld_a();
+}
+extern "C" {
+    pub fn helloworld_b();
 }
 extern "C" {
     pub fn wolfSSL_Init() -> ::std::os::raw::c_int;
@@ -11154,7 +11375,7 @@ extern "C" {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
@@ -11182,7 +11403,7 @@ fn bindgen_test_layout_sched_param() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __sched_param {
     pub __sched_priority: ::std::os::raw::c_int,
 }
@@ -11211,7 +11432,7 @@ fn bindgen_test_layout___sched_param() {
 }
 pub type __cpu_mask = ::std::os::raw::c_ulong;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct cpu_set_t {
     pub __bits: [__cpu_mask; 16usize],
 }
@@ -11413,8 +11634,13 @@ fn bindgen_test_layout_tm() {
         )
     );
 }
+impl Default for tm {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct itimerspec {
     pub it_interval: timespec,
     pub it_value: timespec,
@@ -11548,6 +11774,11 @@ fn bindgen_test_layout___locale_struct() {
             stringify!(__names)
         )
     );
+}
+impl Default for __locale_struct {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type __locale_t = *mut __locale_struct;
 pub type locale_t = __locale_t;
@@ -11780,6 +12011,11 @@ fn bindgen_test_layout__pthread_cleanup_buffer() {
         )
     );
 }
+impl Default for _pthread_cleanup_buffer {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub const PTHREAD_CANCEL_ENABLE: ::std::os::raw::c_uint = 0;
 pub const PTHREAD_CANCEL_DISABLE: ::std::os::raw::c_uint = 1;
 pub type _bindgen_ty_28 = ::std::os::raw::c_uint;
@@ -11981,7 +12217,7 @@ pub struct __pthread_unwind_buf_t {
     pub __pad: [*mut ::std::os::raw::c_void; 4usize],
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __pthread_unwind_buf_t__bindgen_ty_1 {
     pub __cancel_jmp_buf: __jmp_buf,
     pub __mask_was_saved: ::std::os::raw::c_int,
@@ -12066,6 +12302,11 @@ fn bindgen_test_layout___pthread_unwind_buf_t() {
         )
     );
 }
+impl Default for __pthread_unwind_buf_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __pthread_cleanup_frame {
@@ -12134,6 +12375,11 @@ fn bindgen_test_layout___pthread_cleanup_frame() {
             stringify!(__cancel_type)
         )
     );
+}
+impl Default for __pthread_cleanup_frame {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn __pthread_register_cancel(__buf: *mut __pthread_unwind_buf_t);
@@ -12562,6 +12808,11 @@ fn bindgen_test_layout_dirent() {
         )
     );
 }
+impl Default for dirent {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub const DT_UNKNOWN: ::std::os::raw::c_uint = 0;
 pub const DT_FIFO: ::std::os::raw::c_uint = 1;
 pub const DT_CHR: ::std::os::raw::c_uint = 2;
@@ -12829,6 +13080,11 @@ fn bindgen_test_layout_ReadDirCtx() {
         )
     );
 }
+impl Default for ReadDirCtx {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn wc_ReadDirFirst(
         ctx: *mut ReadDirCtx,
@@ -12867,7 +13123,7 @@ pub union wait {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct wait__bindgen_ty_1 {
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u8>,
 }
@@ -12943,7 +13199,7 @@ impl wait__bindgen_ty_1 {
 }
 #[repr(C)]
 #[repr(align(4))]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct wait__bindgen_ty_2 {
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u8>,
 }
@@ -13044,6 +13300,11 @@ fn bindgen_test_layout_wait() {
         )
     );
 }
+impl Default for wait {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union __WAIT_STATUS {
@@ -13084,8 +13345,13 @@ fn bindgen_test_layout___WAIT_STATUS() {
         )
     );
 }
+impl Default for __WAIT_STATUS {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct div_t {
     pub quot: ::std::os::raw::c_int,
     pub rem: ::std::os::raw::c_int,
@@ -13124,7 +13390,7 @@ fn bindgen_test_layout_div_t() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ldiv_t {
     pub quot: ::std::os::raw::c_long,
     pub rem: ::std::os::raw::c_long,
@@ -13163,7 +13429,7 @@ fn bindgen_test_layout_ldiv_t() {
     );
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct lldiv_t {
     pub quot: ::std::os::raw::c_longlong,
     pub rem: ::std::os::raw::c_longlong,
@@ -13392,6 +13658,11 @@ fn bindgen_test_layout_random_data() {
         )
     );
 }
+impl Default for random_data {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn random_r(__buf: *mut random_data, __result: *mut i32) -> ::std::os::raw::c_int;
 }
@@ -13452,7 +13723,7 @@ extern "C" {
     pub fn lcong48(__param: *mut ::std::os::raw::c_ushort);
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct drand48_data {
     pub __x: [::std::os::raw::c_ushort; 3usize],
     pub __old_x: [::std::os::raw::c_ushort; 3usize],
@@ -14491,6 +14762,11 @@ fn bindgen_test_layout_wc_Sha256() {
         )
     );
 }
+impl Default for wc_Sha256 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn wc_InitSha256(arg1: *mut wc_Sha256) -> ::std::os::raw::c_int;
 }
@@ -14521,7 +14797,7 @@ extern "C" {
     pub fn wc_Sha256Copy(src: *mut wc_Sha256, dst: *mut wc_Sha256) -> ::std::os::raw::c_int;
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct OS_Seed {
     pub fd: ::std::os::raw::c_int,
 }
@@ -14613,6 +14889,11 @@ fn bindgen_test_layout_WC_RNG() {
             stringify!(status)
         )
     );
+}
+impl Default for WC_RNG {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn wc_GenerateSeed(os: *mut OS_Seed, seed: *mut byte, sz: word32) -> ::std::os::raw::c_int;
@@ -14714,6 +14995,11 @@ fn bindgen_test_layout_mp_int() {
             stringify!(dp)
         )
     );
+}
+impl Default for mp_int {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type ltm_prime_callback = ::std::option::Option<
     unsafe extern "C" fn(
@@ -15149,6 +15435,11 @@ fn bindgen_test_layout_DhParams() {
         )
     );
 }
+impl Default for DhParams {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct DhKey {
@@ -15188,6 +15479,11 @@ fn bindgen_test_layout_DhKey() {
             stringify!(heap)
         )
     );
+}
+impl Default for DhKey {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn wc_InitDhKey(key: *mut DhKey) -> ::std::os::raw::c_int;
@@ -15329,6 +15625,11 @@ fn bindgen_test_layout_DsaKey() {
         )
     );
 }
+impl Default for DsaKey {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn wc_InitDsaKey(key: *mut DsaKey) -> ::std::os::raw::c_int;
 }
@@ -15468,6 +15769,11 @@ fn bindgen_test_layout_wc_Sha() {
         )
     );
 }
+impl Default for wc_Sha {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 extern "C" {
     pub fn wc_InitSha(arg1: *mut wc_Sha) -> ::std::os::raw::c_int;
 }
@@ -15584,6 +15890,11 @@ fn bindgen_test_layout_wc_Md5() {
             stringify!(heap)
         )
     );
+}
+impl Default for wc_Md5 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn wc_InitMd5(arg1: *mut wc_Md5) -> ::std::os::raw::c_int;
@@ -15967,6 +16278,11 @@ fn bindgen_test_layout_DNS_entry() {
         )
     );
 }
+impl Default for DNS_entry {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Base_entry {
@@ -16027,6 +16343,11 @@ fn bindgen_test_layout_Base_entry() {
             stringify!(type_)
         )
     );
+}
+impl Default for Base_entry {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -16298,6 +16619,11 @@ fn bindgen_test_layout_DecodedName() {
         )
     );
 }
+impl Default for DecodedName {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub const SignatureState_SIG_STATE_BEGIN: SignatureState = 0;
 pub const SignatureState_SIG_STATE_HASH: SignatureState = 1;
 pub const SignatureState_SIG_STATE_KEY: SignatureState = 2;
@@ -16357,6 +16683,11 @@ fn bindgen_test_layout_SignatureCtx__bindgen_ty_1() {
             stringify!(ptr)
         )
     );
+}
+impl Default for SignatureCtx__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[test]
 fn bindgen_test_layout_SignatureCtx() {
@@ -16471,6 +16802,11 @@ fn bindgen_test_layout_SignatureCtx() {
         )
     );
 }
+impl Default for SignatureCtx {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub const CertSignState_CERTSIGN_STATE_BEGIN: CertSignState = 0;
 pub const CertSignState_CERTSIGN_STATE_DIGEST: CertSignState = 1;
 pub const CertSignState_CERTSIGN_STATE_ENCODE: CertSignState = 2;
@@ -16547,6 +16883,11 @@ fn bindgen_test_layout_CertSignCtx() {
             stringify!(state)
         )
     );
+}
+impl Default for CertSignCtx {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -17194,6 +17535,11 @@ fn bindgen_test_layout_DecodedCert() {
         )
     );
 }
+impl Default for DecodedCert {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct WOLFSSL_ASN1_OBJECT {
@@ -17265,6 +17611,11 @@ fn bindgen_test_layout_WOLFSSL_ASN1_OBJECT() {
             stringify!(dynamic)
         )
     );
+}
+impl Default for WOLFSSL_ASN1_OBJECT {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub static mut BEGIN_CERT: *const ::std::os::raw::c_char;
@@ -17497,6 +17848,11 @@ fn bindgen_test_layout_Signer() {
             stringify!(next)
         )
     );
+}
+impl Default for Signer {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 extern "C" {
     pub fn FreeAltNames(arg1: *mut DNS_entry, arg2: *mut ::std::os::raw::c_void);
@@ -17885,6 +18241,11 @@ fn bindgen_test_layout_attestation_verification_report_t() {
         )
     );
 }
+impl Default for attestation_verification_report_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub const rsa_3072_der_len: ::std::os::raw::c_int = 1766;
 pub const rsa_pub_3072_pcks_der_len: ::std::os::raw::c_int = 422;
 pub const rsa_pub_3072_pcks_header_len: ::std::os::raw::c_int = 24;
@@ -18125,8 +18486,13 @@ fn bindgen_test_layout_ecdsa_attestation_evidence_t() {
         )
     );
 }
+impl Default for ecdsa_attestation_evidence_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _attributes_t {
     pub flags: u64,
     pub xfrm: u64,
@@ -18167,7 +18533,7 @@ fn bindgen_test_layout__attributes_t() {
 pub type sgx_attributes_t = _attributes_t;
 pub type sgx_misc_select_t = u32;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _sgx_misc_attribute_t {
     pub secs_attr: sgx_attributes_t,
     pub misc_select: sgx_misc_select_t,
@@ -18213,7 +18579,7 @@ pub type sgx_isv_svn_t = u16;
 pub type sgx_config_svn_t = u16;
 pub type sgx_config_id_t = [u8; 64usize];
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _sgx_cpu_svn_t {
     pub svn: [u8; 16usize],
 }
@@ -18242,7 +18608,7 @@ fn bindgen_test_layout__sgx_cpu_svn_t() {
 }
 pub type sgx_cpu_svn_t = _sgx_cpu_svn_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _sgx_key_id_t {
     pub id: [u8; 32usize],
 }
@@ -18397,9 +18763,14 @@ fn bindgen_test_layout__key_request_t() {
         )
     );
 }
+impl Default for _key_request_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_key_request_t = _key_request_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _sgx_measurement_t {
     pub m: [u8; 32usize],
 }
@@ -18455,6 +18826,11 @@ fn bindgen_test_layout__sgx_report_data_t() {
             stringify!(d)
         )
     );
+}
+impl Default for _sgx_report_data_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type sgx_report_data_t = _sgx_report_data_t;
 pub type sgx_prod_id_t = u16;
@@ -18564,6 +18940,11 @@ fn bindgen_test_layout__target_info_t() {
             stringify!(reserved3)
         )
     );
+}
+impl Default for _target_info_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type sgx_target_info_t = _target_info_t;
 #[repr(C)]
@@ -18759,6 +19140,11 @@ fn bindgen_test_layout__report_body_t() {
         )
     );
 }
+impl Default for _report_body_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_report_body_t = _report_body_t;
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -18810,10 +19196,15 @@ fn bindgen_test_layout__report_t() {
         )
     );
 }
+impl Default for _report_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_report_t = _report_t;
 pub type sgx_epid_group_id_t = [u8; 4usize];
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _spid_t {
     pub id: [u8; 16usize],
 }
@@ -18842,7 +19233,7 @@ fn bindgen_test_layout__spid_t() {
 }
 pub type sgx_spid_t = _spid_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _basename_t {
     pub name: [u8; 32usize],
 }
@@ -18871,7 +19262,7 @@ fn bindgen_test_layout__basename_t() {
 }
 pub type sgx_basename_t = _basename_t;
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _quote_nonce {
     pub rand: [u8; 16usize],
 }
@@ -18928,6 +19319,11 @@ fn bindgen_test_layout__quote_t() {
         concat!("Alignment of ", stringify!(_quote_t))
     );
 }
+impl Default for _quote_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_quote_t = _quote_t;
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -18957,9 +19353,14 @@ fn bindgen_test_layout__platform_info() {
         )
     );
 }
+impl Default for _platform_info {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_platform_info_t = _platform_info;
 #[repr(C, packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct _update_info_bit {
     pub ucodeUpdate: ::std::os::raw::c_int,
     pub csmeFwUpdate: ::std::os::raw::c_int,
@@ -19036,6 +19437,11 @@ fn bindgen_test_layout__att_key_id_t() {
             stringify!(att_key_id)
         )
     );
+}
+impl Default for _att_key_id_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type sgx_att_key_id_t = _att_key_id_t;
 #[repr(C, packed)]
@@ -19160,6 +19566,11 @@ fn bindgen_test_layout__sgx_ql_att_key_id_t() {
         )
     );
 }
+impl Default for _sgx_ql_att_key_id_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_ql_att_key_id_t = _sgx_ql_att_key_id_t;
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
@@ -19224,6 +19635,11 @@ fn bindgen_test_layout__sgx_att_key_id_ext_t() {
         )
     );
 }
+impl Default for _sgx_att_key_id_ext_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 pub type sgx_att_key_id_ext_t = _sgx_att_key_id_ext_t;
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
@@ -19277,6 +19693,11 @@ fn bindgen_test_layout__qe_report_info_t() {
             stringify!(qe_report)
         )
     );
+}
+impl Default for _qe_report_info_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
 pub type sgx_qe_report_info_t = _qe_report_info_t;
 #[repr(C)]
@@ -19340,8 +19761,13 @@ fn bindgen_test_layout_ra_tls_options() {
         )
     );
 }
+impl Default for ra_tls_options {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct ecdsa_ra_tls_options {
     pub subscription_key: [::std::os::raw::c_char; 32usize],
 }
@@ -19444,8 +19870,13 @@ fn bindgen_test_layout___va_list_tag() {
         )
     );
 }
+impl Default for __va_list_tag {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct __locale_data {
     pub _address: u8,
 }
