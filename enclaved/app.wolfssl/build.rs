@@ -22,6 +22,15 @@ fn main() {
     let wolfssl_bindings = bindgen::Builder::default().disable_name_namespacing()
         .rust_target(bindgen::RustTarget::Nightly)
         .raw_line("// Generated wolfssl trusted codes.")
+        .clang_args(
+            [
+                "-I/opt/intel/sgxsdk/include",
+                "-I../rust-sgx/edl",
+                "-I../../ra-tls/wolfssl",
+                "-I../../ra-tls/sgx-ra-tls",
+            ]
+            .iter(),
+        )
         .header("wrapper.h")
         .blacklist_item("IPPORT_RESERVED")
         .blacklist_item("EXTERNAL_SERIAL_SIZE")
