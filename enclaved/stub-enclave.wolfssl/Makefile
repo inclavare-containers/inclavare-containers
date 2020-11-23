@@ -26,4 +26,5 @@ test:
 
 clean:
 	@cargo clean
+	@rm -f Enclave_t.o enclave.so
 
