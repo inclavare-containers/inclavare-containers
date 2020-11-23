@@ -23,6 +23,7 @@ enclave {
     from "sgx_net.edl" import *;
     from "sgx_time.edl" import *;
     from "sgx_tstdc.edl" import *;
+    from "sgx_env.edl" import *;
 
     include "sgx_quote.h"
 

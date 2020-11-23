@@ -16,10 +16,12 @@ use sgx_tstd::{
     env,
     os::unix::ffi::OsStrExt,
 };
-use crate::ratls::ffi as ratlsffi;
 use std::ptr::slice_from_raw_parts;
-use crate::ratls::ffi::ra_tls_create_report;
 use std::ffi::OsString;
+
+use crate::ratls::ffi as ratlsffi;
+use crate::ratls::hex;
+use crate::ratls::ffi::sgx_spid_t;
 
 extern "C" {
     pub fn ocall_low_res_time() -> c_int;
@@ -300,8 +302,7 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
             rsgx_abort();
         }
     };
-    let mut spid: [u8; 16] = Default::default();
-    spid.copy_from_slice(&spidstr.as_bytes()[..16]);
+    let spid = hex::decode_spid(spidstr.to_str().unwrap());
 
     let mut quote_type = ratlsffi::sgx_quote_sign_type_t_SGX_UNLINKABLE_SIGNATURE; // default
     env::var_os("QUOTE_TYPE").and_then(|x| -> Option<OsString> {
@@ -312,9 +313,7 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
     });
 
     let mut opt = ratlsffi::ra_tls_options {
-        spid: ratlsffi::sgx_spid_t {
-            id: spid,
-        },
+        spid: spid,
         quote_type: quote_type,
         ias_server,
         subscription_key,

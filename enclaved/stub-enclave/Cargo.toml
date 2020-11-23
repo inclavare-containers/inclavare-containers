@@ -31,15 +31,15 @@ itertools = { version = "0.8" , default-features = false, features = []}
 webpki-roots= { git = "https://github.com/mesalock-linux/webpki-roots.git", branch = "mesalock_sgx" }
 lazy_static = { version = "*", default-features = false, features = ["spin_no_std"] }
 ring = { git = "https://github.com/mesalock-linux/ring-sgx", tag = "v0.16.5" }
-num_bigint = { git = "https://github.com/mesalock-linux/num-bigint-sgx", version = "0.2" }
+#num_bigint = { git = "https://github.com/mesalock-linux/num-bigint-sgx", version = "0.2" }
 
 [dependencies.rustls]
 git = "https://github.com/mesalock-linux/rustls"
 branch = "mesalock_sgx"
 features = ["dangerous_configuration"]
 
-[patch.'https://github.com/mesalock-linux/rustls']
-rustls = { path = "../rustls" }
+#[patch.'https://github.com/mesalock-linux/rustls']
+#rustls = { path = "../rustls" }
 
 [patch.'https://github.com/apache/teaclave-sgx-sdk.git']
 sgx_alloc = { path = "../rust-sgx/sgx_alloc" }
@@ -65,6 +65,6 @@ sgx_tseal = { path = "../rust-sgx/sgx_tseal" }
 sgx_tstd = { path = "../rust-sgx/sgx_tstd" }
 sgx_tunittest = { path = "../rust-sgx/sgx_tunittest" }
 sgx_types = { path = "../rust-sgx/sgx_types" }
-#sgx_ucrypto = { path = "../rust-sgx/sgx_ucrypto" }
 sgx_unwind = { path = "../rust-sgx/sgx_unwind" }
+#sgx_ucrypto = { path = "../rust-sgx/sgx_ucrypto" }
 #sgx_urts = { path = "../rust-sgx/sgx_urts" }
