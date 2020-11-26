@@ -142,6 +142,14 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 				Major: 10,
 			},
 		}
+	case enclaveConfigs.EnclaveTypeJailHouse:
+		return []*configs.Device{
+			&configs.Device{
+				Type:  'c',
+				Path:  "/dev/jailhouse",
+				Major: 10,
+			},
+		}
 	default:
 		return nil
 	}
@@ -162,6 +170,8 @@ func genEnclavePathTemplate(etype string) []string {
 		return []string{"/dev/isgx", "/dev/sgx/enclave", "/dev/gsgx"}
 	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
 		return []string{"/dev/nitro_enclaves"}
+	case enclaveConfigs.EnclaveTypeJailHouse:
+		return []string{"/dev/jailhouse"}
 	default:
 		return nil
 	}
@@ -175,6 +185,8 @@ func CreateEnclaveDeviceConfig(devices *[]*configs.Device, etype string) {
 		mode = 0666
 	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
 		mode = 0660
+	case enclaveConfigs.EnclaveTypeJailHouse:
+		mode = 0666
 	default:
 		return
 	}
