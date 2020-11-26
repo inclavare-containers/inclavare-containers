@@ -20,6 +20,7 @@ const (
 	EnclaveTypeNone             string = ""
 	EnclaveTypeIntelSgx         string = "intelSgx"
 	EnclaveTypeAwsNitroEnclaves string = "AwsNitroEnclaves"
+	EnclaveTypeJailHouse        string = "Jailhouse"
 )
 
 type Enclave struct {

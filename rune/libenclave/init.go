@@ -3,6 +3,7 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 import (
 	"github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
+	"github.com/inclavare-containers/rune/libenclave/jailhouse"
 	"github.com/inclavare-containers/rune/libenclave/nitroenclaves"
 	"net"
 	"os/user"
@@ -43,5 +44,7 @@ func init() {
 		enclaveType = configs.EnclaveTypeIntelSgx
 	} else if nitroenclaves.IsNitroEnclaves() {
 		enclaveType = configs.EnclaveTypeAwsNitroEnclaves
+	} else if jailhouse.IsJailHouseSupported() {
+		enclaveType = configs.EnclaveTypeJailHouse
 	}
 }
