@@ -1,3 +1,9 @@
+rune (0.5.0-2) unstable; urgency=low
+
+  * Drop unnecessary dependency.
+
+ -- Shirong Hao <shirong@linux.alibaba.com>  Thu, 26 Nov 2020 13:48:35 +0000
+
 rune (0.5.0-1) unstable; urgency=low
 
   * Update to version 0.5.0.
