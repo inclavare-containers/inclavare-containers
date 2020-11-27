@@ -177,22 +177,17 @@ Please refer to [this guide](docs/running_rune_with_pouch_and_occlum.md) to run 
 
 # Deployment
 
-Inclavare Containers can be deployed with dockerd, containerd, and pouchd.
+Inclavare Containers can be deployed with Occlum LibOS and WebAssembly Micro Runtime (WAMR).
 
-## dockerd
-
-### Occlum LibOS
+## Occlum LibOS
 
 Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to run [Occlum](https://github.com/occlum/occlum) with `rune` and docker.
 
-### WebAssembly Micro Runtime (WAMR)
+Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_kubernetes_cluster.md) to deploy an enclave container in a Kubernetes cluster. Currently, [Hello-world application image](https://hub.docker.com/r/inclavarecontainers/occlum-hello-world) and web application images based on [OpenJDK 11](https://hub.docker.com/r/inclavarecontainers/occlum-java-web), [Dragonwell](https://hub.docker.com/r/inclavarecontainers/occlum-dragonwell-web), and [Golang](https://hub.docker.com/r/inclavarecontainers/occlum-golang-web) are provided. These images don't contain enclave runtime. They are only used for the deployment with containerd.
+
+
+## WebAssembly Micro Runtime (WAMR)
 
 Please refer to [this guide](https://github.com/bytecodealliance/wasm-micro-runtime/tree/main/product-mini/platforms/linux-sgx/enclave-sample/App#wamr-as-an-enclave-runtime-for-rune) to run [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) with `rune`.
 
-## containerd
-
-Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_kubernetes_cluster.md) to deploy an enclave container in a Kubernetes cluster.
-
-[The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11, [Dragonwell](http://dragonwell-jdk.io/), and Golang are provided.
-
-**All reference container images don't contain enclave runtime. They are only used for the deployment with containerd.**
+[WebAssembly Micro Runtime (WAMR) application image](https://hub.docker.com/r/inclavarecontainers/enclave-wamr/tags) is provided. WAMR image contains enclave runtime, because it doesn't adapt to shim-rune and use off-cloud signing. It is only used for the deployment with dockerd.
