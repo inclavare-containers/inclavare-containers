@@ -5,9 +5,9 @@
 %global BIN_DIR /usr/local/bin
 
 Name: rune
-Version: 0.5.0
+Version: 0.5.1
 Release: %{centos_base_release}%{?dist}
-Summary: CLI tool for spawning and running enclaves in containers according to the OCI specification.  
+Summary: CLI tool for spawning and running enclaves in containers according to the OCI specification.
 
 Group: Development/Tools
 License: Apache License 2.0
@@ -18,7 +18,7 @@ BuildRequires: libseccomp-devel
 ExclusiveArch: x86_64
 
 %description
-rune is a CLI tool for spawning and running enclaves in containers according to the OCI specification. The codebase of rune is a fork of runc, so rune can be used as runc if enclave is not configured or available.
+rune is a CLI tool for spawning and running enclaves in containers according to the OCI specification.
 
 %prep
 %setup -q -n %{PROJECT}-%{version}
@@ -56,6 +56,9 @@ install -p -m 644 %{name}/LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{ve
 %{BIN_DIR}/%{name}
 
 %changelog
+* Mon Nov 30 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.5.1
+- Update to version 0.5.1
+
 * Sat Nov 21 2020 Yilin Li <YiLin.Li@linux.alibaba.com> - 0.5.0-1
 - Drop unnecessary dependency.
 
