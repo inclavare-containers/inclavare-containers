@@ -173,6 +173,8 @@ You can check whether `rune` is correctly enabled or not with:
 pouch info | grep rune
 ```
 
+Please refer to [this guide](docs/running_rune_with_pouch_and_occlum.md) to run `rune` with `pouchd`.
+
 # Deployment
 
 Inclavare Containers can be deployed with dockerd, containerd, and pouchd.
@@ -194,31 +196,3 @@ Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_
 [The reference container images](https://hub.docker.com/u/inclavarecontainers) are available for the demonstration purpose to show how a Confidential Computing Kubernetes Cluster with Inclavare Containers works. Currently, web application demos based on OpenJDK 11, [Dragonwell](http://dragonwell-jdk.io/), and Golang are provided.
 
 **All reference container images don't contain enclave runtime. They are only used for the deployment with containerd.**
-
-## pouchd
-
-Please refer to [this guide](https://github.com/alibaba/pouch/blob/master/INSTALLATION.md) to install pouch and refer to [this guide](https://github.com/alibaba/inclavare-containers#pouchd) to configure the runtime of pouchd.
-
-### pouch + pouchd + rune
-
-#### Occlum LibOS
-
-Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to build your Occlum container image. Then run pouch with Occlum container images refer to
-
-```shell
-pouch run -it --rm --runtime=rune \
-  -e ENCLAVE_TYPE=intelSgx \
-  -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
-  -e ENCLAVE_RUNTIME_ARGS=occlum_instance \
-  occlum-app
-```
-
-In addition, pouch supports to configure annotation` options to run container image. You can run pouch with annotations instead of environment variables.
-
-```shell
-pouch run -it --rm --runtime=rune \
-  --annotation "enclave.type=intelSgx" \
-  --annotation "enclave.runtime.path=/opt/occlum/build/lib/libocclum-pal.so" \
-  --annotation "enclave.runtime.args=occlum_instance" \
-  occlum-app
-```
