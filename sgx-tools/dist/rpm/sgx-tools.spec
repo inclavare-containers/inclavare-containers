@@ -1,11 +1,11 @@
-%define centos_base_release 2
+%define centos_base_release 1
 %define _debugsource_template %{nil}
 
 %global PROJECT inclavare-containers
 %global BIN_DIR /usr/local/bin
 
 Name: sgx-tools
-Version: 0.5.0
+Version: 0.5.1
 Release: %{centos_base_release}%{?dist}
 Summary: sgx-tools is a commandline tool, used to interact Intel SGx aesm service.
 
@@ -51,6 +51,9 @@ install -p -m 755 %{name}/%{name} %{buildroot}%{BIN_DIR}
 %{BIN_DIR}/%{name}
 
 %changelog
+* Mon Nov 30 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.5.1
+- Update to version 0.5.1
+
 * Tue Nov 24 2020 Yilin Li <YiLin.Li@linux.alibaba.com> - 0.5.0-2
 - Drop unnecessary dependency
 
