@@ -165,15 +165,6 @@ Assuming you have an OCI bundle according to previous steps, please add config i
                 "rbind",
                 "rprivate"
         ]
-},
-{
-        "destination": "/var/run/sock/",
-        "type": "bind",
-        "source": "/var/run/sock/",
-        "options": [
-                "rbind",
-                "rprivate"
-        ]
 }
 
 "annotations": {
