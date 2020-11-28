@@ -74,18 +74,18 @@
  * @memory_size:	Size of the user space memory region.
  */
 struct ne_user_mem_region {
-	void	*userspace_addr;
-	size_t	memory_size;
+	void *userspace_addr;
+	size_t memory_size;
 };
 
 /**
  * Global Variable
  */
-char* eif_image = NULL;
+char *eif_image = NULL;
 int enclave_fd = -1;
 unsigned int ne_vcpu_nums = NE_DEFAULT_NR_VCPUS;
 unsigned int ne_mem_regions = NE_DEFAULT_NR_MEM_REGIONS;
-struct ne_user_mem_region ne_user_mem_regions[NE_DEFAULT_NR_MEM_REGIONS] = {};
+struct ne_user_mem_region ne_user_mem_regions[NE_DEFAULT_NR_MEM_REGIONS] = { };
 
 /**
  * ne_create_vm() - Create a slot for the enclave VM.
@@ -106,11 +106,11 @@ static int ne_create_vm(int ne_dev_fd, unsigned long *slot_uid, int *enclave_fd)
 	if (*enclave_fd < 0) {
 		rc = *enclave_fd;
 		switch (errno) {
-		case NE_ERR_NO_CPUS_AVAIL_IN_POOL: {
-			printf("Error in create VM, no CPUs available in the NE CPU pool\n");
+		case NE_ERR_NO_CPUS_AVAIL_IN_POOL:{
+				printf("Error in create VM, no CPUs available in the NE CPU pool\n");
 
-			break;
-		}
+				break;
+			}
 
 		default:
 			printf("Error in create VM [%m]\n");
@@ -122,7 +122,6 @@ static int ne_create_vm(int ne_dev_fd, unsigned long *slot_uid, int *enclave_fd)
 	return 0;
 }
 
-
 /**
  * ne_poll_enclave_fd() - Thread function for polling the enclave fd.
  * @data:	Argument provided for the polling function.
@@ -133,8 +132,8 @@ static int ne_create_vm(int ne_dev_fd, unsigned long *slot_uid, int *enclave_fd)
  */
 void *ne_poll_enclave_fd(void *data)
 {
-	int enclave_fd = *(int *)data;
-	struct pollfd fds[1] = {};
+	int enclave_fd = *(int *) data;
+	struct pollfd fds[1] = { };
 	int i = 0;
 	int rc = -EINVAL;
 
@@ -190,16 +189,18 @@ void *ne_poll_enclave_fd(void *data)
  * * 0 on success.
  * * Negative return value on failure.
  */
-static int ne_alloc_user_mem_region(struct ne_user_mem_region *ne_user_mem_region)
+static int ne_alloc_user_mem_region(struct ne_user_mem_region
+				    *ne_user_mem_region)
 {
 	/**
 	 * Check available hugetlb encodings for different huge page sizes in
 	 * include/uapi/linux/mman.h.
 	 */
-	ne_user_mem_region->userspace_addr = mmap(NULL, ne_user_mem_region->memory_size,
-						  PROT_READ | PROT_WRITE,
-						  MAP_PRIVATE | MAP_ANONYMOUS |
-						  MAP_HUGETLB | MAP_HUGE_2MB, -1, 0);
+	ne_user_mem_region->userspace_addr =
+		mmap(NULL, ne_user_mem_region->memory_size,
+		     PROT_READ | PROT_WRITE,
+		     MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_HUGE_2MB,
+		     -1, 0);
 	if (ne_user_mem_region->userspace_addr == MAP_FAILED) {
 		printf("Error in mmap memory [%m]\n");
 
@@ -220,7 +221,9 @@ static int ne_alloc_user_mem_region(struct ne_user_mem_region *ne_user_mem_regio
  * * 0 on success.
  * * Negative return value on failure.
  */
-static int ne_load_enclave_image(int enclave_fd, struct ne_user_mem_region ne_user_mem_regions[],
+static int ne_load_enclave_image(int enclave_fd,
+				 struct ne_user_mem_region
+				 ne_user_mem_regions[],
 				 char *enclave_image_path)
 {
 	unsigned char *enclave_image = NULL;
@@ -232,7 +235,7 @@ static int ne_load_enclave_image(int enclave_fd, struct ne_user_mem_region ne_us
 	struct ne_image_load_info image_load_info = {
 		.flags = NE_EIF_IMAGE,
 	};
-	struct stat image_stat_buf = {};
+	struct stat image_stat_buf = { };
 	int rc = -EINVAL;
 	size_t temp_image_offset = 0;
 
@@ -257,17 +260,17 @@ static int ne_load_enclave_image(int enclave_fd, struct ne_user_mem_region ne_us
 	rc = ioctl(enclave_fd, NE_GET_IMAGE_LOAD_INFO, &image_load_info);
 	if (rc < 0) {
 		switch (errno) {
-		case NE_ERR_NOT_IN_INIT_STATE: {
-			printf("Error in get image load info, enclave not in init state\n");
+		case NE_ERR_NOT_IN_INIT_STATE:{
+				printf("Error in get image load info, enclave not in init state\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_FLAG_VALUE: {
-			printf("Error in get image load info, provided invalid flag\n");
+		case NE_ERR_INVALID_FLAG_VALUE:{
+				printf("Error in get image load info, provided invalid flag\n");
 
-			break;
-		}
+				break;
+			}
 
 		default:
 			printf("Error in get image load info [%m]\n");
@@ -315,7 +318,7 @@ static int ne_load_enclave_image(int enclave_fd, struct ne_user_mem_region ne_us
 
 		remaining_bytes = enclave_image_size - image_written_bytes;
 		bytes_to_write = memory_size < remaining_bytes ?
-				 memory_size : remaining_bytes;
+			memory_size : remaining_bytes;
 
 		memcpy(userspace_addr + memory_offset,
 		       enclave_image + image_written_bytes, bytes_to_write);
@@ -343,77 +346,78 @@ static int ne_load_enclave_image(int enclave_fd, struct ne_user_mem_region ne_us
  * * 0 on success.
  * * Negative return value on failure.
  */
-static int ne_set_user_mem_region(int enclave_fd, struct ne_user_mem_region ne_user_mem_region)
+static int ne_set_user_mem_region(int enclave_fd,
+				  struct ne_user_mem_region ne_user_mem_region)
 {
 	struct ne_user_memory_region mem_region = {
 		.flags = NE_DEFAULT_MEMORY_REGION,
 		.memory_size = ne_user_mem_region.memory_size,
-		.userspace_addr = (__u64)ne_user_mem_region.userspace_addr,
+		.userspace_addr = (__u64) ne_user_mem_region.userspace_addr,
 	};
 	int rc = -EINVAL;
 
 	rc = ioctl(enclave_fd, NE_SET_USER_MEMORY_REGION, &mem_region);
 	if (rc < 0) {
 		switch (errno) {
-		case NE_ERR_NOT_IN_INIT_STATE: {
-			printf("Error in set user memory region, enclave not in init state\n");
+		case NE_ERR_NOT_IN_INIT_STATE:{
+				printf("Error in set user memory region, enclave not in init state\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_MEM_REGION_SIZE: {
-			printf("Error in set user memory region, mem size not multiple of 2 MiB\n");
+		case NE_ERR_INVALID_MEM_REGION_SIZE:{
+				printf("Error in set user memory region, mem size not multiple of 2 MiB\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_MEM_REGION_ADDR: {
-			printf("Error in set user memory region, invalid user space address\n");
+		case NE_ERR_INVALID_MEM_REGION_ADDR:{
+				printf("Error in set user memory region, invalid user space address\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_UNALIGNED_MEM_REGION_ADDR: {
-			printf("Error in set user memory region, unaligned user space address\n");
+		case NE_ERR_UNALIGNED_MEM_REGION_ADDR:{
+				printf("Error in set user memory region, unaligned user space address\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_MEM_REGION_ALREADY_USED: {
-			printf("Error in set user memory region, memory region already used\n");
+		case NE_ERR_MEM_REGION_ALREADY_USED:{
+				printf("Error in set user memory region, memory region already used\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_MEM_NOT_HUGE_PAGE: {
-			printf("Error in set user memory region, not backed by huge pages\n");
+		case NE_ERR_MEM_NOT_HUGE_PAGE:{
+				printf("Error in set user memory region, not backed by huge pages\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_MEM_DIFFERENT_NUMA_NODE: {
-			printf("Error in set user memory region, different NUMA node than CPUs\n");
+		case NE_ERR_MEM_DIFFERENT_NUMA_NODE:{
+				printf("Error in set user memory region, different NUMA node than CPUs\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_MEM_MAX_REGIONS: {
-			printf("Error in set user memory region, max memory regions reached\n");
+		case NE_ERR_MEM_MAX_REGIONS:{
+				printf("Error in set user memory region, max memory regions reached\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_PAGE_SIZE: {
-			printf("Error in set user memory region, has page not multiple of 2 MiB\n");
+		case NE_ERR_INVALID_PAGE_SIZE:{
+				printf("Error in set user memory region, has page not multiple of 2 MiB\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_FLAG_VALUE: {
-			printf("Error in set user memory region, provided invalid flag\n");
+		case NE_ERR_INVALID_FLAG_VALUE:{
+				printf("Error in set user memory region, provided invalid flag\n");
 
-			break;
-		}
+				break;
+			}
 
 		default:
 			printf("Error in set user memory region [%m]\n");
@@ -459,41 +463,41 @@ static int ne_add_vcpu(int enclave_fd, unsigned int *vcpu_id)
 	rc = ioctl(enclave_fd, NE_ADD_VCPU, vcpu_id);
 	if (rc < 0) {
 		switch (errno) {
-		case NE_ERR_NO_CPUS_AVAIL_IN_POOL: {
-			printf("Error in add vcpu, no CPUs available in the NE CPU pool\n");
+		case NE_ERR_NO_CPUS_AVAIL_IN_POOL:{
+				printf("Error in add vcpu, no CPUs available in the NE CPU pool\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_VCPU_ALREADY_USED: {
-			printf("Error in add vcpu, the provided vCPU is already used\n");
+		case NE_ERR_VCPU_ALREADY_USED:{
+				printf("Error in add vcpu, the provided vCPU is already used\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_VCPU_NOT_IN_CPU_POOL: {
-			printf("Error in add vcpu, the provided vCPU is not in the NE CPU pool\n");
+		case NE_ERR_VCPU_NOT_IN_CPU_POOL:{
+				printf("Error in add vcpu, the provided vCPU is not in the NE CPU pool\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_VCPU_INVALID_CPU_CORE: {
-			printf("Error in add vcpu, the core id of the provided vCPU is invalid\n");
+		case NE_ERR_VCPU_INVALID_CPU_CORE:{
+				printf("Error in add vcpu, the core id of the provided vCPU is invalid\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_NOT_IN_INIT_STATE: {
-			printf("Error in add vcpu, enclave not in init state\n");
+		case NE_ERR_NOT_IN_INIT_STATE:{
+				printf("Error in add vcpu, enclave not in init state\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_VCPU: {
-			printf("Error in add vcpu, the provided vCPU is out of avail CPUs range\n");
+		case NE_ERR_INVALID_VCPU:{
+				printf("Error in add vcpu, the provided vCPU is out of avail CPUs range\n");
 
-			break;
-		}
+				break;
+			}
 
 		default:
 			printf("Error in add vcpu [%m]\n");
@@ -515,54 +519,55 @@ static int ne_add_vcpu(int enclave_fd, unsigned int *vcpu_id)
  * * 0 on success.
  * * Negative return value on failure.
  */
-static int ne_start_enclave(int enclave_fd,  struct ne_enclave_start_info *enclave_start_info)
+static int ne_start_enclave(int enclave_fd,
+			    struct ne_enclave_start_info *enclave_start_info)
 {
 	int rc = -EINVAL;
 
 	rc = ioctl(enclave_fd, NE_START_ENCLAVE, enclave_start_info);
 	if (rc < 0) {
 		switch (errno) {
-		case NE_ERR_NOT_IN_INIT_STATE: {
-			printf("Error in start enclave, enclave not in init state\n");
+		case NE_ERR_NOT_IN_INIT_STATE:{
+				printf("Error in start enclave, enclave not in init state\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_NO_MEM_REGIONS_ADDED: {
-			printf("Error in start enclave, no memory regions have been added\n");
+		case NE_ERR_NO_MEM_REGIONS_ADDED:{
+				printf("Error in start enclave, no memory regions have been added\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_NO_VCPUS_ADDED: {
-			printf("Error in start enclave, no vCPUs have been added\n");
+		case NE_ERR_NO_VCPUS_ADDED:{
+				printf("Error in start enclave, no vCPUs have been added\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_FULL_CORES_NOT_USED: {
-			printf("Error in start enclave, enclave has no full cores set\n");
+		case NE_ERR_FULL_CORES_NOT_USED:{
+				printf("Error in start enclave, enclave has no full cores set\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_ENCLAVE_MEM_MIN_SIZE: {
-			printf("Error in start enclave, enclave memory is less than min size\n");
+		case NE_ERR_ENCLAVE_MEM_MIN_SIZE:{
+				printf("Error in start enclave, enclave memory is less than min size\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_FLAG_VALUE: {
-			printf("Error in start enclave, provided invalid flag\n");
+		case NE_ERR_INVALID_FLAG_VALUE:{
+				printf("Error in start enclave, provided invalid flag\n");
 
-			break;
-		}
+				break;
+			}
 
-		case NE_ERR_INVALID_ENCLAVE_CID: {
-			printf("Error in start enclave, provided invalid enclave CID\n");
+		case NE_ERR_INVALID_ENCLAVE_CID:{
+				printf("Error in start enclave, provided invalid enclave CID\n");
 
-			break;
-		}
+				break;
+			}
 
 		default:
 			printf("Error in start enclave [%m]\n");
@@ -587,11 +592,11 @@ static int ne_start_enclave(int enclave_fd,  struct ne_enclave_start_info *encla
  */
 static int ne_start_enclave_check_booted(int enclave_fd)
 {
-	struct sockaddr_vm client_vsock_addr = {};
+	struct sockaddr_vm client_vsock_addr = { };
 	int client_vsock_fd = -1;
 	socklen_t client_vsock_len = sizeof(client_vsock_addr);
-	struct ne_enclave_start_info enclave_start_info = {};
-	struct pollfd fds[1] = {};
+	struct ne_enclave_start_info enclave_start_info = { };
+	struct pollfd fds[1] = { };
 	int rc = -EINVAL;
 	unsigned char recv_buf = 0;
 	struct sockaddr_vm server_vsock_addr = {
@@ -610,7 +615,7 @@ static int ne_start_enclave_check_booted(int enclave_fd)
 		return rc;
 	}
 
-	rc = bind(server_vsock_fd, (struct sockaddr *)&server_vsock_addr,
+	rc = bind(server_vsock_fd, (struct sockaddr *) &server_vsock_addr,
 		  sizeof(server_vsock_addr));
 	if (rc < 0) {
 		printf("Error in bind [%m]\n");
@@ -657,7 +662,7 @@ static int ne_start_enclave_check_booted(int enclave_fd)
 		goto out;
 	}
 
-	rc = accept(server_vsock_fd, (struct sockaddr *)&client_vsock_addr,
+	rc = accept(server_vsock_fd, (struct sockaddr *) &client_vsock_addr,
 		    &client_vsock_len);
 	if (rc < 0) {
 		printf("Error in accept [%m]\n");
@@ -797,13 +802,14 @@ release_enclave_fd:
 int pal_create_process(struct pal_create_process_args *args)
 {
 	pthread_t thread_id = 0;
-	unsigned int ne_vcpus[NE_DEFAULT_NR_VCPUS] = {};
+	unsigned int ne_vcpus[NE_DEFAULT_NR_VCPUS] = { };
 	unsigned int i = 0;
 	int rc = -EINVAL;
 
 	printf("pal_create_process: args->argv[0]=[%s]\n", args->argv[0]);
 
-	rc = pthread_create(&thread_id, NULL, ne_poll_enclave_fd, (void *)&enclave_fd);
+	rc = pthread_create(&thread_id, NULL, ne_poll_enclave_fd,
+			    (void *) &enclave_fd);
 	if (rc < 0) {
 		printf("Error in thread create [%m]\n");
 
