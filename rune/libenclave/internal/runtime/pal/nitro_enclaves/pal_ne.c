@@ -693,7 +693,7 @@ out:
 	return rc;
 }
 
-int pal_version()
+int pal_get_version()
 {
 	return PAL_VERSION;
 }
@@ -704,9 +704,7 @@ int pal_init(const struct pal_attr_t *attr)
 {
 	unsigned int i = 0;
 	int ne_dev_fd = -1;
-	unsigned int ne_vcpus[NE_DEFAULT_NR_VCPUS] = {};
 	int rc = -EINVAL;
-	pthread_t thread_id = 0;
 	unsigned long slot_uid = 0;
 
 	printf("attr->args=[%s]\n", attr->args);
@@ -734,15 +732,6 @@ int pal_init(const struct pal_attr_t *attr)
 
 	printf("Enclave fd %d\n", enclave_fd);
 
-	rc = pthread_create(&thread_id, NULL, ne_poll_enclave_fd, (void *)&enclave_fd);
-	if (rc < 0) {
-		printf("Error in thread create [%m]\n");
-
-		close(enclave_fd);
-
-		exit(EXIT_FAILURE);
-	}
-
 	for (i = 0; i < NE_DEFAULT_NR_MEM_REGIONS; i++) {
 		ne_user_mem_regions[i].memory_size = NE_MIN_MEM_REGION_SIZE;
 
@@ -754,9 +743,40 @@ int pal_init(const struct pal_attr_t *attr)
 		}
 	}
 
-	rc = ne_load_enclave_image(enclave_fd, ne_user_mem_regions, (char *)attr->args);
-	if (rc < 0)
+	printf("Enclave memory regions were alloced\n");
+
+	return 0;
+
+release_enclave_fd:
+	close(enclave_fd);
+	ne_free_mem_regions(ne_user_mem_regions);
+	return -1;
+}
+
+int pal_create_process(struct pal_create_process_args *args)
+{
+	pthread_t thread_id = 0;
+	unsigned int ne_vcpus[NE_DEFAULT_NR_VCPUS] = {};
+	unsigned int i = 0;
+	int rc = -EINVAL;
+
+	printf("pal_create_process: args->argv[0]=[%s]", args->argv[0]);
+
+	rc = pthread_create(&thread_id, NULL, ne_poll_enclave_fd, (void *)&enclave_fd);
+	if (rc < 0) {
+		printf("Error in thread create [%m]\n");
+
 		goto release_enclave_fd;
+	}
+
+	rc = ne_load_enclave_image(enclave_fd, ne_user_mem_regions, (char *)args->argv[0]);
+	if (rc < 0) {
+		printf("Error in load enclave image [%m]\n");
+
+		goto release_enclave_fd;
+	}
+
+	printf("Enclave image was loaded\n");
 
 	for (i = 0; i < NE_DEFAULT_NR_MEM_REGIONS; i++) {
 		rc = ne_set_user_mem_region(enclave_fd, ne_user_mem_regions[i]);
@@ -800,11 +820,6 @@ release_enclave_fd:
 	close(enclave_fd);
 	ne_free_mem_regions(ne_user_mem_regions);
 	return -1;
-}
-
-int pal_create_process(struct pal_create_process_args *args)
-{
-	return 0;
 }
 
 int pal_exec(struct pal_exec_args *args)
