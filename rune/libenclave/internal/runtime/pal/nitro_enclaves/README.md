@@ -1,22 +1,26 @@
 The files in this directory are used to implement a nitro enclave runtime in order to help to write your own enclave runtime. For now just implement the pal interface for nitro enclave to run the sample enclave image file.
 
+Note that this code base is inspired by [Sample flow of using the ioctl interface provided by the Nitro Enclaves (NE) kernel driver](https://github.com/torvalds/linux/blob/master/samples/nitro_enclaves/ne_ioctl_sample.c).
+
 ---
 
 # Run nitro enclave with OCI bundle
+
 ## Create EC2 instance with Enclave enable
-refer to [Amazon EC2 instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Instances.html) to create a `EC2` instance which need to enable Enclave. Note that the limitation:
+
+Refer to [Amazon EC2 instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Instances.html) to create a `EC2` instance which need to enable Enclave. Note that the limitation:
 - virtualized Nitro-based instances with at least 4 vCPUs, except t3, t3a, t4g, a1, c6g, c6gd, m6g, m6gd, r6g, and r6gd.
-- Parent instance and Enclave both are linux operating system.
+- Parent instance and Enclave both are linux operating systems.
 
 ## Build nitro enclave environment
-refer to [Getting started: Hello enclave](https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html) to build a `nitro enclave` environment in parent instance.
+Refer to [Getting started: Hello enclave](https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html) to build a `nitro enclave` environment in parent instance.
 
 ## Build and install rune
 Please refer to [this guide](https://github.com/alibaba/inclavare-containers#rune) to build `rune` from scratch.
 
 ## Build and install rune pal library
 ```shell
-cd $HOME/inclavare-containers/rune/libenclave/internal/runtime/pal/nitro_enclaves
+cd inclavare-containers/rune/libenclave/internal/runtime/pal/nitro_enclaves
 make
 cp libpal_ne.so /usr/lib64/libpal_ne.so
 ```
@@ -81,8 +85,6 @@ where:
 - @enclave.type: specify the type of enclave hardware to use, such as intelSgx.
 - @enclave.runtime.path: specify the path to enclave runtime to launch.
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, seperated by the comma.
-
-Note that if you add `-s ${SIZE}` when signing your enclave image with `sgxsign` tool. You must specify `mmap-size=${SIZE}` in "enclave.runtime.args`.
 
 ## Run nitro enclave
 Assuming you have an OCI bundle from the previous step you can execute the container in this way.
