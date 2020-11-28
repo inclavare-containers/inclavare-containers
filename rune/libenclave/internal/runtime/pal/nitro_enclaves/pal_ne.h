@@ -26,8 +26,8 @@ struct pal_exec_args {
 };
 
 struct pal_kill_args {
-    int pid;
-    int sig;
+	int pid;
+	int sig;
 };
 
 #endif /* PAL_NE_H */
