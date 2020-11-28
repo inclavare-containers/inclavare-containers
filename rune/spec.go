@@ -90,9 +90,10 @@ created by an unprivileged user.
 		}
 		spec.Hostname = "rune"
 		spec.Annotations = map[string]string{
-			"enclave.type":         enclConf.EnclaveTypeIntelSgx,
-			"enclave.runtime.path": "/var/run/rune/liberpal-skeleton-v2.so",
-			"enclave.runtime.args": "debug",
+			"enclave.type":             enclConf.EnclaveTypeIntelSgx,
+			"enclave.runtime.path":     "/var/run/rune/liberpal-skeleton-v2.so",
+			"enclave.runtime.args":     "debug",
+			"enclave.runtime.loglevel": enclConf.DefaultLogLevel,
 		}
 
 		spec.Mounts = append(spec.Mounts, *createLibenclaveMount())

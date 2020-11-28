@@ -35,8 +35,6 @@ type RuneletConfig struct {
 }
 
 func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err error) {
-	logLevel := cfg.LogLevel
-
 	// Determine which type of runelet is initializing.
 	fifoFd := cfg.FifoFd
 
@@ -57,6 +55,11 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 	}
 	if err = writeSync(initPipe, procEnclaveConfigAck); err != nil {
 		return 1, err
+	}
+
+	logLevel := configs.DefaultLogLevel
+	if config.LogLevel != "" {
+		logLevel = config.LogLevel
 	}
 
 	// Only parent runelet has a responsibility to initialize the enclave

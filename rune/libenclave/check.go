@@ -237,6 +237,11 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		args = strings.Join(a, " ")
 	}
 
+	logLevel := filterOut(env, "ENCLAVE_RUNTIME_LOGLEVEL")
+	if logLevel == "" {
+		logLevel = libenclaveUtils.SearchLabels(config.Labels, "enclave.runtime.loglevel")
+	}
+
 	raType := filterOut(env, "ENCLAVE_RA_TYPE")
 	if raType == "" {
 		raType = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_type")
@@ -276,6 +281,7 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		Type:                  etype,
 		Path:                  path,
 		Args:                  args,
+		LogLevel:              logLevel,
 		RaType:                enclaveRaType,
 		RaEpidSpid:            raEpidSpid,
 		RaEpidSubscriptionKey: raEpidSubscriptionKey,
@@ -302,6 +308,19 @@ func ValidateEnclave(config *enclaveConfigs.EnclaveConfig) error {
 
 	if _, err := os.Stat(config.Enclave.Path); err != nil {
 		return err
+	}
+
+	IsValidLogLevel := false
+	for _, v := range enclaveConfigs.LogLevelArray {
+		if v == config.Enclave.LogLevel {
+			IsValidLogLevel = true
+			break
+		}
+	}
+	if !IsValidLogLevel {
+		logrus.Debugf("Invalid Enclave Runtime LogLevel")
+		config.Enclave.LogLevel = enclaveConfigs.DefaultLogLevel
+		logrus.Debugf("Use default LogLevel: %s", enclaveConfigs.DefaultLogLevel)
 	}
 
 	if config.Enclave.RaType != sgx.UnknownRaType {
