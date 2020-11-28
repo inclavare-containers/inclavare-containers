@@ -79,6 +79,15 @@ struct ne_user_mem_region {
 };
 
 /**
+ * Global Variable
+ */
+char* eif_image = NULL;
+int enclave_fd = -1;
+unsigned int ne_vcpu_nums = NE_DEFAULT_NR_VCPUS;
+unsigned int ne_mem_regions = NE_DEFAULT_NR_MEM_REGIONS;
+struct ne_user_mem_region ne_user_mem_regions[NE_DEFAULT_NR_MEM_REGIONS] = {};
+
+/**
  * ne_create_vm() - Create a slot for the enclave VM.
  * @ne_dev_fd:		The file descriptor of the NE misc device.
  * @slot_uid:		The generated slot uid for the enclave.
@@ -230,7 +239,6 @@ static int ne_load_enclave_image(int enclave_fd, struct ne_user_mem_region ne_us
 	for (i = 0; i < NE_DEFAULT_NR_MEM_REGIONS; i++)
 		enclave_memory_size += ne_user_mem_regions[i].memory_size;
 
-	printf("enclave_image_path = [%s]\n", enclave_image_path);
 	rc = stat(enclave_image_path, &image_stat_buf);
 	if (rc < 0) {
 		printf("Error in get image stat info [%m]\n");
@@ -693,13 +701,50 @@ out:
 	return rc;
 }
 
+static void check_opts(const char *opt)
+{
+	if (!strncmp(opt, "image=", 6)) {
+		eif_image = strdup(opt + 6);
+		printf("NE image path: %s\n", eif_image);
+	} else if (strstr(opt, "memory")) {
+		ne_mem_regions = atoi(strchr(opt, '=') + 1);
+		printf("NE memory regions: %d\n", ne_mem_regions);
+	} else if (strstr(opt, "vcpus")) {
+		ne_vcpu_nums = atoi(strchr(opt, '=') + 1);
+		printf("NE vcpus: %d\n", ne_vcpu_nums);
+	}
+}
+
+void parse_args(const char *args)
+{
+	char *a = strdup(args);
+	if (!a)
+		return;
+
+	char *opt = strtok(a, " ");
+	check_opts(opt);
+
+	if (!opt) {
+		free(a);
+		return;
+	}
+
+	do {
+		char *opt = strtok(NULL, " ");
+		if (!opt)
+			break;
+
+		check_opts(opt);
+	} while (1);
+
+	free(a);
+}
+
 int pal_get_version()
 {
 	return PAL_VERSION;
 }
 
-int enclave_fd = -1;
-struct ne_user_mem_region ne_user_mem_regions[NE_DEFAULT_NR_MEM_REGIONS] = {};
 int pal_init(const struct pal_attr_t *attr)
 {
 	unsigned int i = 0;
@@ -708,11 +753,7 @@ int pal_init(const struct pal_attr_t *attr)
 	unsigned long slot_uid = 0;
 
 	printf("attr->args=[%s]\n", attr->args);
-	if (strlen(attr->args) >= PATH_MAX) {
-		printf("The size of the path to enclave image is higher than max path\n");
-
-		exit(EXIT_FAILURE);
-	}
+	parse_args(attr->args);
 
 	ne_dev_fd = open(NE_DEV_NAME, O_RDWR | O_CLOEXEC);
 	if (ne_dev_fd < 0) {
@@ -732,7 +773,7 @@ int pal_init(const struct pal_attr_t *attr)
 
 	printf("Enclave fd %d\n", enclave_fd);
 
-	for (i = 0; i < NE_DEFAULT_NR_MEM_REGIONS; i++) {
+	for (i = 0; i < ne_mem_regions; i++) {
 		ne_user_mem_regions[i].memory_size = NE_MIN_MEM_REGION_SIZE;
 
 		rc = ne_alloc_user_mem_region(&ne_user_mem_regions[i]);
@@ -760,7 +801,7 @@ int pal_create_process(struct pal_create_process_args *args)
 	unsigned int i = 0;
 	int rc = -EINVAL;
 
-	printf("pal_create_process: args->argv[0]=[%s]", args->argv[0]);
+	printf("pal_create_process: args->argv[0]=[%s]\n", args->argv[0]);
 
 	rc = pthread_create(&thread_id, NULL, ne_poll_enclave_fd, (void *)&enclave_fd);
 	if (rc < 0) {
@@ -769,7 +810,7 @@ int pal_create_process(struct pal_create_process_args *args)
 		goto release_enclave_fd;
 	}
 
-	rc = ne_load_enclave_image(enclave_fd, ne_user_mem_regions, (char *)args->argv[0]);
+	rc = ne_load_enclave_image(enclave_fd, ne_user_mem_regions, eif_image);
 	if (rc < 0) {
 		printf("Error in load enclave image [%m]\n");
 
@@ -778,7 +819,7 @@ int pal_create_process(struct pal_create_process_args *args)
 
 	printf("Enclave image was loaded\n");
 
-	for (i = 0; i < NE_DEFAULT_NR_MEM_REGIONS; i++) {
+	for (i = 0; i < ne_mem_regions; i++) {
 		rc = ne_set_user_mem_region(enclave_fd, ne_user_mem_regions[i]);
 		if (rc < 0) {
 			printf("Error in set memory region, iter %d\n", i);
@@ -789,7 +830,7 @@ int pal_create_process(struct pal_create_process_args *args)
 
 	printf("Enclave memory regions were added\n");
 
-	for (i = 0; i < NE_DEFAULT_NR_VCPUS; i++) {
+	for (i = 0; i < ne_vcpu_nums; i++) {
 		/*
 		 * The vCPU is chosen from the enclave vCPU pool, if the value
 		 * of the vcpu_id is 0.
@@ -833,6 +874,9 @@ int pal_exec(struct pal_exec_args *args)
 
 int pal_kill(int pid, int sig)
 {
+	//TODO: maybe also call close enclave_fd to release enclave instance
+	// close(enclave_fd);
+	// ne_free_mem_regions(ne_user_mem_regions);
 	return 0;
 }
 
