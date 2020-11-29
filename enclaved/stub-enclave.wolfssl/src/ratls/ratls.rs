@@ -306,7 +306,7 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
 
     let mut quote_type = ratlsffi::sgx_quote_sign_type_t_SGX_UNLINKABLE_SIGNATURE; // default
     env::var_os("QUOTE_TYPE").and_then(|x| -> Option<OsString> {
-        if x == "SGX_UNLINKABLE_SIGNATURE" {
+        if x == "SGX_LINKABLE_SIGNATURE" {
             quote_type = ratlsffi::sgx_quote_sign_type_t_SGX_LINKABLE_SIGNATURE;
         }
         None
