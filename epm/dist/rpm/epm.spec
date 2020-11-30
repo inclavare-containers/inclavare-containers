@@ -8,7 +8,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name: epm
-Version: 0.5.0
+Version: 0.5.1
 Release: %{centos_base_release}%{?dist}
 Summary: epm for Inclavare Containers(runE)
 Group: Development/Tools
@@ -98,5 +98,8 @@ systemctl stop epm
 %{EPM_BIN_DIR}/epm
 
 %changelog
+* Mon Nov 30 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.1
+- Update to version 0.5.1
+
 * Sun Oct 29 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.0
 - Update to version 0.5.0

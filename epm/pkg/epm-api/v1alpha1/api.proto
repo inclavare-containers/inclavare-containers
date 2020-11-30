@@ -46,8 +46,10 @@ service EnclavePoolManager {
 message GetCacheRequest {
     // Type represents the type of enclave pool
     string type = 1;
+    // SubType represents the subType of enclave pool
+    string subType = 2;
     // ID represents the id of the cache
-    string ID = 2;
+    string ID = 3;
 }
 
 message GetCacheResponse {
@@ -59,13 +61,15 @@ message GetCacheResponse {
 message PickCacheRequest {
     // Type represents the type of enclave pool
     string type = 1;
-    // ID represents the id of the cache
-    string ID = 2;
+    // SubType represents the subType of enclave pool
+    string subType = 2;
+    // Filters represents the filters that used to filter out the suitable result
+    map<string, string> filters = 3;
 }
 
 message PickCacheResponse {
-    // Cache represents the response cache metadata
-    Cache cache = 1;
+    // Caches represents the caches which match the selection criteria
+    repeated Cache caches = 1;
 }
 
 message SaveCacheRequest {
@@ -83,12 +87,14 @@ message SaveCacheResponse {
 message ListCacheRequest {
     // Type represents the type of enclave pool
     string type = 1;
+    // SubType represents the subType of enclave pool
+    string subType = 2;
     // LastCacheID represents the id of the last cache metadata in the most recent query list,
     // if the value is "", query the cache metadata from the starting point of DB,
     // otherwise query the cache metadata starting from the next id of `lastCacheID` in alphabetical order
-    string lastCacheID = 2;
+    string lastCacheID = 3;
     // Limit represents the maximum number of queried entries
-    int32 limit = 3;
+    int32 limit = 4;
 }
 message ListCacheResponse {
     // Caches represents the list of response caches
@@ -98,8 +104,10 @@ message ListCacheResponse {
 message DeleteCacheRequest {
     // Type represents the type of enclave pool
     string type = 1;
+    // SubType represents the subType of enclave pool
+    string subType = 2;
     // ID represents the id of the cache
-    string ID = 2;
+    string ID = 3;
 }
 message DeleteCacheResponse {
     // Ok represents whether the cache is deleted successfully
@@ -109,6 +117,8 @@ message DeleteCacheResponse {
 message LoadCacheRequest {
     // Type represents the type of enclave pool
     string type = 1;
+    // SubType represents the subType of enclave pool
+    string subType = 2;
     // ID represents the id of the cache
     string ID = 3;
     // TargetPath represents the work directory for loading the cache data

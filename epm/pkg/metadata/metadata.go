@@ -67,7 +67,7 @@ func (m *Metadata) GetCache(bucket, key string) (*v1alpha1.Cache, error) {
 }
 
 // ListCache lists the cache metadata from DB
-func (m *Metadata) ListCache(bucket, lastKey string, limit int32) ([]*v1alpha1.Cache, error) {
+func (m *Metadata) ListCache(bucket, subType string, lastKey string, limit int32) ([]*v1alpha1.Cache, error) {
 	caches := make([]*v1alpha1.Cache, 0)
 	err := m.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
@@ -86,6 +86,9 @@ func (m *Metadata) ListCache(bucket, lastKey string, limit int32) ([]*v1alpha1.C
 			cache := &v1alpha1.Cache{}
 			if err := json.Unmarshal(v, cache); err != nil {
 				return err
+			}
+			if cache.SubType != subType {
+				continue
 			}
 			caches = append(caches, cache)
 			count++

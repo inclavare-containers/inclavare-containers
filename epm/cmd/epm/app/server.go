@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"golang.org/x/sys/unix"
-
 	"github.com/alibaba/inclavare-containers/epm/cmd/epm/app/options"
 	"github.com/alibaba/inclavare-containers/epm/config"
 	"github.com/alibaba/inclavare-containers/epm/pkg/epm"
@@ -19,6 +17,7 @@ import (
 	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
 	"github.com/golang/glog"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 )
 
