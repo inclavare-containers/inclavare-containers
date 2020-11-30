@@ -32,6 +32,21 @@ func (s *EnclavePoolManagerServer) GetCache(ctx context.Context, req *v1alpha1.G
 	return &v1alpha1.GetCacheResponse{Cache: cache}, nil
 }
 
+func (s *EnclavePoolManagerServer) PickCache(ctx context.Context, req *v1alpha1.PickCacheRequest) (*v1alpha1.PickCacheResponse, error) {
+	manager, err := s.getCachePoolManager(req.Type)
+	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	caches, err := manager.PickCache(req.SubType, req.Filters)
+	if err != nil {
+		glog.Errorf("pick caches failed. request: %++v, error: %++v", req, err)
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	glog.Infof("pick caches successfully. request: %++v", req)
+	return &v1alpha1.PickCacheResponse{Caches: caches}, nil
+}
+
 // SaveCache saves the data to a cache directory and record the cache metadata
 func (s *EnclavePoolManagerServer) SaveCache(ctx context.Context, req *v1alpha1.SaveCacheRequest) (*v1alpha1.SaveCacheResponse, error) {
 	cache := req.Cache
@@ -68,7 +83,7 @@ func (s *EnclavePoolManagerServer) ListCache(ctx context.Context, req *v1alpha1.
 		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	caches, err := manager.ListCache(req.LastCacheID, req.Limit)
+	caches, err := manager.ListCache(req.LastCacheID, req.SubType, req.Limit)
 	if err != nil {
 		glog.Errorf("list cache failed. error: %++v", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
