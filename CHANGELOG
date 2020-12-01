@@ -1,3 +1,10 @@
+# 2020-12-01 v0.5.1
+- Initial enclave runtime support for AWS Nitro Enclaves
+- Integration with pouch
+- NULL pointer dereference protection and enclave VM support for skeleton
+- Improve the performance of enclave instant launch
+- Support Occlum 0.18.0
+
 # 2020-11-08 v0.5.0
 - Implement bundle cache
 - Implement enclave instant launch
