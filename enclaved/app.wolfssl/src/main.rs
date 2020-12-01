@@ -1,35 +1,26 @@
-extern crate httparse;
 #[allow(unused)]
 #[allow(non_camel_case_types)]
-extern crate sgx_types;
-extern crate sgx_urts;
-
 mod ratls;
 
 use http::header;
+use http::StatusCode;
+use libc;
 use ratls::ffi as ratlsffi;
 use reqwest::header::HeaderMap;
-use std::ffi::CStr;
-use std::os::unix::net::UnixListener;
-
 use sgx_types::{
     c_int, c_void, sgx_attributes_t, sgx_calc_quote_size, sgx_epid_group_id_t, sgx_get_quote,
     sgx_init_quote, sgx_launch_token_t, sgx_misc_attribute_t, sgx_report_t, sgx_status_t,
     sgx_target_info_t, SgxResult,
 };
 use sgx_urts::SgxEnclave;
-
 use std::default::Default;
-use std::net::{SocketAddr, TcpStream};
-use std::os::unix::io::{AsRawFd, IntoRawFd};
+use std::ffi::CStr;
+use std::os::unix::io::AsRawFd;
+use std::os::unix::net::UnixListener;
 use std::ptr;
 use std::str;
 
-use libc;
-
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
-const REPORT_SUFFIX: &'static str = "/sgx/dev/attestation/v3/report";
-const IAS_HOST: &'static str = "api.trustedservices.intel.com";
 const IAS_REPORT_API_URL: &'static str =
     "https://api.trustedservices.intel.com/sgx/dev/attestation/v3/report";
 
@@ -151,86 +142,85 @@ pub extern "C" fn ocall_sgx_init_quote(ret_target_info: *mut sgx_target_info_t) 
     unsafe { sgx_init_quote(ret_target_info, &mut ret_epid_group_id) }
 }
 
-fn percent_decode(orig: String) -> String {
-    let v: Vec<&str> = orig.split("%").collect();
-    let mut ret = String::new();
-    ret.push_str(v[0]);
-    if v.len() > 1 {
-        for s in v[1..].iter() {
-            ret.push(u8::from_str_radix(&s[0..2], 16).unwrap() as char);
-            ret.push_str(&s[2..]);
-        }
+fn parse_response_attn_report(
+    resp: reqwest::blocking::Response,
+    attn_report: *mut ratlsffi::attestation_verification_report_t,
+) {
+    let resp_headers = resp.headers();
+    for (k, v) in resp_headers.iter() {
+        println!("{:?}: {:?}", k, v);
     }
-    ret
+
+    let mut cert = resp_headers
+        .get("X-IASReport-Signing-Certificate")
+        .unwrap()
+        .as_bytes();
+    let cert = percent_encoding::percent_decode(cert)
+        .decode_utf8()
+        .unwrap();
+
+    let pem_head = "-----BEGIN CERTIFICATE-----";
+    let pem_head_len = pem_head.len();
+    let v: Vec<&str> = cert.split(pem_head).collect();
+    let sign_cert = v[1].as_bytes();
+    let sign_cert_len = pem_head_len + sign_cert.len();
+    unsafe {
+        (*attn_report).ias_sign_cert[..pem_head_len].clone_from_slice(&pem_head.as_bytes());
+        (*attn_report).ias_sign_cert[pem_head_len..sign_cert_len].clone_from_slice(&sign_cert);
+        (*attn_report).ias_sign_cert_len = sign_cert_len as u32 - 1;
+        println!(
+            "sign cert {}",
+            str::from_utf8(&((*attn_report).ias_sign_cert)[..sign_cert_len - 1]).unwrap()
+        );
+    }
+
+    let sign_ca_cert = v[2].as_bytes();
+    let sign_ca_cert_len = pem_head_len + sign_ca_cert.len();
+    unsafe {
+        (*attn_report).ias_sign_ca_cert[..pem_head_len].clone_from_slice(&pem_head.as_bytes());
+        (*attn_report).ias_sign_ca_cert[pem_head_len..sign_ca_cert_len]
+            .clone_from_slice(&sign_ca_cert);
+        (*attn_report).ias_sign_ca_cert_len = sign_ca_cert_len as u32 - 1;
+        println!(
+            "sign ca cert {}",
+            str::from_utf8(&((*attn_report).ias_sign_ca_cert)[..sign_ca_cert_len - 1]).unwrap()
+        );
+    }
+
+    let sig = resp_headers
+        .get("X-IASReport-Signature")
+        .unwrap()
+        .as_bytes();
+    let sig_len = sig.len();
+    unsafe {
+        (*attn_report).ias_report_signature[..sig_len].clone_from_slice(&sig);
+        (*attn_report).ias_report_signature_len = sig_len as u32;
+        println!(
+            "report signature {}",
+            std::str::from_utf8(&((*attn_report).ias_report_signature)[..sig_len]).unwrap()
+        );
+    }
+
+    let report_len = resp.content_length().unwrap() as usize;
+    unsafe {
+        (*attn_report).ias_report_len = report_len as u32;
+    }
+
+    let report = resp.bytes().unwrap();
+    unsafe {
+        (*attn_report).ias_report[..report_len].clone_from_slice(&report.slice(..));
+        println!(
+            "report {}",
+            std::str::from_utf8(&((*attn_report).ias_report)[..report_len]).unwrap()
+        );
+    }
 }
 
-fn parse_response_attn_report(resp: &[u8]) -> (String, String, String) {
-    let mut headers = [httparse::EMPTY_HEADER; 16];
-    let mut respp = httparse::Response::new(&mut headers);
-    let result = respp.parse(resp);
-    println!("parse result {:?}", result);
-
-    let msg: &'static str;
-
-    match respp.code {
-        Some(200) => msg = "OK Operation Successful",
-        Some(401) => msg = "Unauthorized Failed to authenticate or authorize request.",
-        Some(404) => msg = "Not Found GID does not refer to a valid EPID group ID.",
-        Some(500) => msg = "Internal error occurred",
-        Some(503) => {
-            msg = "Service is currently not able to process the request (due to
-            a temporary overloading or maintenance). This is a
-            temporary state ?~@~S the same request can be repeated after
-            some time. "
-        }
-        _ => {
-            println!("DBG:{}", respp.code.unwrap());
-            msg = "Unknown error occured"
-        }
-    }
-
-    println!("{}", msg);
-    let mut len_num: u32 = 0;
-
-    let mut sig = String::new();
-    let mut cert = String::new();
-    let mut attn_report = String::new();
-
-    for i in 0..respp.headers.len() {
-        let h = respp.headers[i];
-        //println!("{} : {}", h.name, str::from_utf8(h.value).unwrap());
-        match h.name {
-            "Content-Length" => {
-                let len_str = String::from_utf8(h.value.to_vec()).unwrap();
-                len_num = len_str.parse::<u32>().unwrap();
-                println!("content length = {}", len_num);
-            }
-            "X-IASReport-Signature" => sig = str::from_utf8(h.value).unwrap().to_string(),
-            "X-IASReport-Signing-Certificate" => {
-                cert = str::from_utf8(h.value).unwrap().to_string()
-            }
-            _ => (),
-        }
-    }
-
-    // Remove %0A from cert, and only obtain the signing cert
-    cert = cert.replace("%0A", "");
-    cert = percent_decode(cert);
-    let v: Vec<&str> = cert.split("-----").collect();
-    let sig_cert = v[2].to_string();
-
-    if len_num != 0 {
-        let header_len = result.unwrap().unwrap();
-        let resp_body = &resp[header_len..];
-        attn_report = str::from_utf8(resp_body).unwrap().to_string();
-        println!("Attestation report: {}", attn_report);
-    }
-
-    // len_num == 0
-    (attn_report, sig, sig_cert)
-}
-
-pub fn retrieve_ias_report(sub_key: String, quote: &[u8]) -> (String, String, String) {
+pub fn retrieve_ias_report(
+    sub_key: String,
+    quote: &[u8],
+    attn_report: *mut ratlsffi::attestation_verification_report_t,
+) {
     // The common headers like Host, Content-length, Connection, Agent
     // are all not required.
     let mut headers = HeaderMap::new();
@@ -248,13 +238,34 @@ pub fn retrieve_ias_report(sub_key: String, quote: &[u8]) -> (String, String, St
         .send()
         .unwrap();
 
-    println!("{}", resp.status());
+    let msg: String = match resp.status() {
+        StatusCode::OK => "200 OK: Operation Successful".to_string(),
+        StatusCode::BAD_REQUEST => {
+            "400 Bad Request: Invalid Attestation Evidence Payload".to_string()
+        }
+        StatusCode::UNAUTHORIZED => {
+            "401 Unauthorized: Failed to authenticate or authorize request".to_string()
+        }
+        StatusCode::NOT_FOUND => {
+            "404 Not Found: GID does not refer to a valid EPID group ID".to_string()
+        }
+        StatusCode::INTERNAL_SERVER_ERROR => "500 Internal error occurred".to_string(),
+        StatusCode::SERVICE_UNAVAILABLE => {
+            "503 Service Unavailable: Service is currently not able to process the request (due to
+            a temporary overloading or maintenance). This is a
+            temporary state - the same request can be repeated after
+            some time"
+                .to_string()
+        }
+        _ => format!("{}: Unknown error occured", resp.status()),
+    };
+    println!("{}", msg);
 
-    let resp = resp.text().unwrap();
-    println!("{}", resp);
+    if resp.status() != StatusCode::OK {
+        return;
+    }
 
-    let (attn_report, sig, cert) = parse_response_attn_report(resp.as_bytes());
-    (attn_report, sig, cert)
+    parse_response_attn_report(resp, attn_report);
 }
 
 #[no_mangle]
@@ -321,7 +332,7 @@ pub extern "C" fn ocall_remote_attestation(
 
     let sub_key = unsafe { CStr::from_ptr((*opts).subscription_key.as_ptr()) };
     let sub_key = sub_key.to_owned().into_string().unwrap();
-    retrieve_ias_report(sub_key, &quote[..]);
+    retrieve_ias_report(sub_key, &quote[..], attn_report);
 }
 
 // struct ScopeCall<F: FnMut()> {
