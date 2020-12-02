@@ -1,0 +1,139 @@
+name: Set up package repository and test
+
+# This is a manual trigger.
+on: [workflow_dispatch]
+
+jobs:
+  Package_repository_setup_and_deploy:
+    runs-on: [self-hosted, ubuntu]
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Get version
+      run: |
+        wget -q https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
+        echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h;
+        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV
+
+    - name: Create centos container
+      run: |
+        docker rm -f make-rpm || true;
+        docker run -itd --name=make-rpm -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos/rpm-repo:/root/repos/rpm-repo occlum/occlum:${{ env.OCCLUM_VERSION }}-centos8.1
+
+    - name: Build rpm packages
+      run: docker exec make-rpm bash -c "yum install -y libseccomp-devel;
+        cd /root && wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
+        tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
+        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
+        echo 'export GOPATH=/root/gopath' >> /etc/profile;
+        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
+        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
+        echo 'export GO111MODULE=on' >>/etc/profile;
+        cd /root && source /etc/profile;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd /root/inclavare-containers-$RUNE_VERSION;
+        echo "$RUNE_VERSION" > VERSION;
+        find ./ -path "*dist/Makefile" | xargs -I files sed -i '16 d' files;
+        mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
+        cp /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES/;
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y"
+
+    - name: Configure the centos container
+      run: docker exec make-rpm bash -c 'yum install -y gnupg pinentry createrepo rpm-sign ca-certificates;
+        rm -rf /root/.gnupg;
+        echo "${{ secrets.RPM_PRIVATE_KEY }}" > /root/rpm_private_key;
+        echo "${{ secrets.PASSPARSE }}" | gpg --batch --yes --passphrase-fd 0 --allow-secret-key-import --import /root/rpm_private_key;
+        echo "${{ secrets.CA_PRIVATE_KEY }}" > /root/ca_private_key;
+        echo "${{ secrets.PASSPARSE }}" | gpg --batch --yes --passphrase-fd 0 --allow-secret-key-import --import /root/ca_private_key;
+        gpg --list-keys;
+        echo "${{ secrets.PASSPARSE }}" >> /root/passphrase-file;
+        echo -e "%__gpg /usr/bin/gpg\n%_source_filedigest_algorithm 8\n%_binary_filedigest_algorithm 8\n%_gpg_digest_algo SHA256\n%_gpg_path  /root/.gnupg\n%_gpg_name rpm_gpg_key\n%__gpg_sign_cmd %{__gpg} gpg --no-verbose --no-armor --batch --pinentry-mode loopback --passphrase-file /root/passphrase-file %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} --no-secmem-warning -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}" > /root/.rpmmacros'
+
+    - name: Sign the package and update the rpm repo
+      run: docker exec make-rpm bash -c "cp inclavare-containers-$RUNE_VERSION/*rpm /root/repos/rpm-repo;
+        cd /root/repos/rpm-repo;
+        rm -rf repodata RPM-GPG-KEY-*;
+        rpmsign --resign *.rpm;
+        createrepo --update -d -p -o . .;
+        gpg -u rpm_gpg_key --detach-sign -a repodata/repomd.xml;
+        gpg --export -a "rpm_gpg_key" > RPM-GPG-KEY-rpm-sign;
+        gpg --export -a "ca_gpg_key" > RPM-GPG-KEY-rpm-sign-ca;
+        gpg --detach-sign -a -u ca_gpg_key RPM-GPG-KEY-rpm-sign"
+
+    - name: Create ubuntu container
+      run: |
+        docker rm -f make-deb || true;
+        docker run -itd --name=make-deb -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos/deb-repo:/root/repos/deb-repo occlum/occlum:${{ env.OCCLUM_VERSION }}-ubuntu18.04
+
+    - name: Build deb packages
+      run: docker exec make-deb bash -c "apt-get update;
+        apt-get install libseccomp-dev;
+        cd /root && wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
+        tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
+        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
+        echo 'export GOPATH=/root/gopath' >> /etc/profile;
+        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
+        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
+        echo 'export GO111MODULE=on' >>/etc/profile;
+        cd /root && source /etc/profile;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd /root/inclavare-containers-$RUNE_VERSION;
+        echo "$RUNE_VERSION" > VERSION;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
+        make package"
+
+    - name: Update deb repo
+      run:  docker exec make-deb bash -c 'apt-get update;
+        apt-get install -y tree apt-utils gnupg reprepro rng-tools aptly; rm -rf /root/.gnupg;
+        echo "${{ secrets.DEB_PRIVATE_KEY }}" > /root/deb_private_key;
+        echo "${{ secrets.PASSPARSE }}" | gpg --batch --yes --passphrase-fd 0 --allow-secret-key-import --import /root/deb_private_key;
+        gpg --list-keys; echo "${{ secrets.PASSPARSE }}" >> /root/passphrase-file;
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf;
+        gpg --export -a "deb_gpg_key" > /root/DEB-GPG-KEY.key;
+        aptly -distribution='bionic' -architectures=amd64 repo create inclavare-deb-repo;
+        aptly repo add inclavare-deb-repo /root/inclavare-containers-${{ env.RUNE_VERSION }}/*deb;
+        find /root/repos/deb-repo -name "*.*deb" | xargs -I files aptly repo add inclavare-deb-repo files || true;
+        aptly publish repo -passphrase=${{ secrets.PASSPARSE }} inclavare-deb-repo; tree /root/.aptly/public;
+        cd /root/repos/deb-repo; rm -rf *; cp -r /root/.aptly/public/* /root/repos/deb-repo;
+        cp /root/DEB-GPG-KEY.key /root/repos/deb-repo'
+
+    - name: Deploy repository to remote server
+      run: echo "Ready to deploy!!";
+        scp -r /root/repos/* ${{ secrets.USER_NAME }}@${{ secrets.HOST }}:${{ secrets.WORK_DIR }}/inclavare-containers;
+
+  Test_package_repository:
+    needs: Package_repository_setup_and_deploy
+    runs-on: ubuntu-18.04
+    steps:
+
+    - name: Create a clean ubuntu container
+      run: docker run -itd --name=test-deb ubuntu:18.04
+
+    - name: Test deb repository
+      run: |
+        docker exec test-deb bash -c "apt-get update;
+        apt-get install -y gnupg wget;
+        echo 'deb [arch=amd64] https://mirrors.openanolis.org/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list;
+        wget -qO - https://mirrors.openanolis.org/inclavare-containers/deb-repo/DEB-GPG-KEY.key  | apt-key add -;
+        apt-get update;
+        apt-get install rune"
+
+    - name: Create a clean centos container
+      run: docker run -itd --name=test-rpm centos:centos8.1.1911
+
+    - name: Test rpm repository
+      run: |
+        docker exec test-rpm bash -c "cat << EOF > /etc/yum.repos.d/inclavare-containers.repo
+        [inclavare-containers]
+        name=inclavare-containers
+        enabled=1
+        baseurl=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/
+        gpgcheck=1
+        repo_gpgcheck=1
+        gpgkey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
+        gpgcakey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+        EOF"
+        docker exec test-rpm bash -c "yum --showduplicate list -y rune; yum install -y rune"
