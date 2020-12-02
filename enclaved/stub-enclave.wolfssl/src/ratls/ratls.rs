@@ -321,7 +321,7 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
 
     unsafe {
         create_key_and_x509(der_key.as_mut_ptr(),
-                            &mut der_cert_len as *mut _ as *mut c_uint,
+                            &mut der_key_len as *mut _ as *mut c_uint,
                             der_cert.as_mut_ptr(),
                             &mut der_cert_len as *mut _ as *mut c_uint,
                             &mut opt as *mut ratlsffi::ra_tls_options);
