@@ -4,6 +4,7 @@
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
+SGX_DEBUG ?= 1
 
 WOLFSSL_ROOT := $(shell readlink -f $(TOPDIR)/wolfssl)
 THISDIR := $(shell pwd)
@@ -20,7 +21,7 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-    SGX_COMMON_CFLAGS += -O0 -g
+    SGX_COMMON_CFLAGS += -O0 -g -ggdb 
 else
     SGX_COMMON_CFLAGS += -O2
 endif

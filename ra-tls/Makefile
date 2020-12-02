@@ -1,13 +1,14 @@
 TOPDIR := $(shell readlink -f .)
 export TOPDIR
 
-DEBUG ?=
+DEBUG ?= 1
 
 PREFIX ?= $(TOPDIR)/build
 BINDIR := $(PREFIX)/bin
 LIBDIR := $(PREFIX)/lib
 INCDIR := $(PREFIX)/include
 
+SGX_DEBUG ?= 1
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_RA_TLS := $(TOPDIR)/sgx-ra-tls
 WOLFSSL := $(TOPDIR)/wolfssl
@@ -25,7 +26,7 @@ endif
 
 CFLAGS += -std=gnu99 -I$(SGX_RA_TLS) -I$(SGX_SDK)/include -I$(INCDIR) $(SGX_DCAP_INC) -fPIC
 #CFLAGSERRORS := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow -Werror
-CFLAGS += $(CFLAGSERRORS) -g -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_EXT # -DDEBUG -DDYNAMIC_RSA
+CFLAGS += $(CFLAGSERRORS) -g -ggdb -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_EXT # -DDEBUG -DDYNAMIC_RSA
 CFLAGS += -DSGX_GROUP_OUT_OF_DATE
 ifdef ECDSA
   CFLAGS += -DRATLS_ECDSA
@@ -56,13 +57,13 @@ $(BINDIR)/Wolfssl_Enclave.signed.so: $(BINDIR)
 # 2019-03-19 removed --enable-intelasm configure flag. The Celeron NUC I am developing this, does not support AVX.
 WOLFSSL_CFLAGS := -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_ALWAYS_VERIFY_CB -DKEEP_PEER_CERT -Wno-stringop-truncation
 ifdef DEBUG
-  WOLFSSL_CFLAGS += --enable-debug
+  WOLFSSL_CONFFLAGS += --enable-debug
 endif
 $(LIBDIR)/libwolfssl.a: CFLAGS += $(WOLFSSL_CFLAGS)
 $(LIBDIR)/libwolfssl.a: $(LIBDIR) wolfssl
 	cd wolfssl && $(MAKE) install
 
-wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --enable-writedup --enable-static --enable-keygen --enable-certgen --enable-certext --with-pic --disable-examples --disable-crypttests --enable-aesni --enable-tlsv10
+wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --enable-writedup --enable-static --enable-keygen --enable-certgen --enable-certext --with-pic --disable-examples --disable-crypttests --enable-aesni --enable-tlsv10 $(WOLFSSL_CONFFLAGS)
 wolfssl:
 	git clone https://github.com/wolfSSL/wolfssl && \
 	  cd wolfssl && git checkout 57e5648a5dd734d1c219d385705498ad12941dd0 && \
