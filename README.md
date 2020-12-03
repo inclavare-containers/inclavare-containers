@@ -151,7 +151,7 @@ Add the assocated configurations in pouchd config file, e.g, `/etc/pouch/config.
 		"rune": {
             		"path": "/usr/local/bin/rune",
             		"runtimeArgs": null,
-            		"type": "io.containerd.runtime.v1.linux"
+            		"type": "io.containerd.rune.v2"
         	},
 		...
 	}	
@@ -161,9 +161,9 @@ where:
 - @path: specify the path of OCI Runtime, such as the pach of `rune`.
 - @runtimeArgs: specify the arguments of the pouchd runtime, such as `--platform`, `--network`.
 - @type: specify the shim template from the following candidates:
-	- io.containerd.runtime.v1.linux: correspond to containerd-shim
 	- io.containerd.rune.v2: correspond to shim-rune
-	- io.containerd.runc.v1/2: correspond to containerd-shim-runc-v1/2
+	- io.containerd.runtime.v1.linux: correspond to containerd-shim
+	- io.containerd.runc.v1: correspond to containerd-shim-runc-v1
 
 then restart pouchd on your system.
 
@@ -172,8 +172,6 @@ You can check whether `rune` is correctly enabled or not with:
 ```shell
 pouch info | grep rune
 ```
-
-Please refer to [this guide](docs/running_rune_with_pouch_and_occlum.md) to run `rune` with `pouchd`.
 
 # Deployment
 
@@ -185,6 +183,7 @@ Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/r
 
 Please refer to [this guide](docs/develop_and_deploy_hello_world_application_in_kubernetes_cluster.md) to deploy an enclave container in a Kubernetes cluster. Currently, [Hello-world application image](https://hub.docker.com/r/inclavarecontainers/occlum-hello-world) and web application images based on [OpenJDK 11](https://hub.docker.com/r/inclavarecontainers/occlum-java-web), [Dragonwell](https://hub.docker.com/r/inclavarecontainers/occlum-dragonwell-web), and [Golang](https://hub.docker.com/r/inclavarecontainers/occlum-golang-web) are provided. These images don't contain enclave runtime. They are only used for the deployment with containerd.
 
+Please refer to [this guide](docs/running_inclavare_containers_with_pouch_and_occlum.md) to run inclavare-containers with `pouchd`.
 
 ## WebAssembly Micro Runtime (WAMR)
 
