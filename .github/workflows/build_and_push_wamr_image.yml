@@ -1,0 +1,116 @@
+name: Wamr image build, run and push
+
+# This is a manual trigger.
+on: [workflow_dispatch]
+
+jobs:
+  wamr_build:
+    runs-on: [self-hosted, centos]
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Get version
+      run: wget https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
+        echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h
+
+    - name: Create ubuntu container
+      run: docker rm -f wamr || true;
+        docker run -itd --privileged --rm --name=wamr --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers occlum/occlum:$OCCLUM_VERSION-ubuntu18.04
+
+    - name: Prepare work
+      run: |
+        docker exec wamr bash -c "apt-get update;
+        apt-get install -y proxychains4;
+        cat <<- EOF >/etc/proxychains.conf
+        strict_chain
+        [ProxyList]
+        socks5 127.0.0.1 5432
+        EOF"
+
+    - name: Install and configure docker
+      run: |
+        docker exec wamr bash -c "apt-get install -y apt-transport-https ca-certificates curl software-properties-common;
+        curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -;
+        add-apt-repository 'deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable';
+        apt-get update && apt-get install -y docker-ce"
+
+        docker exec wamr bash -c "mkdir -p /etc/docker;
+        cat <<- EOF >/etc/docker/daemon.json
+        {
+            \"runtimes\":{
+                \"rune\":{
+                    \"path\":\"/usr/local/bin/rune\",
+                    \"runtimeArgs\":[]
+                  }
+              },
+              \"storage-driver\":\"vfs\"
+        }
+        EOF"
+
+        docker exec wamr bash -c "service docker start"
+
+    - name: Build and install rune on ubuntu
+      run: docker exec wamr bash -c "apt-get update;
+         apt-get install libseccomp-dev;
+         cd /root && proxychains4 wget -t 5 https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
+         tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
+         echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
+         echo 'export GOPATH=/root/gopath' >> /etc/profile;
+         echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
+         echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
+         echo 'export PKG_CONFIG_PATH=/usr/lib/pkgconfig' >>/etc/profile;
+         echo 'export GO111MODULE=on' >>/etc/profile;
+         source /etc/profile;
+         cd /root/inclavare-containers/rune && make && make install"
+
+    - name: Build wamr application image
+      run: |
+        docker exec wamr bash -c "proxychains4 git clone https://github.com/bytecodealliance/wasm-micro-runtime;
+        cd wasm-micro-runtime/product-mini/platforms/linux-sgx/;
+        mkdir build && cd build && cmake .. && make;
+        cd ../enclave-sample && make SGX_MODE=HW SGX_DEBUG=1;
+        g++ -shared -fPIC -o libwamr-pal.so App/*.o libvmlib_untrusted.a -L/opt/intel/sgxsdk/lib64 -lsgx_urts -lpthread -lssl -lcrypto;
+        cp ./libwamr-pal.so /usr/lib/libwamr-pal.so;
+        cd /root/wasm-micro-runtime/wamr-compiler;
+        proxychains4 ./build_llvm.sh;
+        mkdir build && cd build;
+        cmake .. && make;
+        cp wamrc /usr/bin/wamrc"
+
+        docker exec wamr bash -c "cat <<- EOF >/root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/test.c
+        "#include\<stdio.h\>"
+        int main (void)
+        {
+            printf(\"Hello world!\n\");
+            return 0;
+        }
+        EOF"
+
+        docker exec wamr bash -c "proxychains4 wget -t 5 https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz;
+        tar zxf wasi-sdk-12.0-linux.tar.gz -C /opt;
+        mv /opt/wasi-sdk-12.0 /opt/wasi-sdk;
+        cd /root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample;
+        /opt/wasi-sdk/bin/clang -O3 -o test.wasm test.c;
+        wamrc -sgx -o test.aot test.wasm"
+
+        docker exec wamr bash -c "cat <<- EOF >/root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/Dockerfile
+        FROM centos:8.1.1911
+        RUN mkdir -p /run/rune
+        WORKDIR /run/rune
+        COPY enclave.signed.so .
+        COPY test.aot app
+        ENTRYPOINT [\"/run/rune/app\"]
+        EOF"
+
+        docker exec wamr bash -c "cd /root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample;
+        docker build . -t inclavarecontainers/enclave-wamr:latest"
+
+    - name: Run wamr image on ubuntu
+      run: docker exec wamr bash -c "docker run -i --rm --runtime=rune  -e ENCLAVE_TYPE=intelSgx  -e ENCLAVE_RUNTIME_PATH=/usr/lib/libwamr-pal.so -e ENCLAVE_RUNTIME_ARGS=debug inclavarecontainers/enclave-wamr:latest"
+
+    - name: Push wamr image to Dockerhub
+      run: docker exec wamr bash -c "docker login -p ${{ secrets.DOCKER_PASSWORD }} -u ${{ secrets.DOCKER_USERNAME }};
+        docker push inclavarecontainers/enclave-wamr:latest"
+
+    - name: Kill the container
+      run: docker stop wamr
