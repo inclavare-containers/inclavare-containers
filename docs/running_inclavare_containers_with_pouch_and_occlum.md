@@ -1,10 +1,19 @@
-# Running rune with pouch and Occlum
+# Running inclavare-containers with pouch and Occlum
 
-This user guide provides the steps to run rune with pouch and Occlum.
+This user guide provides the steps to run inclavare-containers with pouch and Occlum.
 
 # Requirements
+## pouch
 
 Please refer to [this guide](https://github.com/alibaba/pouch/blob/master/INSTALLATION.md) to install pouch and refer to [this guide](https://github.com/alibaba/inclavare-containers#pouchd) to configure the runtime of pouchd.
+
+## rune
+
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/rune#building) to install `rune`.
+
+## shim-rune
+
+Please refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/shim#step-1-build-and-install-shim-binary) to install `shim-rune` and refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/shim#step-2-configuration) to configure `shim-rune`.
 
 # Running Occlum container image
 
