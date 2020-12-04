@@ -1,3 +1,37 @@
+diff --git a/IDE/LINUX-SGX/sgx_t_static.mk b/IDE/LINUX-SGX/sgx_t_static.mk
+index c7ee276c9..bb27f2dc4 100644
+--- a/IDE/LINUX-SGX/sgx_t_static.mk
++++ b/IDE/LINUX-SGX/sgx_t_static.mk
+@@ -2,6 +2,7 @@
+ SGX_SDK ?= /opt/intel/sgxsdk
+ SGX_MODE ?= SIM
+ SGX_ARCH ?= x64
++SGX_DEBUG ?= 1
+ WOLFSSL_ROOT ?= $(shell readlink -f ../..)
+ 
+ ifeq ($(shell getconf LONG_BIT), 32)
+@@ -29,7 +30,7 @@ endif
+ endif
+ 
+ ifeq ($(SGX_DEBUG), 1)
+-        SGX_COMMON_CFLAGS += -O0 -g
++        SGX_COMMON_CFLAGS += -O0 -g -ggdb
+ else
+         SGX_COMMON_CFLAGS += -O2
+ endif
+diff --git a/configure.ac b/configure.ac
+index 6a6edefe4..683445cc1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -110,7 +110,7 @@ LT_LIB_M
+ OPTIMIZE_CFLAGS="-Os -fomit-frame-pointer"
+ OPTIMIZE_FAST_CFLAGS="-O2 -fomit-frame-pointer"
+ OPTIMIZE_HUGE_CFLAGS="-funroll-loops -DTFM_SMALL_SET -DTFM_HUGE_SET"
+-DEBUG_CFLAGS="-g -DDEBUG -DDEBUG_WOLFSSL"
++DEBUG_CFLAGS="-g -ggdb -DDEBUG -DDEBUG_WOLFSSL"
+ LIB_ADD=
+ LIB_STATIC_ADD=
+ 
 diff --git a/m4/ax_vcs_checkout.m4 b/m4/ax_vcs_checkout.m4
 index 4636b58ed..58c1af256 100644
 --- a/m4/ax_vcs_checkout.m4
@@ -529,3 +563,6 @@ index 6254b727d..9a204138c 100644
      #define HAVE_AESGCM
      #define USE_CERT_BUFFERS_2048
      #define USE_FAST_MATH
+-- 
+2.17.1
+
