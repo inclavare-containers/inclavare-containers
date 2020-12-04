@@ -33,7 +33,7 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-        SGX_COMMON_CFLAGS += -O0 -g -DSGX_DEBUG
+        SGX_COMMON_CFLAGS += -O0 -g -ggdb -DSGX_DEBUG
 else
         SGX_COMMON_CFLAGS += -O2
 endif

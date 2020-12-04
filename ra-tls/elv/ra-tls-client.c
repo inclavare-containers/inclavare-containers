@@ -65,6 +65,8 @@ extern struct ra_tls_options my_ra_tls_options;
 
 int ra_tls_echo(int sockfd)
 {
+	wolfSSL_Debugging_ON();
+
 	wolfSSL_Init();
 
 	WOLFSSL_CTX *ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
