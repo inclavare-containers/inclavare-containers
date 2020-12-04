@@ -12,12 +12,9 @@ enclave {
     from "ra_tls.edl" import *;
 
     trusted {
-        public void ecall_my_test_print();
-
     };
 
     untrusted {
-
     };
 
 };

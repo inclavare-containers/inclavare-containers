@@ -8,7 +8,7 @@ fn main() {
     println!("cargo:rustc-link-search=native=../../ra-tls/build/lib");
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
-    println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=build.rs");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for

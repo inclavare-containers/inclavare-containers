@@ -17,7 +17,7 @@ fn main() {
     println!("cargo:rustc-link-lib=dylib=sgx_urts");
     println!("cargo:rustc-link-lib=dylib=sgx_uae_service");
 
-    println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-changed=build.rs");
 
     let wolfssl_bindings = bindgen::Builder::default().disable_name_namespacing()
         .rust_target(bindgen::RustTarget::Nightly)

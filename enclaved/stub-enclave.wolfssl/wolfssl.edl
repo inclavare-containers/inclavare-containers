@@ -5,6 +5,7 @@ enclave {
 
     include "wolfcrypt/test/test.h"
     include "wolfcrypt/benchmark/benchmark.h"
+    include "unistd.h"
 
     trusted {
         //public int wc_test([user_check]void* args);
@@ -56,8 +57,8 @@ enclave {
         void ocall_low_res_time([out] int* time);
         //void ocall_print_string([in, string] const char* str);
         //void ocall_current_time([out] double* time);
-        size_t ocall_recv(int sockfd, [out, size=len] void *buf, size_t len, int flags) propagate_errno;
-        size_t ocall_send(int sockfd, [in, size=len] const void *buf, size_t len, int flags) propagate_errno;
+        ssize_t ocall_recv(int sockfd, [out, size=len] void *buf, size_t len, int flags) propagate_errno;
+        ssize_t ocall_send(int sockfd, [in, size=len] const void *buf, size_t len, int flags) propagate_errno;
         //void time_t ocall_XTIME([out] time_t* t);
     };
 };

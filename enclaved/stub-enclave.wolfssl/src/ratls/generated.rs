@@ -3,87 +3,6 @@
 // Generated ra-tls trusted codes.
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct __BindgenBitfieldUnit<Storage, Align> {
-    storage: Storage,
-    align: [Align; 0],
-}
-impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align> {
-    #[inline]
-    pub const fn new(storage: Storage) -> Self {
-        Self { storage, align: [] }
-    }
-}
-impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align>
-where
-    Storage: AsRef<[u8]> + AsMut<[u8]>,
-{
-    #[inline]
-    pub fn get_bit(&self, index: usize) -> bool {
-        debug_assert!(index / 8 < self.storage.as_ref().len());
-        let byte_index = index / 8;
-        let byte = self.storage.as_ref()[byte_index];
-        let bit_index = if cfg!(target_endian = "big") {
-            7 - (index % 8)
-        } else {
-            index % 8
-        };
-        let mask = 1 << bit_index;
-        byte & mask == mask
-    }
-    #[inline]
-    pub fn set_bit(&mut self, index: usize, val: bool) {
-        debug_assert!(index / 8 < self.storage.as_ref().len());
-        let byte_index = index / 8;
-        let byte = &mut self.storage.as_mut()[byte_index];
-        let bit_index = if cfg!(target_endian = "big") {
-            7 - (index % 8)
-        } else {
-            index % 8
-        };
-        let mask = 1 << bit_index;
-        if val {
-            *byte |= mask;
-        } else {
-            *byte &= !mask;
-        }
-    }
-    #[inline]
-    pub fn get(&self, bit_offset: usize, bit_width: u8) -> u64 {
-        debug_assert!(bit_width <= 64);
-        debug_assert!(bit_offset / 8 < self.storage.as_ref().len());
-        debug_assert!((bit_offset + (bit_width as usize)) / 8 <= self.storage.as_ref().len());
-        let mut val = 0;
-        for i in 0..(bit_width as usize) {
-            if self.get_bit(i + bit_offset) {
-                let index = if cfg!(target_endian = "big") {
-                    bit_width as usize - 1 - i
-                } else {
-                    i
-                };
-                val |= 1 << index;
-            }
-        }
-        val
-    }
-    #[inline]
-    pub fn set(&mut self, bit_offset: usize, bit_width: u8, val: u64) {
-        debug_assert!(bit_width <= 64);
-        debug_assert!(bit_offset / 8 < self.storage.as_ref().len());
-        debug_assert!((bit_offset + (bit_width as usize)) / 8 <= self.storage.as_ref().len());
-        for i in 0..(bit_width as usize) {
-            let mask = 1 << i;
-            let val_bit_is_set = val & mask == mask;
-            let index = if cfg!(target_endian = "big") {
-                bit_width as usize - 1 - i
-            } else {
-                i
-            };
-            self.set_bit(index + bit_offset, val_bit_is_set);
-        }
-    }
-}
-#[repr(C)]
 #[derive(Default)]
 pub struct __IncompleteArrayField<T>(::std::marker::PhantomData<T>, [T; 0]);
 impl<T> __IncompleteArrayField<T> {
@@ -123,15 +42,13 @@ pub const LIBWOLFSSL_VERSION_HEX: u32 = 50405378;
 pub const WOLFSSL_VERSION: &'static [u8; 7usize] = b"3.12.2\0";
 pub const _SYS_TYPES_H: u32 = 1;
 pub const _FEATURES_H: u32 = 1;
-pub const __USE_ANSI: u32 = 1;
-pub const _BSD_SOURCE: u32 = 1;
-pub const _SVID_SOURCE: u32 = 1;
+pub const _DEFAULT_SOURCE: u32 = 1;
 pub const __USE_ISOC11: u32 = 1;
 pub const __USE_ISOC99: u32 = 1;
 pub const __USE_ISOC95: u32 = 1;
+pub const __USE_POSIX_IMPLICITLY: u32 = 1;
 pub const _POSIX_SOURCE: u32 = 1;
 pub const _POSIX_C_SOURCE: u32 = 200809;
-pub const __USE_POSIX_IMPLICITLY: u32 = 1;
 pub const __USE_POSIX: u32 = 1;
 pub const __USE_POSIX2: u32 = 1;
 pub const __USE_POSIX199309: u32 = 1;
@@ -140,32 +57,34 @@ pub const __USE_XOPEN2K: u32 = 1;
 pub const __USE_XOPEN2K8: u32 = 1;
 pub const _ATFILE_SOURCE: u32 = 1;
 pub const __USE_MISC: u32 = 1;
-pub const __USE_BSD: u32 = 1;
-pub const __USE_SVID: u32 = 1;
 pub const __USE_ATFILE: u32 = 1;
 pub const __USE_FORTIFY_LEVEL: u32 = 0;
+pub const __GLIBC_USE_DEPRECATED_GETS: u32 = 0;
 pub const _STDC_PREDEF_H: u32 = 1;
 pub const __STDC_IEC_559__: u32 = 1;
 pub const __STDC_IEC_559_COMPLEX__: u32 = 1;
-pub const __STDC_ISO_10646__: u32 = 201103;
+pub const __STDC_ISO_10646__: u32 = 201706;
 pub const __STDC_NO_THREADS__: u32 = 1;
 pub const __GNU_LIBRARY__: u32 = 6;
 pub const __GLIBC__: u32 = 2;
-pub const __GLIBC_MINOR__: u32 = 17;
-pub const __GLIBC_HAVE_LONG_LONG: u32 = 1;
+pub const __GLIBC_MINOR__: u32 = 27;
 pub const _SYS_CDEFS_H: u32 = 1;
+pub const __glibc_c99_flexarr_available: u32 = 1;
 pub const __WORDSIZE: u32 = 64;
 pub const __WORDSIZE_TIME64_COMPAT32: u32 = 1;
 pub const __SYSCALL_WORDSIZE: u32 = 64;
+pub const __HAVE_GENERIC_SELECTION: u32 = 1;
 pub const _BITS_TYPES_H: u32 = 1;
 pub const _BITS_TYPESIZES_H: u32 = 1;
 pub const __OFF_T_MATCHES_OFF64_T: u32 = 1;
 pub const __INO_T_MATCHES_INO64_T: u32 = 1;
+pub const __RLIM_T_MATCHES_RLIM64_T: u32 = 1;
 pub const __FD_SETSIZE: u32 = 1024;
 pub const __clock_t_defined: u32 = 1;
-pub const __time_t_defined: u32 = 1;
 pub const __clockid_t_defined: u32 = 1;
+pub const __time_t_defined: u32 = 1;
 pub const __timer_t_defined: u32 = 1;
+pub const _BITS_STDINT_INTN_H: u32 = 1;
 pub const __BIT_TYPES_DEFINED__: u32 = 1;
 pub const _ENDIAN_H: u32 = 1;
 pub const __LITTLE_ENDIAN: u32 = 1234;
@@ -178,27 +97,35 @@ pub const BIG_ENDIAN: u32 = 4321;
 pub const PDP_ENDIAN: u32 = 3412;
 pub const BYTE_ORDER: u32 = 1234;
 pub const _BITS_BYTESWAP_H: u32 = 1;
+pub const _BITS_UINTN_IDENTITY_H: u32 = 1;
 pub const _SYS_SELECT_H: u32 = 1;
 pub const __FD_ZERO_STOS: &'static [u8; 6usize] = b"stosq\0";
-pub const _SIGSET_H_types: u32 = 1;
-pub const __timespec_defined: u32 = 1;
-pub const _STRUCT_TIMEVAL: u32 = 1;
+pub const __sigset_t_defined: u32 = 1;
+pub const __timeval_defined: u32 = 1;
+pub const _STRUCT_TIMESPEC: u32 = 1;
 pub const FD_SETSIZE: u32 = 1024;
 pub const _SYS_SYSMACROS_H: u32 = 1;
-pub const _BITS_PTHREADTYPES_H: u32 = 1;
-pub const __SIZEOF_PTHREAD_ATTR_T: u32 = 56;
+pub const _BITS_SYSMACROS_H: u32 = 1;
+pub const _BITS_PTHREADTYPES_COMMON_H: u32 = 1;
+pub const _THREAD_SHARED_TYPES_H: u32 = 1;
+pub const _BITS_PTHREADTYPES_ARCH_H: u32 = 1;
 pub const __SIZEOF_PTHREAD_MUTEX_T: u32 = 40;
+pub const __SIZEOF_PTHREAD_ATTR_T: u32 = 56;
+pub const __SIZEOF_PTHREAD_RWLOCK_T: u32 = 56;
+pub const __SIZEOF_PTHREAD_BARRIER_T: u32 = 32;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: u32 = 4;
 pub const __SIZEOF_PTHREAD_COND_T: u32 = 48;
 pub const __SIZEOF_PTHREAD_CONDATTR_T: u32 = 4;
-pub const __SIZEOF_PTHREAD_RWLOCK_T: u32 = 56;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: u32 = 8;
-pub const __SIZEOF_PTHREAD_BARRIER_T: u32 = 32;
 pub const __SIZEOF_PTHREAD_BARRIERATTR_T: u32 = 4;
-pub const __have_pthread_attr_t: u32 = 1;
-pub const __PTHREAD_MUTEX_HAVE_PREV: u32 = 1;
+pub const __PTHREAD_MUTEX_LOCK_ELISION: u32 = 1;
+pub const __PTHREAD_MUTEX_NUSERS_AFTER_KIND: u32 = 0;
+pub const __PTHREAD_MUTEX_USE_UNION: u32 = 0;
 pub const __PTHREAD_RWLOCK_INT_FLAGS_SHARED: u32 = 1;
+pub const __PTHREAD_MUTEX_HAVE_PREV: u32 = 1;
+pub const __have_pthread_attr_t: u32 = 1;
 pub const _ERRNO_H: u32 = 1;
+pub const _BITS_ERRNO_H: u32 = 1;
 pub const EPERM: u32 = 1;
 pub const ENOENT: u32 = 2;
 pub const ESRCH: u32 = 3;
@@ -337,6 +264,7 @@ pub const _UNISTD_H: u32 = 1;
 pub const _POSIX_VERSION: u32 = 200809;
 pub const __POSIX2_THIS_VERSION: u32 = 200809;
 pub const _POSIX2_VERSION: u32 = 200809;
+pub const _POSIX2_C_VERSION: u32 = 200809;
 pub const _POSIX2_C_BIND: u32 = 200809;
 pub const _POSIX2_C_DEV: u32 = 200809;
 pub const _POSIX2_SW_DEV: u32 = 200809;
@@ -412,7 +340,6 @@ pub const _POSIX_TRACE_EVENT_FILTER: i32 = -1;
 pub const _POSIX_TRACE_INHERIT: i32 = -1;
 pub const _POSIX_TRACE_LOG: i32 = -1;
 pub const _POSIX_TYPED_MEMORY_OBJECTS: i32 = -1;
-pub const _XOPEN_STREAMS: i32 = -1;
 pub const _POSIX_V7_LPBIG_OFFBIG: i32 = -1;
 pub const _POSIX_V6_LPBIG_OFFBIG: i32 = -1;
 pub const _XBS5_LPBIG_OFFBIG: i32 = -1;
@@ -420,9 +347,9 @@ pub const _POSIX_V7_LP64_OFF64: u32 = 1;
 pub const _POSIX_V6_LP64_OFF64: u32 = 1;
 pub const _XBS5_LP64_OFF64: u32 = 1;
 pub const __ILP32_OFF32_CFLAGS: &'static [u8; 5usize] = b"-m32\0";
+pub const __ILP32_OFF32_LDFLAGS: &'static [u8; 5usize] = b"-m32\0";
 pub const __ILP32_OFFBIG_CFLAGS: &'static [u8; 48usize] =
     b"-m32 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64\0";
-pub const __ILP32_OFF32_LDFLAGS: &'static [u8; 5usize] = b"-m32\0";
 pub const __ILP32_OFFBIG_LDFLAGS: &'static [u8; 5usize] = b"-m32\0";
 pub const __LP64_OFF64_CFLAGS: &'static [u8; 5usize] = b"-m64\0";
 pub const __LP64_OFF64_LDFLAGS: &'static [u8; 5usize] = b"-m64\0";
@@ -439,6 +366,8 @@ pub const SEEK_END: u32 = 2;
 pub const L_SET: u32 = 0;
 pub const L_INCR: u32 = 1;
 pub const L_XTND: u32 = 2;
+pub const _GETOPT_POSIX_H: u32 = 1;
+pub const _GETOPT_CORE_H: u32 = 1;
 pub const F_ULOCK: u32 = 0;
 pub const F_LOCK: u32 = 1;
 pub const F_TLOCK: u32 = 2;
@@ -515,6 +444,11 @@ pub const POSIX_FADV_SEQUENTIAL: u32 = 2;
 pub const POSIX_FADV_WILLNEED: u32 = 3;
 pub const POSIX_FADV_DONTNEED: u32 = 4;
 pub const POSIX_FADV_NOREUSE: u32 = 5;
+pub const AT_FDCWD: i32 = -100;
+pub const AT_SYMLINK_NOFOLLOW: u32 = 256;
+pub const AT_REMOVEDIR: u32 = 512;
+pub const AT_SYMLINK_FOLLOW: u32 = 1024;
+pub const AT_EACCESS: u32 = 512;
 pub const _BITS_STAT_H: u32 = 1;
 pub const _STAT_VER_KERNEL: u32 = 0;
 pub const _STAT_VER_LINUX: u32 = 1;
@@ -559,15 +493,8 @@ pub const S_IROTH: u32 = 4;
 pub const S_IWOTH: u32 = 2;
 pub const S_IXOTH: u32 = 1;
 pub const S_IRWXO: u32 = 7;
-pub const AT_FDCWD: i32 = -100;
-pub const AT_SYMLINK_NOFOLLOW: u32 = 256;
-pub const AT_REMOVEDIR: u32 = 512;
-pub const AT_SYMLINK_FOLLOW: u32 = 1024;
-pub const AT_EACCESS: u32 = 512;
 pub const _SYS_SOCKET_H: u32 = 1;
-pub const _SYS_UIO_H: u32 = 1;
-pub const _BITS_UIO_H: u32 = 1;
-pub const UIO_MAXIOV: u32 = 1024;
+pub const __iovec_defined: u32 = 1;
 pub const PF_UNSPEC: u32 = 0;
 pub const PF_LOCAL: u32 = 1;
 pub const PF_UNIX: u32 = 1;
@@ -612,7 +539,10 @@ pub const PF_CAIF: u32 = 37;
 pub const PF_ALG: u32 = 38;
 pub const PF_NFC: u32 = 39;
 pub const PF_VSOCK: u32 = 40;
-pub const PF_MAX: u32 = 41;
+pub const PF_KCM: u32 = 41;
+pub const PF_QIPCRTR: u32 = 42;
+pub const PF_SMC: u32 = 43;
+pub const PF_MAX: u32 = 44;
 pub const AF_UNSPEC: u32 = 0;
 pub const AF_LOCAL: u32 = 1;
 pub const AF_UNIX: u32 = 1;
@@ -657,7 +587,10 @@ pub const AF_CAIF: u32 = 37;
 pub const AF_ALG: u32 = 38;
 pub const AF_NFC: u32 = 39;
 pub const AF_VSOCK: u32 = 40;
-pub const AF_MAX: u32 = 41;
+pub const AF_KCM: u32 = 41;
+pub const AF_QIPCRTR: u32 = 42;
+pub const AF_SMC: u32 = 43;
+pub const AF_MAX: u32 = 44;
 pub const SOL_RAW: u32 = 255;
 pub const SOL_DECNET: u32 = 261;
 pub const SOL_X25: u32 = 262;
@@ -665,6 +598,22 @@ pub const SOL_PACKET: u32 = 263;
 pub const SOL_ATM: u32 = 264;
 pub const SOL_AAL: u32 = 265;
 pub const SOL_IRDA: u32 = 266;
+pub const SOL_NETBEUI: u32 = 267;
+pub const SOL_LLC: u32 = 268;
+pub const SOL_DCCP: u32 = 269;
+pub const SOL_NETLINK: u32 = 270;
+pub const SOL_TIPC: u32 = 271;
+pub const SOL_RXRPC: u32 = 272;
+pub const SOL_PPPOL2TP: u32 = 273;
+pub const SOL_BLUETOOTH: u32 = 274;
+pub const SOL_PNPIPE: u32 = 275;
+pub const SOL_RDS: u32 = 276;
+pub const SOL_IUCV: u32 = 277;
+pub const SOL_CAIF: u32 = 278;
+pub const SOL_ALG: u32 = 279;
+pub const SOL_NFC: u32 = 280;
+pub const SOL_KCM: u32 = 281;
+pub const SOL_TLS: u32 = 282;
 pub const SOMAXCONN: u32 = 128;
 pub const _BITS_SOCKADDR_H: u32 = 1;
 pub const _SS_SIZE: u32 = 128;
@@ -742,53 +691,10 @@ pub const SO_COOKIE: u32 = 57;
 pub const SCM_TIMESTAMPING_PKTINFO: u32 = 58;
 pub const SO_PEERGROUPS: u32 = 59;
 pub const SO_ZEROCOPY: u32 = 60;
-pub const SO_TXTIME: u32 = 61;
-pub const SCM_TXTIME: u32 = 61;
+pub const __osockaddr_defined: u32 = 1;
 pub const _ARPA_INET_H: u32 = 1;
 pub const _NETINET_IN_H: u32 = 1;
-pub const _STDINT_H: u32 = 1;
-pub const _BITS_WCHAR_H: u32 = 1;
-pub const __WCHAR_MIN: i32 = -2147483648;
-pub const __WCHAR_MAX: u32 = 2147483647;
-pub const INT8_MIN: i32 = -128;
-pub const INT16_MIN: i32 = -32768;
-pub const INT32_MIN: i32 = -2147483648;
-pub const INT8_MAX: u32 = 127;
-pub const INT16_MAX: u32 = 32767;
-pub const INT32_MAX: u32 = 2147483647;
-pub const UINT8_MAX: u32 = 255;
-pub const UINT16_MAX: u32 = 65535;
-pub const UINT32_MAX: u32 = 4294967295;
-pub const INT_LEAST8_MIN: i32 = -128;
-pub const INT_LEAST16_MIN: i32 = -32768;
-pub const INT_LEAST32_MIN: i32 = -2147483648;
-pub const INT_LEAST8_MAX: u32 = 127;
-pub const INT_LEAST16_MAX: u32 = 32767;
-pub const INT_LEAST32_MAX: u32 = 2147483647;
-pub const UINT_LEAST8_MAX: u32 = 255;
-pub const UINT_LEAST16_MAX: u32 = 65535;
-pub const UINT_LEAST32_MAX: u32 = 4294967295;
-pub const INT_FAST8_MIN: i32 = -128;
-pub const INT_FAST16_MIN: i64 = -9223372036854775808;
-pub const INT_FAST32_MIN: i64 = -9223372036854775808;
-pub const INT_FAST8_MAX: u32 = 127;
-pub const INT_FAST16_MAX: u64 = 9223372036854775807;
-pub const INT_FAST32_MAX: u64 = 9223372036854775807;
-pub const UINT_FAST8_MAX: u32 = 255;
-pub const UINT_FAST16_MAX: i32 = -1;
-pub const UINT_FAST32_MAX: i32 = -1;
-pub const INTPTR_MIN: i64 = -9223372036854775808;
-pub const INTPTR_MAX: u64 = 9223372036854775807;
-pub const UINTPTR_MAX: i32 = -1;
-pub const PTRDIFF_MIN: i64 = -9223372036854775808;
-pub const PTRDIFF_MAX: u64 = 9223372036854775807;
-pub const SIG_ATOMIC_MIN: i32 = -2147483648;
-pub const SIG_ATOMIC_MAX: u32 = 2147483647;
-pub const SIZE_MAX: i32 = -1;
-pub const WCHAR_MIN: i32 = -2147483648;
-pub const WCHAR_MAX: u32 = 2147483647;
-pub const WINT_MIN: u32 = 0;
-pub const WINT_MAX: u32 = 4294967295;
+pub const _BITS_STDINT_UINTN_H: u32 = 1;
 pub const __USE_KERNEL_IPV6_DEFS: u32 = 0;
 pub const IP_OPTIONS: u32 = 4;
 pub const IP_HDRINCL: u32 = 3;
@@ -837,6 +743,7 @@ pub const IP_MINTTL: u32 = 21;
 pub const IP_NODEFRAG: u32 = 22;
 pub const IP_CHECKSUM: u32 = 23;
 pub const IP_BIND_ADDRESS_NO_PORT: u32 = 24;
+pub const IP_RECVFRAGSIZE: u32 = 25;
 pub const IP_PMTUDISC_DONT: u32 = 0;
 pub const IP_PMTUDISC_WANT: u32 = 1;
 pub const IP_PMTUDISC_DO: u32 = 2;
@@ -872,6 +779,7 @@ pub const IPV6_JOIN_ANYCAST: u32 = 27;
 pub const IPV6_LEAVE_ANYCAST: u32 = 28;
 pub const IPV6_IPSEC_POLICY: u32 = 34;
 pub const IPV6_XFRM_POLICY: u32 = 35;
+pub const IPV6_HDRINCL: u32 = 36;
 pub const IPV6_RECVPKTINFO: u32 = 49;
 pub const IPV6_PKTINFO: u32 = 50;
 pub const IPV6_RECVHOPLIMIT: u32 = 51;
@@ -883,8 +791,19 @@ pub const IPV6_RECVRTHDR: u32 = 56;
 pub const IPV6_RTHDR: u32 = 57;
 pub const IPV6_RECVDSTOPTS: u32 = 58;
 pub const IPV6_DSTOPTS: u32 = 59;
+pub const IPV6_RECVPATHMTU: u32 = 60;
+pub const IPV6_PATHMTU: u32 = 61;
+pub const IPV6_DONTFRAG: u32 = 62;
 pub const IPV6_RECVTCLASS: u32 = 66;
 pub const IPV6_TCLASS: u32 = 67;
+pub const IPV6_AUTOFLOWLABEL: u32 = 70;
+pub const IPV6_ADDR_PREFERENCES: u32 = 72;
+pub const IPV6_MINHOPCOUNT: u32 = 73;
+pub const IPV6_ORIGDSTADDR: u32 = 74;
+pub const IPV6_RECVORIGDSTADDR: u32 = 74;
+pub const IPV6_TRANSPARENT: u32 = 75;
+pub const IPV6_UNICAST_IF: u32 = 76;
+pub const IPV6_RECVFRAGSIZE: u32 = 77;
 pub const IPV6_ADD_MEMBERSHIP: u32 = 20;
 pub const IPV6_DROP_MEMBERSHIP: u32 = 21;
 pub const IPV6_RXHOPOPTS: u32 = 54;
@@ -1148,9 +1067,14 @@ pub const WOLFSSL_MAX_MASTER_KEY_LENGTH: u32 = 48;
 pub const WOLFSSL_DEFAULT_CIPHER_LIST: &'static [u8; 1usize] = b"\0";
 pub const WOLFSSL_RSA_F4: u32 = 65537;
 pub const _STDIO_H: u32 = 1;
-pub const __FILE_defined: u32 = 1;
+pub const __GLIBC_USE_LIB_EXT2: u32 = 0;
+pub const __GLIBC_USE_IEC_60559_BFP_EXT: u32 = 0;
+pub const __GLIBC_USE_IEC_60559_FUNCS_EXT: u32 = 0;
+pub const __GLIBC_USE_IEC_60559_TYPES_EXT: u32 = 0;
 pub const ____FILE_defined: u32 = 1;
-pub const _G_config_h: u32 = 1;
+pub const __FILE_defined: u32 = 1;
+pub const _BITS_LIBIO_H: u32 = 1;
+pub const _BITS_G_CONFIG_H: u32 = 1;
 pub const ____mbstate_t_defined: u32 = 1;
 pub const _G_HAVE_MMAP: u32 = 1;
 pub const _G_HAVE_MREMAP: u32 = 1;
@@ -1212,23 +1136,28 @@ pub const _IOLBF: u32 = 1;
 pub const _IONBF: u32 = 2;
 pub const BUFSIZ: u32 = 8192;
 pub const P_tmpdir: &'static [u8; 5usize] = b"/tmp\0";
+pub const _BITS_STDIO_LIM_H: u32 = 1;
 pub const L_tmpnam: u32 = 20;
 pub const TMP_MAX: u32 = 238328;
 pub const FILENAME_MAX: u32 = 4096;
 pub const L_ctermid: u32 = 9;
 pub const FOPEN_MAX: u32 = 16;
+pub const _SYS_UIO_H: u32 = 1;
+pub const _BITS_UIO_LIM_H: u32 = 1;
+pub const __IOV_MAX: u32 = 1024;
+pub const UIO_MAXIOV: u32 = 1024;
 pub const WOLFSSL_CRL_MONITOR: u32 = 1;
 pub const WOLFSSL_CRL_START_MON: u32 = 2;
 pub const _PTHREAD_H: u32 = 1;
 pub const _SCHED_H: u32 = 1;
+pub const _BITS_SCHED_H: u32 = 1;
 pub const SCHED_OTHER: u32 = 0;
 pub const SCHED_FIFO: u32 = 1;
 pub const SCHED_RR: u32 = 2;
-pub const __defined_schedparam: u32 = 1;
+pub const _BITS_CPU_SET_H: u32 = 1;
 pub const __CPU_SETSIZE: u32 = 1024;
 pub const _TIME_H: u32 = 1;
 pub const _BITS_TIME_H: u32 = 1;
-pub const CLOCKS_PER_SEC: u32 = 1000000;
 pub const CLOCK_REALTIME: u32 = 0;
 pub const CLOCK_MONOTONIC: u32 = 1;
 pub const CLOCK_PROCESS_CPUTIME_ID: u32 = 2;
@@ -1241,8 +1170,11 @@ pub const CLOCK_REALTIME_ALARM: u32 = 8;
 pub const CLOCK_BOOTTIME_ALARM: u32 = 9;
 pub const CLOCK_TAI: u32 = 11;
 pub const TIMER_ABSTIME: u32 = 1;
+pub const __struct_tm_defined: u32 = 1;
+pub const __itimerspec_defined: u32 = 1;
+pub const _BITS_TYPES_LOCALE_T_H: u32 = 1;
+pub const _BITS_TYPES___LOCALE_T_H: u32 = 1;
 pub const TIME_UTC: u32 = 1;
-pub const _XLOCALE_H: u32 = 1;
 pub const _BITS_SETJMP_H: u32 = 1;
 pub const PTHREAD_ONCE_INIT: u32 = 0;
 pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
@@ -1331,8 +1263,25 @@ pub const WNOWAIT: u32 = 16777216;
 pub const __WNOTHREAD: u32 = 536870912;
 pub const __WALL: u32 = 1073741824;
 pub const __WCLONE: u32 = 2147483648;
+pub const __ENUM_IDTYPE_T: u32 = 1;
 pub const __W_CONTINUED: u32 = 65535;
 pub const __WCOREFLAG: u32 = 128;
+pub const __HAVE_FLOAT128: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT128: u32 = 0;
+pub const __HAVE_FLOAT64X: u32 = 1;
+pub const __HAVE_FLOAT64X_LONG_DOUBLE: u32 = 1;
+pub const __HAVE_FLOAT16: u32 = 0;
+pub const __HAVE_FLOAT32: u32 = 1;
+pub const __HAVE_FLOAT64: u32 = 1;
+pub const __HAVE_FLOAT32X: u32 = 1;
+pub const __HAVE_FLOAT128X: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT16: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT32: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT64: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT32X: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT64X: u32 = 0;
+pub const __HAVE_DISTINCT_FLOAT128X: u32 = 0;
+pub const __HAVE_FLOATN_NOT_TYPEDEF: u32 = 0;
 pub const __ldiv_t_defined: u32 = 1;
 pub const __lldiv_t_defined: u32 = 1;
 pub const RAND_MAX: u32 = 2147483647;
@@ -1340,6 +1289,7 @@ pub const EXIT_FAILURE: u32 = 1;
 pub const EXIT_SUCCESS: u32 = 0;
 pub const _ALLOCA_H: u32 = 1;
 pub const _STRING_H: u32 = 1;
+pub const _STRINGS_H: u32 = 1;
 pub const _CTYPE_H: u32 = 1;
 pub const WOLFSSL_MAX_ERROR_SZ: u32 = 80;
 pub const INVALID_DEVID: i32 = -2;
@@ -1412,6 +1362,45 @@ pub const EXTKEYUSE_CODESIGN: u32 = 8;
 pub const EXTKEYUSE_CLIENT_AUTH: u32 = 4;
 pub const EXTKEYUSE_SERVER_AUTH: u32 = 2;
 pub const EXTKEYUSE_ANY: u32 = 1;
+pub const _STDINT_H: u32 = 1;
+pub const _BITS_WCHAR_H: u32 = 1;
+pub const INT8_MIN: i32 = -128;
+pub const INT16_MIN: i32 = -32768;
+pub const INT32_MIN: i32 = -2147483648;
+pub const INT8_MAX: u32 = 127;
+pub const INT16_MAX: u32 = 32767;
+pub const INT32_MAX: u32 = 2147483647;
+pub const UINT8_MAX: u32 = 255;
+pub const UINT16_MAX: u32 = 65535;
+pub const UINT32_MAX: u32 = 4294967295;
+pub const INT_LEAST8_MIN: i32 = -128;
+pub const INT_LEAST16_MIN: i32 = -32768;
+pub const INT_LEAST32_MIN: i32 = -2147483648;
+pub const INT_LEAST8_MAX: u32 = 127;
+pub const INT_LEAST16_MAX: u32 = 32767;
+pub const INT_LEAST32_MAX: u32 = 2147483647;
+pub const UINT_LEAST8_MAX: u32 = 255;
+pub const UINT_LEAST16_MAX: u32 = 65535;
+pub const UINT_LEAST32_MAX: u32 = 4294967295;
+pub const INT_FAST8_MIN: i32 = -128;
+pub const INT_FAST16_MIN: i64 = -9223372036854775808;
+pub const INT_FAST32_MIN: i64 = -9223372036854775808;
+pub const INT_FAST8_MAX: u32 = 127;
+pub const INT_FAST16_MAX: u64 = 9223372036854775807;
+pub const INT_FAST32_MAX: u64 = 9223372036854775807;
+pub const UINT_FAST8_MAX: u32 = 255;
+pub const UINT_FAST16_MAX: i32 = -1;
+pub const UINT_FAST32_MAX: i32 = -1;
+pub const INTPTR_MIN: i64 = -9223372036854775808;
+pub const INTPTR_MAX: u64 = 9223372036854775807;
+pub const UINTPTR_MAX: i32 = -1;
+pub const PTRDIFF_MIN: i64 = -9223372036854775808;
+pub const PTRDIFF_MAX: u64 = 9223372036854775807;
+pub const SIG_ATOMIC_MIN: i32 = -2147483648;
+pub const SIG_ATOMIC_MAX: u32 = 2147483647;
+pub const SIZE_MAX: i32 = -1;
+pub const WINT_MIN: u32 = 0;
+pub const WINT_MAX: u32 = 4294967295;
 pub const SGX_FLAGS_INITTED: u32 = 1;
 pub const SGX_FLAGS_DEBUG: u32 = 2;
 pub const SGX_FLAGS_MODE64BIT: u32 = 4;
@@ -1525,6 +1514,8 @@ pub type __int64_t = ::std::os::raw::c_long;
 pub type __uint64_t = ::std::os::raw::c_ulong;
 pub type __quad_t = ::std::os::raw::c_long;
 pub type __u_quad_t = ::std::os::raw::c_ulong;
+pub type __intmax_t = ::std::os::raw::c_long;
+pub type __uintmax_t = ::std::os::raw::c_ulong;
 pub type __dev_t = ::std::os::raw::c_ulong;
 pub type __uid_t = ::std::os::raw::c_uint;
 pub type __gid_t = ::std::os::raw::c_uint;
@@ -1586,10 +1577,10 @@ pub type __ssize_t = ::std::os::raw::c_long;
 pub type __syscall_slong_t = ::std::os::raw::c_long;
 pub type __syscall_ulong_t = ::std::os::raw::c_ulong;
 pub type __loff_t = __off64_t;
-pub type __qaddr_t = *mut __quad_t;
 pub type __caddr_t = *mut ::std::os::raw::c_char;
 pub type __intptr_t = ::std::os::raw::c_long;
 pub type __socklen_t = ::std::os::raw::c_uint;
+pub type __sig_atomic_t = ::std::os::raw::c_int;
 pub type u_char = __u_char;
 pub type u_short = __u_short;
 pub type u_int = __u_int;
@@ -1612,8 +1603,8 @@ pub type daddr_t = __daddr_t;
 pub type caddr_t = __caddr_t;
 pub type key_t = __key_t;
 pub type clock_t = __clock_t;
-pub type time_t = __time_t;
 pub type clockid_t = __clockid_t;
+pub type time_t = __time_t;
 pub type timer_t = __timer_t;
 pub type size_t = ::std::os::raw::c_ulong;
 pub type ulong = ::std::os::raw::c_ulong;
@@ -1624,7 +1615,6 @@ pub type u_int16_t = ::std::os::raw::c_ushort;
 pub type u_int32_t = ::std::os::raw::c_uint;
 pub type u_int64_t = ::std::os::raw::c_ulong;
 pub type register_t = ::std::os::raw::c_long;
-pub type __sig_atomic_t = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct __sigset_t {
@@ -1654,45 +1644,6 @@ fn bindgen_test_layout___sigset_t() {
     );
 }
 pub type sigset_t = __sigset_t;
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct timespec {
-    pub tv_sec: __time_t,
-    pub tv_nsec: __syscall_slong_t,
-}
-#[test]
-fn bindgen_test_layout_timespec() {
-    assert_eq!(
-        ::std::mem::size_of::<timespec>(),
-        16usize,
-        concat!("Size of: ", stringify!(timespec))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<timespec>(),
-        8usize,
-        concat!("Alignment of ", stringify!(timespec))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<timespec>())).tv_sec as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(timespec),
-            "::",
-            stringify!(tv_sec)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<timespec>())).tv_nsec as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(timespec),
-            "::",
-            stringify!(tv_nsec)
-        )
-    );
-}
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct timeval {
@@ -1729,6 +1680,45 @@ fn bindgen_test_layout_timeval() {
             stringify!(timeval),
             "::",
             stringify!(tv_usec)
+        )
+    );
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct timespec {
+    pub tv_sec: __time_t,
+    pub tv_nsec: __syscall_slong_t,
+}
+#[test]
+fn bindgen_test_layout_timespec() {
+    assert_eq!(
+        ::std::mem::size_of::<timespec>(),
+        16usize,
+        concat!("Size of: ", stringify!(timespec))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<timespec>(),
+        8usize,
+        concat!("Alignment of ", stringify!(timespec))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<timespec>())).tv_sec as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(timespec),
+            "::",
+            stringify!(tv_sec)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<timespec>())).tv_nsec as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(timespec),
+            "::",
+            stringify!(tv_nsec)
         )
     );
 }
@@ -1783,66 +1773,183 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn gnu_dev_major(__dev: ::std::os::raw::c_ulonglong) -> ::std::os::raw::c_uint;
+    pub fn gnu_dev_major(__dev: __dev_t) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    pub fn gnu_dev_minor(__dev: ::std::os::raw::c_ulonglong) -> ::std::os::raw::c_uint;
+    pub fn gnu_dev_minor(__dev: __dev_t) -> ::std::os::raw::c_uint;
 }
 extern "C" {
     pub fn gnu_dev_makedev(
         __major: ::std::os::raw::c_uint,
         __minor: ::std::os::raw::c_uint,
-    ) -> ::std::os::raw::c_ulonglong;
+    ) -> __dev_t;
 }
 pub type blksize_t = __blksize_t;
 pub type blkcnt_t = __blkcnt_t;
 pub type fsblkcnt_t = __fsblkcnt_t;
 pub type fsfilcnt_t = __fsfilcnt_t;
-pub type pthread_t = ::std::os::raw::c_ulong;
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub union pthread_attr_t {
-    pub __size: [::std::os::raw::c_char; 56usize],
-    pub __align: ::std::os::raw::c_long,
-    _bindgen_union_align: [u64; 7usize],
+#[derive(Debug, Default, Copy, Clone)]
+pub struct __pthread_rwlock_arch_t {
+    pub __readers: ::std::os::raw::c_uint,
+    pub __writers: ::std::os::raw::c_uint,
+    pub __wrphase_futex: ::std::os::raw::c_uint,
+    pub __writers_futex: ::std::os::raw::c_uint,
+    pub __pad3: ::std::os::raw::c_uint,
+    pub __pad4: ::std::os::raw::c_uint,
+    pub __cur_writer: ::std::os::raw::c_int,
+    pub __shared: ::std::os::raw::c_int,
+    pub __rwelision: ::std::os::raw::c_schar,
+    pub __pad1: [::std::os::raw::c_uchar; 7usize],
+    pub __pad2: ::std::os::raw::c_ulong,
+    pub __flags: ::std::os::raw::c_uint,
 }
 #[test]
-fn bindgen_test_layout_pthread_attr_t() {
+fn bindgen_test_layout___pthread_rwlock_arch_t() {
     assert_eq!(
-        ::std::mem::size_of::<pthread_attr_t>(),
+        ::std::mem::size_of::<__pthread_rwlock_arch_t>(),
         56usize,
-        concat!("Size of: ", stringify!(pthread_attr_t))
+        concat!("Size of: ", stringify!(__pthread_rwlock_arch_t))
     );
     assert_eq!(
-        ::std::mem::align_of::<pthread_attr_t>(),
+        ::std::mem::align_of::<__pthread_rwlock_arch_t>(),
         8usize,
-        concat!("Alignment of ", stringify!(pthread_attr_t))
+        concat!("Alignment of ", stringify!(__pthread_rwlock_arch_t))
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_attr_t>())).__size as *const _ as usize },
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__readers as *const _ as usize
+        },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_attr_t),
+            stringify!(__pthread_rwlock_arch_t),
             "::",
-            stringify!(__size)
+            stringify!(__readers)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_attr_t>())).__align as *const _ as usize },
-        0usize,
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__writers as *const _ as usize
+        },
+        4usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_attr_t),
+            stringify!(__pthread_rwlock_arch_t),
             "::",
-            stringify!(__align)
+            stringify!(__writers)
         )
     );
-}
-impl Default for pthread_attr_t {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__wrphase_futex as *const _ as usize
+        },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__wrphase_futex)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__writers_futex as *const _ as usize
+        },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__writers_futex)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__pad3 as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__pad3)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__pad4 as *const _ as usize },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__pad4)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__cur_writer as *const _ as usize
+        },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__cur_writer)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__shared as *const _ as usize
+        },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__shared)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__rwelision as *const _ as usize
+        },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__rwelision)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__pad1 as *const _ as usize },
+        33usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__pad1)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__pad2 as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__pad2)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_rwlock_arch_t>())).__flags as *const _ as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_rwlock_arch_t),
+            "::",
+            stringify!(__flags)
+        )
+    );
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1890,16 +1997,8 @@ impl Default for __pthread_internal_list {
 }
 pub type __pthread_list_t = __pthread_internal_list;
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub union pthread_mutex_t {
-    pub __data: pthread_mutex_t___pthread_mutex_s,
-    pub __size: [::std::os::raw::c_char; 40usize],
-    pub __align: ::std::os::raw::c_long,
-    _bindgen_union_align: [u64; 5usize],
-}
-#[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct pthread_mutex_t___pthread_mutex_s {
+pub struct __pthread_mutex_s {
     pub __lock: ::std::os::raw::c_int,
     pub __count: ::std::os::raw::c_uint,
     pub __owner: ::std::os::raw::c_int,
@@ -1910,178 +2009,385 @@ pub struct pthread_mutex_t___pthread_mutex_s {
     pub __list: __pthread_list_t,
 }
 #[test]
-fn bindgen_test_layout_pthread_mutex_t___pthread_mutex_s() {
+fn bindgen_test_layout___pthread_mutex_s() {
     assert_eq!(
-        ::std::mem::size_of::<pthread_mutex_t___pthread_mutex_s>(),
+        ::std::mem::size_of::<__pthread_mutex_s>(),
         40usize,
-        concat!("Size of: ", stringify!(pthread_mutex_t___pthread_mutex_s))
+        concat!("Size of: ", stringify!(__pthread_mutex_s))
     );
     assert_eq!(
-        ::std::mem::align_of::<pthread_mutex_t___pthread_mutex_s>(),
+        ::std::mem::align_of::<__pthread_mutex_s>(),
         8usize,
-        concat!(
-            "Alignment of ",
-            stringify!(pthread_mutex_t___pthread_mutex_s)
-        )
+        concat!("Alignment of ", stringify!(__pthread_mutex_s))
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__lock as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__lock as *const _ as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__lock)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__count as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__count as *const _ as usize },
         4usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__count)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__owner as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__owner as *const _ as usize },
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__owner)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__nusers as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__nusers as *const _ as usize },
         12usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__nusers)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__kind as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__kind as *const _ as usize },
         16usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__kind)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__spins as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__spins as *const _ as usize },
         20usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__spins)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__elision as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__elision as *const _ as usize },
         22usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__elision)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_mutex_t___pthread_mutex_s>())).__list as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<__pthread_mutex_s>())).__list as *const _ as usize },
         24usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t___pthread_mutex_s),
+            stringify!(__pthread_mutex_s),
             "::",
             stringify!(__list)
         )
     );
 }
-impl Default for pthread_mutex_t___pthread_mutex_s {
+impl Default for __pthread_mutex_s {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct __pthread_cond_s {
+    pub __bindgen_anon_1: __pthread_cond_s__bindgen_ty_1,
+    pub __bindgen_anon_2: __pthread_cond_s__bindgen_ty_2,
+    pub __g_refs: [::std::os::raw::c_uint; 2usize],
+    pub __g_size: [::std::os::raw::c_uint; 2usize],
+    pub __g1_orig_size: ::std::os::raw::c_uint,
+    pub __wrefs: ::std::os::raw::c_uint,
+    pub __g_signals: [::std::os::raw::c_uint; 2usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union __pthread_cond_s__bindgen_ty_1 {
+    pub __wseq: ::std::os::raw::c_ulonglong,
+    pub __wseq32: __pthread_cond_s__bindgen_ty_1__bindgen_ty_1,
+    _bindgen_union_align: u64,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct __pthread_cond_s__bindgen_ty_1__bindgen_ty_1 {
+    pub __low: ::std::os::raw::c_uint,
+    pub __high: ::std::os::raw::c_uint,
+}
+#[test]
+fn bindgen_test_layout___pthread_cond_s__bindgen_ty_1__bindgen_ty_1() {
+    assert_eq!(
+        ::std::mem::size_of::<__pthread_cond_s__bindgen_ty_1__bindgen_ty_1>(),
+        8usize,
+        concat!(
+            "Size of: ",
+            stringify!(__pthread_cond_s__bindgen_ty_1__bindgen_ty_1)
+        )
+    );
+    assert_eq!(
+        ::std::mem::align_of::<__pthread_cond_s__bindgen_ty_1__bindgen_ty_1>(),
+        4usize,
+        concat!(
+            "Alignment of ",
+            stringify!(__pthread_cond_s__bindgen_ty_1__bindgen_ty_1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_1__bindgen_ty_1>())).__low
+                as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_1__bindgen_ty_1),
+            "::",
+            stringify!(__low)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_1__bindgen_ty_1>())).__high
+                as *const _ as usize
+        },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_1__bindgen_ty_1),
+            "::",
+            stringify!(__high)
+        )
+    );
+}
+#[test]
+fn bindgen_test_layout___pthread_cond_s__bindgen_ty_1() {
+    assert_eq!(
+        ::std::mem::size_of::<__pthread_cond_s__bindgen_ty_1>(),
+        8usize,
+        concat!("Size of: ", stringify!(__pthread_cond_s__bindgen_ty_1))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<__pthread_cond_s__bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(__pthread_cond_s__bindgen_ty_1))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_1>())).__wseq as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_1),
+            "::",
+            stringify!(__wseq)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_1>())).__wseq32 as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_1),
+            "::",
+            stringify!(__wseq32)
+        )
+    );
+}
+impl Default for __pthread_cond_s__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union __pthread_cond_s__bindgen_ty_2 {
+    pub __g1_start: ::std::os::raw::c_ulonglong,
+    pub __g1_start32: __pthread_cond_s__bindgen_ty_2__bindgen_ty_1,
+    _bindgen_union_align: u64,
+}
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct __pthread_cond_s__bindgen_ty_2__bindgen_ty_1 {
+    pub __low: ::std::os::raw::c_uint,
+    pub __high: ::std::os::raw::c_uint,
+}
+#[test]
+fn bindgen_test_layout___pthread_cond_s__bindgen_ty_2__bindgen_ty_1() {
+    assert_eq!(
+        ::std::mem::size_of::<__pthread_cond_s__bindgen_ty_2__bindgen_ty_1>(),
+        8usize,
+        concat!(
+            "Size of: ",
+            stringify!(__pthread_cond_s__bindgen_ty_2__bindgen_ty_1)
+        )
+    );
+    assert_eq!(
+        ::std::mem::align_of::<__pthread_cond_s__bindgen_ty_2__bindgen_ty_1>(),
+        4usize,
+        concat!(
+            "Alignment of ",
+            stringify!(__pthread_cond_s__bindgen_ty_2__bindgen_ty_1)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_2__bindgen_ty_1>())).__low
+                as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_2__bindgen_ty_1),
+            "::",
+            stringify!(__low)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_2__bindgen_ty_1>())).__high
+                as *const _ as usize
+        },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_2__bindgen_ty_1),
+            "::",
+            stringify!(__high)
+        )
+    );
+}
+#[test]
+fn bindgen_test_layout___pthread_cond_s__bindgen_ty_2() {
+    assert_eq!(
+        ::std::mem::size_of::<__pthread_cond_s__bindgen_ty_2>(),
+        8usize,
+        concat!("Size of: ", stringify!(__pthread_cond_s__bindgen_ty_2))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<__pthread_cond_s__bindgen_ty_2>(),
+        8usize,
+        concat!("Alignment of ", stringify!(__pthread_cond_s__bindgen_ty_2))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_2>())).__g1_start as *const _
+                as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_2),
+            "::",
+            stringify!(__g1_start)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<__pthread_cond_s__bindgen_ty_2>())).__g1_start32 as *const _
+                as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s__bindgen_ty_2),
+            "::",
+            stringify!(__g1_start32)
+        )
+    );
+}
+impl Default for __pthread_cond_s__bindgen_ty_2 {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
 }
 #[test]
-fn bindgen_test_layout_pthread_mutex_t() {
+fn bindgen_test_layout___pthread_cond_s() {
     assert_eq!(
-        ::std::mem::size_of::<pthread_mutex_t>(),
-        40usize,
-        concat!("Size of: ", stringify!(pthread_mutex_t))
+        ::std::mem::size_of::<__pthread_cond_s>(),
+        48usize,
+        concat!("Size of: ", stringify!(__pthread_cond_s))
     );
     assert_eq!(
-        ::std::mem::align_of::<pthread_mutex_t>(),
+        ::std::mem::align_of::<__pthread_cond_s>(),
         8usize,
-        concat!("Alignment of ", stringify!(pthread_mutex_t))
+        concat!("Alignment of ", stringify!(__pthread_cond_s))
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_mutex_t>())).__data as *const _ as usize },
-        0usize,
+        unsafe { &(*(::std::ptr::null::<__pthread_cond_s>())).__g_refs as *const _ as usize },
+        16usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t),
+            stringify!(__pthread_cond_s),
             "::",
-            stringify!(__data)
+            stringify!(__g_refs)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_mutex_t>())).__size as *const _ as usize },
-        0usize,
+        unsafe { &(*(::std::ptr::null::<__pthread_cond_s>())).__g_size as *const _ as usize },
+        24usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t),
+            stringify!(__pthread_cond_s),
             "::",
-            stringify!(__size)
+            stringify!(__g_size)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_mutex_t>())).__align as *const _ as usize },
-        0usize,
+        unsafe { &(*(::std::ptr::null::<__pthread_cond_s>())).__g1_orig_size as *const _ as usize },
+        32usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_mutex_t),
+            stringify!(__pthread_cond_s),
             "::",
-            stringify!(__align)
+            stringify!(__g1_orig_size)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_cond_s>())).__wrefs as *const _ as usize },
+        36usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s),
+            "::",
+            stringify!(__wrefs)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__pthread_cond_s>())).__g_signals as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__pthread_cond_s),
+            "::",
+            stringify!(__g_signals)
         )
     );
 }
-impl Default for pthread_mutex_t {
+impl Default for __pthread_cond_s {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
 }
+pub type pthread_t = ::std::os::raw::c_ulong;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union pthread_mutexattr_t {
@@ -2123,192 +2429,6 @@ fn bindgen_test_layout_pthread_mutexattr_t() {
     );
 }
 impl Default for pthread_mutexattr_t {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union pthread_cond_t {
-    pub __data: pthread_cond_t__bindgen_ty_1,
-    pub __size: [::std::os::raw::c_char; 48usize],
-    pub __align: ::std::os::raw::c_longlong,
-    _bindgen_union_align: [u64; 6usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct pthread_cond_t__bindgen_ty_1 {
-    pub __lock: ::std::os::raw::c_int,
-    pub __futex: ::std::os::raw::c_uint,
-    pub __total_seq: ::std::os::raw::c_ulonglong,
-    pub __wakeup_seq: ::std::os::raw::c_ulonglong,
-    pub __woken_seq: ::std::os::raw::c_ulonglong,
-    pub __mutex: *mut ::std::os::raw::c_void,
-    pub __nwaiters: ::std::os::raw::c_uint,
-    pub __broadcast_seq: ::std::os::raw::c_uint,
-}
-#[test]
-fn bindgen_test_layout_pthread_cond_t__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_cond_t__bindgen_ty_1>(),
-        48usize,
-        concat!("Size of: ", stringify!(pthread_cond_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_cond_t__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_cond_t__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__lock as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__lock)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__futex as *const _ as usize
-        },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__futex)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__total_seq as *const _
-                as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__total_seq)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__wakeup_seq as *const _
-                as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__wakeup_seq)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__woken_seq as *const _
-                as usize
-        },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__woken_seq)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__mutex as *const _ as usize
-        },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__mutex)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__nwaiters as *const _ as usize
-        },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__nwaiters)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_cond_t__bindgen_ty_1>())).__broadcast_seq as *const _
-                as usize
-        },
-        44usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t__bindgen_ty_1),
-            "::",
-            stringify!(__broadcast_seq)
-        )
-    );
-}
-impl Default for pthread_cond_t__bindgen_ty_1 {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[test]
-fn bindgen_test_layout_pthread_cond_t() {
-    assert_eq!(
-        ::std::mem::size_of::<pthread_cond_t>(),
-        48usize,
-        concat!("Size of: ", stringify!(pthread_cond_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<pthread_cond_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(pthread_cond_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_cond_t>())).__data as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t),
-            "::",
-            stringify!(__data)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_cond_t>())).__size as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t),
-            "::",
-            stringify!(__size)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<pthread_cond_t>())).__align as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_cond_t),
-            "::",
-            stringify!(__align)
-        )
-    );
-}
-impl Default for pthread_cond_t {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
@@ -2362,176 +2482,168 @@ pub type pthread_key_t = ::std::os::raw::c_uint;
 pub type pthread_once_t = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub union pthread_rwlock_t {
-    pub __data: pthread_rwlock_t__bindgen_ty_1,
+pub union pthread_attr_t {
     pub __size: [::std::os::raw::c_char; 56usize],
     pub __align: ::std::os::raw::c_long,
     _bindgen_union_align: [u64; 7usize],
 }
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct pthread_rwlock_t__bindgen_ty_1 {
-    pub __lock: ::std::os::raw::c_int,
-    pub __nr_readers: ::std::os::raw::c_uint,
-    pub __readers_wakeup: ::std::os::raw::c_uint,
-    pub __writer_wakeup: ::std::os::raw::c_uint,
-    pub __nr_readers_queued: ::std::os::raw::c_uint,
-    pub __nr_writers_queued: ::std::os::raw::c_uint,
-    pub __writer: ::std::os::raw::c_int,
-    pub __shared: ::std::os::raw::c_int,
-    pub __pad1: ::std::os::raw::c_ulong,
-    pub __pad2: ::std::os::raw::c_ulong,
-    pub __flags: ::std::os::raw::c_uint,
-}
 #[test]
-fn bindgen_test_layout_pthread_rwlock_t__bindgen_ty_1() {
+fn bindgen_test_layout_pthread_attr_t() {
     assert_eq!(
-        ::std::mem::size_of::<pthread_rwlock_t__bindgen_ty_1>(),
+        ::std::mem::size_of::<pthread_attr_t>(),
         56usize,
-        concat!("Size of: ", stringify!(pthread_rwlock_t__bindgen_ty_1))
+        concat!("Size of: ", stringify!(pthread_attr_t))
     );
     assert_eq!(
-        ::std::mem::align_of::<pthread_rwlock_t__bindgen_ty_1>(),
+        ::std::mem::align_of::<pthread_attr_t>(),
         8usize,
-        concat!("Alignment of ", stringify!(pthread_rwlock_t__bindgen_ty_1))
+        concat!("Alignment of ", stringify!(pthread_attr_t))
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__lock as *const _ as usize
-        },
+        unsafe { &(*(::std::ptr::null::<pthread_attr_t>())).__size as *const _ as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
+            stringify!(pthread_attr_t),
             "::",
-            stringify!(__lock)
+            stringify!(__size)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__nr_readers as *const _
-                as usize
-        },
-        4usize,
+        unsafe { &(*(::std::ptr::null::<pthread_attr_t>())).__align as *const _ as usize },
+        0usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
+            stringify!(pthread_attr_t),
             "::",
-            stringify!(__nr_readers)
+            stringify!(__align)
         )
     );
+}
+impl Default for pthread_attr_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union pthread_mutex_t {
+    pub __data: __pthread_mutex_s,
+    pub __size: [::std::os::raw::c_char; 40usize],
+    pub __align: ::std::os::raw::c_long,
+    _bindgen_union_align: [u64; 5usize],
+}
+#[test]
+fn bindgen_test_layout_pthread_mutex_t() {
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__readers_wakeup as *const _
-                as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__readers_wakeup)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__writer_wakeup as *const _
-                as usize
-        },
-        12usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__writer_wakeup)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__nr_readers_queued
-                as *const _ as usize
-        },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__nr_readers_queued)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__nr_writers_queued
-                as *const _ as usize
-        },
-        20usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__nr_writers_queued)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__writer as *const _ as usize
-        },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__writer)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__shared as *const _ as usize
-        },
-        28usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__shared)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__pad1 as *const _ as usize
-        },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
-            "::",
-            stringify!(__pad1)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__pad2 as *const _ as usize
-        },
+        ::std::mem::size_of::<pthread_mutex_t>(),
         40usize,
+        concat!("Size of: ", stringify!(pthread_mutex_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<pthread_mutex_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(pthread_mutex_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<pthread_mutex_t>())).__data as *const _ as usize },
+        0usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
+            stringify!(pthread_mutex_t),
             "::",
-            stringify!(__pad2)
+            stringify!(__data)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<pthread_rwlock_t__bindgen_ty_1>())).__flags as *const _ as usize
-        },
-        48usize,
+        unsafe { &(*(::std::ptr::null::<pthread_mutex_t>())).__size as *const _ as usize },
+        0usize,
         concat!(
             "Offset of field: ",
-            stringify!(pthread_rwlock_t__bindgen_ty_1),
+            stringify!(pthread_mutex_t),
             "::",
-            stringify!(__flags)
+            stringify!(__size)
         )
     );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<pthread_mutex_t>())).__align as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(pthread_mutex_t),
+            "::",
+            stringify!(__align)
+        )
+    );
+}
+impl Default for pthread_mutex_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union pthread_cond_t {
+    pub __data: __pthread_cond_s,
+    pub __size: [::std::os::raw::c_char; 48usize],
+    pub __align: ::std::os::raw::c_longlong,
+    _bindgen_union_align: [u64; 6usize],
+}
+#[test]
+fn bindgen_test_layout_pthread_cond_t() {
+    assert_eq!(
+        ::std::mem::size_of::<pthread_cond_t>(),
+        48usize,
+        concat!("Size of: ", stringify!(pthread_cond_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<pthread_cond_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(pthread_cond_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<pthread_cond_t>())).__data as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(pthread_cond_t),
+            "::",
+            stringify!(__data)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<pthread_cond_t>())).__size as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(pthread_cond_t),
+            "::",
+            stringify!(__size)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<pthread_cond_t>())).__align as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(pthread_cond_t),
+            "::",
+            stringify!(__align)
+        )
+    );
+}
+impl Default for pthread_cond_t {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union pthread_rwlock_t {
+    pub __data: __pthread_rwlock_arch_t,
+    pub __size: [::std::os::raw::c_char; 56usize],
+    pub __align: ::std::os::raw::c_long,
+    _bindgen_union_align: [u64; 7usize],
 }
 #[test]
 fn bindgen_test_layout_pthread_rwlock_t() {
@@ -3508,6 +3620,12 @@ extern "C" {
 extern "C" {
     pub fn fdatasync(__fildes: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
+extern "C" {
+    pub fn getentropy(
+        __buffer: *mut ::std::os::raw::c_void,
+        __length: size_t,
+    ) -> ::std::os::raw::c_int;
+}
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct flock {
@@ -3597,7 +3715,7 @@ pub struct stat {
     pub st_atim: timespec,
     pub st_mtim: timespec,
     pub st_ctim: timespec,
-    pub __unused: [__syscall_slong_t; 3usize],
+    pub __glibc_reserved: [__syscall_slong_t; 3usize],
 }
 #[test]
 fn bindgen_test_layout_stat() {
@@ -3752,13 +3870,13 @@ fn bindgen_test_layout_stat() {
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<stat>())).__unused as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<stat>())).__glibc_reserved as *const _ as usize },
         120usize,
         concat!(
             "Offset of field: ",
             stringify!(stat),
             "::",
-            stringify!(__unused)
+            stringify!(__glibc_reserved)
         )
     );
 }
@@ -3845,36 +3963,6 @@ impl Default for iovec {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
-}
-extern "C" {
-    pub fn readv(
-        __fd: ::std::os::raw::c_int,
-        __iovec: *const iovec,
-        __count: ::std::os::raw::c_int,
-    ) -> ssize_t;
-}
-extern "C" {
-    pub fn writev(
-        __fd: ::std::os::raw::c_int,
-        __iovec: *const iovec,
-        __count: ::std::os::raw::c_int,
-    ) -> ssize_t;
-}
-extern "C" {
-    pub fn preadv(
-        __fd: ::std::os::raw::c_int,
-        __iovec: *const iovec,
-        __count: ::std::os::raw::c_int,
-        __offset: __off_t,
-    ) -> ssize_t;
-}
-extern "C" {
-    pub fn pwritev(
-        __fd: ::std::os::raw::c_int,
-        __iovec: *const iovec,
-        __count: ::std::os::raw::c_int,
-        __offset: __off_t,
-    ) -> ssize_t;
 }
 pub const __socket_type_SOCK_STREAM: __socket_type = 1;
 pub const __socket_type_SOCK_DGRAM: __socket_type = 2;
@@ -3998,6 +4086,8 @@ pub const MSG_ERRQUEUE: ::std::os::raw::c_uint = 8192;
 pub const MSG_NOSIGNAL: ::std::os::raw::c_uint = 16384;
 pub const MSG_MORE: ::std::os::raw::c_uint = 32768;
 pub const MSG_WAITFORONE: ::std::os::raw::c_uint = 65536;
+pub const MSG_BATCH: ::std::os::raw::c_uint = 262144;
+pub const MSG_ZEROCOPY: ::std::os::raw::c_uint = 67108864;
 pub const MSG_FASTOPEN: ::std::os::raw::c_uint = 536870912;
 pub const MSG_CMSG_CLOEXEC: ::std::os::raw::c_uint = 1073741824;
 pub type _bindgen_ty_4 = ::std::os::raw::c_uint;
@@ -4119,6 +4209,46 @@ fn bindgen_test_layout_cmsghdr() {
         ::std::mem::align_of::<cmsghdr>(),
         8usize,
         concat!("Alignment of ", stringify!(cmsghdr))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<cmsghdr>())).cmsg_len as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(cmsghdr),
+            "::",
+            stringify!(cmsg_len)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<cmsghdr>())).cmsg_level as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(cmsghdr),
+            "::",
+            stringify!(cmsg_level)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<cmsghdr>())).cmsg_type as *const _ as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(cmsghdr),
+            "::",
+            stringify!(cmsg_type)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<cmsghdr>())).__cmsg_data as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(cmsghdr),
+            "::",
+            stringify!(__cmsg_data)
+        )
     );
 }
 extern "C" {
@@ -4345,24 +4475,6 @@ extern "C" {
         __fdtype: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
-pub type int_least8_t = ::std::os::raw::c_schar;
-pub type int_least16_t = ::std::os::raw::c_short;
-pub type int_least32_t = ::std::os::raw::c_int;
-pub type int_least64_t = ::std::os::raw::c_long;
-pub type uint_least8_t = ::std::os::raw::c_uchar;
-pub type uint_least16_t = ::std::os::raw::c_ushort;
-pub type uint_least32_t = ::std::os::raw::c_uint;
-pub type uint_least64_t = ::std::os::raw::c_ulong;
-pub type int_fast8_t = ::std::os::raw::c_schar;
-pub type int_fast16_t = ::std::os::raw::c_long;
-pub type int_fast32_t = ::std::os::raw::c_long;
-pub type int_fast64_t = ::std::os::raw::c_long;
-pub type uint_fast8_t = ::std::os::raw::c_uchar;
-pub type uint_fast16_t = ::std::os::raw::c_ulong;
-pub type uint_fast32_t = ::std::os::raw::c_ulong;
-pub type uint_fast64_t = ::std::os::raw::c_ulong;
-pub type intmax_t = ::std::os::raw::c_long;
-pub type uintmax_t = ::std::os::raw::c_ulong;
 pub type in_addr_t = u32;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
@@ -8657,8 +8769,8 @@ pub const WOLFSSL_OCSP_CHECKALL: ::std::os::raw::c_uint = 4;
 pub const WOLFSSL_CRL_CHECKALL: ::std::os::raw::c_uint = 1;
 pub const WOLFSSL_CRL_CHECK: ::std::os::raw::c_uint = 27;
 pub type _bindgen_ty_10 = ::std::os::raw::c_uint;
-pub type FILE = _IO_FILE;
 pub type __FILE = _IO_FILE;
+pub type FILE = _IO_FILE;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct __mbstate_t {
@@ -10104,12 +10216,6 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn helloworld_a();
-}
-extern "C" {
-    pub fn helloworld_b();
-}
-extern "C" {
     pub fn wolfSSL_Init() -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -10375,6 +10481,36 @@ extern "C" {
         len: ::std::os::raw::c_uint,
         label: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn readv(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+    ) -> ssize_t;
+}
+extern "C" {
+    pub fn writev(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+    ) -> ssize_t;
+}
+extern "C" {
+    pub fn preadv(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+        __offset: __off_t,
+    ) -> ssize_t;
+}
+extern "C" {
+    pub fn pwritev(
+        __fd: ::std::os::raw::c_int,
+        __iovec: *const iovec,
+        __count: ::std::os::raw::c_int,
+        __offset: __off_t,
+    ) -> ssize_t;
 }
 extern "C" {
     pub fn wolfSSL_writev(
@@ -11377,7 +11513,7 @@ extern "C" {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct sched_param {
-    pub __sched_priority: ::std::os::raw::c_int,
+    pub sched_priority: ::std::os::raw::c_int,
 }
 #[test]
 fn bindgen_test_layout_sched_param() {
@@ -11392,41 +11528,13 @@ fn bindgen_test_layout_sched_param() {
         concat!("Alignment of ", stringify!(sched_param))
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<sched_param>())).__sched_priority as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<sched_param>())).sched_priority as *const _ as usize },
         0usize,
         concat!(
             "Offset of field: ",
             stringify!(sched_param),
             "::",
-            stringify!(__sched_priority)
-        )
-    );
-}
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct __sched_param {
-    pub __sched_priority: ::std::os::raw::c_int,
-}
-#[test]
-fn bindgen_test_layout___sched_param() {
-    assert_eq!(
-        ::std::mem::size_of::<__sched_param>(),
-        4usize,
-        concat!("Size of: ", stringify!(__sched_param))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__sched_param>(),
-        4usize,
-        concat!("Alignment of ", stringify!(__sched_param))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<__sched_param>())).__sched_priority as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(__sched_param),
-            "::",
-            stringify!(__sched_priority)
+            stringify!(sched_priority)
         )
     );
 }
@@ -11683,26 +11791,6 @@ fn bindgen_test_layout_itimerspec() {
 pub struct sigevent {
     _unused: [u8; 0],
 }
-extern "C" {
-    pub fn clock() -> clock_t;
-}
-extern "C" {
-    pub fn time(__timer: *mut time_t) -> time_t;
-}
-extern "C" {
-    pub fn difftime(__time1: time_t, __time0: time_t) -> f64;
-}
-extern "C" {
-    pub fn mktime(__tp: *mut tm) -> time_t;
-}
-extern "C" {
-    pub fn strftime(
-        __s: *mut ::std::os::raw::c_char,
-        __maxsize: size_t,
-        __format: *const ::std::os::raw::c_char,
-        __tp: *const tm,
-    ) -> size_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __locale_struct {
@@ -11783,12 +11871,32 @@ impl Default for __locale_struct {
 pub type __locale_t = *mut __locale_struct;
 pub type locale_t = __locale_t;
 extern "C" {
+    pub fn clock() -> clock_t;
+}
+extern "C" {
+    pub fn time(__timer: *mut time_t) -> time_t;
+}
+extern "C" {
+    pub fn difftime(__time1: time_t, __time0: time_t) -> f64;
+}
+extern "C" {
+    pub fn mktime(__tp: *mut tm) -> time_t;
+}
+extern "C" {
+    pub fn strftime(
+        __s: *mut ::std::os::raw::c_char,
+        __maxsize: size_t,
+        __format: *const ::std::os::raw::c_char,
+        __tp: *const tm,
+    ) -> size_t;
+}
+extern "C" {
     pub fn strftime_l(
         __s: *mut ::std::os::raw::c_char,
         __maxsize: size_t,
         __format: *const ::std::os::raw::c_char,
         __tp: *const tm,
-        __loc: __locale_t,
+        __loc: locale_t,
     ) -> size_t;
 }
 extern "C" {
@@ -13113,243 +13221,14 @@ pub const WOLFSSL_BIT_SIZE: ::std::os::raw::c_uint = 8;
 pub const WOLFSSL_WORD_BITS: ::std::os::raw::c_uint = 64;
 pub type _bindgen_ty_31 = ::std::os::raw::c_uint;
 pub type wchar_t = ::std::os::raw::c_int;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union wait {
-    pub w_status: ::std::os::raw::c_int,
-    pub __wait_terminated: wait__bindgen_ty_1,
-    pub __wait_stopped: wait__bindgen_ty_2,
-    _bindgen_union_align: u32,
-}
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct wait__bindgen_ty_1 {
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u8>,
-}
-#[test]
-fn bindgen_test_layout_wait__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<wait__bindgen_ty_1>(),
-        4usize,
-        concat!("Size of: ", stringify!(wait__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<wait__bindgen_ty_1>(),
-        4usize,
-        concat!("Alignment of ", stringify!(wait__bindgen_ty_1))
-    );
-}
-impl wait__bindgen_ty_1 {
-    #[inline]
-    pub fn __w_termsig(&self) -> ::std::os::raw::c_uint {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 7u8) as u32) }
-    }
-    #[inline]
-    pub fn set___w_termsig(&mut self, val: ::std::os::raw::c_uint) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 7u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __w_coredump(&self) -> ::std::os::raw::c_uint {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set___w_coredump(&mut self, val: ::std::os::raw::c_uint) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(7usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __w_retcode(&self) -> ::std::os::raw::c_uint {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 8u8) as u32) }
-    }
-    #[inline]
-    pub fn set___w_retcode(&mut self, val: ::std::os::raw::c_uint) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(8usize, 8u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        __w_termsig: ::std::os::raw::c_uint,
-        __w_coredump: ::std::os::raw::c_uint,
-        __w_retcode: ::std::os::raw::c_uint,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize], u8> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize], u8> =
-            Default::default();
-        __bindgen_bitfield_unit.set(0usize, 7u8, {
-            let __w_termsig: u32 = unsafe { ::std::mem::transmute(__w_termsig) };
-            __w_termsig as u64
-        });
-        __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let __w_coredump: u32 = unsafe { ::std::mem::transmute(__w_coredump) };
-            __w_coredump as u64
-        });
-        __bindgen_bitfield_unit.set(8usize, 8u8, {
-            let __w_retcode: u32 = unsafe { ::std::mem::transmute(__w_retcode) };
-            __w_retcode as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[repr(align(4))]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct wait__bindgen_ty_2 {
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize], u8>,
-}
-#[test]
-fn bindgen_test_layout_wait__bindgen_ty_2() {
-    assert_eq!(
-        ::std::mem::size_of::<wait__bindgen_ty_2>(),
-        4usize,
-        concat!("Size of: ", stringify!(wait__bindgen_ty_2))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<wait__bindgen_ty_2>(),
-        4usize,
-        concat!("Alignment of ", stringify!(wait__bindgen_ty_2))
-    );
-}
-impl wait__bindgen_ty_2 {
-    #[inline]
-    pub fn __w_stopval(&self) -> ::std::os::raw::c_uint {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(0usize, 8u8) as u32) }
-    }
-    #[inline]
-    pub fn set___w_stopval(&mut self, val: ::std::os::raw::c_uint) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(0usize, 8u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn __w_stopsig(&self) -> ::std::os::raw::c_uint {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(8usize, 8u8) as u32) }
-    }
-    #[inline]
-    pub fn set___w_stopsig(&mut self, val: ::std::os::raw::c_uint) {
-        unsafe {
-            let val: u32 = ::std::mem::transmute(val);
-            self._bitfield_1.set(8usize, 8u8, val as u64)
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        __w_stopval: ::std::os::raw::c_uint,
-        __w_stopsig: ::std::os::raw::c_uint,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize], u8> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize], u8> =
-            Default::default();
-        __bindgen_bitfield_unit.set(0usize, 8u8, {
-            let __w_stopval: u32 = unsafe { ::std::mem::transmute(__w_stopval) };
-            __w_stopval as u64
-        });
-        __bindgen_bitfield_unit.set(8usize, 8u8, {
-            let __w_stopsig: u32 = unsafe { ::std::mem::transmute(__w_stopsig) };
-            __w_stopsig as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[test]
-fn bindgen_test_layout_wait() {
-    assert_eq!(
-        ::std::mem::size_of::<wait>(),
-        4usize,
-        concat!("Size of: ", stringify!(wait))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<wait>(),
-        4usize,
-        concat!("Alignment of ", stringify!(wait))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<wait>())).w_status as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(wait),
-            "::",
-            stringify!(w_status)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<wait>())).__wait_terminated as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(wait),
-            "::",
-            stringify!(__wait_terminated)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<wait>())).__wait_stopped as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(wait),
-            "::",
-            stringify!(__wait_stopped)
-        )
-    );
-}
-impl Default for wait {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union __WAIT_STATUS {
-    pub __uptr: *mut wait,
-    pub __iptr: *mut ::std::os::raw::c_int,
-    _bindgen_union_align: u64,
-}
-#[test]
-fn bindgen_test_layout___WAIT_STATUS() {
-    assert_eq!(
-        ::std::mem::size_of::<__WAIT_STATUS>(),
-        8usize,
-        concat!("Size of: ", stringify!(__WAIT_STATUS))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<__WAIT_STATUS>(),
-        8usize,
-        concat!("Alignment of ", stringify!(__WAIT_STATUS))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<__WAIT_STATUS>())).__uptr as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(__WAIT_STATUS),
-            "::",
-            stringify!(__uptr)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<__WAIT_STATUS>())).__iptr as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(__WAIT_STATUS),
-            "::",
-            stringify!(__iptr)
-        )
-    );
-}
-impl Default for __WAIT_STATUS {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
+pub const idtype_t_P_ALL: idtype_t = 0;
+pub const idtype_t_P_PID: idtype_t = 1;
+pub const idtype_t_P_PGID: idtype_t = 2;
+pub type idtype_t = ::std::os::raw::c_uint;
+pub type _Float32 = f32;
+pub type _Float64 = f64;
+pub type _Float32x = f64;
+pub type _Float64x = u128;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct div_t {
@@ -13867,9 +13746,6 @@ extern "C" {
     pub fn free(__ptr: *mut ::std::os::raw::c_void);
 }
 extern "C" {
-    pub fn cfree(__ptr: *mut ::std::os::raw::c_void);
-}
-extern "C" {
     pub fn alloca(__size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
@@ -14192,7 +14068,7 @@ extern "C" {
         __dest: *mut ::std::os::raw::c_void,
         __src: *const ::std::os::raw::c_void,
         __c: ::std::os::raw::c_int,
-        __n: size_t,
+        __n: ::std::os::raw::c_ulong,
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
@@ -14272,7 +14148,7 @@ extern "C" {
     pub fn strcoll_l(
         __s1: *const ::std::os::raw::c_char,
         __s2: *const ::std::os::raw::c_char,
-        __l: __locale_t,
+        __l: locale_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -14280,7 +14156,7 @@ extern "C" {
         __dest: *mut ::std::os::raw::c_char,
         __src: *const ::std::os::raw::c_char,
         __n: size_t,
-        __l: __locale_t,
+        __l: locale_t,
     ) -> size_t;
 }
 extern "C" {
@@ -14368,11 +14244,15 @@ extern "C" {
 extern "C" {
     pub fn strerror_l(
         __errnum: ::std::os::raw::c_int,
-        __l: __locale_t,
+        __l: locale_t,
     ) -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
-    pub fn __bzero(__s: *mut ::std::os::raw::c_void, __n: size_t);
+    pub fn bcmp(
+        __s1: *const ::std::os::raw::c_void,
+        __s2: *const ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn bcopy(
@@ -14383,13 +14263,6 @@ extern "C" {
 }
 extern "C" {
     pub fn bzero(__s: *mut ::std::os::raw::c_void, __n: ::std::os::raw::c_ulong);
-}
-extern "C" {
-    pub fn bcmp(
-        __s1: *const ::std::os::raw::c_void,
-        __s2: *const ::std::os::raw::c_void,
-        __n: size_t,
-    ) -> ::std::os::raw::c_int;
 }
 extern "C" {
     pub fn index(
@@ -14407,6 +14280,12 @@ extern "C" {
     pub fn ffs(__i: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn ffsl(__l: ::std::os::raw::c_long) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn ffsll(__ll: ::std::os::raw::c_longlong) -> ::std::os::raw::c_int;
+}
+extern "C" {
     pub fn strcasecmp(
         __s1: *const ::std::os::raw::c_char,
         __s2: *const ::std::os::raw::c_char,
@@ -14418,6 +14297,24 @@ extern "C" {
         __s2: *const ::std::os::raw::c_char,
         __n: ::std::os::raw::c_ulong,
     ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn strcasecmp_l(
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __loc: locale_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn strncasecmp_l(
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __n: size_t,
+        __loc: locale_t,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    pub fn explicit_bzero(__s: *mut ::std::os::raw::c_void, __n: size_t);
 }
 extern "C" {
     pub fn strsep(
@@ -14531,52 +14428,52 @@ extern "C" {
     pub fn _tolower(arg1: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isalnum_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isalnum_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isalpha_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isalpha_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn iscntrl_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn iscntrl_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isdigit_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isdigit_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn islower_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn islower_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isgraph_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isgraph_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isprint_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isprint_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn ispunct_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn ispunct_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isspace_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isspace_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isupper_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isupper_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isxdigit_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isxdigit_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn isblank_l(arg1: ::std::os::raw::c_int, arg2: __locale_t) -> ::std::os::raw::c_int;
+    pub fn isblank_l(arg1: ::std::os::raw::c_int, arg2: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn __tolower_l(__c: ::std::os::raw::c_int, __l: __locale_t) -> ::std::os::raw::c_int;
+    pub fn __tolower_l(__c: ::std::os::raw::c_int, __l: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn tolower_l(__c: ::std::os::raw::c_int, __l: __locale_t) -> ::std::os::raw::c_int;
+    pub fn tolower_l(__c: ::std::os::raw::c_int, __l: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn __toupper_l(__c: ::std::os::raw::c_int, __l: __locale_t) -> ::std::os::raw::c_int;
+    pub fn __toupper_l(__c: ::std::os::raw::c_int, __l: locale_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    pub fn toupper_l(__c: ::std::os::raw::c_int, __l: __locale_t) -> ::std::os::raw::c_int;
+    pub fn toupper_l(__c: ::std::os::raw::c_int, __l: locale_t) -> ::std::os::raw::c_int;
 }
 pub const DYNAMIC_TYPE_CA: ::std::os::raw::c_uint = 1;
 pub const DYNAMIC_TYPE_CERT: ::std::os::raw::c_uint = 2;
@@ -18491,6 +18388,24 @@ impl Default for ecdsa_attestation_evidence_t {
         unsafe { ::std::mem::zeroed() }
     }
 }
+pub type int_least8_t = ::std::os::raw::c_schar;
+pub type int_least16_t = ::std::os::raw::c_short;
+pub type int_least32_t = ::std::os::raw::c_int;
+pub type int_least64_t = ::std::os::raw::c_long;
+pub type uint_least8_t = ::std::os::raw::c_uchar;
+pub type uint_least16_t = ::std::os::raw::c_ushort;
+pub type uint_least32_t = ::std::os::raw::c_uint;
+pub type uint_least64_t = ::std::os::raw::c_ulong;
+pub type int_fast8_t = ::std::os::raw::c_schar;
+pub type int_fast16_t = ::std::os::raw::c_long;
+pub type int_fast32_t = ::std::os::raw::c_long;
+pub type int_fast64_t = ::std::os::raw::c_long;
+pub type uint_fast8_t = ::std::os::raw::c_uchar;
+pub type uint_fast16_t = ::std::os::raw::c_ulong;
+pub type uint_fast32_t = ::std::os::raw::c_ulong;
+pub type uint_fast64_t = ::std::os::raw::c_ulong;
+pub type intmax_t = __intmax_t;
+pub type uintmax_t = __uintmax_t;
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct _attributes_t {
@@ -19317,6 +19232,106 @@ fn bindgen_test_layout__quote_t() {
         ::std::mem::align_of::<_quote_t>(),
         1usize,
         concat!("Alignment of ", stringify!(_quote_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).version as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(version)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).sign_type as *const _ as usize },
+        2usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(sign_type)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).epid_group_id as *const _ as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(epid_group_id)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).qe_svn as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(qe_svn)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).pce_svn as *const _ as usize },
+        10usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(pce_svn)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).xeid as *const _ as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(xeid)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).basename as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(basename)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).report_body as *const _ as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(report_body)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).signature_len as *const _ as usize },
+        432usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(signature_len)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_quote_t>())).signature as *const _ as usize },
+        436usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_quote_t),
+            "::",
+            stringify!(signature)
+        )
     );
 }
 impl Default for _quote_t {

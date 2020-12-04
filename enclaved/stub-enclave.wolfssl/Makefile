@@ -14,11 +14,11 @@ all: $(Rust_Enclave_Name)
 
 $(Rust_Enclave_Name): $(Rust_Enclave_Files)
 ifeq ($(XARGO_SGX), 1)
-	RUST_TARGET_PATH=$(Rust_Target_Path) xargo build --target x86_64-unknown-linux-sgx --release
-	cp ./target/x86_64-unknown-linux-sgx/release/libhelloworldsampleenclave.a ../lib/libenclave.a
+	RUST_TARGET_PATH=$(Rust_Target_Path) xargo build --target x86_64-unknown-linux-sgx
+	cp ./target/x86_64-unknown-linux-sgx/debug/libhelloworldsampleenclave.a ../lib/libenclave.a
 else
-	C_INCLUDE_PATH="../../ra-tls/wolfssl:/opt/intel/sgxsdk/include" cargo build --release
-	cp ./target/release/libstubenclave.a ../lib/libenclave.a
+	C_INCLUDE_PATH="../../ra-tls/wolfssl:/opt/intel/sgxsdk/include" cargo build
+	cp ./target/debug/libstubenclave.a ../lib/libenclave.a
 endif
 
 test:

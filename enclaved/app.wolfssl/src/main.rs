@@ -167,9 +167,10 @@ fn parse_response_attn_report(
     unsafe {
         (*attn_report).ias_sign_cert[..pem_head_len].clone_from_slice(&pem_head.as_bytes());
         (*attn_report).ias_sign_cert[pem_head_len..sign_cert_len].clone_from_slice(&sign_cert);
-        (*attn_report).ias_sign_cert_len = sign_cert_len as u32 - 1;
+        (*attn_report).ias_sign_cert_len = sign_cert_len as u32;
         println!(
-            "sign cert {}",
+            "sign cert({}) {}",
+            sign_cert_len - 1,
             str::from_utf8(&((*attn_report).ias_sign_cert)[..sign_cert_len - 1]).unwrap()
         );
     }
@@ -180,9 +181,10 @@ fn parse_response_attn_report(
         (*attn_report).ias_sign_ca_cert[..pem_head_len].clone_from_slice(&pem_head.as_bytes());
         (*attn_report).ias_sign_ca_cert[pem_head_len..sign_ca_cert_len]
             .clone_from_slice(&sign_ca_cert);
-        (*attn_report).ias_sign_ca_cert_len = sign_ca_cert_len as u32 - 1;
+        (*attn_report).ias_sign_ca_cert_len = sign_ca_cert_len as u32;
         println!(
-            "sign ca cert {}",
+            "sign ca cert({}) {}",
+            sign_ca_cert_len - 1,
             str::from_utf8(&((*attn_report).ias_sign_ca_cert)[..sign_ca_cert_len - 1]).unwrap()
         );
     }
@@ -196,7 +198,8 @@ fn parse_response_attn_report(
         (*attn_report).ias_report_signature[..sig_len].clone_from_slice(&sig);
         (*attn_report).ias_report_signature_len = sig_len as u32;
         println!(
-            "report signature {}",
+            "report signature({}) {}",
+            sig_len,
             std::str::from_utf8(&((*attn_report).ias_report_signature)[..sig_len]).unwrap()
         );
     }
@@ -210,8 +213,9 @@ fn parse_response_attn_report(
     unsafe {
         (*attn_report).ias_report[..report_len].clone_from_slice(&report.slice(..));
         println!(
-            "report {}",
-            std::str::from_utf8(&((*attn_report).ias_report)[..report_len]).unwrap()
+            "report({}) {}",
+            report_len - 1,
+            std::str::from_utf8(&((*attn_report).ias_report)[..report_len - 1]).unwrap()
         );
     }
 }
@@ -372,13 +376,10 @@ fn main() {
     let mut ssl: *mut ratlsffi::WOLFSSL = ptr::null_mut();
     let mut ctx: *mut ratlsffi::WOLFSSL_CTX = ptr::null_mut();
 
-    /*
-        unsafe {
-            let sgxstatus = ratlsffi::ecall_my_test_print(enclave.geteid());
-            panicIfEcallFailed("ecall_my_test_print", sgxstatus);
-        }
-    */
     unsafe {
+        sgxstatus = ratlsffi::ecall_wolfSSL_Debugging_ON(enclave.geteid());
+        panicIfEcallFailed("ecall_wolfSSL_Debugging_ON", sgxstatus);
+
         sgxstatus = ratlsffi::ecall_wolfSSL_Init(enclave.geteid(), &mut retval as *mut c_int);
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval != ratlsffi::WOLFSSL_SUCCESS {
             panic!(
@@ -387,12 +388,9 @@ fn main() {
             );
         }
 
-        sgxstatus = ratlsffi::ecall_wolfSSL_Debugging_ON(enclave.geteid());
-        panicIfEcallFailed("ecall_wolfSSL_Debugging_ON", sgxstatus);
-
         let mut method: *mut ratlsffi::WOLFSSL_METHOD = ptr::null_mut();
         sgxstatus =
-            ratlsffi::ecall_wolfTLSv1_2_server_method(enclave.geteid(), &mut method as *mut _);
+            ratlsffi::ecall_wolfTLSv1_2_server_method(enclave.geteid(), &mut method as *mut *mut _);
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || method.is_null() {
             panic!(
                 "ecall_wolfTLSv1_2_server_method failed: sgx_status={}, method is_null={}",
@@ -419,7 +417,7 @@ fn main() {
             panic!("ecall_create_key_and_x509 failed: sgx_status={}", sgxstatus);
         }
 
-        sgxstatus = ratlsffi::ecall_wolfSSL_new(enclave.geteid(), &mut ssl as *mut _, ctx);
+        sgxstatus = ratlsffi::ecall_wolfSSL_new(enclave.geteid(), &mut ssl as *mut *mut _, ctx);
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || ssl.is_null() {
             panic!(
                 "ecall_wolfSSL_new failed: sgx_status={}, ssl is_null={}",
@@ -437,24 +435,7 @@ fn main() {
             Ok((socket, addr)) => {
                 println!("new client from {:?} {}", addr, socket.as_raw_fd());
 
-                // defer! {
-                //     if !ctx.is_null() {
-                //         println!("ecall_wolfSSL_CTX_free start ...");
-                //         unsafe { ratlsffi::ecall_wolfSSL_CTX_free(enclave.geteid(), ctx) };
-                //     }
-                //
-                //     if !ssl.is_null() {
-                //         println!("ecall_wolfSSL_free start ...");
-                //         unsafe { ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl) };
-                //     }
-                //
-                //     println!("ecall_wolfSSL_Cleanup start ...");
-                //     unsafe { ratlsffi::ecall_wolfSSL_Cleanup(enclave.geteid(), &mut retval as *mut _) };
-                // }
-                // ;
-
                 unsafe {
-                    println!("ecall_wolfSSL_set_fd start ...");
                     sgxstatus = ratlsffi::ecall_wolfSSL_set_fd(
                         enclave.geteid(),
                         &mut retval as *mut c_int,
@@ -471,43 +452,15 @@ fn main() {
                         continue;
                     }
 
-                    println!("ecall_wolfSSL_read start ...");
-                    let mut buff: &mut [u8; 256] = &mut [0; 256];
+                    let mut buff: [u8; 256] = [0; 256];
                     sgxstatus = ratlsffi::ecall_wolfSSL_read(
                         enclave.geteid(),
-                        &mut retval,
+                        &mut retval as *mut c_int,
                         ssl,
-                        buff.as_mut_ptr() as *mut _ as *mut c_void,
+                        buff.as_mut_ptr() as *mut c_void,
                         256 - 1,
                     ); //TODO: 256?
                     if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval <= 0 {
-                        if retval <= 0 {
-                            ratlsffi::ecall_wolfSSL_get_error(
-                                enclave.geteid(),
-                                &mut retval as *mut _,
-                                ssl,
-                                retval,
-                            );
-                        }
-                        panic!(
-                            "ecall_wolfSSL_read failed: sgx_status={}, retval={}",
-                            sgxstatus, retval
-                        );
-                        continue;
-                    }
-
-                    println!("ecall_wolfSSL_write start ...");
-                    let msg = b"Hello, inclavares!\n";
-                    sgxstatus = ratlsffi::ecall_wolfSSL_write(
-                        enclave.geteid(),
-                        &mut retval,
-                        ssl,
-                        msg.as_ptr() as *const _ as *const c_void,
-                        msg.len() as c_int,
-                    );
-                    if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS
-                        || retval != ratlsffi::WOLFSSL_SUCCESS
-                    {
                         if retval == ratlsffi::WOLFSSL_FATAL_ERROR {
                             ratlsffi::ecall_wolfSSL_get_error(
                                 enclave.geteid(),
@@ -516,7 +469,32 @@ fn main() {
                                 retval,
                             );
                         }
-                        panic!(
+
+                        println!(
+                            "ecall_wolfSSL_read failed: sgx_status={}, retval={}",
+                            sgxstatus, retval
+                        );
+                        continue;
+                    }
+
+                    let msg = b"Hello, Inclavare Containers!\n";
+                    sgxstatus = ratlsffi::ecall_wolfSSL_write(
+                        enclave.geteid(),
+                        &mut retval,
+                        ssl,
+                        msg.as_ptr() as *const _ as *const c_void,
+                        msg.len() as c_int,
+                    );
+                    if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval <= 0 {
+                        if retval == ratlsffi::WOLFSSL_FATAL_ERROR {
+                            ratlsffi::ecall_wolfSSL_get_error(
+                                enclave.geteid(),
+                                &mut retval as *mut _,
+                                ssl,
+                                retval,
+                            );
+                        }
+                        println!(
                             "ecall_wolfSSL_write failed: sgx_status={}, retval={}",
                             sgxstatus, retval
                         );
