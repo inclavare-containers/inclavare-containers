@@ -1,0 +1,9 @@
+metadata:
+  attempt: 1
+  name: my-podsandbox
+  namespace: default
+  uid: hdishd83djaidwnduwk28bcsb
+log_directory: /tmp/hello_world
+linux:
+  namespaces:
+    options: {}

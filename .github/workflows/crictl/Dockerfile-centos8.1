@@ -1,0 +1,93 @@
+#stage 1: build crictl-src
+FROM centos:8.1.1911 AS crictl-src
+
+LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
+
+RUN yum install -y wget git make gcc libseccomp-devel iptables openssl openssl-devel
+
+# install go
+RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib
+
+# configure GOPATH and GOROOT
+ENV GOROOT  /usr/lib/go
+ENV GOPATH  /root/gopath
+ENV PATH    $PATH:$GOROOT/bin:$GOPATH/bin
+
+WORKDIR /root
+
+RUN mkdir -p gopath/src/github.com/containerd               \
+    gopath/src/github.com/kubernetes-sigs                   \
+    gopath/src/github.com/containernetworking               \
+    gopath/bin                                              \
+    gopath/pkg                                              \
+    /etc/containerd                                         \
+    /opt/cni
+
+# build plugins
+RUN cd /root/gopath/src/github.com/containernetworking && \
+    git clone https://github.com/containernetworking/plugins.git && \
+    cd plugins && sed -i '/export GOPATH/d' build_linux.sh  && ./build_linux.sh && \
+    cp -a bin /opt/cni
+
+# build cri-tools
+RUN cd /root/gopath/src/github.com/kubernetes-sigs && \
+    git clone https://github.com/kubernetes-sigs/cri-tools.git && \
+    cd cri-tools && make && make install
+
+# build containerd
+# http://elrepo.org/tiki/tiki-index.php
+RUN rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org && \
+    yum install -y https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm && \
+    yum --enablerepo=elrepo-testing install -y btrfs-progs btrfs-progs-devel --nogpgcheck
+
+RUN cd /root/gopath/src/github.com/containerd && \
+    git clone https://github.com/containerd/containerd -b v1.3.4 && \
+    cd containerd && \
+    make && make install
+
+# configure containerd
+RUN containerd config default > config.toml && \
+    sed -i "s#k8s.gcr.io/pause:3.1#registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.1#g" config.toml && \
+    sed -i 's/\(snapshotter = \)"overlayfs"/\1"native"/' config.toml && \
+    sed -i 's/\(default_runtime_name = \)"runc"/\1"rune"/' config.toml && \
+    sed -i '/\[plugins."io.containerd.grpc.v1.cri".containerd.runtimes\]/a\\t[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.rune]' config.toml && \
+    sed -i '/\[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.rune\]/a\\t  runtime_type = "io.containerd.rune.v2"' config.toml && \
+    mv config.toml /etc/containerd
+
+# stage 2: build crictl-test
+FROM occlum/occlum:OCCLUM_VERSION-centos8.1 AS crictl-test
+
+LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
+
+RUN yum install -y libseccomp-devel iptables openssl openssl-devel wget make
+
+WORKDIR /root
+
+RUN mkdir -p /usr/local/go                                  \
+    /etc/containerd                                         \
+    /etc/cni/net.d                                          \
+    /opt/cni                                                \
+    /root/samples                                           \
+    /tmp/hello_world
+
+# copy binary and configure files
+COPY --from=crictl-src /opt/cni                             /opt/cni
+COPY --from=crictl-src /etc/containerd/config.toml          /etc/containerd
+COPY --from=crictl-src /usr/local/bin                       /usr/local/bin
+
+COPY 10-mynet.conf                                          /etc/cni/net.d
+COPY 99-loopback.conf                                       /etc/cni/net.d
+COPY crictl.yaml                                            /etc
+COPY samples                                                /root/samples
+COPY Dockerfile                                             /root
+COPY hello_world.c                                          /root
+
+# install docker-ce
+RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && \
+    yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo && \
+    yum -y install docker-ce-18.03.0.ce
+
+# configure docker
+RUN mkdir -p /etc/docker && \
+    echo -e "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t}\n}" >> /etc/docker/daemon.json

@@ -1,0 +1,17 @@
+metadata:
+ name: golang-web
+image:
+  image: docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch
+envs:
+- key: ENCLAVE_TYPE
+  value: intelSgx
+- key: "RUNE_CARRIER"
+  value: occlum
+- key: OCCLUM_USER_SPACE_SIZE
+  value: "380MB"
+- key: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+  value: "300MB"
+command:
+- /bin/web_server
+working_dir: /run/rune
+log_path: busybox.1.log

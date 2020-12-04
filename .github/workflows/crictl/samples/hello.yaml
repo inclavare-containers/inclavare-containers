@@ -1,0 +1,12 @@
+metadata:
+  name: occlum_hello
+image:
+  image: docker.io/inclavarecontainers/occlum-hello-world:scratch
+envs:
+- key: "ENCLAVE_TYPE"
+  value: "intelSgx"
+- key: "RUNE_CARRIER"
+  value: occlum
+command:
+- /bin/hello_world
+log_path: busybox.0.log
