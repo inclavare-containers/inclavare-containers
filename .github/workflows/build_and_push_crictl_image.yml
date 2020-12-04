@@ -1,0 +1,39 @@
+name: Crictl image build and push
+
+on: [workflow_dispatch]
+
+jobs:
+  centos-crictl-image:
+      # GitHub Actions doesn't have CentOS VM provided
+      runs-on: ubuntu-18.04
+
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+
+      # Crictl images is based on Occlum image
+      - name: Get Occlum version
+        run: wget https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
+          echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV
+
+      - name: Build images
+        run: cd $GITHUB_WORKSPACE/.github/workflows/crictl;
+          sed -i "s/OCCLUM_VERSION/${{ env.OCCLUM_VERSION }}/" Dockerfile-centos8.1;
+          docker build . -t crictl-centos8.1 -f Dockerfile-centos8.1
+
+      # Dockerfile doesn't support start up containerd
+      - name: Download various images in advance to speed up testing
+        run: |
+          docker run -itd --privileged --name=centos crictl-centos8.1;
+          docker exec centos bash -c "containerd" &
+          docker exec centos bash -c "crictl pull registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.1;
+          crictl pull docker.io/inclavarecontainers/occlum-hello-world:scratch;
+          crictl pull docker.io/inclavarecontainers/occlum-dragonwell-web:scratch;
+          crictl pull docker.io/inclavarecontainers/occlum-java-web:scratch;
+          crictl pull docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch"
+          docker exec centos bash -c "pkill -9 containerd"
+          docker commit centos inclavarecontainers/crictl-centos8.1:occlum-${{ env.OCCLUM_VERSION }}
+
+      - name: Push crictl image to Dockerhub
+        run: docker login -p ${{ secrets.DOCKER_PASSWORD }} -u ${{ secrets.DOCKER_USERNAME }};
+          docker push inclavarecontainers/crictl-centos8.1:occlum-${{ env.OCCLUM_VERSION }}

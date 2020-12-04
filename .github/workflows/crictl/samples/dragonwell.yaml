@@ -1,0 +1,23 @@
+metadata:
+ name: dragonwell-web
+image:
+  image: docker.io/inclavarecontainers/occlum-dragonwell-web:scratch
+envs:
+- key: ENCLAVE_TYPE
+  value: intelSgx
+- key: "RUNE_CARRIER"
+  value: occlum
+- key: OCCLUM_USER_SPACE_SIZE
+  value: "1400MB"
+- key: OCCLUM_MAX_NUM_OF_THREADS
+  value: "64"
+- key: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+  value: "1120MB"
+- key: OCCLUM_PROCESS_DEFAULT_HEAP_SIZE
+  value: "256MB"
+- key: OCCLUM_KERNEL_SPACE_HEAP_SIZE
+  value: "64MB"
+- key: OCCLUM_DEFAULT_ENV
+  value: "LD_LIBRARY_PATH=/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib/server:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/../lib"
+working_dir: /run/rune
+log_path: busybox.1.log
