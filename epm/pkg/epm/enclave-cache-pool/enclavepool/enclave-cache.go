@@ -13,6 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	EPMDir string = "/var/run/epm"
+)
+
 var mut sync.Mutex
 var EnclavePoolStore map[int]*v1alpha1.Enclave
 var EnclavePoolPreStore map[string]*v1alpha1.Enclave
@@ -66,7 +70,7 @@ func (d *EnclaveCacheManager) GetPoolType() string {
 func SaveFd(cacheID string, err *error) {
 	var fd int
 
-	sockpath := filepath.Join("/var/run/sock/", cacheID)
+	sockpath := filepath.Join(EPMDir, cacheID)
 	fd, *err = utils.RecvFd(sockpath)
 	if fd != -1 {
 		EnclavePoolPreStore[cacheID].Fd = int64(fd)
@@ -105,7 +109,8 @@ func (d *EnclaveCacheManager) GetCache(ID string) (*v1alpha1.Cache, error) {
 	}
 
 	fd := enclaveinfo.Fd
-	err = utils.SendFd("/var/run/sock/"+cache.ID, int(fd))
+	sockpath := filepath.Join(EPMDir, cache.ID)
+	err = utils.SendFd(sockpath, int(fd))
 	if err != nil {
 		logrus.Warnf("send fd to epm client failure!", err)
 	}
