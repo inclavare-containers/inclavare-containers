@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	address = "/var/run/containerd/containerd.sock"
+	address     = "/var/run/epm/epm.sock"
+	sockpathdir = "/var/run/epm"
 )
 
 func UnixConnect(addr string, t time.Duration) (net.Conn, error) {
@@ -44,7 +45,7 @@ func GetCache(ID string) *v1alpha1.Enclave {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	sockpath := filepath.Join("/var/run/sock", ID)
+	sockpath := filepath.Join(sockpathdir, ID)
 	go recvFd(sockpath, &fd)
 
 	Type := "enclave-cache-pool"
@@ -94,7 +95,7 @@ func SaveCache(ID string) {
 
 	c.SaveCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})
 
-	unisock := filepath.Join("/var/run/sock", ID)
+	unisock := filepath.Join(sockpathdir, ID)
 	sendFd(unisock, int(enclaveinfo.Fd))
 }
 

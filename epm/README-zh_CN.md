@@ -29,7 +29,7 @@ The Configuration file of epm MUST BE placed into `/etc/epm/config.toml`
 root = "/var/local/epm"
 
 [grpc]
-  address = "/var/run/containerd/containerd.sock"
+  address = "/var/run/epm/epm.sock"
   uid = 0
   gid = 0
   max_recv_message_size = 16777216

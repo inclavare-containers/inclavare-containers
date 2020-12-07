@@ -158,18 +158,9 @@ Assuming you have an OCI bundle according to previous steps, please add config i
 
 ```shell
 {
-        "destination": "/var/run/containerd/",
+        "destination": "/var/run/epm/",
         "type": "bind",
-        "source": "/var/run/containerd/",
-        "options": [
-                "rbind",
-                "rprivate"
-        ]
-},
-{
-        "destination": "/var/run/sock/",
-        "type": "bind",
-        "source": "/var/run/sock/",
+        "source": "/var/run/epm/",
         "options": [
                 "rbind",
                 "rprivate"
