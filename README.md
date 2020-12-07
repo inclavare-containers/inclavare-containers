@@ -131,7 +131,7 @@ docker info | grep rune
 
 ## containerd 
 
-Add the assocated configurations for shim-rune in containerd config file, e.g, `/etc/containerd/config.toml`, on your system.
+Inclavare Containers is added to the [adopters list of containerd](https://github.com/containerd/containerd/blob/master/ADOPTERS.md). Besides, `shim-rune` supports [containerd shim v2 API](https://github.com/containerd/containerd/blob/master/runtime/v2/task/shim.proto). So you can add the assocated configurations for `shim-rune` in the `containerd` config file, e.g, `/etc/containerd/config.toml`, on your system.
 
 ```toml
         [plugins.cri.containerd]
