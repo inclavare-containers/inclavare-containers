@@ -36,7 +36,6 @@ static char *sgx_dev_path;
 static bool no_sgx_flc = false;
 static bool enclave_debug = true;
 static int wait_timeout;
-uint64_t max_mmap_size = 0;
 bool debugging = false;
 bool is_oot_driver;
 bool backend_kvm = false;
@@ -165,7 +164,7 @@ static int create_enclave_range(int dev_fd, uint64_t mmap_size,
 
 static bool encl_create(int dev_fd, unsigned long bin_size,
 			struct sgx_secs *secs, struct enclave_info *encl_info,
-			uint64_t max_mmap_size)
+			struct metadata *meta_data)
 {
 	struct sgx_enclave_create ioc;
 	uint64_t xfrm;
@@ -183,15 +182,15 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 		sgx_calc_ssaframesize(secs->miscselect, secs->xfrm);
 
 	uint64_t mmap_size = bin_size + PAGE_SIZE * secs->ssa_frame_size;
-	if (max_mmap_size) {
-		if (max_mmap_size < mmap_size) {
+	if (meta_data->max_mmap_size) {
+		if (meta_data->max_mmap_size < mmap_size) {
 			fprintf(stderr,
 				"Invalid enclave mmap size %lu, "
 				"set enclave mmap size larger than %lu.\n",
-				max_mmap_size, mmap_size);
+				meta_data->max_mmap_size, mmap_size);
 			return false;
 		}
-		mmap_size = max_mmap_size;
+		mmap_size = meta_data->max_mmap_size;
 	}
 
 	if (mmap_size % PAGE_SIZE)
@@ -292,11 +291,16 @@ static bool encl_add_pages(int dev_fd, uint64_t addr, void *data,
 static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		       struct sgx_sigstruct *sigstruct,
 		       struct sgx_einittoken *token,
-		       struct enclave_info *encl_info, uint64_t max_mmap_size)
+		       struct enclave_info *encl_info)
 {
 	int dev_fd;
 	int rc;
 	uint64_t *add_memory = NULL;
+	struct metadata meta_data;
+
+	/* Get metadata from enclave image. */
+	memset(&meta_data, 0, sizeof(struct metadata));
+	meta_data = *(struct metadata *) (bin + bin_size - PAGE_SIZE);
 
 	dev_fd = open(sgx_dev_path, O_RDWR);
 	if (dev_fd < 0) {
@@ -307,7 +311,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	if (!(sigstruct->body.attributes & SGX_ATTR_DEBUG))
 		enclave_debug = false;
 
-	if (!encl_create(dev_fd, bin_size, secs, encl_info, max_mmap_size))
+	if (!encl_create(dev_fd, bin_size, secs, encl_info, &meta_data))
 		goto out_dev_fd;
 
 	uint64_t *ssa_frame = valloc(PAGE_SIZE * secs->ssa_frame_size);
@@ -322,12 +326,12 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	tcs->entry_offset += encl_info->encl_offset;
 
 	uint64_t add_size = 0;
-	if (max_mmap_size) {
+	if (meta_data.max_mmap_size) {
 		/* *INDENT-OFF* */
-		add_size = max_mmap_size - PAGE_SIZE * secs->ssa_frame_size -
-			   bin_size;
+		add_size = meta_data.max_mmap_size -
+			PAGE_SIZE * secs->ssa_frame_size - bin_size;
 		/* *INDENT-ON* */
-		if (max_mmap_size % PAGE_SIZE)
+		if (meta_data.max_mmap_size % PAGE_SIZE)
 			add_size = (add_size / PAGE_SIZE + 1) * PAGE_SIZE;
 		add_memory = valloc(add_size);
 		if (add_memory == NULL) {
@@ -360,7 +364,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 						SGX_REG_PAGE_FLAGS))
 			goto out_add_memory;
 
-		if (max_mmap_size) {
+		if (meta_data.max_mmap_size) {
 			if (!encl_add_pages_with_mrmask(dev_fd,
 							load_base + bin_size +
 							PAGE_SIZE * secs->ssa_frame_size,
@@ -388,7 +392,7 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 				    SGX_REG_PAGE_FLAGS))
 			goto out_add_memory;
 
-		if (max_mmap_size) {
+		if (meta_data.max_mmap_size) {
 			if (!encl_add_pages(dev_fd,
 					    load_base + bin_size +
 					    PAGE_SIZE * secs->ssa_frame_size,
@@ -467,7 +471,7 @@ static bool get_file_size(const char *path, off_t *bin_size)
 		return false;
 	}
 
-	if (!sb.st_size || sb.st_size & 0xfff) {
+	if (!sb.st_size) {
 		fprintf(stderr, "Invalid blob size %lu\n", sb.st_size);
 		return false;
 	}
@@ -532,9 +536,7 @@ static void check_opts(const char *opt)
 		no_sgx_flc = true;
 	else if (!strcmp(opt, "debug"))
 		debugging = true;
-	else if (strstr(opt, "mmap-size")) {
-		max_mmap_size = atoi(strchr(opt, '=') + 1);
-	} else if (!strcmp(opt, "backend-kvm")) {
+	else if (!strcmp(opt, "backend-kvm")) {
 		backend_kvm = true;
 	} else if (!strncmp(opt, "kvm-kernel=", 11)) {
 		kvm_kernel = strdup(opt + 11);
@@ -589,8 +591,7 @@ int encl_init(struct enclave_info *encl_info)
 	}
 
 	bin_size = align_up(bin_size, PAGE_SIZE);
-	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token,
-			encl_info, max_mmap_size))
+	if (!encl_build(&secs, bin, bin_size, &sigstruct, &token, encl_info))
 		return -EINVAL;
 
 	return 0;
