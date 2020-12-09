@@ -324,16 +324,6 @@ pub extern "C" fn ocall_remote_attestation(
         return;
     }
 
-    /*
-    let mut ias_sock: i32 = 0;
-        unsafe {
-            status = get_ias_socket(&mut ias_sock as *mut i32);
-            if status != sgx_status_t::SGX_SUCCESS {
-                return;
-            }
-        }
-    */
-
     let sub_key = unsafe { CStr::from_ptr((*opts).subscription_key.as_ptr()) };
     let sub_key = sub_key.to_owned().into_string().unwrap();
     retrieve_ias_report(sub_key, &quote[..], attn_report);
@@ -477,12 +467,12 @@ fn main() {
                         continue;
                     }
 
-                    let msg = b"Hello, Inclavare Containers!\n";
+                    let msg = "Hello, Inclavare Containers!\n";
                     sgxstatus = ratlsffi::ecall_wolfSSL_write(
                         enclave.geteid(),
                         &mut retval,
                         ssl,
-                        msg.as_ptr() as *const _ as *const c_void,
+                        msg.as_ptr() as *const c_void,
                         msg.len() as c_int,
                     );
                     if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval <= 0 {
@@ -500,21 +490,19 @@ fn main() {
                         );
                         continue;
                     }
-
-                    // FIXME: close the client connection
                 }
             }
             Err(e) => println!("couldn't get client: {:?}", e),
         }
-    } //loop
+    }
 
     unsafe {
-        if !ctx.is_null() {
-            ratlsffi::ecall_wolfSSL_CTX_free(enclave.geteid(), ctx);
-        }
-
         if !ssl.is_null() {
             ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl);
+        }
+
+        if !ctx.is_null() {
+            ratlsffi::ecall_wolfSSL_CTX_free(enclave.geteid(), ctx);
         }
 
         ratlsffi::ecall_wolfSSL_Cleanup(enclave.geteid(), &mut retval as *mut _);
