@@ -6,3 +6,9 @@ shim/bin/
 shim/.idea/
 *.rpm
 *.deb
+
+# gnu global files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
