@@ -6,6 +6,10 @@
 #include "arch.h"
 #include "sgx_call.h"
 
+struct metadata m __attribute__((section(".metadata"))) = {
+	.max_mmap_size = 0
+};
+
 static void *memcpy(void *dest, const void *src, size_t n)
 {
 	size_t i;

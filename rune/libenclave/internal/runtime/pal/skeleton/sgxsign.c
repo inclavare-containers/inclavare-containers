@@ -239,7 +239,7 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
 /* *INDENT-OFF* */
 static bool measure_encl(const char *path, uint8_t *mrenclave,
 			 uint32_t miscselect, uint64_t xfrm,
-			 uint64_t max_mmap_size,
+			 struct metadata *meta_data,
 			 uint64_t mmap_min_addr,
 			 bool null_dereference_protection)
 /* *INDENT-ON* */
@@ -255,7 +255,7 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	if (!ctx)
 		return false;
 
-	file = fopen(path, "rb");
+	file = fopen(path, "r+b");
 	if (!file) {
 		perror("fopen");
 		EVP_MD_CTX_destroy(ctx);
@@ -268,22 +268,37 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 		goto out;
 	}
 
-	if (!sb.st_size || sb.st_size & 0xfff) {
+	/* Save metadata area to enclave image, skeleton will act accordingly. */
+	if (fseek(file, -sizeof(struct metadata), SEEK_END)) {
+		perror("fseek");
+		goto out;
+	}
+	if (fwrite(meta_data, 1, sizeof(struct metadata), file) !=
+	    sizeof(struct metadata)) {
+		perror("fwrite");
+		goto out;
+	}
+	if (fseek(file, 0L, SEEK_SET)) {
+		perror("fseek");
+		goto out;
+	}
+
+	if (!sb.st_size) {
 		fprintf(stderr, "Invalid blob size %lu\n", sb.st_size);
 		goto out;
 	}
 
 	ssa_frame_size = sgx_calc_ssaframesize(miscselect, xfrm);
 	uint64_t mmap_size = sb.st_size + PAGE_SIZE * ssa_frame_size;
-	if (max_mmap_size) {
-		if (max_mmap_size < mmap_size) {
+	if (meta_data->max_mmap_size) {
+		if (meta_data->max_mmap_size < mmap_size) {
 			fprintf(stderr,
 				"Invalid enclave mmap size %lu, "
 				"please set enclave mmap size large than %lu.\n",
-				max_mmap_size, mmap_size);
+				meta_data->max_mmap_size, mmap_size);
 			return false;
 		}
-		mmap_size = max_mmap_size;
+		mmap_size = meta_data->max_mmap_size;
 	}
 
 	if (mmap_size % PAGE_SIZE)
@@ -503,7 +518,7 @@ int main(int argc, char **argv)
 	int opt;
 	RSA *sign_key;
 	bool enclave_debug = true;
-	uint64_t max_mmap_size = 0;
+	struct metadata meta_data;
 	char *const short_options = "ps:";
 	struct option long_options[] = {
 		{"product", no_argument, NULL, 'p'},
@@ -512,6 +527,7 @@ int main(int argc, char **argv)
 	};
 
 	program = argv[0];
+	memset(&meta_data, 0, sizeof(struct metadata));
 
 	do {
 		opt = getopt_long(argc, argv, short_options, long_options,
@@ -521,7 +537,7 @@ int main(int argc, char **argv)
 			enclave_debug = false;
 			break;
 		case 's':
-			max_mmap_size = atoi(optarg);
+			meta_data.max_mmap_size = atoi(optarg);
 			break;
 		case -1:
 			break;
@@ -569,7 +585,7 @@ int main(int argc, char **argv)
 
 	/* *INDENT-OFF* */
 	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect,
-			  ss.body.xfrm, max_mmap_size, mmap_min_addr,
+			  ss.body.xfrm, &meta_data, mmap_min_addr,
 			  !is_oot_kernel_driver()))
 		goto out;
 	/* *INDENT-ON* */

@@ -18,6 +18,11 @@ SECTIONS
 		*(.data*)
 	}
 
+	. = ALIGN(4096);
+	.metadata : {
+                *(.metadata*)
+	}
+
 	/DISCARD/ : {
 		*(.data*)
 		*(.comment*)

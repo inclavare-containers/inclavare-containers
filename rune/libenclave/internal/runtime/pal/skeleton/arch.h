@@ -428,6 +428,10 @@ struct sgx_report {
 } __packed __aligned(512);
 static_assert(sizeof(struct sgx_report) == 512, "incorrect size of sgx_report");
 
+struct metadata {
+	uint64_t max_mmap_size;
+} __packed;
+
 /* *INDENT-OFF* */
 #endif   /* _ASM_X86_SGX_ARCH_H */
 /* *INDENT-ON* */
