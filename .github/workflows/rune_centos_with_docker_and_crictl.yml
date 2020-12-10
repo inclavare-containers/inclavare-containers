@@ -16,11 +16,12 @@ jobs:
       run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
 
     - name: Create centos container
-      run: docker rm -f centos || true;
-        docker run -itd --privileged --name=centos --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers crictl-occlum:centos8.1
+      run: |
+        centos=$(docker run -itd --privileged --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers crictl-occlum:centos8.1)
+        echo "centos=$centos" >> $GITHUB_ENV
 
     - name: Install dependencies on centos
-      run: docker exec centos bash -c "yum install -y libseccomp-devel;
+      run: docker exec $centos bash -c "yum install -y libseccomp-devel;
         cd /root && wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
         tar -zxf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
         echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
@@ -30,7 +31,7 @@ jobs:
         echo 'export GO111MODULE=on' >>/etc/profile"
 
     - name: Build and install rune and shim-rune rpm
-      run: docker exec centos bash -c "cd /root && source /etc/profile;
+      run: docker exec $centos bash -c "cd /root && source /etc/profile;
         cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
         tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
         cd /root/inclavare-containers-$RUNE_VERSION;
@@ -43,9 +44,9 @@ jobs:
         rpm -ivh shim-rune-$RUNE_VERSION-1.el8.x86_64.rpm"
 
     - name: Build Occlum application image on centos
-      run: docker exec centos bash -c "dockerd -b docker0 --storage-driver=vfs &"
+      run: docker exec $centos bash -c "dockerd -b docker0 --storage-driver=vfs &"
 
-        docker exec centos bash -c "occlum-gcc -o hello_world hello_world.c;
+        docker exec $centos bash -c "occlum-gcc -o hello_world hello_world.c;
         occlum new occlum_instance && cd occlum_instance;
         cp ../hello_world image/bin/ && occlum build;
         occlum package occlum_instance.tar.gz;
@@ -54,7 +55,7 @@ jobs:
 
     - name: Build skeleton image on centos
       run: |
-        docker exec centos bash -c "dnf --enablerepo=PowerTools install -y binutils-devel protobuf-devel protobuf-c-devel;
+        docker exec $centos bash -c "dnf --enablerepo=PowerTools install -y binutils-devel protobuf-devel protobuf-c-devel;
         cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
         make && cp liberpal-skeleton-v*.so /usr/lib;
         cat >Dockerfile <<-EOF
@@ -67,45 +68,46 @@ jobs:
         COPY encl.ss .
         EOF"
 
-        docker exec centos bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
+        docker exec $centos bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
         docker build . -t skeleton-enclave"
 
     - name: Run Occlum image on centos
-      run: docker exec centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
+      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
 
     - name: Run skeleton-v1.so on centos
       if: always()
-      run: docker exec centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run skeleton-v2.so on centos
       if: always()
-      run: docker exec centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run skeleton-v3.so on centos
       if: always()
-      run: docker exec centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run occlum-hello pod on centos
       if: always()
-      run: docker exec centos bash -c "containerd" &
+      run: docker exec $centos bash -c "containerd" &
 
-        docker exec centos bash -c "cd /root/samples && ./clean.sh;
+        docker exec $centos bash -c "cd /root/samples && ./clean.sh;
         crictl run --timeout 3s hello.yaml pod.yaml && ./show.sh"
 
     - name: Run dragonwell-web pod on centos
       if: always()
-      run: docker exec centos bash -c "cd /root/samples && ./clean.sh;
+      run: docker exec $centos bash -c "cd /root/samples && ./clean.sh;
         crictl run --timeout 3s dragonwell.yaml pod.yaml && ./show.sh"
 
     - name: Run openjdk-web pod on centos
       if: always()
-      run: docker exec centos bash -c "cd /root/samples && ./clean.sh;
+      run: docker exec $centos bash -c "cd /root/samples && ./clean.sh;
         crictl run --timeout 3s jdk.yaml pod.yaml && ./show.sh"
 
     - name: Run golang-web pod on centos
       if: always()
-      run: docker exec centos bash -c "cd /root/samples && ./clean.sh;
+      run: docker exec $centos bash -c "cd /root/samples && ./clean.sh;
         crictl run --timeout 3s golang.yaml pod.yaml && ./show.sh"
 
     - name: Kill the container
-      run: docker stop centos
+      if: always()
+      run: docker stop $centos
