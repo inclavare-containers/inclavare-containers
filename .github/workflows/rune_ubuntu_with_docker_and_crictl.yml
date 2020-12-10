@@ -20,11 +20,12 @@ jobs:
         echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV
 
     - name: Create ubuntu container
-      run: docker rm -f ubuntu || true;
-        docker run -itd --privileged --rm --name=ubuntu --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers occlum/occlum:$OCCLUM_VERSION-ubuntu18.04
+      run: |
+        ubuntu=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers occlum/occlum:$OCCLUM_VERSION-ubuntu18.04)
+        echo "ubuntu=$ubuntu" >> $GITHUB_ENV
 
     - name: Install dependencies on ubuntu
-      run: docker exec ubuntu bash -c "apt-get update;
+      run: docker exec $ubuntu bash -c "apt-get update;
         apt-get install libseccomp-dev;
         cd /root && wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
         tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
@@ -36,7 +37,7 @@ jobs:
         echo 'export GO111MODULE=on' >>/etc/profile"
 
     - name: Build and install rune deb
-      run: docker exec ubuntu bash -c "cd /root;
+      run: docker exec $ubuntu bash -c "cd /root;
         cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
         tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
         pushd /root/inclavare-containers-$RUNE_VERSION;
@@ -50,12 +51,12 @@ jobs:
 
     - name: Install and configure docker on ubuntu
       run: |
-        docker exec ubuntu bash -c "apt-get install -y apt-transport-https ca-certificates curl software-properties-common;
+        docker exec $ubuntu bash -c "apt-get install -y apt-transport-https ca-certificates curl software-properties-common;
         curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -;
         add-apt-repository 'deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable';
         apt-get update && apt-get install -y docker-ce"
 
-        docker exec ubuntu bash -c "mkdir -p /etc/docker;
+        docker exec $ubuntu bash -c "mkdir -p /etc/docker;
         cat <<- EOF >/etc/docker/daemon.json
         {
             \"runtimes\":{
@@ -68,11 +69,11 @@ jobs:
         }
         EOF"
 
-        docker exec ubuntu bash -c "service docker start"
+        docker exec $ubuntu bash -c "service docker start"
 
     - name: Build Occlum Application Image on ubuntu
       run: |
-        docker exec ubuntu bash -c "cat <<- EOF >/root/hello_world.c
+        docker exec $ubuntu bash -c "cat <<- EOF >/root/hello_world.c
         "#include\<stdio.h\>"
         int main (void)
         {
@@ -81,12 +82,12 @@ jobs:
         }
         EOF"
 
-        docker exec ubuntu bash -c "occlum-gcc -o hello_world hello_world.c;
+        docker exec $ubuntu bash -c "occlum-gcc -o hello_world hello_world.c;
         occlum new occlum_instance && cd occlum_instance;
         cp ../hello_world image/bin/ && occlum build;
         occlum package occlum_instance.tar.gz"
 
-        docker exec ubuntu bash -c "cat <<- EOF >/root/occlum_instance/Dockerfile
+        docker exec $ubuntu bash -c "cat <<- EOF >/root/occlum_instance/Dockerfile
         FROM centos:8.1.1911
         RUN mkdir -p /run/rune
         WORKDIR /run/rune
@@ -94,12 +95,12 @@ jobs:
         ENTRYPOINT [\"/bin/hello_world\"]
         EOF"
 
-        docker exec ubuntu bash -c "cd /root/occlum_instance;
+        docker exec $ubuntu bash -c "cd /root/occlum_instance;
         docker build . -t occlum-app"
 
     - name: Build skeleton image on ubuntu
       run: |
-        docker exec ubuntu bash -c "apt-get install -y libprotoc-dev binutils-dev;
+        docker exec $ubuntu bash -c "apt-get install -y libprotoc-dev binutils-dev;
         wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz; tar -zxvf v1.3.1.tar.gz;
         cd protobuf-c-1.3.1; ./autogen.sh;
         source /etc/profile; ./configure && make && make install;
@@ -116,23 +117,24 @@ jobs:
         COPY encl.ss .
         EOF"
 
-        docker exec ubuntu bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
+        docker exec $ubuntu bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
         docker build . -t skeleton-enclave"
 
     - name: Run Occlum image on ubuntu
-      run: docker exec ubuntu bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
+      run: docker exec $ubuntu bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
 
     - name: Run skeleton-v1.so on ubuntu
       if: always()
-      run: docker exec ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run skeleton-v2.so on ubuntu
       if: always()
-      run: docker exec ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run skeleton-v3.so on ubuntu
       if: always()
-      run: docker exec ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Kill the container
-      run: docker stop ubuntu
+      if: always()
+      run: docker stop $ubuntu
