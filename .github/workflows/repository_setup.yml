@@ -13,7 +13,8 @@ jobs:
       run: |
         wget -q https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
         echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h;
-        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV
+        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        echo "CPU_NUM=$(grep 'processor' /proc/cpuinfo | sort -u | wc -l)" >> $GITHUB_ENV
 
     - name: Create centos container
       run: |
@@ -37,7 +38,7 @@ jobs:
         find ./ -path "*dist/Makefile" | xargs -I files sed -i '16 d' files;
         mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
         cp /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES/;
-        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y"
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM}"
 
     - name: Configure the centos container
       run: docker exec make-rpm bash -c 'yum install -y gnupg pinentry createrepo rpm-sign ca-certificates;
@@ -83,7 +84,7 @@ jobs:
         echo "$RUNE_VERSION" > VERSION;
         find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
         find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
-        make package"
+        make package -j${CPU_NUM}"
 
     - name: Update deb repo
       run:  docker exec make-deb bash -c 'apt-get update;

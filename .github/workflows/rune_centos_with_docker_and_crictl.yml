@@ -14,6 +14,7 @@ jobs:
 
     - name: Get version
       run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        echo "CPU_NUM=$(grep 'processor' /proc/cpuinfo | sort -u | wc -l)" >> $GITHUB_ENV
 
     - name: Create centos container
       run: |
@@ -39,7 +40,7 @@ jobs:
         cp /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES/;
         echo "$RUNE_VERSION" > VERSION;
         find ./ -path "*dist/Makefile" | xargs -I files sed -i '16 d' files;
-        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y;
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
         rpm -ivh rune-$RUNE_VERSION-1.el8.x86_64.rpm;
         rpm -ivh shim-rune-$RUNE_VERSION-1.el8.x86_64.rpm"
 
@@ -57,7 +58,7 @@ jobs:
       run: |
         docker exec $centos bash -c "dnf --enablerepo=PowerTools install -y binutils-devel protobuf-devel protobuf-c-devel;
         cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
-        make && cp liberpal-skeleton-v*.so /usr/lib;
+        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /usr/lib;
         cat >Dockerfile <<-EOF
         FROM centos:8.1.1911
 
