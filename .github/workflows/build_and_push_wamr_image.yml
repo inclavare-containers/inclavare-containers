@@ -11,7 +11,8 @@ jobs:
 
     - name: Get version
       run: wget https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
-        echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h
+        echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h;
+        echo "CPU_NUM=$(grep 'processor' /proc/cpuinfo | sort -u | wc -l)" >> $GITHUB_ENV
 
     - name: Create ubuntu container
       run: docker rm -f wamr || true;
@@ -61,20 +62,20 @@ jobs:
          echo 'export PKG_CONFIG_PATH=/usr/lib/pkgconfig' >>/etc/profile;
          echo 'export GO111MODULE=on' >>/etc/profile;
          source /etc/profile;
-         cd /root/inclavare-containers/rune && make && make install"
+         cd /root/inclavare-containers/rune && make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
     - name: Build wamr application image
       run: |
         docker exec wamr bash -c "proxychains4 git clone https://github.com/bytecodealliance/wasm-micro-runtime;
         cd wasm-micro-runtime/product-mini/platforms/linux-sgx/;
-        mkdir build && cd build && cmake .. && make;
-        cd ../enclave-sample && make SGX_MODE=HW SGX_DEBUG=1;
+        mkdir build && cd build && cmake .. && make -j${CPU_NUM};
+        cd ../enclave-sample && make SGX_MODE=HW SGX_DEBUG=1 -j${CPU_NUM};
         g++ -shared -fPIC -o libwamr-pal.so App/*.o libvmlib_untrusted.a -L/opt/intel/sgxsdk/lib64 -lsgx_urts -lpthread -lssl -lcrypto;
         cp ./libwamr-pal.so /usr/lib/libwamr-pal.so;
         cd /root/wasm-micro-runtime/wamr-compiler;
         proxychains4 ./build_llvm.sh;
         mkdir build && cd build;
-        cmake .. && make;
+        cmake .. && make -j${CPU_NUM};
         cp wamrc /usr/bin/wamrc"
 
         docker exec wamr bash -c "cat <<- EOF >/root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/test.c
