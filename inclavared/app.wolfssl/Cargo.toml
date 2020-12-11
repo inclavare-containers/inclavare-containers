@@ -1,5 +1,5 @@
 [package]
-name = "enclaved-wolfssl"
+name = "inclavared"
 version = "0.1.0"
 authors = ["stormgbs <stormgbs@gmail.com>"]
 build = "build.rs"

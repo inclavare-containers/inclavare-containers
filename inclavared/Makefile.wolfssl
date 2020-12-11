@@ -75,9 +75,9 @@ App_SRC_Files := $(shell find app.wolfssl/ -type f -name '*.rs') $(shell find ap
 App_Include_Paths := -I ./app.wolfssl -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH) -I$(RA_TLS_EDL_PATH)
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 
-App_Rust_Path := ./app.wolfssl/target/debug
+App_Rust_Path := ./app.wolfssl/target/release
 App_Enclave_u_Object :=app.wolfssl/libEnclave_u.a
-App_Name := bin/enclaved.wolfssl
+App_Name := bin/inclavared.wolfssl
 
 ######## Enclave Settings ########
 
@@ -127,7 +127,7 @@ $(WOLFSSL_RA_LIB_SRC_NAME):
 	$(MAKE) -C ../ra-tls
 
 $(WOLFSSL_RA_LIB_NAME): $(WOLFSSL_RA_LIB_SRC_NAME)
-	mkdir ../ra-tls/build/lib/ra && cd ../ra-tls/build/lib/ra && $(AR) -x ../libsgx_ra_tls_wolfssl.a && rm -f ra_tls_t.o && $(AR) rcs ../libsgx_ra.a *.o && cd ../../../../enclaved 
+	mkdir ../ra-tls/build/lib/ra && cd ../ra-tls/build/lib/ra && $(AR) -x ../libsgx_ra_tls_wolfssl.a && rm -f ra_tls_t.o && $(AR) rcs ../libsgx_ra.a *.o && cd ../../../../inclavared
 
 .PHONY: all
 all: $(WOLFSSL_RA_LIB_NAME) $(Rust_SDK) $(App_Name) $(Signed_RustEnclave_Name)
@@ -160,7 +160,7 @@ $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
 	$(MAKE) -C ./app.wolfssl
 	@echo "Cargo  =>  $@"
 	mkdir -p bin
-	cp $(App_Rust_Path)/enclaved-wolfssl ./bin/enclaved.wolfssl
+	cp $(App_Rust_Path)/inclavared ./bin/inclavared.wolfssl
 
 ######## Enclave Objects ########
 
