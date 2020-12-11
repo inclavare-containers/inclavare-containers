@@ -164,7 +164,8 @@ static int create_enclave_range(int dev_fd, uint64_t mmap_size,
 
 static bool encl_create(int dev_fd, unsigned long bin_size,
 			struct sgx_secs *secs, struct enclave_info *encl_info,
-			struct metadata *meta_data)
+			struct metadata *meta_data,
+			struct sgx_sigstruct *sigstruct)
 {
 	struct sgx_enclave_create ioc;
 	uint64_t xfrm;
@@ -173,9 +174,37 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	secs->attributes = SGX_ATTR_MODE64BIT;
 	if (enclave_debug)
 		secs->attributes |= SGX_ATTR_DEBUG;
+	/* Check attributes to prevent possible tampering of metadata area */
+	if ((meta_data->attributes & sigstruct->body.attributes) !=
+	    sigstruct->body.attributes) {
+		fprintf(stderr, "Invalid attributes value.\n");
+		return false;
+	}
+	secs->attributes = meta_data->attributes & secs->attributes;
+	/* Check the attributes in signature structure restrictions */
+	if ((sigstruct->body.attributes & sigstruct->body.attributes_mask) !=
+	    (secs->attributes & sigstruct->body.attributes_mask)) {
+		fprintf(stderr,
+			"secs attributes does NOT match signature attributes.\n");
+		return false;
+	}
 
 	get_sgx_xfrm_by_cpuid(&xfrm);
 	secs->xfrm = xfrm;
+	/* Check whether the xfrm features in metadata area are available */
+	if ((secs->xfrm & meta_data->xfrm) != meta_data->xfrm) {
+		fprintf(stderr,
+			"Invalid xfrm value. Unavailable bits are %#lx.\n",
+			meta_data->xfrm & ~(secs->xfrm & meta_data->xfrm));
+		return false;
+	}
+	secs->xfrm = meta_data->xfrm & secs->xfrm;
+	/* Check the xfrm in signature structure restrictions */
+	if ((sigstruct->body.xfrm & sigstruct->body.xfrm_mask) !=
+	    (secs->xfrm & sigstruct->body.xfrm_mask)) {
+		fprintf(stderr, "secs xfrm does NOT match signature xfrm.\n");
+		return false;
+	}
 
 	secs->miscselect = get_sgx_miscselect_by_cpuid();
 	secs->ssa_frame_size =
@@ -311,8 +340,10 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 	if (!(sigstruct->body.attributes & SGX_ATTR_DEBUG))
 		enclave_debug = false;
 
-	if (!encl_create(dev_fd, bin_size, secs, encl_info, &meta_data))
+	/* *INDENT-OFF* */
+	if (!encl_create(dev_fd, bin_size, secs, encl_info, &meta_data, sigstruct))
 		goto out_dev_fd;
+	/* *INDENT-ON* */
 
 	uint64_t *ssa_frame = valloc(PAGE_SIZE * secs->ssa_frame_size);
 	if (ssa_frame == NULL) {

@@ -519,10 +519,12 @@ int main(int argc, char **argv)
 	RSA *sign_key;
 	bool enclave_debug = true;
 	struct metadata meta_data;
-	char *const short_options = "ps:";
+	char *const short_options = "ps:x:a:";
 	struct option long_options[] = {
 		{"product", no_argument, NULL, 'p'},
 		{"mmap-size", required_argument, NULL, 's'},
+		{"xfrm", required_argument, NULL, 'x'},
+		{"attrs", required_argument, NULL, 'a'},
 		{0, 0, 0, 0}
 	};
 
@@ -538,6 +540,12 @@ int main(int argc, char **argv)
 			break;
 		case 's':
 			meta_data.max_mmap_size = atoi(optarg);
+			break;
+		case 'x':
+			meta_data.xfrm = strtol(optarg, NULL, 16);
+			break;
+		case 'a':
+			meta_data.attributes = strtol(optarg, NULL, 16);
 			break;
 		case -1:
 			break;
@@ -566,11 +574,39 @@ int main(int argc, char **argv)
 #endif
 	if (enclave_debug)
 		ss.body.attributes |= SGX_ATTR_DEBUG;
+	if (meta_data.attributes) {
+		/* The minimum set of attributes must be set */
+		if ((meta_data.attributes & ss.body.attributes) !=
+		    ss.body.attributes) {
+			fprintf(stderr,
+				"Invalid attributes value. The minimum set of attributes %#lx must be set.\n",
+				ss.body.attributes);
+			return -1;
+		}
+
+		ss.body.attributes = meta_data.attributes;
+	} else {
+		meta_data.attributes = ss.body.attributes;
+	}
 
 	get_sgx_xfrm_by_cpuid(&xfrm);
 	ss.body.xfrm = xfrm;
+	if (meta_data.xfrm) {
+		/* The minimum set of xfrm must be set */
+		if ((meta_data.xfrm & SGX_XFRM_LEGACY) != SGX_XFRM_LEGACY) {
+			fprintf(stderr,
+				"Invalid xfrm value. The minimum set of xfrm %#llx must be set.\n",
+				SGX_XFRM_LEGACY);
+			return -1;
+		}
+
+		ss.body.xfrm = meta_data.xfrm;
+	} else {
+		meta_data.xfrm = ss.body.xfrm;
+	}
 
 	ss.body.attributes_mask = ss.body.attributes;
+	ss.body.xfrm_mask = ss.body.xfrm;
 	ss.body.miscselect = get_sgx_miscselect_by_cpuid();
 
 	/* sanity check only */
