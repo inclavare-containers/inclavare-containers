@@ -3,7 +3,7 @@ build/
 .idea/
 _output/
 shim/bin/
-shim/.idea/
+*/.idea/
 *.rpm
 *.deb
-enclaved/rust-sgx
+inclavared/rust-sgx

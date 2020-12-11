@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: enclaved
+  name: inclavared
   namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: enclaved
+  name: inclavared
 rules:
   - apiGroups:
       - ""
@@ -33,31 +33,31 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: enclaved
+  name: inclavared
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: enclaved
+  name: inclavared
 subjects:
   - kind: ServiceAccount
-    name: enclaved
+    name: inclavared
     namespace: kube-system
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: enclaved
-  name: enclaved
+    app: inclavared
+  name: inclavared
   namespace: kube-system
 spec:
   selector:
     matchLabels:
-      app: enclaved
+      app: inclavared
   template:
     metadata:
       labels:
-        app: enclaved
+        app: inclavared
     spec:
       affinity:
         nodeAffinity:
@@ -85,9 +85,9 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.namespace
-          image: registry.cn-hangzhou.aliyuncs.com/sandboxed-container/enclaved:v0.1.0
+          image: registry.cn-hangzhou.aliyuncs.com/sandboxed-container/inclavared:v0.1.0
           imagePullPolicy: IfNotPresent
-          name: enclaved
+          name: inclavared
           resources:
             limits:
               cpu: "1"
@@ -101,8 +101,8 @@ spec:
               readOnly: true
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      serviceAccount: enclaved
-      serviceAccountName: enclaved
+      serviceAccount: inclavared
+      serviceAccountName: inclavared
       volumes:
         - hostPath:
             path: /etc/localtime

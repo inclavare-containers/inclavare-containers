@@ -17,7 +17,7 @@ var version = ""
 // and will be populated by the Makefile
 var gitCommit = ""
 
-const usage = `enclaved command line tool
+const usage = `inclavared command line tool
 `
 
 func main() {

@@ -55,7 +55,7 @@ lib/libra-tls-server.a:
 	make -C lib 
 
 install: ra-tls-server
-	cp -f enclaved $(BINDIR)
+	cp -f inclavared $(BINDIR)
 
 clean:
 	rm -f *.o ra-tls-server

@@ -6,9 +6,9 @@ Rust_App_Files := $(wildcard src/*.rs)
 all: $(Rust_App_Name)
 
 $(Rust_App_Name): $(Rust_App_Files)
-	cargo build
+	cargo build --release
 	[ ! -d ../bin ] && mkdir ../bin || true
-	cp ./target/debug/enclaved-wolfssl ../bin/enclaved.wolfssl
+	cp ./target/release/inclavared ../bin/inclavared
 
 clean:
 	@cargo clean
