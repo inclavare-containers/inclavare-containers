@@ -777,9 +777,25 @@ int __pal_get_local_report(void *targetinfo, int targetinfo_len,
 	struct sgx_report report_align;
 	int ret;
 
+	FILE *fp_stderr = stderr;
+	FILE *fp_stdout = stdout;
+
+	if (pal_stdio.stderr != -1) {
+		fp_stderr = fdopen(pal_stdio.stderr, "w");
+		if (!fp_stderr)
+			return -1;
+	}
+
+	if (pal_stdio.stdout != -1) {
+		fp_stdout = fdopen(pal_stdio.stdout, "w");
+		if (!fp_stdout)
+			return -1;
+	}
+
 	if (!initialized) {
-		fprintf(stderr,
+		fprintf(fp_stderr,
 			"Enclave runtime skeleton uninitialized yet!\n");
+		fflush(fp_stderr);
 		return -1;
 	}
 
@@ -789,28 +805,31 @@ int __pal_get_local_report(void *targetinfo, int targetinfo_len,
 
 	if (targetinfo == NULL ||
 	    targetinfo_len != sizeof(struct sgx_target_info)) {
-		fprintf(stderr,
+		fprintf(fp_stderr,
 			"Input parameter targetinfo is NULL or targentinfo_len != sizeof(struct sgx_target_info)!\n");
+		fflush(fp_stderr);
 		return -1;
 	}
 
 	if (report == NULL || report_len == NULL ||
 	    *report_len < SGX_REPORT_SIZE) {
-		fprintf(stderr,
+		fprintf(fp_stderr,
 			"Input parameter report is NULL or report_len is not enough!\n");
+		fflush(fp_stderr);
 		return -1;
 	}
 
 	ret = SGX_ENTER_3_ARGS(ECALL_REPORT, (void *) secs.base, targetinfo,
 			       report_data, &report_align);
 	if (ret) {
-		fprintf(stderr, "failed to get report\n");
+		fprintf(fp_stderr, "failed to get report\n");
+		fflush(fp_stderr);
 		return ret;
 	}
 
 	memcpy(report, &report_align, SGX_REPORT_SIZE);
 	if (debugging) {
-		fprintf(stdout, "succeed to get local report\n");
+		fprintf(fp_stdout, "succeed to get local report\n");
 	}
 
 	return 0;
