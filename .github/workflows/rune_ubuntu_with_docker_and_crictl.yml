@@ -89,10 +89,8 @@ jobs:
         occlum package occlum_instance.tar.gz"
 
         docker exec $ubuntu bash -c "cat <<- EOF >/root/occlum_instance/Dockerfile
-        FROM centos:8.1.1911
-        RUN mkdir -p /run/rune
-        WORKDIR /run/rune
-        ADD occlum_instance.tar.gz /run/rune
+        FROM scratch
+        ADD occlum_instance.tar.gz /
         ENTRYPOINT [\"/bin/hello_world\"]
         EOF"
 
@@ -109,13 +107,11 @@ jobs:
         cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton
         make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /usr/lib;
         cat >Dockerfile <<-EOF
-        FROM centos:8.1.1911
+        FROM scratch
 
-        RUN mkdir -p /run/rune
-        WORKDIR /run/rune
-
-        COPY encl.bin .
-        COPY encl.ss .
+        COPY encl.bin /
+        COPY encl.ss /
+        ENTRYPOINT [\"dummy\"]
         EOF"
 
         docker exec $ubuntu bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
