@@ -45,13 +45,19 @@ jobs:
         rpm -ivh shim-rune-$RUNE_VERSION-1.el8.x86_64.rpm"
 
     - name: Build Occlum application image on centos
-      run: docker exec $centos bash -c "dockerd -b docker0 --storage-driver=vfs &"
+      run: | 
+        docker exec $centos bash -c "dockerd -b docker0 --storage-driver=vfs &"
 
         docker exec $centos bash -c "occlum-gcc -o hello_world hello_world.c;
         occlum new occlum_instance && cd occlum_instance;
         cp ../hello_world image/bin/ && occlum build;
         occlum package occlum_instance.tar.gz;
-        cp /root/Dockerfile /root/occlum_instance;
+        cat >/root/occlum_instance/Dockerfile <<-EOF
+        FROM scratch
+
+        ADD occlum_instance.tar.gz /
+        ENTRYPOINT [\"/bin/hello_world\"]
+        EOF
         docker build . -t occlum-app"
 
     - name: Build skeleton image on centos
@@ -60,13 +66,12 @@ jobs:
         cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
         make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /usr/lib;
         cat >Dockerfile <<-EOF
-        FROM centos:8.1.1911
+        FROM scratch
 
-        RUN mkdir -p /run/rune
-        WORKDIR /run/rune
+        COPY encl.bin /
+        COPY encl.ss /
 
-        COPY encl.bin .
-        COPY encl.ss .
+        ENTRYPOINT [\"dummy\"]
         EOF"
 
         docker exec $centos bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
