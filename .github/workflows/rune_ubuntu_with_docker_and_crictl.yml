@@ -37,18 +37,11 @@ jobs:
         echo 'export PKG_CONFIG_PATH=/usr/lib/pkgconfig' >>/etc/profile;
         echo 'export GO111MODULE=on' >>/etc/profile"
 
-    - name: Build and install rune deb
-      run: docker exec $ubuntu bash -c "cd /root;
-        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
-        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
-        pushd /root/inclavare-containers-$RUNE_VERSION;
-        echo "$RUNE_VERSION" > VERSION;
-        sed -i '17 d' rune/dist/deb/build.sh;
-        sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' rune/dist/deb/build.sh;
-        source /etc/profile;
-        make package components=rune;
-        dpkg -i rune_$RUNE_VERSION-1_amd64.deb;
-        popd"
+    - name: Build and install binaries on ubuntu
+      run: docker exec $ubuntu bash -c "source /etc/profile;
+        cd /root && cp -r inclavare-containers inclavare-containers-$RUNE_VERSION; 
+        cd inclavare-containers-$RUNE_VERSION;
+        make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
     - name: Install and configure docker on ubuntu
       run: |
@@ -131,6 +124,62 @@ jobs:
     - name: Run skeleton-v3.so on ubuntu
       if: always()
       run: docker exec $ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+
+    - name: Create skeleton bundle on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "mkdir rootfs;
+        docker create --name skeleton-enclave skeleton-enclave;
+        docker export skeleton-enclave | tar -C rootfs -xvf -;
+        cp /etc/resolv.conf rootfs/etc/resolv.conf"
+
+    - name: Run skeleton v2 bundle on ubuntu
+      if: always()
+      run: |
+        docker exec $ubuntu bash -c "mkdir -p /var/run/rune;
+        cp /usr/lib/liberpal-skeleton-v2.so /var/run/rune/liberpal-skeleton-v2.so;
+        rune spec;
+        sed -i '4 c \"terminal\": false,' config.json;
+        sed -i '16 c \"cwd\": \"\/\",' config.json;
+        rune --debug run ra"
+
+    - name: Generate skeleton ra config.json on ubuntu
+      if: always()
+      run: | 
+        docker exec $ubuntu bash -c "sed -i '161,163d' config.json;
+        sed -i 's/\/var\/run\/rune\/liberpal-skeleton-v2.so/\/usr\/lib\/liberpal-skeleton-v3.so/g' config.json;
+        sed -i '10 c  \"sh\",\"wait_timeout\",\"6000\"' config.json;
+        sed -i '144 a \"enclave.attestation.ra_epid_is_linkable\": \"false\",' config.json;
+        sed -i '144 a \"enclave.attestation.ra_epid_subscription_key\": \"${{ secrets.SUB_KEY }}\",' config.json;
+        sed -i '144 a \"enclave.attestation.ra_epid_spid\": \"${{ secrets.SPID }}\",' config.json;
+        sed -i '144 a \"enclave.attestation.ra_type\":\"EPID\",' config.json;"
+
+    - name: Run skeleton v3 bundle on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "rune --debug run skeleton-enclave-container" &
+
+    - name: Get remote report with rune attest command with skeleton on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "sleep 10;
+        rune --debug attest --isRA --linkable=false --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
+
+    - name: Get local report with rune attest command with skeleton on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "rune --debug attest --reportFile=/report.bin skeleton-enclave-container"
+
+    - name: Get target info with sgx-tools on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "cd rootfs;
+        sgx-tools -verbose gen-qe-target-info"
+
+    - name: Get quote with sgx-tools on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "cd rootfs;
+        sgx-tools -verbose gen-quote --report report.bin --spid=${{ secrets.SPID }}"
+
+    - name: Get remote report with sgx-tools on ubuntu
+      if: always()
+      run: docker exec $ubuntu bash -c "cd rootfs;
+        sgx-tools -verbose get-ias-report --quote quote.bin --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }}"
 
     - name: Kill the container
       if: always()
