@@ -1,4 +1,4 @@
-name: Nightly build on k8s-centos
+name: Nightly
 
 # This is a manual trigger and schedule to run everyday at 2AM CST.
 on:
