@@ -15,6 +15,7 @@ use sgx_types::{
 use sgx_urts::SgxEnclave;
 use std::default::Default;
 use std::ffi::CStr;
+use std::net::Shutdown;
 use std::os::unix::io::AsRawFd;
 use std::os::unix::net::UnixListener;
 use std::ptr;
@@ -363,7 +364,6 @@ fn main() {
 
     let mut sgxstatus = ratlsffi::_status_t_SGX_SUCCESS;
     let mut retval: c_int = 0;
-    let mut ssl: *mut ratlsffi::WOLFSSL = ptr::null_mut();
     let mut ctx: *mut ratlsffi::WOLFSSL_CTX = ptr::null_mut();
 
     unsafe {
@@ -406,19 +406,13 @@ fn main() {
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS {
             panic!("ecall_create_key_and_x509 failed: sgx_status={}", sgxstatus);
         }
-
-        sgxstatus = ratlsffi::ecall_wolfSSL_new(enclave.geteid(), &mut ssl as *mut *mut _, ctx);
-        if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || ssl.is_null() {
-            panic!(
-                "ecall_wolfSSL_new failed: sgx_status={}, ssl is_null={}",
-                sgxstatus,
-                ssl.is_null()
-            );
-        }
     }
 
     println!("Running server(based on wolfssl)...");
+
     let sock_path = "/run/rune/ra-tls.sock";
+    std::fs::remove_file(sock_path).unwrap();
+
     let listener = UnixListener::bind(sock_path).unwrap();
     loop {
         match listener.accept() {
@@ -426,6 +420,18 @@ fn main() {
                 println!("new client from {:?} {}", addr, socket.as_raw_fd());
 
                 unsafe {
+                    let mut ssl: *mut ratlsffi::WOLFSSL = ptr::null_mut();
+
+                    sgxstatus =
+                        ratlsffi::ecall_wolfSSL_new(enclave.geteid(), &mut ssl as *mut *mut _, ctx);
+                    if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || ssl.is_null() {
+                        panic!(
+                            "ecall_wolfSSL_new failed: sgx_status={}, ssl is_null={}",
+                            sgxstatus,
+                            ssl.is_null()
+                        );
+                    }
+
                     sgxstatus = ratlsffi::ecall_wolfSSL_set_fd(
                         enclave.geteid(),
                         &mut retval as *mut c_int,
@@ -464,6 +470,7 @@ fn main() {
                             "ecall_wolfSSL_read failed: sgx_status={}, retval={}",
                             sgxstatus, retval
                         );
+                        ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl);
                         continue;
                     }
 
@@ -488,19 +495,18 @@ fn main() {
                             "ecall_wolfSSL_write failed: sgx_status={}, retval={}",
                             sgxstatus, retval
                         );
-                        continue;
                     }
+
+                    ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl);
                 }
+
+                socket.shutdown(Shutdown::Both).expect("shutdown failed");
             }
             Err(e) => println!("couldn't get client: {:?}", e),
         }
     }
 
     unsafe {
-        if !ssl.is_null() {
-            ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl);
-        }
-
         if !ctx.is_null() {
             ratlsffi::ecall_wolfSSL_CTX_free(enclave.geteid(), ctx);
         }

@@ -20,6 +20,9 @@
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
+SGX_DEBUG ?=
+
+export SGX_DEBUG
 
 TOP_DIR := .
 include $(TOP_DIR)/buildenv.mk
@@ -70,13 +73,19 @@ Enclave_EDL_Files := stub-enclave.wolfssl/Enclave_t.c stub-enclave.wolfssl/Encla
 
 ######## APP Settings ########
 
+ifneq ($(SGX_DEBUG), 1)
+App_Rust_Flags := --release
+App_Rust_Release_Mode := release
+else
 App_Rust_Flags :=
+App_Rust_Release_Mode := debug
+endif
 App_SRC_Files := $(shell find app.wolfssl/ -type f -name '*.rs') $(shell find app.wolfssl/ -type f -name 'Cargo.toml')
 App_Include_Paths := -I ./app.wolfssl -I./include -I$(SGX_SDK)/include -I$(CUSTOM_EDL_PATH) -I$(RA_TLS_EDL_PATH)
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 
-App_Rust_Path := ./app.wolfssl/target/release
-App_Enclave_u_Object :=app.wolfssl/libEnclave_u.a
+App_Rust_Path := ./app.wolfssl/target/$(App_Rust_Release_Mode)
+App_Enclave_u_Object := app.wolfssl/libEnclave_u.a
 App_Name := bin/inclavared.wolfssl
 
 ######## Enclave Settings ########
@@ -181,7 +190,6 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 .PHONY: enclave
 enclave:
 	$(MAKE) -C ./stub-enclave.wolfssl/
-
 
 .PHONY: clean
 clean:
