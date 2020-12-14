@@ -106,8 +106,8 @@ ifdef DEBUG
 CURL_CONFFLAGS += --enable-debug
 endif
 curl-wolfssl:
-	git clone https://github.com/curl/curl.git -b curl-7_47_0 curl-wolfssl && \
-	  cd curl-wolfssl && ./buildconf && \
+	test -d curl-wolfssl || git clone https://github.com/curl/curl.git curl-wolfssl
+	cd curl-wolfssl && git stash && git checkout curl-7_47_0 && ./buildconf && \
 	  CFLAGS="-fPIC" ./configure $(CURL_CONFFLAGS) --without-ssl --with-cyassl=$(shell readlink -f $(PREFIX))
 
 ifdef ECDSA
@@ -146,4 +146,4 @@ mrproper:
 	$(MAKE) clean
 	rm -rf curl-wolfssl wolfssl
 
-.PHONY: all clean mrproper wolfssl
+.PHONY: all clean mrproper wolfssl curl-wolfssl
