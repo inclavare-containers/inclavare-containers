@@ -1,5 +1,7 @@
 ![inclavare-containers](docs/image/logo.png)
 
+[![Nightly](https://github.com/alibaba/inclavare-containers/workflows/Nightly/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions?query=workflow%3ANightly)
+
 Inclavare Containers is an innovation of container runtime with the novel approach for launching protected containers in hardware-assisted Trusted Execution Environment (TEE) technology, aka Enclave, which can prevent the untrusted entity, such as Cloud Service Provider (CSP), from accessing the sensitive and confidential assets in use.
 
 Inclavare Containers has the following salient features:
