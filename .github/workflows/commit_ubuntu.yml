@@ -2,7 +2,7 @@ name: Run rune on ubuntu with docker and crictl test
 
 # Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
 on:
-  pull_request:
+  pull_request_target:
     types: labeled
 
 jobs:
@@ -11,7 +11,9 @@ jobs:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
     runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
     - name: Get version
