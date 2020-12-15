@@ -30,6 +30,7 @@
 
 struct sgx_secs secs;
 static pal_stdio_fds pal_stdio = { -1, -1, -1 };
+
 bool initialized = false;
 static int exit_code;
 static char *sgx_dev_path;
@@ -69,12 +70,24 @@ static void detect_driver_type(void)
  * in enclave range.
  */
 static int create_enclave_range(int dev_fd, uint64_t mmap_size,
-				struct enclave_info *encl_info)
+				struct enclave_info *encl_info,
+				struct metadata *meta_data)
 {
 	uint64_t mmap_min_addr;
 
 	if (get_mmap_min_addr(&mmap_min_addr) < 0)
 		return -1;
+
+	/* mmap_min_addr only affect the value of encl_offset when
+	 * in tree driver with null_dereference_protection.
+	 */
+	if ((mmap_min_addr != meta_data->mmap_min_addr) && !is_oot_driver &&
+	    meta_data->null_dereference_protection) {
+		fprintf(stderr,
+			"Invalid mmap_min_addr value, the valid mmap_min_addr is %ld\n",
+			mmap_min_addr);
+		return -1;
+	}
 
 	int flags = MAP_SHARED;
 	int prot = PROT_READ | PROT_WRITE | PROT_EXEC;
@@ -85,20 +98,33 @@ static int create_enclave_range(int dev_fd, uint64_t mmap_size,
 	 * disallows to mmap(0), and thus there is no way to protect
 	 * enclave against null dereference attack.
 	 */
-	if (is_oot_driver && mmap_min_addr) {
+	if (meta_data->null_dereference_protection && is_oot_driver &&
+	    mmap_min_addr) {
+		fprintf(stderr,
+			"Cannot protect enclave against null dereference attack "
+			"when vm.mmap_min_addr is not configured of 0 in OOT driver.\n");
+		return -1;
+	}
+
+	if (!meta_data->null_dereference_protection) {
+		printf("WARNING: enclave is vulnerable to null dereference "
+		       "attack. Careful consideration required prior to "
+		       "setting -n option when signing. In additon, set "
+		       "vm.mmap_min_addr=0 if using OOT driver.\n");
+
 		encl_size = pow2(mmap_size);
-		/* *INDENT-OFF* */
-		mmap_addr = mmap(NULL, encl_size * 2, prot, flags,
-				 dev_fd, 0);
-		/* *INDENT-ON* */
+
+		if (!is_oot_driver) {
+			dev_fd = -1;
+			prot = PROT_NONE;
+			flags |= MAP_ANONYMOUS;
+		}
+
+		mmap_addr = mmap(NULL, encl_size * 2, prot, flags, dev_fd, 0);
 		if (mmap_addr == MAP_FAILED) {
 			perror("mmap");
 			return -1;
 		}
-
-		printf("WARNING: enclave is vulnerable to null dereference "
-		       "attack. Careful consideration required prior to "
-		       "setting vm.mmap_min_addr=0\n");
 
 		/* Unmap unused areas */
 		uint64_t mmap_base;
@@ -108,7 +134,7 @@ static int create_enclave_range(int dev_fd, uint64_t mmap_size,
 		/* *INDENT-ON* */
 		munmap(mmap_addr, mmap_base - (uint64_t) mmap_addr);
 
-		/* OOT driver requires VMA is consistent with enclave range
+		/* VMA should be consistent with enclave range
 		 * during EINIT. The tail padding to be unmapped must be
 		 * located at mmap_base + encl_size.
 		 */
@@ -225,7 +251,7 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	if (mmap_size % PAGE_SIZE)
 		mmap_size = (mmap_size / PAGE_SIZE + 1) * PAGE_SIZE;
 
-	if (create_enclave_range(dev_fd, mmap_size, encl_info) < 0)
+	if (create_enclave_range(dev_fd, mmap_size, encl_info, meta_data) < 0)
 		return false;
 
 	printf("enclave range [%#016lx, %#016lx], length %ld-byte\n",

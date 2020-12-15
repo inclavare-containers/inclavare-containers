@@ -239,9 +239,7 @@ static bool mrenclave_eextend(EVP_MD_CTX *ctx, uint64_t offset, uint8_t *data)
 /* *INDENT-OFF* */
 static bool measure_encl(const char *path, uint8_t *mrenclave,
 			 uint32_t miscselect, uint64_t xfrm,
-			 struct metadata *meta_data,
-			 uint64_t mmap_min_addr,
-			 bool null_dereference_protection)
+			 struct metadata *meta_data)
 /* *INDENT-ON* */
 {
 	FILE *file;
@@ -304,8 +302,16 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 	if (mmap_size % PAGE_SIZE)
 		mmap_size = (mmap_size / PAGE_SIZE + 1) * PAGE_SIZE;
 
-	uint64_t encl_offset = calc_enclave_offset(mmap_min_addr,
-						   !is_oot_kernel_driver());
+	if (meta_data->null_dereference_protection && meta_data->mmap_min_addr
+	    && is_oot_kernel_driver()) {
+		fprintf(stderr,
+			"Cannot protect enclave against null dereference attack "
+			"when vm.mmap_min_addr is not configured of 0 in OOT driver.\n");
+		return false;
+	}
+	uint64_t encl_offset = calc_enclave_offset(meta_data->mmap_min_addr,
+						   meta_data->
+						   null_dereference_protection);
 	uint64_t encl_size = pow2(encl_offset + mmap_size);
 
 	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
@@ -519,17 +525,20 @@ int main(int argc, char **argv)
 	RSA *sign_key;
 	bool enclave_debug = true;
 	struct metadata meta_data;
-	char *const short_options = "ps:x:a:";
+	char *const short_options = "ps:x:a:nm:";
 	struct option long_options[] = {
 		{"product", no_argument, NULL, 'p'},
 		{"mmap-size", required_argument, NULL, 's'},
 		{"xfrm", required_argument, NULL, 'x'},
 		{"attrs", required_argument, NULL, 'a'},
+		{"null_dereference_protection", no_argument, NULL, 'n'},
+		{"mmap_min_addr", required_argument, NULL, 'm'},
 		{0, 0, 0, 0}
 	};
 
 	program = argv[0];
 	memset(&meta_data, 0, sizeof(struct metadata));
+	meta_data.mmap_min_addr = mmap_min_addr;
 
 	do {
 		opt = getopt_long(argc, argv, short_options, long_options,
@@ -546,6 +555,12 @@ int main(int argc, char **argv)
 			break;
 		case 'a':
 			meta_data.attributes = strtol(optarg, NULL, 16);
+			break;
+		case 'n':
+			meta_data.null_dereference_protection = true;
+			break;
+		case 'm':
+			meta_data.mmap_min_addr = strtol(optarg, NULL, 16);
 			break;
 		case -1:
 			break;
@@ -621,8 +636,7 @@ int main(int argc, char **argv)
 
 	/* *INDENT-OFF* */
 	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect,
-			  ss.body.xfrm, &meta_data, mmap_min_addr,
-			  !is_oot_kernel_driver()))
+			  ss.body.xfrm, &meta_data))
 		goto out;
 	/* *INDENT-ON* */
 
