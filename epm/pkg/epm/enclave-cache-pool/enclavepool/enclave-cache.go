@@ -5,10 +5,10 @@ import (
 	"sync"
 	"syscall"
 
-	cache_manager "github.com/alibaba/inclavare-containers/epm/pkg/epm"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm/enclave-cache-pool/types"
-	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
+	cache_manager "github.com/inclavare-containers/epm/pkg/epm"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm/enclave-cache-pool/types"
+	"github.com/inclavare-containers/epm/pkg/utils"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 )

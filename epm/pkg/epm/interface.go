@@ -8,10 +8,10 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
+	"github.com/inclavare-containers/epm/pkg/utils"
 
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	cache_metadata "github.com/inclavare-containers/epm/pkg/metadata"
 )
 
 // EnclavePool represents a kind of enclave pool

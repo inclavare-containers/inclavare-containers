@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
 	"google.golang.org/grpc"
 )
 

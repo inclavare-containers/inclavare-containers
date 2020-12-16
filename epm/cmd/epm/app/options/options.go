@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
-	"github.com/alibaba/inclavare-containers/epm/config"
+	"github.com/inclavare-containers/epm/config"
 	"github.com/spf13/pflag"
 )
 
