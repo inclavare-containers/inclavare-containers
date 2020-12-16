@@ -4,8 +4,8 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 #include <stdlib.h>
 
 static int palCreateProcessV2(void *sym, const char *exe, const char *argv[],
-			    const char *envp[], int stdin, int stdout,
-			    int stderr, int *pid)
+			      const char *envp[], int stdin, int stdout,
+			      int stderr, int *pid)
 {
 	typedef struct {
 		int stdin, stdout, stderr;
@@ -31,8 +31,8 @@ static int palCreateProcessV2(void *sym, const char *exe, const char *argv[],
 		pid,
 	};
 
-	return ((int (*)(pal_create_process_args *))sym)
-                (&create_process_args);
+	return ((int (*)(pal_create_process_args *)) sym)
+		(&create_process_args);
 }
 
 static int palExecV2(void *sym, int pid, int *exit_code)
@@ -47,13 +47,13 @@ static int palExecV2(void *sym, int pid, int *exit_code)
 		exit_code,
 	};
 
-	return ((int (*)(pal_exec_args *))sym)
+	return ((int (*)(pal_exec_args *)) sym)
 		(&args);
 }
 
 static int palKillV2(void *sym, int pid, int sig)
 {
-	return ((int (*)(int, int))sym)(pid, sig);
+	return ((int (*)(int, int)) sym) (pid, sig);
 }
 */
 import "C"
