@@ -3,7 +3,6 @@ module github.com/inclavare-containers/rune
 go 1.14
 
 require (
-	github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
 	github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5
 	github.com/containerd/console v1.0.0
 	github.com/coreos/go-systemd/v22 v22.0.0
@@ -11,6 +10,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/go-restruct/restruct v0.0.0-20191227155143-5734170a48a1
 	github.com/golang/protobuf v1.4.2
+	github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000
 	github.com/moby/sys/mountinfo v0.1.3
 	github.com/mrunalp/fileutils v0.0.0-20171103030105-7d4729fb3618
 	github.com/opencontainers/runc v0.0.0-20200429033603-85c44b190e42
@@ -27,3 +27,5 @@ require (
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 	google.golang.org/grpc v1.33.1
 )
+
+replace github.com/inclavare-containers/epm => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c

@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
