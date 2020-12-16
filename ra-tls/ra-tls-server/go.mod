@@ -1,4 +1,4 @@
-module github.com/inclavare-containers/enclaved
+module github.com/inclavare-containers/inclavared
 
 go 1.14
 

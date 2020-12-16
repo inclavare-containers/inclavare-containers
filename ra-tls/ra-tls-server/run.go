@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/enclaved"
+package main // import "github.com/inclavare-containers/inclavared"
 
 /*
 #cgo CFLAGS: -I../build/include -I/opt/intel/sgxsdk/include -I../sgx-ra-tls
@@ -39,7 +39,7 @@ const (
 
 var runCommand = cli.Command{
 	Name:  "run",
-	Usage: "run the enclaved",
+	Usage: "run the inclavared",
 	ArgsUsage: `[command options]
 
 EXAMPLE:
@@ -56,7 +56,7 @@ EXAMPLE:
 		*/
 		cli.StringFlag{
 			Name:  "addr",
-			Usage: "the timeout in second for re-establishing the connection to enclaved",
+			Usage: "the timeout in second for re-establishing the connection to inclavared",
 		},
 	},
 	SkipArgReorder: true,

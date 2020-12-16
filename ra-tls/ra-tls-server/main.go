@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/enclaved"
+package main // import "github.com/inclavare-containers/inclavared"
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ const usage = `Enclave Daemon
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "enclaved"
+	app.Name = "inclavared"
 	app.Usage = usage
 
 	var ver []string
