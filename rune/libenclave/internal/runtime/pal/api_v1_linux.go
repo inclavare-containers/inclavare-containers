@@ -6,7 +6,7 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 
 static int palGetVersion(void *sym)
 {
-	return ((int (*)(void))sym)();
+	return ((int (*)(void)) sym) ();
 }
 
 static int palInitV1(void *sym, const char *args, const char *log_level)
@@ -16,7 +16,7 @@ static int palInitV1(void *sym, const char *args, const char *log_level)
 		log_level,
 	};
 
-	return ((int (*)(pal_attr_v1_t *))sym)(&attr);
+	return ((int (*)(pal_attr_v1_t *)) sym) (&attr);
 }
 
 static int palExecV1(void *sym, const char *exe, const char *argv[],
@@ -30,13 +30,13 @@ static int palExecV1(void *sym, const char *exe, const char *argv[],
 		stdin, stdout, stderr,
 	};
 
-	return ((int (*)(const char *, const char *[], pal_stdio_fds *, int *))sym)
+	return ((int (*)(const char *, const char *[], pal_stdio_fds *, int *)) sym)
 		(exe, argv, &fds, exit_code);
 }
 
 static int palDestroyV1(void *sym)
 {
-	return ((int (*)(void))sym)();
+	return ((int (*)(void)) sym) ();
 }
 */
 import "C"
@@ -57,9 +57,8 @@ func (pal *enclaveRuntimePalApiV1) get_version() uint32 {
 	sym := symAddrPalVersion()
 	if sym != nil {
 		return uint32(C.palGetVersion(sym))
-	} else {
-		return 1
 	}
+	return 1
 }
 
 func (api *enclaveRuntimePalApiV1) init(args string, logLevel string) error {

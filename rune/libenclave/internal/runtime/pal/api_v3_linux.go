@@ -6,7 +6,8 @@ package enclave_runtime_pal // import "github.com/inclavare-containers/rune/libe
 #include <stdint.h>
 #include "skeleton/liberpal-skeleton.h"
 
-static int palInitV3(void *sym, const char *args, const char *log_level, int fd, uint64_t addr)
+static int palInitV3(void *sym, const char *args, const char *log_level, int fd,
+		     uint64_t addr)
 {
 	pal_attr_v3_t attr_v3 = {
 		args,
@@ -15,14 +16,15 @@ static int palInitV3(void *sym, const char *args, const char *log_level, int fd,
 		addr,
 	};
 
-	return ((int (*)(pal_attr_v3_t *))sym)(&attr_v3);
+	return ((int (*)(pal_attr_v3_t *)) sym) (&attr_v3);
 }
 
 static int palGetLocalReport(void *sym, void *target_info, int target_info_len,
-							void *report, int* report_len)
+			     void *report, int *report_len)
 {
-	return ((int (*)(void *, int, void*, int*))sym)(target_info, target_info_len,
-								report, report_len);
+	return ((int (*)(void *, int, void *, int *)) sym) (target_info,
+							    target_info_len,
+							    report, report_len);
 }
 */
 import "C"
