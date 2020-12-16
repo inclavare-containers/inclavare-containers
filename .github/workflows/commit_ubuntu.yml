@@ -127,6 +127,20 @@ jobs:
       if: always()
       run: docker exec $ubuntu bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
+    - name: Run Occlum bundle on ubuntu
+      if: always()
+      run: |
+        docker exec $ubuntu bash -c "mkdir rootfs;
+        docker create --name occlum-app occlum-app;
+        docker export occlum-app | tar -C rootfs -xvf -;
+        rune spec;
+        sed -i '4 c \"terminal\": false,' config.json;
+        sed -i '16 c \"cwd\": \"\/\",' config.json;
+        sed -i 's#\"sh\"#\"/bin/hello_world\"#g' config.json;
+        sed -i 's#\"debug\"#\"occlum_instance\"#g' config.json;
+        sed -i 's#/var/run/rune/liberpal-skeleton-v2.so#/opt/occlum/build/lib/libocclum-pal.so#g' config.json;
+        rune --debug run occlum-app && rm -rf rootfs config.json"
+
     - name: Create skeleton bundle on ubuntu
       if: always()
       run: docker exec $ubuntu bash -c "mkdir rootfs;
