@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"time"
 
-	cache_manager "github.com/alibaba/inclavare-containers/epm/pkg/epm"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/constants"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
-	cache_metadata "github.com/alibaba/inclavare-containers/epm/pkg/metadata"
-	"github.com/alibaba/inclavare-containers/epm/pkg/utils"
+	cache_manager "github.com/inclavare-containers/epm/pkg/epm"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/constants"
+	"github.com/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
+	cache_metadata "github.com/inclavare-containers/epm/pkg/metadata"
+	"github.com/inclavare-containers/epm/pkg/utils"
 )
 
 type BundleCache1Manager struct {

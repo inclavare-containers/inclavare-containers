@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/boltdb/bolt"
 )
 

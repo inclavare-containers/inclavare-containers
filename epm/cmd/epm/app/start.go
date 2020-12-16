@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/alibaba/inclavare-containers/epm/cmd/epm/app/options"
+	"github.com/inclavare-containers/epm/cmd/epm/app/options"
 	"github.com/spf13/cobra"
 )
 

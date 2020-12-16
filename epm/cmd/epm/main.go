@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/alibaba/inclavare-containers/epm/cmd/epm/app"
+	"github.com/inclavare-containers/epm/cmd/epm/app"
 	"github.com/golang/glog"
 )
 

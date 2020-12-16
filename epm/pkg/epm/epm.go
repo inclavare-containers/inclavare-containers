@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/golang/glog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
