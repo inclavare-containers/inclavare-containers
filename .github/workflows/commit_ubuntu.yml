@@ -198,5 +198,4 @@ jobs:
         sgx-tools -verbose get-ias-report --quote quote.bin --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }}"
 
     - name: Kill the container
-      if: always()
       run: docker stop $ubuntu
