@@ -271,22 +271,11 @@ You can run epm service following with epm [README](https://github.com/alibaba/i
 ### Run epm client
 
 Assuming you have an OCI bundle according to previous steps, please add config into config.json as following:
-
-```shell
-{
-        "destination": "/var/run/epm/",
-        "type": "bind",
-        "source": "/var/run/epm/",
-        "options": [
-                "rbind",
-                "rprivate"
-        ]
-}
-
+```json
 "annotations": {
 	"enclave.type": "intelSgx",
-	"enclave.runtime.path": "/usr/lib/liberpal-skeleton-v${SKELETON_PAL_VERSION}.so",
-	"enclave.runtime.args": "debug, epm"
+	"enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
+	"enclave.runtime.args": "epm"
 }
 ```
 
