@@ -5,25 +5,25 @@ components := rune shim epm sgx-tools
 
 all:
 	for name in $(components); do \
-		$(MAKE) -C $$name; \
+		$(MAKE) -C $$name || exit 1; \
 	done
 
 install:
 	for name in $(components); do \
-		$(MAKE) -C $$name install; \
+		$(MAKE) -C $$name install || exit 1; \
 	done
 
 clean:
 	for name in $(components); do \
-		$(MAKE) -C $$name clean; \
+		$(MAKE) -C $$name clean || exit 1; \
 	done
 
 uninstall:
 	for name in $(components); do \
-		$(MAKE) -C $$name uninstall; \
+		$(MAKE) -C $$name uninstall || exit 1; \
 	done
 
 package:
 	for name in $(components); do \
-		$(MAKE) -C $$name package; \
+		$(MAKE) -C $$name package || exit 1; \
 	done
