@@ -20,7 +20,7 @@ jobs:
 
     - name: Create centos container
       run: |
-        centos=$(docker run -itd --privileged --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers crictl-occlum:centos8.1)
+        centos=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers crictl-occlum:centos8.1)
         echo "centos=$centos" >> $GITHUB_ENV
 
     - name: Install dependencies on centos
@@ -188,5 +188,4 @@ jobs:
         sgx-tools -verbose get-ias-report --quote quote.bin --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }}"
 
     - name: Kill the container
-      if: always()
       run: docker stop $centos
