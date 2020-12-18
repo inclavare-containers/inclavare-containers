@@ -46,7 +46,7 @@ sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
 # If the epm serivce is deployed, you can configure a appropriate unix socket address in "epm.socket" field, 
 # otherwise just delete the epm section.
 [epm]
-    socket = "/run/epm/epm.sock"
+    socket = "/var/run/epm/epm.sock"
 [enclave_runtime]
     # The signature_method represents the signature method for enclave.
     # It can be "server" or "client", the default value is "server"
@@ -102,6 +102,6 @@ spec:
     image: registry.cn-shanghai.aliyuncs.com/larus-test/hello-world:v2
     imagePullPolicy: IfNotPresent
     name: helloworld
-    workingDir: /run/rune
+    workingDir: /var/run/rune
 EOF
 ```
