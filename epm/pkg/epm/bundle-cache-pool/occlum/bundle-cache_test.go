@@ -229,7 +229,7 @@ func Test_BundleCache0Manager_GetCache(t *testing.T) {
 			ID:   "408fbccd943bb",
 		},
 	}
-	err = m.SaveCache("/tmp/f8e9696f895741aae5c034cf063806f28fa4809d37f789056cd90c6026c9f120/rootfs/run/rune", cache)
+	err = m.SaveCache("/tmp/f8e9696f895741aae5c034cf063806f28fa4809d37f789056cd90c6026c9f120/rootfs/var/run/rune", cache)
 	if err != nil {
 		t.Fatal(err)
 	}*/
