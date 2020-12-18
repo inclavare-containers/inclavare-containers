@@ -46,6 +46,35 @@ func CreateLibenclaveMount(cwd string, config *configs.Config, etype string) {
 	config.Mounts = append(config.Mounts, createLibenclaveMount(cwd))
 }
 
+func createLibenclaveEPMMount(cwd string) *configs.Mount {
+	return &configs.Mount{
+		Device:           "bind",
+		Source:           "/var/run/epm",
+		Destination:      "/var/run/epm",
+		Flags:            unix.MS_BIND | unix.MS_REC,
+		PropagationFlags: []int{unix.MS_PRIVATE | unix.MS_REC},
+	}
+}
+
+func CreateLibenclaveEPMMount(cwd string, config *configs.Config, etype string) {
+	if etype != enclaveConfigs.EnclaveTypeIntelSgx {
+		return
+	}
+
+	_, err := os.Stat("/var/run/epm")
+	if os.IsNotExist(err) {
+		return
+	}
+
+	for _, m := range config.Mounts {
+		if strings.EqualFold(m.Destination, "/var/run/epm") {
+			return
+		}
+	}
+
+	config.Mounts = append(config.Mounts, createLibenclaveEPMMount(cwd))
+}
+
 func CreateEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
 	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
 		dev.Permissions = "rwm"
