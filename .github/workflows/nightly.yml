@@ -254,7 +254,6 @@ jobs:
         curl http://$(kubectl get pod golang-web --template={{.status.podIP}}):8090/ping
 
     - name: Clear the environment
-      if: always()
       run: |
         sudo kubectl delete pod --all
         sudo kubeadm reset -f || true
