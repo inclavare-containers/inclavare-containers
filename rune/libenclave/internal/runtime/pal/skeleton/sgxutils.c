@@ -162,22 +162,16 @@ uint64_t calc_enclave_offset(uint64_t mmap_min_addr,
 {
 	uint64_t encl_offset;
 
-	if (mmap_min_addr) {
-		/* OOT driver cannot enable enclave dereference protection
-		 * if vm.mmap_min_addr is set to non-zero. In this case,
-		 * load_base - encl_base must equal to 0 in order to keep
-		 * consistent between mmap area and enclave range.
-		 */
-		encl_offset = 0;
-		/* But there is no such a restriction for in-tree driver.
-		 * Currently, null_dereference_protection is always true
-		 * if in-tree driver is used.
-		 */
-		if (null_dereference_protection)
+	/* If NULL dereference protection is not enabled,
+	 * there is no need to make zero page into enclaves.
+	 */
+	encl_offset = 0;
+
+	if (null_dereference_protection) {
+		if (mmap_min_addr)
 			encl_offset = mmap_min_addr;
-	} else {
-		/* Enable the enclave dereference protection automatically */
-		encl_offset = ENCLAVE_GUARD_AREA_SIZE;
+		else
+			encl_offset = ENCLAVE_GUARD_AREA_SIZE;
 	}
 
 	return encl_offset;

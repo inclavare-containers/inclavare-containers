@@ -432,6 +432,8 @@ struct metadata {
 	uint64_t max_mmap_size;
 	uint64_t attributes;
 	uint64_t xfrm;
+	bool null_dereference_protection;
+	uint64_t mmap_min_addr;
 } __packed;
 
 /* *INDENT-OFF* */
