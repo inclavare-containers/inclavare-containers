@@ -173,7 +173,7 @@ If you were to write an SGX Hello World project using some SGX SDK, the project 
         image: docker.io/inclavarecontainers/occlum-hello-world:scratch
         imagePullPolicy: IfNotPresent
         name: helloworld
-        workingDir: /run/rune
+        workingDir: /var/run/rune
     EOF
     ```
     **Note**: The field `runtimeClassName` should be set to `rune` which means the container will be handled by rune, specify the environment `RUNE_CARRIER` to `occlum` telling the `shim-rune`  to create and run an occlum application.<br />
