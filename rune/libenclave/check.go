@@ -32,16 +32,18 @@ func CreateLibenclaveMount(cwd string, config *configs.Config, etype string) {
 		return
 	}
 
-	aesmedMounted := false
+	_, err := os.Stat("/var/run/aesmd")
+	if os.IsNotExist(err) {
+		return
+	}
+
 	for _, m := range config.Mounts {
 		if strings.EqualFold(m.Destination, "/var/run/aesmd") || strings.EqualFold(m.Destination, "/run/aesmd") {
-			aesmedMounted = true
-			break
+			return
 		}
 	}
-	if aesmedMounted != true {
-		config.Mounts = append(config.Mounts, createLibenclaveMount(cwd))
-	}
+
+	config.Mounts = append(config.Mounts, createLibenclaveMount(cwd))
 }
 
 func CreateEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
