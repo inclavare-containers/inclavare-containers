@@ -260,6 +260,7 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec, action C
 		c := config.Cgroups
 
 		libenclave.CreateLibenclaveMount(cwd, config, enclaveConfig.Enclave.Type)
+		libenclave.CreateLibenclaveEPMMount(cwd, config, enclaveConfig.Enclave.Type)
 		libenclave.CreateEnclaveDeviceConfig(&config.Devices, enclaveConfig.Enclave.Type)
 		libenclave.CreateEnclaveCgroupConfig(&c.Resources.Devices, enclaveConfig.Enclave.Type)
 
