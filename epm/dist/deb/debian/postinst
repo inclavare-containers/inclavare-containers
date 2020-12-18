@@ -9,7 +9,7 @@ db_path = "/etc/epm/epm.db"
 db_timeout = 10
 
 [grpc]
-  address = "/run/epm/epm.sock"
+  address = "/var/run/epm/epm.sock"
   uid = 0
   gid = 0
   max_recv_message_size = 16777216
