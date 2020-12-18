@@ -519,6 +519,8 @@ int main(int argc, char **argv)
 	uint64_t header1[2] = { 0x000000E100000006, 0x0000000000010000 };
 	uint64_t header2[2] = { 0x0000006000000101, 0x0000000100000060 };
 	uint64_t xfrm;
+	uint64_t expected_xfrm = 0;
+	uint64_t expected_attributes = 0;
 	struct sgx_sigstruct ss;
 	const char *program;
 	int opt;
@@ -551,10 +553,10 @@ int main(int argc, char **argv)
 			meta_data.max_mmap_size = atoi(optarg);
 			break;
 		case 'x':
-			meta_data.xfrm = strtol(optarg, NULL, 16);
+			expected_xfrm = strtol(optarg, NULL, 16);
 			break;
 		case 'a':
-			meta_data.attributes = strtol(optarg, NULL, 16);
+			expected_attributes = strtol(optarg, NULL, 16);
 			break;
 		case 'n':
 			meta_data.null_dereference_protection = true;
@@ -589,35 +591,30 @@ int main(int argc, char **argv)
 #endif
 	if (enclave_debug)
 		ss.body.attributes |= SGX_ATTR_DEBUG;
-	if (meta_data.attributes) {
-		/* The minimum set of attributes must be set */
-		if ((meta_data.attributes & ss.body.attributes) !=
-		    ss.body.attributes) {
+	if (expected_attributes) {
+		/* skeleton doesn't support 32-bit mode */
+		if (!(expected_attributes & SGX_ATTR_MODE64BIT)) {
 			fprintf(stderr,
-				"Invalid attributes value. The minimum set of attributes %#lx must be set.\n",
-				ss.body.attributes);
+				"Invalid attributes value. The minimum set of attributes %#x must be set.\n",
+				SGX_ATTR_MODE64BIT);
 			return -1;
 		}
 
-		ss.body.attributes = meta_data.attributes;
-	} else {
-		meta_data.attributes = ss.body.attributes;
+		ss.body.attributes = expected_attributes;
 	}
 
 	get_sgx_xfrm_by_cpuid(&xfrm);
 	ss.body.xfrm = xfrm;
-	if (meta_data.xfrm) {
+	if (expected_xfrm) {
 		/* The minimum set of xfrm must be set */
-		if ((meta_data.xfrm & SGX_XFRM_LEGACY) != SGX_XFRM_LEGACY) {
+		if ((expected_xfrm & SGX_XFRM_LEGACY) != SGX_XFRM_LEGACY) {
 			fprintf(stderr,
 				"Invalid xfrm value. The minimum set of xfrm %#llx must be set.\n",
 				SGX_XFRM_LEGACY);
 			return -1;
 		}
 
-		ss.body.xfrm = meta_data.xfrm;
-	} else {
-		meta_data.xfrm = ss.body.xfrm;
+		ss.body.xfrm = expected_xfrm;
 	}
 
 	ss.body.attributes_mask = ss.body.attributes;

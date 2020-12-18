@@ -90,7 +90,8 @@ enum sgx_attribute {
 
 #define SGX_ATTR_RESERVED_MASK	(BIT_ULL(3) | BIT_ULL(6) | GENMASK_ULL(63, 8))
 #define SGX_ATTR_ALLOWED_MASK	(SGX_ATTR_DEBUG | SGX_ATTR_MODE64BIT | \
-				 SGX_ATTR_KSS)
+				 SGX_ATTR_KSS | SGX_ATTR_PROVISIONKEY | \
+				 SGX_ATTR_EINITTOKENKEY)
 
 /**
  * struct sgx_secs - SGX Enclave Control Structure (SECS)
@@ -430,8 +431,6 @@ static_assert(sizeof(struct sgx_report) == 512, "incorrect size of sgx_report");
 
 struct metadata {
 	uint64_t max_mmap_size;
-	uint64_t attributes;
-	uint64_t xfrm;
 	bool null_dereference_protection;
 	uint64_t mmap_min_addr;
 } __packed;
