@@ -10,7 +10,7 @@ const (
 	EnvKeyRaEpidSubKey       = "ENCLAVE_RA_EPID_SUB_KEY"
 	EnvKeyRaEpidIsLinkable   = "ENCLAVE_RA_EPID_IS_LINKABLE"
 	EnvKeyImageDigest        = "IMAGE_DIGEST"
-	RuneDefaultWorkDirectory = "/run/rune"
+	RuneDefaultWorkDirectory = "/var/run/rune"
 )
 
 const (
