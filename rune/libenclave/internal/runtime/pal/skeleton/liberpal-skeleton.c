@@ -35,7 +35,6 @@ bool initialized = false;
 static int exit_code;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
-static bool enclave_debug = true;
 static int wait_timeout;
 bool debugging = false;
 bool is_oot_driver;
@@ -197,9 +196,7 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 	uint64_t xfrm;
 
 	memset(secs, 0, sizeof(*secs));
-	secs->attributes = SGX_ATTR_MODE64BIT;
-	if (enclave_debug)
-		secs->attributes |= SGX_ATTR_DEBUG;
+	secs->attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_DEBUG;
 	/* Check attributes to prevent possible tampering of metadata area */
 	if ((meta_data->attributes & sigstruct->body.attributes) !=
 	    sigstruct->body.attributes) {
@@ -362,9 +359,6 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		fprintf(stderr, "Unable to open %s\n", sgx_dev_path);
 		return false;
 	}
-
-	if (!(sigstruct->body.attributes & SGX_ATTR_DEBUG))
-		enclave_debug = false;
 
 	/* *INDENT-OFF* */
 	if (!encl_create(dev_fd, bin_size, secs, encl_info, &meta_data, sigstruct))
