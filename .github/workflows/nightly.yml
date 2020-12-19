@@ -20,6 +20,41 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: Clear the environment
+      run: |
+        sudo kubectl delete pod --all || true
+        sudo kubeadm reset -f || true
+        for service in kubectl kubelet containerd epm
+        do
+          sudo systemctl stop $service || true
+          sudo systemctl disable $service || true
+        done
+        sudo pkill -9 kube-apiserver || true
+        sudo pkill -9 kube-controller-manager || true
+        sudo pkill -9 kube-proxy || true
+        sudo pkill -9 kube-scheduler || true
+        sudo yum remove -y occlum || true
+        sudo rpm -e shim-rune || true
+        sudo rpm -e rune || true
+        sudo rpm -e epm || true
+        sudo yum remove -y kube* || true
+        sudo rm -rf  $WORK_DIR
+        sudo rm -fr /etc/containerd
+        sudo rm -fr /etc/inclavare-containers/
+        sudo rm -rf ~/.kube/
+        sudo rm -rf /etc/kubernetes
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/lib/etcd
+        sudo rm -f /etc/yum.repos.d/occlum.repo
+        sudo rm -f /etc/yum.repos.d/kubernetes.repo
+        sudo ip link set cni0 down || true
+        sudo ip link delete cni0 || true
+        sudo ip link set flannel.1 down || true
+        sudo ip link delete flannel.1 || true
+        sudo ip -all netns del || true
+        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
+        sudo systemctl restart docker
+
     # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
     - name: Get version
       run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
@@ -27,6 +62,7 @@ jobs:
 
     - name: Install Occlum stack
       run: |
+        sudo mkdir -p $WORK_DIR
         cat << EOF > /etc/yum.repos.d/occlum.repo
         [occlum]
         name=occlum
@@ -255,7 +291,7 @@ jobs:
 
     - name: Clear the environment
       run: |
-        sudo kubectl delete pod --all
+        sudo kubectl delete pod --all || true
         sudo kubeadm reset -f || true
         for service in kubectl kubelet containerd epm
         do
@@ -272,7 +308,6 @@ jobs:
         sudo rpm -e epm || true
         sudo yum remove -y kube* || true
         sudo rm -rf  $WORK_DIR
-        sudo mkdir -p $WORK_DIR
         sudo rm -fr /etc/containerd
         sudo rm -fr /etc/inclavare-containers/
         sudo rm -rf ~/.kube/
@@ -281,10 +316,10 @@ jobs:
         sudo rm -fr /var/lib/etcd
         sudo rm -f /etc/yum.repos.d/occlum.repo
         sudo rm -f /etc/yum.repos.d/kubernetes.repo
-        sudo ip link set cni0 down
-        sudo ip link delete cni0
-        sudo ip link set flannel.1 down
-        sudo ip link delete flannel.1
-        sudo ip -all netns del
+        sudo ip link set cni0 down || true
+        sudo ip link delete cni0 || true
+        sudo ip link set flannel.1 down || true
+        sudo ip link delete flannel.1 || true
+        sudo ip -all netns del || true
         sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
         sudo systemctl restart docker
