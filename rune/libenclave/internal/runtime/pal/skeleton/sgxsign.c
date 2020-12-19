@@ -23,6 +23,10 @@ struct sgx_sigstruct_payload {
 	struct sgx_sigstruct_body body;
 };
 
+uint64_t req_xfrm, req_xfrm_mask;
+uint64_t req_attrs, req_attrs_mask;
+bool enclave_debug = true;
+
 static bool check_crypto_errors(void)
 {
 	int err;
@@ -309,11 +313,15 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 			"when vm.mmap_min_addr is not configured of 0 in OOT driver.\n");
 		return false;
 	}
-	uint64_t encl_offset = calc_enclave_offset(meta_data->mmap_min_addr,
-						   meta_data->
-						   null_dereference_protection);
-	uint64_t encl_size = pow2(encl_offset + mmap_size);
 
+	uint64_t encl_offset;
+	{
+		// *INDENT-OFF*
+		encl_offset = calc_enclave_offset(meta_data->mmap_min_addr,
+						  meta_data->null_dereference_protection);
+		// *INDENT-ON*
+	}
+	uint64_t encl_size = pow2(encl_offset + mmap_size);
 	void *bin = mmap(NULL, sb.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE,
 			 fileno(file), 0);
 	if (bin == MAP_FAILED) {
@@ -507,6 +515,121 @@ static bool save_sigstruct(const struct sgx_sigstruct *sigstruct,
 	return true;
 }
 
+// *INDENT-OFF*
+static int calc_sgx_attributes(uint64_t *ret_attrs, uint64_t *ret_attrs_mask)
+{
+	/* skeleton doesn't support 32-bit mode */
+	uint64_t enforced_pattern = SGX_ATTR_MODE64BIT;
+
+#ifdef CONFIG_EINITTOKENKEY
+	enforced_pattern |= SGX_ATTR_EINITTOKENKEY;
+#endif
+	if (enclave_debug)
+		enforced_pattern |= SGX_ATTR_DEBUG;
+
+	if (req_attrs) {
+		if (req_attrs & ~SGX_ATTR_ALLOWED_MASK) {
+			fprintf(stderr,
+				"Invalid option --attrs. The unsupported attributes %#lx are set.\n",
+				req_attrs & ~SGX_ATTR_ALLOWED_MASK);
+			return -1;
+		}
+
+		if ((req_attrs & enforced_pattern) != enforced_pattern) {
+			fprintf(stderr,
+				"Invalid option --attrs. The bitmap %#lx must be set.\n",
+				enforced_pattern & ~req_attrs);
+			return -1;
+		}
+
+		if (!req_attrs_mask)
+			req_attrs_mask = req_attrs;
+	}
+
+	if (req_attrs_mask) {
+		if ((req_attrs_mask & enforced_pattern) != enforced_pattern) {
+			fprintf(stderr,
+				"Invalid option --attrs-mask. The bitmap %#lx must be set.\n",
+				enforced_pattern & ~req_attrs_mask);
+			return -1;
+		}
+
+		if (!req_attrs)
+			req_attrs = req_attrs_mask;
+	}
+
+	if (req_attrs) {
+		/*
+		 * Check whether --attrs plus --attrs-mask conflicts with
+		 * enclave_debug. Note that the conflict with debug enclave can
+		 * be detected prior to reaching here with
+		 * enclave_debug && !(req_attrs & req_attrs_mask & SGX_ATTR_DEBUG)
+		 * so only the conflict with produce enclave is checked here.
+		 */
+
+		if (!enclave_debug &&
+		    (req_attrs & req_attrs_mask & SGX_ATTR_DEBUG)) {
+			fprintf(stderr,
+				"--attrs & --attrs-mask conflicts with product enclave.\n");
+			return -1;
+		}
+
+		*ret_attrs = req_attrs;
+		*ret_attrs_mask = req_attrs_mask;
+
+		return 0;
+	}
+
+	*ret_attrs = enforced_pattern;
+	*ret_attrs_mask = enforced_pattern;
+
+	return 0;
+}
+
+static int calc_sgx_xfrm(uint64_t *ret_xfrm, uint64_t *ret_xfrm_mask)
+{
+	uint64_t calc_xfrm, calc_xfrm_mask;
+
+	get_sgx_xfrm_by_cpuid(&calc_xfrm);
+	calc_xfrm_mask = calc_xfrm;
+
+	const uint64_t enforced_pattern = SGX_XFRM_LEGACY;
+
+	if (req_xfrm) {
+		if ((req_xfrm & enforced_pattern) != enforced_pattern) {
+			fprintf(stderr,
+				"Invalid option --xfrm. The minimum bits %#lx are not set.\n",
+				enforced_pattern & ~req_xfrm);
+			return -1;
+		}
+
+		if (!req_xfrm_mask)
+			req_xfrm_mask = req_xfrm;
+
+		calc_xfrm = req_xfrm;
+	}
+
+	if (req_xfrm_mask) {
+		if ((req_xfrm_mask & enforced_pattern) != enforced_pattern) {
+			fprintf(stderr,
+				"Invalid option --xfrm-mask. The minimum bits %#lx are not set.\n",
+				enforced_pattern & ~req_xfrm_mask);
+			return -1;
+		}
+
+		if (!req_xfrm)
+			calc_xfrm = req_xfrm = req_xfrm_mask;
+
+		calc_xfrm_mask = req_xfrm_mask;
+	}
+
+	*ret_xfrm = calc_xfrm;
+	*ret_xfrm_mask = calc_xfrm_mask;
+
+	return 0;
+}
+// *INDENT-ON*
+
 int main(int argc, char **argv)
 {
 	uint64_t mmap_min_addr;
@@ -518,12 +641,10 @@ int main(int argc, char **argv)
 
 	uint64_t header1[2] = { 0x000000E100000006, 0x0000000000010000 };
 	uint64_t header2[2] = { 0x0000006000000101, 0x0000000100000060 };
-	uint64_t xfrm;
 	struct sgx_sigstruct ss;
 	const char *program;
 	int opt;
 	RSA *sign_key;
-	bool enclave_debug = true;
 	struct metadata meta_data;
 	char *const short_options = "ps:x:a:nm:";
 	struct option long_options[] = {
@@ -531,6 +652,8 @@ int main(int argc, char **argv)
 		{"mmap-size", required_argument, NULL, 's'},
 		{"xfrm", required_argument, NULL, 'x'},
 		{"attrs", required_argument, NULL, 'a'},
+		{"xfrm-mask", required_argument, NULL, 'X'},
+		{"attrs-mask", required_argument, NULL, 'A'},
 		{"null_dereference_protection", no_argument, NULL, 'n'},
 		{"mmap_min_addr", required_argument, NULL, 'm'},
 		{0, 0, 0, 0}
@@ -551,10 +674,16 @@ int main(int argc, char **argv)
 			meta_data.max_mmap_size = atoi(optarg);
 			break;
 		case 'x':
-			meta_data.xfrm = strtol(optarg, NULL, 16);
+			req_xfrm = strtol(optarg, NULL, 16);
+			break;
+		case 'X':
+			req_xfrm_mask = strtol(optarg, NULL, 16);
 			break;
 		case 'a':
-			meta_data.attributes = strtol(optarg, NULL, 16);
+			req_attrs = strtol(optarg, NULL, 16);
+			break;
+		case 'A':
+			req_attrs_mask = strtol(optarg, NULL, 16);
 			break;
 		case 'n':
 			meta_data.null_dereference_protection = true;
@@ -582,46 +711,12 @@ int main(int argc, char **argv)
 	ss.header.header2[1] = header2[1];
 	ss.exponent = 3;
 
-#ifndef CONFIG_EINITTOKENKEY
-	ss.body.attributes = SGX_ATTR_MODE64BIT;
-#else
-	ss.body.attributes = SGX_ATTR_MODE64BIT | SGX_ATTR_EINITTOKENKEY;
-#endif
-	if (enclave_debug)
-		ss.body.attributes |= SGX_ATTR_DEBUG;
-	if (meta_data.attributes) {
-		/* The minimum set of attributes must be set */
-		if ((meta_data.attributes & ss.body.attributes) !=
-		    ss.body.attributes) {
-			fprintf(stderr,
-				"Invalid attributes value. The minimum set of attributes %#lx must be set.\n",
-				ss.body.attributes);
-			return -1;
-		}
+	if (calc_sgx_attributes(&ss.body.attributes, &ss.body.attributes_mask))
+		return -1;
 
-		ss.body.attributes = meta_data.attributes;
-	} else {
-		meta_data.attributes = ss.body.attributes;
-	}
+	if (calc_sgx_xfrm(&ss.body.xfrm, &ss.body.xfrm_mask))
+		return -1;
 
-	get_sgx_xfrm_by_cpuid(&xfrm);
-	ss.body.xfrm = xfrm;
-	if (meta_data.xfrm) {
-		/* The minimum set of xfrm must be set */
-		if ((meta_data.xfrm & SGX_XFRM_LEGACY) != SGX_XFRM_LEGACY) {
-			fprintf(stderr,
-				"Invalid xfrm value. The minimum set of xfrm %#llx must be set.\n",
-				SGX_XFRM_LEGACY);
-			return -1;
-		}
-
-		ss.body.xfrm = meta_data.xfrm;
-	} else {
-		meta_data.xfrm = ss.body.xfrm;
-	}
-
-	ss.body.attributes_mask = ss.body.attributes;
-	ss.body.xfrm_mask = ss.body.xfrm;
 	ss.body.miscselect = get_sgx_miscselect_by_cpuid();
 
 	/* sanity check only */

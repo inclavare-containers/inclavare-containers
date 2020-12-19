@@ -14,6 +14,12 @@
 #define __packed __attribute__((packed))
 #define static_assert _Static_assert
 
+struct metadata {
+	uint64_t max_mmap_size;
+	bool null_dereference_protection;
+	uint64_t mmap_min_addr;
+} __packed;
+
 /* *INDENT-OFF* */
 int get_mmap_min_addr(uint64_t *addr);
 /* *INDENT-ON* */

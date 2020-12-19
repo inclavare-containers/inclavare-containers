@@ -35,7 +35,6 @@ bool initialized = false;
 static int exit_code;
 static char *sgx_dev_path;
 static bool no_sgx_flc = false;
-static bool enclave_debug = true;
 static int wait_timeout;
 bool debugging = false;
 bool is_oot_driver;
@@ -188,49 +187,98 @@ static int create_enclave_range(int dev_fd, uint64_t mmap_size,
 	return 0;
 }
 
+/* Sanity check attributes to prevent possible tampering */
+static bool check_sgx_attributes(const uint64_t req_attrs,
+				 const uint64_t req_attrs_mask)
+{
+	/* skeleton doesn't support 32-bit mode */
+	uint64_t enforced_pattern = SGX_ATTR_MODE64BIT;
+
+	if (req_attrs & ~SGX_ATTR_ALLOWED_MASK) {
+		fprintf(stderr,
+			"Invalid attributes value. The unsupported attributes %#lx are set.\n",
+			req_attrs & ~SGX_ATTR_ALLOWED_MASK);
+		return false;
+	}
+
+	if ((req_attrs & enforced_pattern) != enforced_pattern) {
+		fprintf(stderr,
+			"Invalid attributes value. The bits %#lx must be set.\n",
+			enforced_pattern & ~req_attrs);
+		return false;
+	}
+
+	if ((req_attrs_mask & enforced_pattern) != enforced_pattern) {
+		fprintf(stderr,
+			"Invalid attributes mask value. The bits %#lx must be set.\n",
+			enforced_pattern & ~req_attrs_mask);
+		return false;
+	}
+
+	return true;
+}
+
+static bool check_sgx_xfrm(uint64_t probed_xfrm, uint64_t req_xfrm,
+			   uint64_t req_xfrm_mask)
+{
+	uint64_t enforced_pattern = SGX_XFRM_LEGACY;
+
+	if ((req_xfrm & enforced_pattern) != enforced_pattern) {
+		fprintf(stderr,
+			"Invalid xfrm value. The bits %#lx must be set.\n",
+			enforced_pattern & ~req_xfrm);
+		return false;
+	}
+
+	if ((req_xfrm_mask & enforced_pattern) != enforced_pattern) {
+		fprintf(stderr,
+			"Invalid xfrm mask value. The bits %#lx must be set.\n",
+			enforced_pattern & ~req_xfrm_mask);
+		return false;
+	}
+
+	/* Check whether the requesting xfrm is supported */
+	if ((req_xfrm & req_xfrm_mask) & ~probed_xfrm) {
+		fprintf(stderr, "Unsupported xfrm bits %#lx.\n",
+			(req_xfrm & req_xfrm_mask) & ~probed_xfrm);
+		return false;
+	}
+
+	return true;
+}
+
 static bool encl_create(int dev_fd, unsigned long bin_size,
 			struct sgx_secs *secs, struct enclave_info *encl_info,
 			struct metadata *meta_data,
 			struct sgx_sigstruct *sigstruct)
 {
-	struct sgx_enclave_create ioc;
-	uint64_t xfrm;
+	if (debugging)
+		fprintf(stdout, "sig.attrs %#lx, sig.attrs_mask %#lx\n",
+			sigstruct->body.attributes,
+			sigstruct->body.attributes_mask);
 
-	memset(secs, 0, sizeof(*secs));
-	secs->attributes = SGX_ATTR_MODE64BIT;
-	if (enclave_debug)
-		secs->attributes |= SGX_ATTR_DEBUG;
-	/* Check attributes to prevent possible tampering of metadata area */
-	if ((meta_data->attributes & sigstruct->body.attributes) !=
-	    sigstruct->body.attributes) {
-		fprintf(stderr, "Invalid attributes value.\n");
+	// *INDENT-OFF*
+	if (!check_sgx_attributes(sigstruct->body.attributes,
+				  sigstruct->body.attributes_mask))
 		return false;
-	}
-	secs->attributes = meta_data->attributes & secs->attributes;
-	/* Check the attributes in signature structure restrictions */
-	if ((sigstruct->body.attributes & sigstruct->body.attributes_mask) !=
-	    (secs->attributes & sigstruct->body.attributes_mask)) {
-		fprintf(stderr,
-			"secs attributes does NOT match signature attributes.\n");
-		return false;
-	}
+	// *INDENT-ON*
+	secs->attributes = sigstruct->body.attributes;
 
-	get_sgx_xfrm_by_cpuid(&xfrm);
-	secs->xfrm = xfrm;
-	/* Check whether the xfrm features in metadata area are available */
-	if ((secs->xfrm & meta_data->xfrm) != meta_data->xfrm) {
-		fprintf(stderr,
-			"Invalid xfrm value. Unavailable bits are %#lx.\n",
-			meta_data->xfrm & ~(secs->xfrm & meta_data->xfrm));
+	uint64_t probed_xfrm;
+	get_sgx_xfrm_by_cpuid(&probed_xfrm);
+
+	if (debugging)
+		fprintf(stdout,
+			"probed xfrm %#lx, sig.xfrm %#lx, sig.xfrm_mask %#lx\n",
+			probed_xfrm, sigstruct->body.xfrm,
+			sigstruct->body.xfrm_mask);
+
+	// *INDENT-OFF*
+	if (!check_sgx_xfrm(probed_xfrm, sigstruct->body.xfrm,
+			    sigstruct->body.xfrm_mask))
 		return false;
-	}
-	secs->xfrm = meta_data->xfrm & secs->xfrm;
-	/* Check the xfrm in signature structure restrictions */
-	if ((sigstruct->body.xfrm & sigstruct->body.xfrm_mask) !=
-	    (secs->xfrm & sigstruct->body.xfrm_mask)) {
-		fprintf(stderr, "secs xfrm does NOT match signature xfrm.\n");
-		return false;
-	}
+	// *INDENT-ON*
+	secs->xfrm = sigstruct->body.xfrm;
 
 	secs->miscselect = get_sgx_miscselect_by_cpuid();
 	secs->ssa_frame_size =
@@ -269,6 +317,8 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 
 	secs->base = encl_info->encl_base;
 	secs->size = encl_info->encl_size;
+
+	struct sgx_enclave_create ioc;
 	ioc.src = (unsigned long) secs;
 	int rc = ioctl(dev_fd, SGX_IOC_ENCLAVE_CREATE, &ioc);
 	if (rc) {
@@ -363,13 +413,16 @@ static bool encl_build(struct sgx_secs *secs, void *bin, unsigned long bin_size,
 		return false;
 	}
 
-	if (!(sigstruct->body.attributes & SGX_ATTR_DEBUG))
-		enclave_debug = false;
+	memset(secs, 0, sizeof(*secs));
 
-	/* *INDENT-OFF* */
-	if (!encl_create(dev_fd, bin_size, secs, encl_info, &meta_data, sigstruct))
-		goto out_dev_fd;
-	/* *INDENT-ON* */
+	/* Work around buggy indent */
+	{
+		// *INDENT-OFF*
+		if (!encl_create(dev_fd, bin_size, secs, encl_info, &meta_data,
+				 sigstruct))
+			goto out_dev_fd;
+		// *INDENT-ON*
+	}
 
 	uint64_t *ssa_frame = valloc(PAGE_SIZE * secs->ssa_frame_size);
 	if (ssa_frame == NULL) {
