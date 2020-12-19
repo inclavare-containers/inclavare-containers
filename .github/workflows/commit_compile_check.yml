@@ -9,6 +9,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: Get cpu number
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+
     - name: Create a clean ubuntu container
       run: docker run -itd --name=ubuntu -v $GITHUB_WORKSPACE:/root/inclavare-containers ubuntu:18.04
 
@@ -25,15 +28,18 @@ jobs:
 
     - name: Compile "rune shim-rune sgx-tools epm pal" on ubuntu
       run: docker exec ubuntu bash -c "cd /root/inclavare-containers;
-        source /etc/profile && make && make install;
-        cd rune/libenclave/internal/runtime/pal/skeleton && make && ls liberpal-skeleton-v*.so;
-        cd ../nitro_enclaves && make && ls libpal_ne.so;
+        source /etc/profile && make -j${CPU_NUM} && make install -j${CPU_NUM};
+        cd rune/libenclave/internal/runtime/pal/skeleton && make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
+        cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
         which rune epm containerd-shim-rune-v2 sgx-tools"
 
   Compile_check_centos:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
+
+    - name: Get cpu number
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
     - name: Create a clean centos container
       run: docker run -itd --name=centos -v $GITHUB_WORKSPACE:/root/inclavare-containers centos:centos8.1.1911
@@ -51,7 +57,7 @@ jobs:
 
     - name: Compile "rune shim-rune sgx-tools epm pal" on centos
       run: docker exec centos bash -c "cd /root/inclavare-containers;
-        source /etc/profile && make && make install;
-        cd rune/libenclave/internal/runtime/pal/skeleton && make && ls liberpal-skeleton-v*.so;
-        cd ../nitro_enclaves && make && ls libpal_ne.so;
+        source /etc/profile && make -j${CPU_NUM} && make install -j${CPU_NUM};
+        cd rune/libenclave/internal/runtime/pal/skeleton && make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
+        cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
         which rune epm containerd-shim-rune-v2 sgx-tools"
