@@ -8,8 +8,6 @@
 
 struct metadata m __attribute__((section(".metadata"))) = {
 	.max_mmap_size = 0,
-	.attributes = 0,
-	.xfrm = 0,
 	.null_dereference_protection = false,
 	.mmap_min_addr = 0
 };
