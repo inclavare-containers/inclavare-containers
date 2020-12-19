@@ -39,12 +39,6 @@ jobs:
         echo 'export PKG_CONFIG_PATH=/usr/lib/pkgconfig' >>/etc/profile;
         echo 'export GO111MODULE=on' >>/etc/profile"
 
-    - name: Build and install binaries on ubuntu
-      run: docker exec $ubuntu bash -c "source /etc/profile;
-        cd /root && cp -r inclavare-containers inclavare-containers-$RUNE_VERSION; 
-        cd inclavare-containers-$RUNE_VERSION;
-        make -j${CPU_NUM} && make install -j${CPU_NUM}"
-
     - name: Install and configure docker on ubuntu
       run: |
         docker exec $ubuntu bash -c "apt-get install -y apt-transport-https ca-certificates curl software-properties-common;
@@ -66,6 +60,19 @@ jobs:
         EOF"
 
         docker exec $ubuntu bash -c "service docker start"
+
+    - name: Make and install packages on ubuntu
+      run:
+        docker exec $ubuntu bash -c "cd /root && source /etc/profile;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd /root/inclavare-containers-$RUNE_VERSION;
+        echo "$RUNE_VERSION" > VERSION;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
+        make package -j${CPU_NUM};
+        dpkg -i rune_$RUNE_VERSION-1_amd64.deb;
+        dpkg -i sgx-tools_$RUNE_VERSION-1_amd64.deb"
 
     - name: Build Occlum Application Image on ubuntu
       run: |
