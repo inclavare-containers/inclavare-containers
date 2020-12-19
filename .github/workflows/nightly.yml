@@ -199,7 +199,7 @@ jobs:
         kubectl get runtimeclass
 
     - name: Check k8s
-      timeout-minutes: 30
+      timeout-minutes: 10
       run: |
           sleep $nap_time
           while true; do
