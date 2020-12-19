@@ -37,7 +37,7 @@ ls -l /usr/local/bin/containerd-shim-rune-v2
 The Configuration file of Inclavare Containers MUST BE placed into `/etc/inclavare-containers/config.toml`
 
 ```toml
-log_level = "debug" # "debug" "info" "warn" "error"
+log_level = "info" # "debug" "info" "warn" "error"
 sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
 
 [containerd]
