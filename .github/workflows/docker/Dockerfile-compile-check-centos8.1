@@ -1,0 +1,22 @@
+FROM centos:8.1.1911
+
+LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
+
+RUN dnf clean all && rm -r /var/cache/dnf && \
+    dnf --enablerepo=PowerTools install -y which wget git \
+    make gcc libseccomp-devel binutils-devel protobuf-devel \
+    protobuf-c-devel openssl openssl-devel
+
+WORKDIR /root
+
+# install go
+RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib && \
+    rm -rf go1.14.2.linux-amd64.tar.gz
+
+# configure GOPATH and GOROOT
+ENV GOROOT       /usr/lib/go
+ENV GOPATH       /root/gopath
+ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
+ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
+ENV GO111MODULE  on
