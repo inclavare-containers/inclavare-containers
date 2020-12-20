@@ -20,7 +20,7 @@ jobs:
       run: wget https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
         echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h;
         echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
-        echo "CPU_NUM=$(grep 'processor' /proc/cpuinfo | sort -u | wc -l)" >> $GITHUB_ENV
+        echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
     - name: Create ubuntu container
       run: |
