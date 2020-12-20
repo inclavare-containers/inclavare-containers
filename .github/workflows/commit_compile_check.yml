@@ -4,60 +4,21 @@ name: Compile check
 on: [push, pull_request]
 
 jobs:
-  Compile_check_ubuntu:
+  Compile:
     runs-on: ubuntu-18.04
+    container: inclavarecontainers/test:${{ matrix.tag }}
+    strategy:
+      matrix:
+        tag: [compile-check-ubuntu18.04, compile-check-centos8.1]
     steps:
     - uses: actions/checkout@v1
 
     - name: Get cpu number
       run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
-    - name: Create a clean ubuntu container
-      run: docker run -itd --name=ubuntu -v $GITHUB_WORKSPACE:/root/inclavare-containers ubuntu:18.04
-
-    - name: Install dependencies on ubuntu
-      run: docker exec ubuntu bash -c "apt-get update;
-        apt-get install -y autoconf gcc make wget git libseccomp-dev binutils-dev libprotoc-dev libprotobuf-c0-dev protobuf-c-compiler pkg-config libssl-dev openssl;
-        wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
-        tar -zxf go1.14.2.linux-amd64.tar.gz -C /usr/lib;
-        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
-        echo 'export GOPATH=/root/gopath' >> /etc/profile;
-        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
-        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
-        echo 'export GO111MODULE=on' >>/etc/profile;"
-
-    - name: Compile "rune shim-rune sgx-tools epm pal" on ubuntu
-      run: docker exec ubuntu bash -c "cd /root/inclavare-containers;
-        source /etc/profile && make -j${CPU_NUM} && make install -j${CPU_NUM};
+    - name: Compile "rune shim-rune sgx-tools epm pal"
+      run: cd $GITHUB_WORKSPACE;
+        make -j${CPU_NUM} && make install -j${CPU_NUM};
         cd rune/libenclave/internal/runtime/pal/skeleton && make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
         cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
-        which rune epm containerd-shim-rune-v2 sgx-tools"
-
-  Compile_check_centos:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v1
-
-    - name: Get cpu number
-      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
-
-    - name: Create a clean centos container
-      run: docker run -itd --name=centos -v $GITHUB_WORKSPACE:/root/inclavare-containers centos:centos8.1.1911
-
-    - name: Install dependencies on centos
-      run: docker exec centos bash -c "dnf clean all && rm -r /var/cache/dnf;
-        dnf --enablerepo=PowerTools install -y which wget git make gcc libseccomp-devel binutils-devel protobuf-devel protobuf-c-devel openssl openssl-devel;
-        wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
-        tar -zxf go1.14.2.linux-amd64.tar.gz -C /usr/lib;
-        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
-        echo 'export GOPATH=/root/gopath' >> /etc/profile;
-        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
-        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
-        echo 'export GO111MODULE=on' >>/etc/profile"
-
-    - name: Compile "rune shim-rune sgx-tools epm pal" on centos
-      run: docker exec centos bash -c "cd /root/inclavare-containers;
-        source /etc/profile && make -j${CPU_NUM} && make install -j${CPU_NUM};
-        cd rune/libenclave/internal/runtime/pal/skeleton && make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
-        cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
-        which rune epm containerd-shim-rune-v2 sgx-tools"
+        which rune epm containerd-shim-rune-v2 sgx-tools
