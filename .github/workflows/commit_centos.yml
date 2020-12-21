@@ -20,22 +20,11 @@ jobs:
 
     - name: Create centos container
       run: |
-        centos=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers crictl-occlum:centos8.1)
+        centos=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.1)
         echo "centos=$centos" >> $GITHUB_ENV
 
-    - name: Install dependencies on centos
-      run: docker exec $centos bash -c "yum install -y libseccomp-devel;
-        cd /root && wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
-        tar -zxf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
-        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
-        echo 'export GOPATH=/root/gopath' >> /etc/profile;
-        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
-        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
-        echo 'export GO111MODULE=on' >>/etc/profile"
-
-    - name: Build and install rune and shim-rune rpm
-      run: docker exec $centos bash -c "cd /root && source /etc/profile;
-        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+    - name: Build and install rune shim-rune and sgx-tools rpm
+      run: docker exec $centos bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-$RUNE_VERSION;
         tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
         cd /root/inclavare-containers-$RUNE_VERSION;
         mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
@@ -48,52 +37,33 @@ jobs:
         rpm -ivh sgx-tools-$RUNE_VERSION-1.el8.x86_64.rpm"
 
     - name: Build Occlum application image on centos
-      run: | 
-        docker exec $centos bash -c "dockerd -b docker0 --storage-driver=vfs &"
+      run: docker exec $centos bash -c "dockerd -b docker0 --storage-driver=vfs &"
 
         docker exec $centos bash -c "occlum-gcc -o hello_world hello_world.c;
         occlum new occlum_instance && cd occlum_instance;
         cp ../hello_world image/bin/ && occlum build;
         occlum package occlum_instance.tar.gz;
-        cat >/root/occlum_instance/Dockerfile <<-EOF
-        FROM scratch
-
-        ADD occlum_instance.tar.gz /
-        ENTRYPOINT [\"/bin/hello_world\"]
-        EOF
-        docker build . -t occlum-app"
+        docker build . -t occlum-app -f /root/Dockerfile-occlum"
 
     - name: Build skeleton image on centos
-      run: |
-        docker exec $centos bash -c "dnf --enablerepo=PowerTools install -y binutils-devel protobuf-devel protobuf-c-devel;
-        cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
+      run: docker exec $centos bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
         make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /usr/lib;
-        cat >Dockerfile <<-EOF
-        FROM scratch
-
-        COPY encl.bin /
-        COPY encl.ss /
-
-        ENTRYPOINT [\"dummy\"]
-        EOF"
-
-        docker exec $centos bash -c "cd /root/inclavare-containers/rune/libenclave/internal/runtime/pal/skeleton;
-        docker build . -t skeleton-enclave"
+        docker build . -t skeleton-enclave -f /root/Dockerfile-skeleton"
 
     - name: Run Occlum image on centos
-      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
+      run: docker exec $centos bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
 
     - name: Run skeleton-v1.so on centos
       if: always()
-      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $centos bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run skeleton-v2.so on centos
       if: always()
-      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $centos bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run skeleton-v3.so on centos
       if: always()
-      run: docker exec $centos bash -c "source /etc/profile; docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $centos bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
 
     - name: Run occlum-hello pod on centos
       if: always()

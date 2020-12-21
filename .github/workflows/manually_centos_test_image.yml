@@ -1,9 +1,14 @@
-name: Crictl image build and push
+name: Build centos image for rune and docker 
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      occlum_version:
+        description: 'The version of Occlum image'
+        required: true
 
 jobs:
-  centos-crictl-image:
+  generate-centos-image:
       # GitHub Actions doesn't have CentOS VM provided
       runs-on: ubuntu-18.04
 
@@ -11,14 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v1
 
-      # Crictl images is based on Occlum image
-      - name: Get Occlum version
-        run: wget https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
-          echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV
-
       - name: Build images
-        run: cd $GITHUB_WORKSPACE/.github/workflows/crictl;
-          sed -i "s/OCCLUM_VERSION/${{ env.OCCLUM_VERSION }}/" Dockerfile-centos8.1;
+        run: cd $GITHUB_WORKSPACE/.github/workflows/docker;
+          sed -i "s/OCCLUM_VERSION/${{ github.event.inputs.occlum_version }}/" Dockerfile-centos8.1;
           docker build . -t crictl-centos8.1 -f Dockerfile-centos8.1
 
       # Dockerfile doesn't support start up containerd
@@ -32,8 +32,8 @@ jobs:
           crictl pull docker.io/inclavarecontainers/occlum-java-web:scratch;
           crictl pull docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch"
           docker exec centos bash -c "pkill -9 containerd"
-          docker commit centos inclavarecontainers/crictl-centos8.1:occlum-${{ env.OCCLUM_VERSION }}
+          docker commit centos inclavarecontainers/test:centos8.1-occlum-${{ github.event.inputs.occlum_version }}
 
       - name: Push crictl image to Dockerhub
         run: docker login -p ${{ secrets.DOCKER_PASSWORD }} -u ${{ secrets.DOCKER_USERNAME }};
-          docker push inclavarecontainers/crictl-centos8.1:occlum-${{ env.OCCLUM_VERSION }}
+          docker push inclavarecontainers/test:centos8.1-occlum-${{ github.event.inputs.occlum_version }}
