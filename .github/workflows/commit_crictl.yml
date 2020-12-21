@@ -1,0 +1,61 @@
+name: Run rune with crictl
+
+# Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
+on:
+  pull_request_target:
+    types: labeled
+
+jobs:
+  rune_crictl:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+    - name: Prepare work
+      run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+
+    - name: Create container
+      run: |
+        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.1)
+        echo "rune_test=$rune_test" >> $GITHUB_ENV
+
+    - name: Build and install packages
+      run: docker exec $rune_test bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-$RUNE_VERSION;
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd /root/inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
+        cp /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES/;
+        echo "$RUNE_VERSION" > VERSION;
+        find ./ -path "*dist/Makefile" | xargs -I files sed -i '16 d' files;
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
+        rpm -ivh rune-$RUNE_VERSION-1.el8.x86_64.rpm;
+        rpm -ivh shim-rune-$RUNE_VERSION-1.el8.x86_64.rpm"
+
+    - name: Run occlum-hello pod
+      if: always()
+      run: docker exec $rune_test bash -c "containerd" &
+
+        docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+        crictl run --timeout 3s hello.yaml pod.yaml && ./show.sh"
+
+    - name: Run dragonwell-web pod
+      if: always()
+      run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+        crictl run --timeout 3s dragonwell.yaml pod.yaml && ./show.sh"
+
+    - name: Run openjdk-web pod
+      if: always()
+      run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+        crictl run --timeout 3s jdk.yaml pod.yaml && ./show.sh"
+
+    - name: Run golang-web pod
+      if: always()
+      run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+        crictl run --timeout 3s golang.yaml pod.yaml && ./show.sh"
+
+    - name: Kill the container
+      run: docker stop $rune_test
