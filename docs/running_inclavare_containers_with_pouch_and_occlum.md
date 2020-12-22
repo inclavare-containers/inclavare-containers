@@ -24,6 +24,7 @@ pouch run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
   -e ENCLAVE_RUNTIME_ARGS=occlum_instance \
+  -e ENCLAVE_RUNTIME_LOGLEVEL=info \
   occlum-app
 ```
 
@@ -34,5 +35,6 @@ pouch run -it --rm --runtime=rune \
   --annotation "enclave.type=intelSgx" \
   --annotation "enclave.runtime.path=/opt/occlum/build/lib/libocclum-pal.so" \
   --annotation "enclave.runtime.args=occlum_instance" \
+  --annotation "enclave.runtime.loglevel=info" \
   occlum-app
 ```
