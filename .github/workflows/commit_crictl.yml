@@ -8,7 +8,10 @@ on:
 jobs:
   rune_crictl:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
-    runs-on: self-hosted
+    runs-on: ${{ matrix.sgx }}
+    strategy:
+      matrix:
+        sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -20,7 +23,11 @@ jobs:
 
     - name: Create container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.1)
+        if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
+          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.1)
+        else
+          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.1)
+        fi;
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
     - name: Build and install packages

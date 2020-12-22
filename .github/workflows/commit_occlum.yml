@@ -8,9 +8,10 @@ on:
 jobs:
   rune_occlum:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
-    runs-on: self-hosted
+    runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
+        sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
         tag: [ubuntu18.04, centos8.1]
     steps:
     - uses: actions/checkout@v2
@@ -22,12 +23,18 @@ jobs:
 
     - name: Create container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
+          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        else
+          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        fi;
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
     - name: Build and install packages
       run: docker exec $rune_test bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-test; 
         cd inclavare-containers-test/rune; 
+        touch libenclave/attestation/proto/shelterd-attestation.pb.go;
+        touch libenclave/intelsgx/proto/aesm-service.pb.go
         make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
     - name: Start docker daemon

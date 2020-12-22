@@ -8,9 +8,10 @@ on:
 jobs:
   rune_skeleton:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
-    runs-on: self-hosted
+    runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
+        sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
         tag: [ubuntu18.04, centos8.1]
     steps:
     - uses: actions/checkout@v2
@@ -22,12 +23,18 @@ jobs:
 
     - name: Create container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
+          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        else
+          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        fi;
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
     - name: Build and install packages
       run: docker exec $rune_test bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-test;
         cd inclavare-containers-test;
+        touch rune/libenclave/attestation/proto/shelterd-attestation.pb.go;
+        touch rune/libenclave/intelsgx/proto/aesm-service.pb.go;
         make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
     - name: Start docker daemon
@@ -70,7 +77,7 @@ jobs:
         rune --debug run ra"
 
     - name: Generate skeleton ra config.json
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: | 
         docker exec $rune_test bash -c "sed -i '161,163d' config.json;
         sed -i 's/\/var\/run\/rune\/liberpal-skeleton-v2.so/\/usr\/lib\/liberpal-skeleton-v3.so/g' config.json;
@@ -81,30 +88,30 @@ jobs:
         sed -i '144 a \"enclave.attestation.ra_type\":\"EPID\",' config.json"
 
     - name: Run skeleton v3 bundle
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "rune --debug run skeleton-enclave-container" &
 
     - name: Get remote report with rune attest command
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "sleep 10;
         rune --debug attest --isRA --linkable=false --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
 
     - name: Get local report with rune attest command
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "rune --debug attest --reportFile=/report.bin skeleton-enclave-container"
 
     - name: Get target info with sgx-tools
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "cd rootfs;
         sgx-tools -verbose gen-qe-target-info"
 
     - name: Get quote with sgx-tools
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "cd rootfs;
         sgx-tools -verbose gen-quote --report report.bin --spid=${{ secrets.SPID }}"
 
     - name: Get remote report with sgx-tools
-      if: always()
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "cd rootfs;
         sgx-tools -verbose get-ias-report --quote quote.bin --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }}"
 

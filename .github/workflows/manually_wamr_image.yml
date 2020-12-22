@@ -5,7 +5,7 @@ on: [workflow_dispatch]
 
 jobs:
   wamr_build:
-    runs-on: [self-hosted, centos]
+    runs-on: [self-hosted, centos, SGX1]
     steps:
     - uses: actions/checkout@v1
 
