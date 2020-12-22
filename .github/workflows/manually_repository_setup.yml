@@ -5,7 +5,7 @@ on: [workflow_dispatch]
 
 jobs:
   Package_repository_setup_and_deploy:
-    runs-on: [self-hosted, ubuntu]
+    runs-on: [self-hosted, ubuntu, SGX1]
     steps:
     - uses: actions/checkout@v1
 
