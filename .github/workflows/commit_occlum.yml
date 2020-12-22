@@ -1,0 +1,67 @@
+name: Run rune with Occlum
+
+# Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
+on:
+  pull_request_target:
+    types: labeled
+
+jobs:
+  rune_occlum:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        tag: [ubuntu18.04, centos8.1]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+    - name: Prepare work
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+
+    - name: Create container
+      run: |
+        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+        echo "rune_test=$rune_test" >> $GITHUB_ENV
+
+    - name: Build and install packages
+      run: docker exec $rune_test bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-test; 
+        cd inclavare-containers-test/rune; 
+        make -j${CPU_NUM} && make install -j${CPU_NUM}"
+
+    - name: Start docker daemon
+      run: |
+        if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
+          docker exec $rune_test bash -c "service docker start"
+        else
+          docker exec $rune_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+        fi;
+
+    - name: Build Occlum docker image
+      run: docker exec $rune_test bash -c "occlum-gcc -o hello_world hello_world.c;
+        occlum new occlum_instance && cd occlum_instance;
+        cp ../hello_world image/bin/ && occlum build;
+        occlum package occlum_instance.tar.gz;
+        service docker start;
+        docker build . -t occlum-app -f /root/Dockerfile-occlum"
+
+    - name: Run Occlum image
+      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
+
+    - name: Run Occlum bundle
+      if: always()
+      run: |
+        docker exec $rune_test bash -c "mkdir rootfs;
+        docker create --name occlum-app occlum-app;
+        docker export occlum-app | tar -C rootfs -xvf -;
+        rune spec;
+        sed -i '4 c \"terminal\": false,' config.json;
+        sed -i '16 c \"cwd\": \"\/\",' config.json;
+        sed -i 's#\"sh\"#\"/bin/hello_world\"#g' config.json;
+        sed -i 's#\"debug\"#\"occlum_instance\"#g' config.json;
+        sed -i 's#/var/run/rune/liberpal-skeleton-v2.so#/opt/occlum/build/lib/libocclum-pal.so#g' config.json;
+        rune --debug run occlum-app && rm -rf rootfs config.json"
+
+    - name: Kill the container
+      run: docker stop $rune_test
