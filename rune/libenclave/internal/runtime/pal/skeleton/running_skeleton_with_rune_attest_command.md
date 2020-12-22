@@ -1,5 +1,5 @@
 # Introduction
-This guide will guide you how to use remote attestation based on SGX in skeleton with rune.
+This guide will guide you how to use remote attestation based on SGX in skeleton with rune. **Currently `rune attest` can only run on the machines with [OOT SGX dirver](https://github.com/intel/linux-sgx-driver), we will support [DCAP driver](https://github.com/intel/SGXDataCenterAttestationPrimitives) as soon as possible**.
 
 # Before you start
 - Build a skeleton bundle according to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/README.md) from scratch.
