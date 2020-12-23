@@ -33,7 +33,7 @@ jobs:
         sudo pkill -9 kube-controller-manager || true
         sudo pkill -9 kube-proxy || true
         sudo pkill -9 kube-scheduler || true
-        sudo yum remove -y occlum || true
+        sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
         sudo rpm -e shim-rune || true
         sudo rpm -e rune || true
         sudo rpm -e epm || true
@@ -74,6 +74,9 @@ jobs:
         gpgcakey=https://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
         EOF
 
+        yum install -y occlum-pal-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
+        yum install -y occlum-runtime-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
+        yum install -y occlum-sgx-tools-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
         yum install -y occlum-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
 
     - name: Install rune shim and epm
@@ -302,7 +305,7 @@ jobs:
         sudo pkill -9 kube-controller-manager || true
         sudo pkill -9 kube-proxy || true
         sudo pkill -9 kube-scheduler || true
-        sudo yum remove -y occlum || true
+        sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
         sudo rpm -e shim-rune || true
         sudo rpm -e rune || true
         sudo rpm -e epm || true
