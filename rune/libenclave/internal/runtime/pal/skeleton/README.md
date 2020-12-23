@@ -270,9 +270,28 @@ Enclave instant launch only support skeleton right now, it will support more enc
 
 You can run epm service following with epm [README](https://github.com/alibaba/inclavare-containers/blob/master/epm/README.md).
 
+```shell
+sudo epm &
+```
+
 ### Run epm client
 
+#### Run skeleton with epm by docker image
+
+According to previous steps about how to build [skeleton docker image](https://github.com/alibaba/inclavare-containers/tree/master/rune/libenclave/internal/runtime/pal/skeleton#build-skeleton-docker-image), you can get the image skeleton-enclave. Then type the following commands to run skeleton with epm:
+
+```shell
+docker run -it --rm --runtime=rune \
+  -e ENCLAVE_TYPE=intelSgx \
+  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
+  -e ENCLAVE_RUNTIME_ARGS="epm" \
+  skeleton-enclave
+```
+
+#### Run skeleton with epm by OCI bundle
+
 Assuming you have an OCI bundle according to previous steps, please add config into config.json as following:
+
 ```json
 "annotations": {
 	"enclave.type": "intelSgx",
