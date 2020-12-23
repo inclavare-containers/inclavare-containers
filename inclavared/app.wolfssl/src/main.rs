@@ -411,7 +411,7 @@ fn main() {
     println!("Running server(based on wolfssl)...");
 
     let sock_path = "/run/rune/ra-tls.sock";
-    std::fs::remove_file(sock_path).unwrap();
+    let _ = std::fs::remove_file(sock_path);
 
     let listener = UnixListener::bind(sock_path).unwrap();
     loop {
