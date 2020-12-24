@@ -1,0 +1,74 @@
+name: Run epm with skeleton
+
+# Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
+on:
+  pull_request_target:
+    types: labeled
+
+jobs:
+  rune_epm:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+    runs-on: ${{ matrix.sgx }}
+    strategy:
+      matrix:
+        sgx: [self-hosted, SGX2]
+        tag: [ubuntu18.04, centos8.1]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+    - name: Prepare work
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+
+    - name: Create container
+      run: |
+        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
+        echo "rune_test=$rune_test" >> $GITHUB_ENV
+
+    - name: Build install packages and run epm service
+      run: |
+        docker exec $rune_test bash -c "mkdir -p /var/run/epm;
+        mkdir -p /var/epm;
+        mkdir -p /var/local/epm;
+        cp -r /root/inclavare-containers /root/inclavare-containers-test;
+        cp /root/inclavare-containers-test/epm/conf/config.toml /var/epm/;
+        cd /root/inclavare-containers-test;
+        make -j${CPU_NUM} && make install -j${CPU_NUM}";
+        docker exec $rune_test bash -c "cd /root/inclavare-containers-test/epm;
+        epm &"
+
+    - name: Start docker daemon
+      run: |
+        if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
+          docker exec $rune_test bash -c "service docker start"
+        else
+          docker exec $rune_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+        fi;
+
+    - name: Build skeleton docker image
+      run: docker exec $rune_test bash -c "cd /root/inclavare-containers-test/rune/libenclave/internal/runtime/pal/skeleton;
+        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /usr/lib;
+        docker build . -t skeleton-enclave -f /root/Dockerfile-skeleton"
+
+    - name: Run skeleton v3 with epm
+      if: always()
+      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=epm skeleton-enclave"
+
+    - name: Run skeleton v3 bundle with epm
+      run: |
+        docker exec $rune_test bash -c "mkdir rootfs;
+        docker create --name skeleton-enclave skeleton-enclave;
+        docker export skeleton-enclave | tar -C rootfs -xvf -;
+        cp /etc/resolv.conf rootfs/etc/resolv.conf;
+        mkdir -p /var/run/rune;
+        cp /usr/lib/liberpal-skeleton-v3.so /var/run/rune/liberpal-skeleton-v3.so;
+        rune spec;
+        sed -i '4 c \"terminal\": false,' config.json;
+        sed -i '16 c \"cwd\": \"\/\",' config.json;
+        sed -i '143 c \"enclave.runtime.args\": \"epm\",' config.json;
+        sed -i '145 c \"enclave.runtime.path\": \"/var/run/rune/liberpal-skeleton-v3.so\",' config.json;
+        rune --debug run ra"
+
+    - name: Kill the container
+      run: docker stop $rune_test
