@@ -1,4 +1,4 @@
-name: Nightly
+name: Nightly CentOS SGX1
 
 # This is a manual trigger and schedule to run everyday at 2AM CST.
 on:
@@ -213,7 +213,6 @@ jobs:
             sleep 5
           done
 
-    # TODO: add other pods such as dragonwell-web and so on.
     - name: Run hello-world pod
       timeout-minutes: 10
       run: |
@@ -263,6 +262,18 @@ jobs:
                   value: "300MB"
               image: docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch
               imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /ping
+                  port: 8090
+                initialDelaySeconds: 10
+                periodSeconds: 10
+              readinessProbe:
+                httpGet:
+                  path: /ping
+                  port: 8090
+                initialDelaySeconds: 10
+                periodSeconds: 10
               name: golang-web
               workingDir: /run/rune
           dnsPolicy: ClusterFirst
@@ -271,13 +282,67 @@ jobs:
 
         kubectl apply -f $WORK_DIR/golang-web.yaml
 
+    - name: Run dragonwell-web pod
+      run: |
+        cat <<- EOF >$WORK_DIR/dragonwell-web.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: dragonwell-web
+          name: dragonwell-web
+          namespace: default
+        spec:
+          tolerations:
+            - key: "node.kubernetes.io/disk-pressure"
+              operator: "Exists"
+              effect: "NoSchedule"
+          containers:
+            - env:
+                - name: RUNE_CARRIER
+                  value: occlum
+                - name: OCCLUM_USER_SPACE_SIZE
+                  value: "1400MB"
+                - name: OCCLUM_MAX_NUM_OF_THREADS
+                  value: "64"
+                - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+                  value: "1120MB"
+                - name: OCCLUM_PROCESS_DEFAULT_HEAP_SIZE
+                  value: "256MB"
+                - name: OCCLUM_KERNEL_SPACE_HEAP_SIZE
+                  value: "64MB"
+                - name: OCCLUM_DEFAULT_ENV
+                  value: "LD_LIBRARY_PATH=/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib/server:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/../lib"
+              image: docker.io/inclavarecontainers/occlum-dragonwell-web:scratch
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                failureThreshold: 10
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                failureThreshold: 10
+              name: dragonwell-web
+              workingDir: /run/rune
+          dnsPolicy: ClusterFirst
+          runtimeClassName: rune
+        EOF
+        kubectl apply -f $WORK_DIR/dragonwell-web.yaml
+
     - name: Check pod runing
       timeout-minutes: 20
       run: |
         sleep $nap_time
         while true; do
-          count=$(kubectl get pod | grep -c "Running")
-          if [ $count -eq 2 ]; then
+          count=$(kubectl get pod | grep "Running" | grep -c "1/1")
+          if [ $count -eq 3 ]; then
             break
           fi
           sleep 5
@@ -286,11 +351,6 @@ jobs:
     - name: Test hello-world pod
       run:
         timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
-
-    - name: Test golang-web pod
-      run: |
-        sleep $nap_time
-        curl http://$(kubectl get pod golang-web --template={{.status.podIP}}):8090/ping
 
     - name: Clear the environment
       run: |

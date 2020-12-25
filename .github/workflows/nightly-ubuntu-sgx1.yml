@@ -1,0 +1,447 @@
+name: Nightly Ubuntu SGX1
+
+# This is a manual trigger and schedule to run everyday at 2AM CST.
+on:
+  workflow_dispatch:
+  schedule:
+    # Schedule to run everyday at 2AM CST
+    - cron:  '0 18 * * *'
+
+env:
+    WORK_DIR: /root/pkgs
+    HOME: /root
+    OCCLUM_VERSION: 0.18.1
+    kubernetes_version: 1.16.9
+    nap_time: 60
+
+jobs:
+  k8s_ubuntu:
+    runs-on: [self-hosted, nightly]
+    steps:
+    - name: Prepare the execution enviorment
+      run: |
+        pushd $WORK_DIR
+        sudo apt-get install software-properties-common
+        sudo add-apt-repository ppa:git-core/ppa -y
+        sudo apt-get update
+        sudo apt-get install -y git
+        wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz
+        tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib
+        echo "export GOROOT=/usr/lib/go" > /tmp/.bashrc
+        echo "export GOPATH=/root/gopath" >> /tmp/.bashrc
+        echo "export PATH=$PATH:\$GOROOT/bin:\$GOPATH/bin" >> /tmp/.bashrc
+        echo "export GOPROXY=\"https://mirrors.aliyun.com/goproxy,direct\"" >>/tmp/.bashrc
+        echo "export GO111MODULE=on" >>/tmp/.bashrc
+        source /tmp/.bashrc
+        popd
+
+    - uses: actions/checkout@v1
+
+    - name: Clear the environment
+      run: |
+        sudo kubectl delete pod --all || true
+        sudo kubeadm reset -f || true
+        for service in kubelet containerd epm
+        do
+          sudo systemctl stop $service || true
+          sudo systemctl disable $service || true
+        done
+        sudo pkill -9 kube-apiserver || true
+        sudo pkill -9 kube-controller-manager || true
+        sudo pkill -9 kube-proxy || true
+        sudo pkill -9 kube-scheduler || true
+        sudo apt-get remove -y occlum || true
+        sudo apt-get remove -y occlum-pal || true
+        sudo apt-get remove -y occlum-runtime || true
+        sudo apt-get remove -y occlum-sgx-tools || true
+        sudo apt-get remove -y occlum-toolchains-gcc || true
+        sudo apt-get remove -y shim-rune || true
+        sudo apt-get remove -y shim || true
+        sudo apt-get remove -y epm || true
+        sudo apt-get remove -y kubelet kubeadm kubectl || true
+        sudo apt-get remove -y libsgx-launch libsgx-urts || true
+        sudo apt-get remove -y libsgx-epid libsgx-urts || true
+        sudo apt-get remove -y libsgx-quote-ex libsgx-urts || true
+        sudo apt-get remove -y *sgx* || true
+        sudo apt-get remove -y libsgx-enclave-common-dbgsym || true
+        sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh || true
+        sudo rm -fr /etc/containerd
+        sudo rm -fr /etc/inclavare-containers/
+        sudo rm -rf ~/.kube/
+        sudo rm -rf /etc/kubernetes
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/lib/etcd
+        sudo ip link set cni0 down || true
+        sudo ip link delete cni0 || true
+        sudo ip link set flannel.1 down || true
+        sudo ip link delete flannel.1 || true
+        sudo ip -all netns del || true
+        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
+        sudo rm -rf  $WORK_DIR
+        sudo mkdir -p $WORK_DIR
+
+    # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
+    - name: Get version
+      run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+
+    - name: Install Intel SGX stack
+      run: |
+        sudo apt-get install -y libssl-dev libcurl4-openssl-dev libprotobuf-dev
+        sudo apt-get install -y build-essential python
+        pushd ${WORK_DIR}
+        wget https://download.01.org/intel-sgx/sgx-linux/2.11/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.6.0_b0a445b.bin -O sgx_linux_x64_driver_2.6.0_b0a445b.bin
+        wget https://download.01.org/intel-sgx/sgx-linux/2.11/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.11.100.2.bin -O sgx_linux_x64_sdk_2.11.100.2.bin
+        echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
+        wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
+        sudo apt-get update
+        sudo apt-get install -y libsgx-launch libsgx-urts
+        sudo apt-get install -y libsgx-epid libsgx-urts
+        sudo apt-get install -y libsgx-quote-ex libsgx-urts
+        sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh
+        sudo /bin/bash /opt/intel/sgx-aesm-service/startup.sh
+        chmod +x sgx_linux_x64_driver_2.6.0_b0a445b.bin sgx_linux_x64_sdk_2.11.100.2.bin
+        ./sgx_linux_x64_driver_2.6.0_b0a445b.bin
+        echo -e "no\n/opt/intel\n" |  ./sgx_linux_x64_sdk_2.11.100.2.bin
+        popd
+
+    - name: Install Occlum stack
+      run: |
+        sudo apt-get install -y unzip
+        pushd ${WORK_DIR}
+        if [ ! $(lsmod | grep enable_rdfsbase) ]; then
+          wget https://github.com/occlum/enable_rdfsbase/archive/master.zip -O enable_rdfsbase.zip && unzip enable_rdfsbase.zip
+          pushd enable_rdfsbase-master
+          make && make install
+          popd
+        fi
+        sudo apt-get install -y libsgx-uae-service
+        popd
+
+        echo 'deb [arch=amd64] https://occlum.io/occlum-package-repos/debian bionic main' | tee /etc/apt/sources.list.d/occlum.list;
+        wget -qO - https://occlum.io/occlum-package-repos/debian/public.key | apt-key add -
+        sudo apt-get update
+        sudo apt-get install -y occlum-pal=${{ env.OCCLUM_VERSION }}-1
+        sudo apt-get install -y occlum-runtime=${{ env.OCCLUM_VERSION }}-1
+        sudo apt-get install -y occlum-sgx-tools=${{ env.OCCLUM_VERSION }}-1
+        sudo apt-get install -y occlum-toolchains-gcc
+        sudo apt-get install -y occlum=${{ env.OCCLUM_VERSION }}-1
+
+    - name: Install rune shim and epm
+      run: |
+        sudo apt-get install -y libseccomp-dev pkg-config
+        sudo apt update
+        pushd $WORK_DIR
+        cp -r $GITHUB_WORKSPACE inclavare-containers-$RUNE_VERSION
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION
+        cd inclavare-containers-$RUNE_VERSION
+        echo "$RUNE_VERSION" > VERSION
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i "17icp $WORK_DIR/v*.tar.gz \$DEBBUILD_DIR" files;
+        make package -j${CPU_NUM};
+        dpkg -i rune_$RUNE_VERSION-1_amd64.deb;
+        dpkg -i shim-rune_$RUNE_VERSION-1_amd64.deb
+        dpkg -i epm_$RUNE_VERSION-1_amd64.deb
+        popd
+
+    - name: Configure containerd
+      run: |
+        pushd ${WORK_DIR}
+        curl -LO http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/containerd-1.3.4.linux-amd64.tar.gz
+        tar -xvf containerd-1.3.4.linux-amd64.tar.gz
+        /bin/cp -f bin/* /usr/local/bin
+        cat <<- EOF >/etc/systemd/system/containerd.service
+        [Unit]
+        Description=containerd container runtime
+        Documentation=https://containerd.io
+        After=network.target
+
+        [Service]
+        ExecStartPre=/sbin/modprobe overlay
+        ExecStart=/usr/local/bin/containerd
+        Restart=always
+        RestartSec=5
+        Delegate=yes
+        KillMode=process
+        OOMScoreAdjust=-999
+        LimitNOFILE=1048576
+        LimitNPROC=infinity
+        LimitCORE=infinity
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+
+        mkdir -p /etc/containerd
+        cat <<- EOF >/etc/containerd/config.toml
+        [plugins]
+          [plugins.cri]
+            sandbox_image = "registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.1"
+            [plugins.cri.containerd]
+              default_runtime_name = "rune"
+              snapshotter = "overlayfs"
+              [plugins.cri.containerd.runtimes.rune]
+                runtime_type = "io.containerd.rune.v2"
+        EOF
+        popd
+        sudo systemctl enable containerd.service
+        sudo systemctl restart containerd.service
+
+    - name: Install kubernetes
+      run: |
+        sudo modprobe br_netfilter
+        cat <<- EOF | tee /etc/sysctl.d/k8s.conf
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.bridge.bridge-nf-call-iptables = 1
+        net.ipv4.ip_forward = 1
+        EOF
+
+        sudo sysctl --system
+        sudo apt update && sudo apt install -y apt-transport-https curl
+        curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main" >>/etc/apt/sources.list.d/kubernetes.list
+        sudo setenforce 0 || true
+
+        sudo apt update && apt install -y kubelet=${kubernetes_version}-00 kubeadm=${kubernetes_version}-00 kubectl=${kubernetes_version}-00
+        cat << EOF >/etc/resolv.conf.kubernetes
+        nameserver 8.8.8.8
+        options timeout:2 attempts:3 rotate single-request-reopen
+        EOF
+
+        cat << EOF >/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+        # Note: This dropin only works with kubeadm and kubelet v1.11+
+        [Service]
+        Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
+        Environment="KUBELET_CONFIG_ARGS=--config=/var/lib/kubelet/config.yaml"
+        Environment="KUBELET_SYSTEM_PODS_ARGS=--max-pods 64 --pod-manifest-path=/etc/kubernetes/manifests"
+        Environment="KUBELET_NETWORK_ARGS=--network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin"
+        Environment="KUBELET_DNS_ARGS=--pod-infra-container-image=registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.0 --cluster-domain=cluster.local --cloud-provider=external --resolv-conf=/etc/resolv.conf.kubernetes"
+        Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --container-runtime-endpoint=/run/containerd/containerd.sock"
+        ExecStart=
+        ExecStart=/usr/bin/kubelet \$KUBELET_KUBECONFIG_ARGS \$KUBELET_CONFIG_ARGS \$KUBELET_SYSTEM_PODS_ARGS \$KUBELET_NETWORK_ARGS \$KUBELET_DNS_ARGS \$KUBELET_EXTRA_ARGS
+        EOF
+
+        sudo systemctl enable kubelet.service
+
+        if [ -f /etc/kubernetes/admin.conf ]; then
+          kubeadm reset -f
+        fi
+        sudo systemctl enable kubelet.service
+        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v1.16.9 --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+
+        mkdir -p $HOME/.kube
+        sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+        sudo chown $(id -u):$(id -g) $HOME/.kube/config
+        kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
+        kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
+        wget -P $WORK_DIR http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/kube-flannel.yml
+        kubectl apply -f $WORK_DIR/kube-flannel.yml
+
+    - name: Install runtimeclass
+      run: |
+        cat <<- EOF >$WORK_DIR/runtime.yaml
+        apiVersion: node.k8s.io/v1beta1
+        handler: rune
+        kind: RuntimeClass
+        metadata:
+          name: rune
+        EOF
+
+        kubectl apply -f $WORK_DIR/runtime.yaml
+        kubectl get runtimeclass
+
+    - name: Check k8s
+      timeout-minutes: 10
+      run: |
+          sleep $nap_time
+          while true; do
+            count=$(kubectl get pod -A | grep -c "1/1")
+            if [ $count -eq 8 ]; then
+              break
+            fi
+            sleep 5
+          done
+
+    - name: Run hello-world pod
+      timeout-minutes: 10
+      run: |
+        cat <<- EOF >$WORK_DIR/helloworld.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: helloworld
+          name: helloworld
+        spec:
+          runtimeClassName: rune
+          containers:
+          - command:
+            - /bin/hello_world
+            env:
+            - name: RUNE_CARRIER
+              value: occlum
+            image: docker.io/inclavarecontainers/occlum-hello-world:scratch
+            imagePullPolicy: IfNotPresent
+            name: helloworld
+            workingDir: /run/rune
+        EOF
+
+        kubectl apply -f $WORK_DIR/helloworld.yaml
+
+    - name: Run Golang-web pod
+      run: |
+        cat <<- EOF >$WORK_DIR/golang-web.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: golang-web
+          name: golang-web
+          namespace: default
+        spec:
+          containers:
+            - command:
+                - /bin/web_server
+              env:
+                - name: RUNE_CARRIER
+                  value: occlum
+                - name: OCCLUM_USER_SPACE_SIZE
+                  value: "380MB"
+                - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+                  value: "300MB"
+              image: docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /ping
+                  port: 8090
+                initialDelaySeconds: 10
+                periodSeconds: 10
+              readinessProbe:
+                httpGet:
+                  path: /ping
+                  port: 8090
+                initialDelaySeconds: 10
+                periodSeconds: 10
+              name: golang-web
+              workingDir: /run/rune
+          dnsPolicy: ClusterFirst
+          runtimeClassName: rune
+        EOF
+
+        kubectl apply -f $WORK_DIR/golang-web.yaml
+
+    - name: Run dragonwell-web pod
+      run: |
+        cat <<- EOF >$WORK_DIR/dragonwell-web.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: dragonwell-web
+          name: dragonwell-web
+          namespace: default
+        spec:
+          tolerations:
+            - key: "node.kubernetes.io/disk-pressure"
+              operator: "Exists"
+              effect: "NoSchedule"
+          containers:
+            - env:
+                - name: RUNE_CARRIER
+                  value: occlum
+                - name: OCCLUM_USER_SPACE_SIZE
+                  value: "1400MB"
+                - name: OCCLUM_MAX_NUM_OF_THREADS
+                  value: "64"
+                - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+                  value: "1120MB"
+                - name: OCCLUM_PROCESS_DEFAULT_HEAP_SIZE
+                  value: "256MB"
+                - name: OCCLUM_KERNEL_SPACE_HEAP_SIZE
+                  value: "64MB"
+                - name: OCCLUM_DEFAULT_ENV
+                  value: "LD_LIBRARY_PATH=/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib/server:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/../lib"
+              image: docker.io/inclavarecontainers/occlum-dragonwell-web:scratch
+              imagePullPolicy: IfNotPresent
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                failureThreshold: 10
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 8080
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                failureThreshold: 10
+              name: dragonwell-web
+              workingDir: /run/rune
+          dnsPolicy: ClusterFirst
+          runtimeClassName: rune
+        EOF
+        kubectl apply -f $WORK_DIR/dragonwell-web.yaml
+
+    - name: Check pod runing
+      timeout-minutes: 20
+      run: |
+        sleep $nap_time
+        while true; do
+          count=$(kubectl get pod | grep "Running" | grep -c "1/1")
+          if [ $count -eq 3 ]; then
+            break
+          fi
+          sleep 5
+        done
+
+    - name: Test hello-world pod
+      run:
+        timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
+
+    - name: Clear the environment
+      run: |
+        sudo kubectl delete pod --all || true
+        sudo kubeadm reset -f || true
+        for service in kubelet containerd epm
+        do
+          sudo systemctl stop $service || true
+          sudo systemctl disable $service || true
+        done
+        sudo pkill -9 kube-apiserver || true
+        sudo pkill -9 kube-controller-manager || true
+        sudo pkill -9 kube-proxy || true
+        sudo pkill -9 kube-scheduler || true
+        sudo apt-get remove -y occlum || true
+        sudo apt-get remove -y occlum-pal || true
+        sudo apt-get remove -y occlum-runtime || true
+        sudo apt-get remove -y occlum-sgx-tools || true
+        sudo apt-get remove -y occlum-toolchains-gcc || true
+        sudo apt-get remove -y shim-rune || true
+        sudo apt-get remove -y shim || true
+        sudo apt-get remove -y epm || true
+        sudo apt-get remove -y kubelet kubeadm kubectl || true
+        sudo apt-get remove -y libsgx-launch libsgx-urts || true
+        sudo apt-get remove -y libsgx-epid libsgx-urts || true
+        sudo apt-get remove -y libsgx-quote-ex libsgx-urts || true
+        sudo apt-get remove -y *sgx* || true
+        sudo apt-get remove -y libsgx-enclave-common-dbgsym || true
+        sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh || true
+        sudo rm -fr /etc/containerd
+        sudo rm -fr /etc/inclavare-containers/
+        sudo rm -rf ~/.kube/
+        sudo rm -rf /etc/kubernetes
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/lib/etcd
+        sudo ip link set cni0 down || true
+        sudo ip link delete cni0 || true
+        sudo ip link set flannel.1 down || true
+        sudo ip link delete flannel.1 || true
+        sudo ip -all netns del || true
+        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
