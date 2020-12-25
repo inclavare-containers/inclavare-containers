@@ -10,7 +10,7 @@ import (
 func TestDecodeConfig(t *testing.T) {
 	text := `
 root = "/var/local/epm"
-db_path = "/var/local/epm/epm.db"
+db_path = "/etc/epm/epm.db"
 db_timeout = 10
 
 [grpc]

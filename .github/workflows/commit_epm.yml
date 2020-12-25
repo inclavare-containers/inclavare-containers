@@ -8,10 +8,9 @@ on:
 jobs:
   rune_epm:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
-    runs-on: ${{ matrix.sgx }}
+    runs-on: [self-hosted, SGX2]
     strategy:
       matrix:
-        sgx: [self-hosted, SGX2]
         tag: [ubuntu18.04, centos8.1]
     steps:
     - uses: actions/checkout@v2
@@ -29,14 +28,16 @@ jobs:
     - name: Build install packages and run epm service
       run: |
         docker exec $rune_test bash -c "mkdir -p /var/run/epm;
-        mkdir -p /var/epm;
+        mkdir -p /etc/epm;
         mkdir -p /var/local/epm;
         cp -r /root/inclavare-containers /root/inclavare-containers-test;
-        cp /root/inclavare-containers-test/epm/conf/config.toml /var/epm/;
+        cp /root/inclavare-containers-test/epm/conf/config.toml /etc/epm/;
         cd /root/inclavare-containers-test;
+        touch rune/libenclave/attestation/proto/shelterd-attestation.pb.go;
+        touch rune/libenclave/intelsgx/proto/aesm-service.pb.go;
+        touch rune/libenclave/proto/agent-service.pb.go;
         make -j${CPU_NUM} && make install -j${CPU_NUM}";
-        docker exec $rune_test bash -c "cd /root/inclavare-containers-test/epm;
-        epm &"
+        docker exec $rune_test bash -c "epm &"
 
     - name: Start docker daemon
       run: |
