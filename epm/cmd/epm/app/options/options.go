@@ -20,7 +20,7 @@ func (opts *Options) AddFlags(fs *pflag.FlagSet) {
 		return
 	}
 
-	fs.StringVar(&opts.ConfigFile, "config", "/var/epm/config.toml", "Path to the epm config file to be used.")
+	fs.StringVar(&opts.ConfigFile, "config", "/etc/epm/config.toml", "Path to the epm config file to be used.")
 }
 
 // ApplyTo loads the epm configuration file to the config.Config Object

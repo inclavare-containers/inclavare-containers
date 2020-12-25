@@ -23,7 +23,7 @@ ls -l /usr/local/bin/epm
 
 ### Step 2: Configuration
 
-The Configuration file of epm must be placed into `/var/run/epm/config.toml`
+The Configuration file of epm must be placed into `/etc/epm/config.toml`
 
 ```toml
 root = "/var/local/epm"
@@ -40,5 +40,5 @@ db_timeout = 10
 
 ## Run the epm
 ```bash
-/bin/bash /usr/local/bin/epm --config=/var/run/epm/config.toml --stderrthreshold=0
+/bin/bash /usr/local/bin/epm --config=/etc/epm/config.toml --stderrthreshold=0
 ```
