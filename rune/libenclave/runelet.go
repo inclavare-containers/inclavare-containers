@@ -76,8 +76,12 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 		}
 
 		// Launch a remote attestation to the enclave runtime.
-		if config.RaType == sgx.EPID {
-			if _, err := rt.LaunchAttestation(true, config.RaEpidSpid, config.RaEpidSubscriptionKey, config.RaEpidIsLinkable); err != nil {
+		if config.RaType == sgx.EPID || config.RaType == sgx.DCAP {
+			isDCAP := false
+			if config.RaType == sgx.DCAP {
+				isDCAP = true
+			}
+			if _, err := rt.LaunchAttestation(isDCAP, true, config.RaEpidSpid, config.RaEpidSubscriptionKey, config.RaEpidIsLinkable); err != nil {
 				return 1, err
 			}
 		}
