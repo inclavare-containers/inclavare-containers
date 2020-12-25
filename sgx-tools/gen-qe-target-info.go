@@ -1,6 +1,7 @@
 package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
+	"fmt"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -17,12 +18,20 @@ For example, save the target information file about Quoting Enclave retrieved fr
 
 	# sgx-tools gen-qe-target-info --targetinfo foo`,
 	Flags: []cli.Flag{
+		cli.BoolFlag{
+			Name:  "isDCAP",
+			Usage: "specify whether the attestation type is DCAP or EPID",
+		},
 		cli.StringFlag{
 			Name:  "targetinfo",
 			Usage: "path to the output target information file containing TARGETINFO",
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.Bool("isDCAP") {
+			return fmt.Errorf("Unsupport the DCAP attestation type")
+		}
+
 		if context.GlobalBool("verbose") {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
