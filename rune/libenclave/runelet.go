@@ -245,6 +245,12 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 		return 1, fmt.Errorf("Unsupported Quote Type Configuration %v!\n", raEpidQuoteType)
 	}
 
+	isDCAP := false
+	if os.Getenv("IsDCAP") == "true" {
+		logrus.Infof("preparing to DCAP attestation")
+		isDCAP = true
+	}
+
 	isRA := false
 	if os.Getenv("IsRemoteAttestation") == "true" {
 		logrus.Infof("preparing to remote Attest")
@@ -253,6 +259,7 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 
 	req := &pb.AgentServiceRequest{}
 	req.Attest = &pb.AgentServiceRequest_Attest{
+		IsDCAP:          isDCAP,
 		IsRA:            isRA,
 		Spid:            os.Getenv("SPID"),
 		SubscriptionKey: os.Getenv("SUBSCRIPTION_KEY"),
