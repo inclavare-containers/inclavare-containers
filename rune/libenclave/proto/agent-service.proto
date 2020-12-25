@@ -13,11 +13,13 @@ message AgentServiceRequest{
     }
 
     message Attest {
+	// isDCAP: the attestation type is EPID or DCAP
+	bool isDCAP		= 1;
 	// isRA: remote attestaion(RA) or just returns local report
-	bool isRA		= 1;
-	string spid       	= 2;
-	string subscriptionKey 	= 3;
-	uint32 quoteType	= 4;
+	bool isRA		= 2;
+	string spid       	= 3;
+	string subscriptionKey 	= 4;
+	uint32 quoteType	= 5;
     }
 
     Execute exec = 1;
