@@ -23,6 +23,10 @@ For example, get remote attestation report from IAS according to quote file:
 
 	# sgx-tools get-ias-report --quote foo.quote --spid ${SPID} --subscription-key ${SUBSCRIPTION_KEY}`,
 	Flags: []cli.Flag{
+		cli.BoolFlag{
+			Name:  "isDCAP",
+			Usage: "specify whether the attestation type is DCAP or EPID",
+		},
 		cli.StringFlag{
 			Name:  "quote",
 			Usage: "path to the input quote file containing QUOTE",
@@ -41,6 +45,10 @@ For example, get remote attestation report from IAS according to quote file:
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.Bool("isDCAP") {
+			return fmt.Errorf("Unsupport the DCAP attestation type")
+		}
+
 		quotePath := context.String("quote")
 		if quotePath == "" {
 			return fmt.Errorf("quote argument cannot be empty")

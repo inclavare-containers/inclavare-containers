@@ -21,6 +21,10 @@ For example, generate the quote file according to the given local report file:
 
 	# sgx-tools gen-quote --report foo.rep --spid ${SPID}`,
 	Flags: []cli.Flag{
+		cli.BoolFlag{
+			Name:  "isDCAP",
+			Usage: "specify whether the attestation type is DCAP or EPID",
+		},
 		cli.StringFlag{
 			Name:  "report",
 			Usage: "path to the input report file containing REPORT",
@@ -39,6 +43,10 @@ For example, generate the quote file according to the given local report file:
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.Bool("isDCAP") {
+			return fmt.Errorf("Unsupport the DCAP attestation type")
+		}
+
 		reportPath := context.String("report")
 		if reportPath == "" {
 			return fmt.Errorf("report argument cannot be empty")
