@@ -161,7 +161,7 @@ func handleRequest(conn net.Conn, id int) {
 	if req.Attest != nil {
 		logrus.Infof("In function handleRequest: get an attest request")
 		resp.Attest = &pb.AgentServiceResponse_Attest{}
-		localReport, err := enclaveRuntime.LaunchAttestation(false, req.Attest.IsRA, req.Attest.Spid,
+		localReport, err := enclaveRuntime.LaunchAttestation(req.Attest.IsDCAP, req.Attest.IsRA, req.Attest.Spid,
 			req.Attest.SubscriptionKey,
 			req.Attest.QuoteType)
 		if err != nil {

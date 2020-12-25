@@ -27,6 +27,10 @@ var attestCommand = cli.Command{
 Where "<container-id>" is the name for the instance of the container`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
+			Name:  "isDCAP",
+			Usage: "specify whether the attestation type is DCAP or EPID",
+		},
+		cli.BoolFlag{
 			Name:  "isRA",
 			Usage: "specify whether to get the remote or local report",
 		},
@@ -140,6 +144,12 @@ func getAttestProcess(context *cli.Context, bundle string) (*specs.Process, erro
 		}
 	}
 	// append the passed env variables
+	isDCAP := "false"
+	if context.Bool("isDCAP") {
+		isDCAP = "true"
+	}
+	p.Env = append(p.Env, "IsDCAP"+envSeparator+isDCAP)
+
 	isRemoteAttestation := "false"
 	if context.Bool("isRA") {
 		isRemoteAttestation = "true"
