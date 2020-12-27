@@ -85,7 +85,7 @@ After build Inclavare Containers on your system, you can use the following comma
 sudo make install
 ```
 
-`rune` will be installed to `/usr/local/bin/rune` on your system. `shim-rune` will be installed to `/usr/local/bin/containerd-shim-rune-v2`. `epm` will be installed to `/usr/local/bin/epm`. `sgx-tools` will be installed to `/usr/local/bin/sgx-tools`.
+`{rune,shim-rune,epm,sgx-tools}` will be installed to `/usr/local/bin/{rune,containerd-shim-rune-v2,epm,sgx-tools}` on your system.
 
 If you don't want to build and install Inclavare Containers from latest source code. We also provide RPM/DEB repository to help you install Inclavare Containers quickly. Please see the [steps about how to configure repository](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#1-add-inclavare-containers-repository) firstly. Then you can run the following command to install Inclavare Containers on your system.
 
