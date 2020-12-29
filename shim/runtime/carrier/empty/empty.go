@@ -1,8 +1,8 @@
 package empty
 
 import (
-	"github.com/alibaba/inclavare-containers/shim/runtime/carrier"
 	"github.com/containerd/containerd/runtime/v2/task"
+	"github.com/inclavare-containers/shim/runtime/carrier"
 )
 
 var _ carrier.Carrier = &empty{}
@@ -28,6 +28,11 @@ func (c *empty) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier.
 func (c *empty) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carrier.CommonArgs) (
 	signingMaterial string, err error) {
 	return "", nil
+}
+
+// SignMaterial impl Carrier.
+func (c *empty) SignMaterial(req *task.CreateTaskRequest, signingMaterial, serverAddress string) (publicKey, signature string, err error) {
+	return "", "", nil
 }
 
 // CascadeEnclaveSignature impl Carrier.

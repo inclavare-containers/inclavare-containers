@@ -41,6 +41,9 @@ type Carrier interface {
 	// GenerateSigningMaterial generates enclave signing material to be signed.
 	GenerateSigningMaterial(req *task.CreateTaskRequest, args *CommonArgs) (signingMaterial string, err error)
 
+	// SignMaterial generates the material signatures and the public key from the signing server
+	SignMaterial(req *task.CreateTaskRequest, signingMaterial, serverAddress string) (publicKey, signature string, err error)
+
 	// CascadeEnclaveSignature generates the signed enclave with the input signature file, the public key and
 	//   the enclave signing material.
 	CascadeEnclaveSignature(req *task.CreateTaskRequest, args *CascadeEnclaveSignatureArgs) (signedEnclave string, err error)

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	pb "github.com/opencontainers/runc/libenclave/proto"
 	"io"
 	"unsafe"
+
+	"github.com/golang/protobuf/proto"
+	pb "github.com/inclavare-containers/rune/libenclave/proto"
 )
 
 func protoBufWrite(conn io.Writer, marshaled interface{}) (err error) {

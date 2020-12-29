@@ -5,7 +5,7 @@ import (
 
 	"github.com/containerd/containerd/runtime/v2/task"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/carrier"
+	"github.com/inclavare-containers/shim/runtime/carrier"
 )
 
 var _ carrier.Carrier = &graphene{}
@@ -36,6 +36,12 @@ func (c *graphene) GenerateSigningMaterial(req *task.CreateTaskRequest, args *ca
 	signingMaterial string, err error) {
 	//TODO
 	return "", errors.New("graphene GenerateSigningMaterial unimplemented")
+}
+
+// SignMaterial impl Carrier.
+func (c *graphene) SignMaterial(req *task.CreateTaskRequest, signingMaterial, serverAddress string) (publicKey, signature string, err error) {
+	//TODO
+	return "", "", nil
 }
 
 // CascadeEnclaveSignature impl Carrier.

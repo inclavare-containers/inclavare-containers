@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	epm_api "github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
-	"github.com/alibaba/inclavare-containers/shim/runtime/utils"
+	epm_api "github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
+	"github.com/inclavare-containers/shim/runtime/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
@@ -15,7 +15,14 @@ import (
 type bundleCacheConfig struct {
 	epmConnection *grpc.ClientConn
 	cacheLevel    types.BundleCachePoolType
-	cacheMap      map[types.BundleCachePoolType]string
+	cacheIDMap    map[types.BundleCachePoolType]string
+	inputsCache   inputsCache
+}
+
+type inputsCache struct {
+	inputs0 bundleCache0Inputs
+	inputs1 bundleCache1Inputs
+	inputs2 bundleCache2Inputs
 }
 
 type cacheInputs interface {
@@ -70,14 +77,19 @@ func (b *bundleCache2Inputs) buildID() (string, error) {
 }
 
 func (o *occlum) loadBundleCache(typ types.BundleCachePoolType, inputs cacheInputs, targetPath string) (string, error) {
+	cacheId, err := inputs.buildID()
+	if err != nil {
+		return "", err
+	}
+	logrus.Debugf("loadBundleCache: cacheId: %s, type: %s", cacheId, typ)
+	return o.loadBundleCacheByCacheId(typ, cacheId, targetPath)
+}
+
+func (o *occlum) loadBundleCacheByCacheId(typ types.BundleCachePoolType, cacheId string, targetPath string) (string, error) {
 	if o.bundleCacheConfig.epmConnection == nil {
 		return "", fmt.Errorf("epm client is not exit")
 	}
 	if err := os.MkdirAll(targetPath, 0755); err != nil {
-		return "", err
-	}
-	cacheId, err := inputs.buildID()
-	if err != nil {
 		return "", err
 	}
 	cli := epm_api.NewEnclavePoolManagerClient(o.bundleCacheConfig.epmConnection)
@@ -97,14 +109,19 @@ func (o *occlum) loadBundleCache(typ types.BundleCachePoolType, inputs cacheInpu
 
 func (o *occlum) saveBundleCache(typ types.BundleCachePoolType, inputs cacheInputs,
 	parent *epm_api.Cache, sourcePath string) (*epm_api.Cache, error) {
-	if o.bundleCacheConfig.epmConnection == nil {
-		return nil, fmt.Errorf("epm client is not exit")
-	}
 	cacheId, err := inputs.buildID()
+	logrus.Debugf("saveBundleCache: cacheId: %s, type: %s", cacheId, typ)
 	if err != nil {
 		return nil, fmt.Errorf("build cacheID failed. type: %s, error: %++v", typ, err)
 	}
-	logrus.Debugf("saveBundleCache: cacheId: %s, type: %s", cacheId, typ)
+	return o.saveBundleCacheByCacheId(typ, cacheId, parent, sourcePath)
+}
+
+func (o *occlum) saveBundleCacheByCacheId(typ types.BundleCachePoolType, cacheId string,
+	parent *epm_api.Cache, sourcePath string) (*epm_api.Cache, error) {
+	if o.bundleCacheConfig.epmConnection == nil {
+		return nil, fmt.Errorf("epm client is not exit")
+	}
 	cli := epm_api.NewEnclavePoolManagerClient(o.bundleCacheConfig.epmConnection)
 	cache := &epm_api.Cache{
 		Type:   string(typ),

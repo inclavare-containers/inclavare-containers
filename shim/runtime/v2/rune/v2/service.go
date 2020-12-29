@@ -30,8 +30,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune"
-	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/containerd/cgroups"
 	eventstypes "github.com/containerd/containerd/api/events"
 	"github.com/containerd/containerd/api/types/task"
@@ -52,11 +50,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	ptypes "github.com/gogo/protobuf/types"
+	"github.com/inclavare-containers/shim/runtime/v2/rune"
+	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
-	//"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/v2/attestation"
+	//"github.com/inclavare-containers/shim/runtime/v2/rune/v2/attestation"
 )
 
 var (
