@@ -3,16 +3,17 @@ package attestation
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/inclavare-containers/shim/runtime/config"
-	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
-	"github.com/opencontainers/runc/libenclave/attestation/sgx"
-	pb "github.com/opencontainers/runc/libenclave/proto"
-	specs "github.com/opencontainers/runtime-spec/specs-go"
-	"github.com/sirupsen/logrus"
 	"net"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
+	pb "github.com/inclavare-containers/rune/libenclave/proto"
+	"github.com/inclavare-containers/shim/runtime/config"
+	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
+	specs "github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -98,7 +99,7 @@ func Attest(ctx context.Context, raParameters map[string]string, containerId str
 	}
 
 	/* spid and subscriptionKey is checked in
-	 * package github.com/opencontainers/runc/libenclave/attestation/sgx/ias.
+	 * package github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias.
 	 * so we only need to check containerId, product and linkable here.
 	 */
 	if containerId == "" {

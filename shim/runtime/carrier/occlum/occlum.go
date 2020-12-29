@@ -11,16 +11,17 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	epm_api "github.com/alibaba/inclavare-containers/epm/pkg/epm-api/v1alpha1"
-	"github.com/alibaba/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
-	shim_config "github.com/alibaba/inclavare-containers/shim/config"
-	"github.com/alibaba/inclavare-containers/shim/runtime/carrier"
-	carr_const "github.com/alibaba/inclavare-containers/shim/runtime/carrier/constants"
-	"github.com/alibaba/inclavare-containers/shim/runtime/config"
-	"github.com/alibaba/inclavare-containers/shim/runtime/utils"
-	"github.com/alibaba/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/runtime/v2/task"
+	epm_api "github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
+	"github.com/inclavare-containers/epm/pkg/epm/bundle-cache-pool/occlum/types"
+	shim_config "github.com/inclavare-containers/shim/config"
+	"github.com/inclavare-containers/shim/runtime/carrier"
+	carr_const "github.com/inclavare-containers/shim/runtime/carrier/constants"
+	"github.com/inclavare-containers/shim/runtime/carrier/sign"
+	"github.com/inclavare-containers/shim/runtime/config"
+	"github.com/inclavare-containers/shim/runtime/utils"
+	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -72,7 +73,7 @@ func NewOcclumCarrier(ctx context.Context, bundle string) (carrier.Carrier, erro
 		shimConfig: &cfg,
 		bundleCacheConfig: &bundleCacheConfig{
 			epmConnection: conn,
-			cacheMap:      make(map[types.BundleCachePoolType]string),
+			cacheIDMap:    make(map[types.BundleCachePoolType]string),
 		},
 	}, nil
 }
@@ -128,6 +129,8 @@ func (o *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 		occlumConfigPath:   occlumConfigPath,
 		occlumLibOSPath:    o.shimConfig.EnclaveRuntime.Occlum.EnclaveLibOSPath,
 	}
+	o.bundleCacheConfig.inputsCache.inputs0 = inputs0
+	o.bundleCacheConfig.inputsCache.inputs1 = inputs1
 	cacheType := types.BundleCache0PoolType
 	occlumInstanceDir := filepath.Join(rootfsDir, o.workDirectory)
 	enclavePath := filepath.Join(occlumInstanceDir, "./build/lib/libocclum-libos.so")
@@ -139,7 +142,7 @@ func (o *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 		}
 	} else {
 		o.bundleCacheConfig.cacheLevel = types.BundleCache0PoolType
-		o.bundleCacheConfig.cacheMap[types.BundleCache0PoolType] = cache0ID
+		o.bundleCacheConfig.cacheIDMap[types.BundleCache0PoolType] = cache0ID
 		logrus.Debugf("BuildUnsignedEnclave: load bundle cache %s time cost: %d", cacheType, (time.Now().Sub(timeStart))/time.Second)
 
 		// Load bundle cache1 to occlum instance directory
@@ -152,7 +155,7 @@ func (o *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 			}
 		} else {
 			o.bundleCacheConfig.cacheLevel = cacheType
-			o.bundleCacheConfig.cacheMap[types.BundleCache1PoolType] = cache1ID
+			o.bundleCacheConfig.cacheIDMap[types.BundleCache1PoolType] = cache1ID
 			logrus.Debugf("BuildUnsignedEnclave: load bundle cache %s time cost: %d", cacheType, (time.Now().Sub(timeStart))/time.Second)
 		}
 	}
@@ -225,9 +228,6 @@ func (o *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carr
 	dataDir := filepath.Join(req.Bundle, dataDirName)
 	signingMaterial = filepath.Join(rootfsDir, o.workDirectory, "enclave_sig.dat")
 	args.Config = filepath.Join(rootfsDir, o.workDirectory, "build/Enclave.xml")
-	//if o.bundleCacheConfig.cacheLevel == types.BundleCache1PoolType {
-	//	return
-	//}
 	cmdArgs := []string{
 		filepath.Join(dataDir, carrierScriptFileName),
 		"--action", "generateSigningMaterial",
@@ -245,13 +245,46 @@ func (o *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carr
 	return signingMaterial, nil
 }
 
+// SignMaterial impl Carrier.
+func (o *occlum) SignMaterial(req *task.CreateTaskRequest, signingMaterial, serverAddress string) (publicKey, signature string, err error) {
+	if serverAddress == "" {
+		return sign.MockSign(signingMaterial)
+	}
+	publicKeyFile, err := sign.GetPublicKey(serverAddress)
+	if err != nil {
+		return "", "", err
+	}
+	defer os.Remove(publicKeyFile)
+	inputs2 := bundleCache2Inputs{
+		publicKeyFilePath:  publicKeyFile,
+		bundleCache1Inputs: o.bundleCacheConfig.inputsCache.inputs1,
+	}
+	o.bundleCacheConfig.inputsCache.inputs2 = inputs2
+	rootfsDir := filepath.Join(req.Bundle, rootfsDirName)
+	occlumInstanceDir := filepath.Join(rootfsDir, o.workDirectory)
+	cacheType := types.BundleCache2PoolType
+	if cache2ID, err := o.loadBundleCache(cacheType, &inputs2, occlumInstanceDir); err != nil {
+		logrus.Warningf("SignMaterial: load bundle cache %s failed. err: %++v", cacheType, err)
+		return sign.RemoteSign(signingMaterial, serverAddress)
+	} else {
+		o.bundleCacheConfig.cacheLevel = cacheType
+		o.bundleCacheConfig.cacheIDMap[cacheType] = cache2ID
+	}
+	return "", "", nil
+}
+
 // CascadeEnclaveSignature impl Carrier.
 func (o *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carrier.CascadeEnclaveSignatureArgs) (
 	signedEnclave string, err error) {
 	timeStart := time.Now()
 	rootfsDir := filepath.Join(req.Bundle, rootfsDirName)
 	dataDir := filepath.Join(req.Bundle, dataDirName)
+	occlumInstanceDir := filepath.Join(rootfsDir, o.workDirectory)
 	signedEnclave = filepath.Join(rootfsDir, o.workDirectory, "./build/lib/libocclum-libos.signed.so")
+	cacheType := types.BundleCache2PoolType
+	if o.bundleCacheConfig.cacheLevel == cacheType {
+		return "", nil
+	}
 	cmdArgs := []string{
 		filepath.Join(dataDir, carrierScriptFileName),
 		"--action", "cascadeEnclaveSignature",
@@ -268,6 +301,18 @@ func (o *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carr
 		return "", err
 	}
 	logrus.Debugf("CascadeEnclaveSignature: sgx_sign catsig successfully")
+	cache1Id := o.bundleCacheConfig.cacheIDMap[types.BundleCache1PoolType]
+	inputs2 := &bundleCache2Inputs{
+		publicKeyFilePath:  args.Key,
+		bundleCache1Inputs: o.bundleCacheConfig.inputsCache.inputs1,
+	}
+	// Save bundle cache2
+	if _, err := o.saveBundleCache(cacheType, inputs2, &epm_api.Cache{
+		ID:   cache1Id,
+		Type: string(types.BundleCache1PoolType),
+	}, occlumInstanceDir); err != nil {
+		logrus.Warningf("CascadeEnclaveSignature: save bundle cache %s failed. error: %++v", cacheType, err)
+	}
 	logrus.Debugf("CascadeEnclaveSignature: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	return signedEnclave, nil
 }
