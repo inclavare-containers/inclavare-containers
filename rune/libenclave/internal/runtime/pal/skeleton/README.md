@@ -309,4 +309,57 @@ sudo rune run skeleton-enclave-container
 
 Skeleton now can interact with [kvmtool](../kvmtool) to support enclave VM for demonstration. This is the first step to support a new form of enclave.
 
-The guide of running skeleton with kvmtool will be provided in the next release.
+Skeleton implements enclave based on VM in two steps, `kvmtool` is a hypervisor running on KVM. By stripping the functions in kvmtool, it implements a high-level abstract library `libvmm`, which is a relatively common library implemented in C language. Then it connects to PAL API based on `libvmm` in skeleton environment.
+
+At present, enclave VM based on kvmtool is only implemented in skeleton v2.
+
+### Run skeleton with kvmtool
+
+Assuming you have an OCI bundle according to previous steps, please add config into config.json as following:
+
+```json
+{
+	"annotations": {
+		"enclave.runtime.args": "debug backend-kvm kvm-kernel=/path/to/bzImage kvm-rootfs=/ kvm-init=/bin/bash",
+		"enclave.runtime.path": "/path/to/liberpal-skeleton-v2.so",
+	},
+	"linux": {
+		"devices": [
+			{
+				"path": "/dev/kvm",
+				"type": "c",
+				"major": 10,
+				"minor": 232,
+				"fileMode": 438,
+				"uid": 0,
+				"gid": 0
+			},
+			{
+				"path": "/dev/net/tun",
+				"type": "c",
+				"major": 10,
+				"minor": 200,
+				"fileMode": 438,
+				"uid": 0,
+				"gid": 0
+			}
+		],
+		"resources": {
+			"devices": [
+				{
+					"allow": true
+				}
+			]
+		},
+	}
+}
+```
+
+Please modify the above device information according to the actual situation, such as fileMode, minor number, etc.
+
+The configuration of `kvm-rootfs` takes bundle as an absolute address of rootfs, the bundle is specified in the parameters of rune.
+
+```shell
+cp inclavare-containers/pal/skeleton/encl.{bin,ss} bundle/run/rune
+rune --debug run -b bundle test
+```
