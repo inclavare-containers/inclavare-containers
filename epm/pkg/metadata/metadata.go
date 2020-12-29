@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/boltdb/bolt"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 )
 
 // Metadata containers the DB used to store the cache metadata
@@ -110,12 +110,13 @@ func (m *Metadata) Close() error {
 func (m *Metadata) GetAncestorCaches(cache *v1alpha1.Cache) ([]*v1alpha1.Cache, error) {
 	p := cache.Parent
 	caches := make([]*v1alpha1.Cache, 0)
-	for ; p != nil; p = p.Parent {
+	for p != nil {
 		c, err := m.GetCache(p.Type, p.ID)
 		if err != nil {
 			return nil, err
 		}
 		caches = append(caches, c)
+		p = c.Parent
 	}
 	return caches, nil
 }

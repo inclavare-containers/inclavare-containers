@@ -16,6 +16,8 @@ import (
 )
 
 func Test_BundleCache0Manager_SaveCache(t *testing.T) {
+	os.MkdirAll("/tmp/test/src", 0777)
+	os.Remove("/tmp/test/test.db")
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "001"
@@ -40,11 +42,13 @@ func Test_BundleCache0Manager_SaveCache(t *testing.T) {
 }
 
 func Test_BundleCache1Manager_SaveCache(t *testing.T) {
+	os.MkdirAll("/tmp/test/src", 0777)
+	os.Remove("/tmp/test/test.db")
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "x001"
 	m := NewBundleCache1Manager("/tmp/test/epm", metadata)
-	sourcePath := "/tmp/test/srcsrc/rune"
+	sourcePath := "/tmp/test/src/rune"
 	parent := &v1alpha1.Cache{
 		Type:   string(types.BundleCache0PoolType),
 		Parent: nil,
@@ -72,6 +76,8 @@ func Test_BundleCache1Manager_SaveCache(t *testing.T) {
 }
 
 func Test_BundleCache2Manager_SaveCache(t *testing.T) {
+	os.MkdirAll("/tmp/test/src/rune", 0777)
+	os.Remove("/tmp/test/test.db")
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "xxx001"
@@ -107,6 +113,8 @@ func Test_BundleCache2Manager_SaveCache(t *testing.T) {
 }
 
 func Test_LoadBundleCache0(t *testing.T) {
+	os.MkdirAll("/tmp/test/src", 0777)
+	os.Remove("/tmp/test/test.db")
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	ID := "001"
@@ -140,6 +148,8 @@ func Test_LoadBundleCache0(t *testing.T) {
 }
 
 func Test_LoadCacheAll(t *testing.T) {
+	os.MkdirAll("/tmp/test/src", 0777)
+	os.Remove("/tmp/test/test.db")
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/test.db", time.Second*5)
 	assert.Nil(t, err)
 	sourcePath := "/tmp/test/src/rune"
@@ -203,34 +213,22 @@ func Test_LoadCacheAll(t *testing.T) {
 
 func Test_BundleCache0Manager_GetCache(t *testing.T) {
 	t.Skip()
+	os.MkdirAll("/tmp/test/src", 0777)
+	os.Remove("/tmp/test/test.db")
 	metadata, err := cache_metadata.NewMetadataServer("/tmp/test/epm.db", time.Second*5)
 	assert.Nil(t, err)
 	m := NewBundleCache1Manager("/tmp/test/epm", metadata)
-	caches, err := m.CacheMetadata.ListCache(string(types.BundleCache0PoolType), "", 10)
+	caches, err := m.CacheMetadata.ListCache(string(types.BundleCache0PoolType), "", "", 10)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(caches))
 	for _, c := range caches {
 		fmt.Printf("type:= %s, key:= %s, cache:= %++v\n", c.Type, c.ID, c)
 	}
 
-	caches, err = m.CacheMetadata.ListCache(string(types.BundleCache1PoolType), "", 10)
+	caches, err = m.CacheMetadata.ListCache(string(types.BundleCache1PoolType), "", "", 10)
 	assert.Nil(t, err)
 	//assert.Equal(t, 1, len(caches))
 	for _, c := range caches {
 		fmt.Printf("type:= %s, key:= %s, cache:= %++v\n", c.Type, c.ID, c)
 	}
-
-	/*ID := "test001"
-	cache := &v1alpha1.Cache{
-		Type: string(types.BundleCache1PoolType),
-		ID:   ID,
-		Parent: &v1alpha1.Cache{
-			Type: string(types.BundleCache0PoolType),
-			ID:   "408fbccd943bb",
-		},
-	}
-	err = m.SaveCache("/tmp/f8e9696f895741aae5c034cf063806f28fa4809d37f789056cd90c6026c9f120/rootfs/var/run/rune", cache)
-	if err != nil {
-		t.Fatal(err)
-	}*/
 }
