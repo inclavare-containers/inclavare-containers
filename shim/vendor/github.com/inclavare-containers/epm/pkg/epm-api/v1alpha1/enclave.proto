@@ -1,0 +1,23 @@
+syntax = 'proto3';
+
+package v1alpha1;
+
+message Enclave {
+	int64 fd = 1;
+	int64 nr = 2;
+	repeated Enclavelayout layout = 3;
+}
+
+message Enclavelayout {
+	uint64 addr = 1;
+	uint64 size = 2;
+	EnclavePerms prot = 3;
+}
+
+message EnclavePerms {
+	bool read = 1;
+	bool write = 2;
+	bool execute = 3;
+	bool share = 4;
+	bool private = 5;
+}
