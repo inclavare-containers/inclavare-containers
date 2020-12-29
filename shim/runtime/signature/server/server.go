@@ -5,10 +5,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server/conf"
+	"github.com/inclavare-containers/shim/runtime/signature/server/conf"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server/api"
 	"github.com/golang/glog"
+	"github.com/inclavare-containers/shim/runtime/signature/server/api"
 )
 
 type Server struct {

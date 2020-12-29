@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/alibaba/inclavare-containers/shim/cmd/signature-server/app"
+	"github.com/inclavare-containers/shim/cmd/signature-server/app"
 )
 
 var onlyOneSignalHandler = make(chan struct{})
