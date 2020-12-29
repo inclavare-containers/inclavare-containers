@@ -3,9 +3,9 @@ package app
 import (
 	"github.com/golang/glog"
 
-	"github.com/alibaba/inclavare-containers/shim/cmd/signature-server/app/options"
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server"
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server/conf"
+	"github.com/inclavare-containers/shim/cmd/signature-server/app/options"
+	"github.com/inclavare-containers/shim/runtime/signature/server"
+	"github.com/inclavare-containers/shim/runtime/signature/server/conf"
 )
 
 func runServer(opts *options.SignatureServerOptions, stopCh <-chan struct{}) error {

@@ -11,9 +11,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/types"
-
 	"github.com/golang/glog"
+	"github.com/inclavare-containers/shim/runtime/signature/types"
 )
 
 type SignStandard string
@@ -26,6 +25,7 @@ const (
 type Client interface {
 	Sign(data []byte) (signature []byte, publicKey []byte, err error)
 	GetStandard() SignStandard
+	GetPublicKey() (publicKey []byte, err error)
 }
 
 //var _ Client = &pkcs1Client{}
@@ -98,6 +98,24 @@ func (c *pkcs1Client) Sign(data []byte) (signature []byte, publicKey []byte, err
 		return nil, nil, err
 	}
 	return decode, []byte(payload.PublicKey), nil
+}
+
+func (c *pkcs1Client) GetPublicKey() (publicKey []byte, err error) {
+	var subURI = "public-key"
+	var url string
+	if strings.HasSuffix(c.serviceBaseURL.String(), "/") {
+		url = fmt.Sprintf("%s%s", c.serviceBaseURL.String(), string(subURI))
+	} else {
+		url = fmt.Sprintf("%s/%s", c.serviceBaseURL.String(), string(subURI))
+	}
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		glog.Errorf("failed to read public key response,%v", err)
+		return nil, err
+	}
+	return bytes, nil
 }
 
 func (c *pkcs1Client) GetStandard() SignStandard {

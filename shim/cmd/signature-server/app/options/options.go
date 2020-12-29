@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server/conf"
+	"github.com/inclavare-containers/shim/runtime/signature/server/conf"
 )
 
 type SignatureServerOptions struct {

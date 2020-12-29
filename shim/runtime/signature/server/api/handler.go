@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/types"
+	"github.com/inclavare-containers/shim/runtime/signature/types"
 
 	"github.com/golang/glog"
 
@@ -53,5 +53,5 @@ func (s *ApiServer) publicKeyHandler(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, string(bytes))
+	c.String(http.StatusOK, string(bytes))
 }

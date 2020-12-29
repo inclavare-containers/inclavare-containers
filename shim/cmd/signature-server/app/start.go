@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 
-	"github.com/alibaba/inclavare-containers/shim/cmd/signature-server/app/options"
+	"github.com/inclavare-containers/shim/cmd/signature-server/app/options"
 )
 
 func NewSignatureServer(stopCh <-chan struct{}) *cobra.Command {

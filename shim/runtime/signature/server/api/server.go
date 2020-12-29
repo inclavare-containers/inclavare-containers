@@ -4,9 +4,9 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server/conf"
-	"github.com/alibaba/inclavare-containers/shim/runtime/signature/server/util"
 	"github.com/gin-gonic/gin"
+	"github.com/inclavare-containers/shim/runtime/signature/server/conf"
+	"github.com/inclavare-containers/shim/runtime/signature/server/util"
 )
 
 type ApiServer struct {

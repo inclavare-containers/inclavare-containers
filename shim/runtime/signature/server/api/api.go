@@ -17,8 +17,8 @@ func (s *ApiServer) installRoutes() {
 		g.Use(loggerHandleFunc)
 		{
 			g.POST("/pkcs1", s.pkcs1Handler)
+			g.GET("/public-key", s.publicKeyHandler)
 		}
-		r.Use(loggerHandleFunc).GET("/api/v1/publickey", s.publicKeyHandler)
 	}
 }
 
