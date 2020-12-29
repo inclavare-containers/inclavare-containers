@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package libenclave_proto;
+
+message AgentServiceRequest{
+    message Execute {
+        string argv = 1;
+        string envp = 2;
+    }
+
+    message Kill {
+        int32 sig = 1;
+    }
+
+    message Attest {
+	// isRA: remote attestaion(RA) or just returns local report
+	bool isRA		= 1;
+	string spid       	= 2;
+	string subscriptionKey 	= 3;
+	uint32 quoteType	= 4;
+    }
+
+    Execute exec = 1;
+    Kill kill = 2;
+    Attest attest = 3;
+}
+
+message AgentServiceResponse {
+    message Execute {
+        int32 exitCode = 1;
+        string error = 2;
+    }
+
+    message Attest {
+	int32 exitCode = 1;
+	string error = 2;
+	bytes localReport = 3;
+    }
+
+    Execute exec = 1;
+    Attest attest = 2;
+}
