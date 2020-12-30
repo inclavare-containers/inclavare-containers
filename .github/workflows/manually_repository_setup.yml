@@ -1,7 +1,12 @@
 name: Set up package repository and test
 
 # This is a manual trigger.
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      occlum_version:
+        description: 'The version of Occlum package'
+        required: true
 
 jobs:
   Package_repository_setup_and_deploy:
@@ -11,27 +16,16 @@ jobs:
 
     - name: Get version
       run: |
-        wget -q https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
-        echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h;
         echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
         echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
     - name: Create centos container
       run: |
         docker rm -f make-rpm || true;
-        docker run -itd --name=make-rpm -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos/rpm-repo:/root/repos/rpm-repo occlum/occlum:${{ env.OCCLUM_VERSION }}-centos8.1
+        docker run -itd --name=make-rpm -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos:/root/repos rune-test:centos8.1
 
     - name: Build rpm packages
-      run: docker exec make-rpm bash -c "yum install -y libseccomp-devel;
-        cd /root && wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
-        tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
-        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
-        echo 'export GOPATH=/root/gopath' >> /etc/profile;
-        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
-        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
-        echo 'export GO111MODULE=on' >>/etc/profile;
-        cd /root && source /etc/profile;
-        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+      run: docker exec make-rpm bash -c "cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
         tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
         cd /root/inclavare-containers-$RUNE_VERSION;
         echo "$RUNE_VERSION" > VERSION;
@@ -53,6 +47,8 @@ jobs:
 
     - name: Sign the package and update the rpm repo
       run: docker exec make-rpm bash -c "cp inclavare-containers-$RUNE_VERSION/*rpm /root/repos/rpm-repo;
+        cd /root/repos/occlum-package-repos && git pull origin pre-release:pre-release;
+        cp rpm-repo/*${{ github.event.inputs.occlum_version }}*.rpm /root/repos/rpm-repo;
         cd /root/repos/rpm-repo;
         rm -rf repodata RPM-GPG-KEY-*;
         rpmsign --resign *.rpm;
@@ -65,20 +61,10 @@ jobs:
     - name: Create ubuntu container
       run: |
         docker rm -f make-deb || true;
-        docker run -itd --name=make-deb -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos/deb-repo:/root/repos/deb-repo occlum/occlum:${{ env.OCCLUM_VERSION }}-ubuntu18.04
+        docker run -itd --name=make-deb -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos:/root/repos rune-test:ubuntu18.04
 
     - name: Build deb packages
-      run: docker exec make-deb bash -c "apt-get update;
-        apt-get install libseccomp-dev;
-        cd /root && wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
-        tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
-        echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
-        echo 'export GOPATH=/root/gopath' >> /etc/profile;
-        echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
-        echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
-        echo 'export GO111MODULE=on' >>/etc/profile;
-        cd /root && source /etc/profile;
-        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+      run: docker exec make-deb bash -c "cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
         tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
         cd /root/inclavare-containers-$RUNE_VERSION;
         echo "$RUNE_VERSION" > VERSION;
@@ -97,13 +83,15 @@ jobs:
         aptly -distribution='bionic' -architectures=amd64 repo create inclavare-deb-repo;
         aptly repo add inclavare-deb-repo /root/inclavare-containers-${{ env.RUNE_VERSION }}/*deb;
         find /root/repos/deb-repo -name "*.*deb" | xargs -I files aptly repo add inclavare-deb-repo files || true;
+        find /root/repos/occlum-package-repos/debian -name "*${{ github.event.inputs.occlum_version }}*.*deb" | xargs -I files aptly repo add inclavare-deb-repo files || true;
         aptly publish repo -passphrase=${{ secrets.PASSPARSE }} inclavare-deb-repo; tree /root/.aptly/public;
         cd /root/repos/deb-repo; rm -rf *; cp -r /root/.aptly/public/* /root/repos/deb-repo;
         cp /root/DEB-GPG-KEY.key /root/repos/deb-repo'
 
     - name: Deploy repository to remote server
       run: echo "Ready to deploy!!";
-        scp -r /root/repos/* ${{ secrets.USER_NAME }}@${{ secrets.HOST }}:${{ secrets.WORK_DIR }}/inclavare-containers;
+        scp -r /root/repos/deb-repo ${{ secrets.USER_NAME }}@${{ secrets.HOST }}:${{ secrets.WORK_DIR }}/inclavare-containers;
+        scp -r /root/repos/rpm-repo ${{ secrets.USER_NAME }}@${{ secrets.HOST }}:${{ secrets.WORK_DIR }}/inclavare-containers;
 
   Test_package_repository:
     needs: Package_repository_setup_and_deploy
@@ -120,7 +108,7 @@ jobs:
         echo 'deb [arch=amd64] https://mirrors.openanolis.org/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list;
         wget -qO - https://mirrors.openanolis.org/inclavare-containers/deb-repo/DEB-GPG-KEY.key  | apt-key add -;
         apt-get update;
-        apt-get install rune"
+        apt-get install -y rune"
 
     - name: Create a clean centos container
       run: docker run -itd --name=test-rpm centos:centos8.1.1911
