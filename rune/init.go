@@ -50,7 +50,13 @@ var initCommand = cli.Command{
 		factory, _ := libenclave.New("", nil, false)
 		if err := factory.StartInitialization(); err != nil {
 			// as the error is sent back to the parent there is no need to log
-			// or write it to stderr because the parent process will handle this
+			// or write it to stderr because the parent process will handle this.
+			// However, locating the log file is painful especially using docker
+			// or any high level container runtime, so the error is still printed
+			// to stderr if --debug is specified.
+			if context.GlobalBool("debug") {
+				fmt.Fprint(os.Stderr, err)
+			}
 			os.Exit(1)
 		}
 		panic("libenclave: container init failed to exec")
