@@ -84,7 +84,7 @@ rm -f %{SHIM_CONFIG_DIR}/config.toml
 * Mon Nov 30 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.1
 - Update to version 0.5.1
 
-* Sun Oct 27 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.0
+* Tue Oct 27 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.0
 - Update to version 0.5.0
 
 * Sun Sep 27 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.4.1
