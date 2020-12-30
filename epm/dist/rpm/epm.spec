@@ -101,5 +101,5 @@ systemctl stop epm
 * Mon Nov 30 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.1
 - Update to version 0.5.1
 
-* Sun Oct 29 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.0
+* Thu Oct 29 2020 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.5.0
 - Update to version 0.5.0
