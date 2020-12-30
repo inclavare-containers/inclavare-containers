@@ -1,7 +1,6 @@
 package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
-	"fmt"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -28,18 +27,24 @@ For example, save the target information file about Quoting Enclave retrieved fr
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if context.Bool("isDCAP") {
-			return fmt.Errorf("Unsupport the DCAP attestation type")
-		}
-
 		if context.GlobalBool("verbose") {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
 
-		ti, err := intelsgx.GetQeTargetInfo()
-		if err != nil {
-			logrus.Print(err)
-			return err
+		var ti []byte
+		var err error
+
+		if context.Bool("isDCAP") {
+			ti, err = GetDCAPTargetInfo()
+			if err != nil {
+				return err
+			}
+		} else {
+			ti, err = intelsgx.GetQeTargetInfo()
+			if err != nil {
+				logrus.Print(err)
+				return err
+			}
 		}
 
 		tiPath := context.String("targetinfo")
