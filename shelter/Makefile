@@ -8,8 +8,8 @@ SGX_DCAP_INC ?=
 INCDIR ?=
 DEBUG ?= 0
 EXTRA_FLAGS ?=
-WOLFSSL_RA_LIBS := ../ra-tls/build/lib/libwolfssl.a
-WOLFSSL_RA_LIBS += ../ra-tls/build/lib/libra-challenger.a
+WOLFSSL_RA_LIBS := $(SGX_RA_TLS_LIB)/libwolfssl.a
+WOLFSSL_RA_LIBS += $(SGX_RA_TLS_LIB)/libra-challenger.a
 export SGX_RA_TLS_LIB SGX_RA_TLS_INC
 
 #ifdef DEBUG 	
@@ -49,8 +49,8 @@ shelter: $(WOLFSSL_RA_LIBS) $(CURRENTDIR)/verification/verification.a  $(CURRENT
 	$(GO_BUILD) -o $@ .
 
 $(WOLFSSL_RA_LIBS):
-	@echo $(MAKE) -C ../ra-tls
-	$(MAKE) -C ../ra-tls
+	@echo $(MAKE) -C $(SGX_RA_TLS)
+	$(MAKE) -C $(SGX_RA_TLS)
 	
 $(CURRENTDIR)/utils/utils.a:
 	@echo $(MAKE) -C utils
@@ -75,9 +75,9 @@ $(CURRENTDIR)/remoteattestation/remoteattestation.a:
 
 clean:
 	rm -f *.o shelter
-	$(MAKE) -C ../ra-tls clean
+	$(MAKE) -C $(SGX_RA_TLS) clean
 	$(MAKE) -C verification clean
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
 
-.PHONY: clean 
+.PHONY: clean
