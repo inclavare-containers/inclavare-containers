@@ -87,7 +87,7 @@ func SaveCache(ID string) {
 
 	cache.Options, err = ptypes.MarshalAny(enclaveinfo)
 	if err != nil {
-		logrus.Fatalf("Marshal encalveinfo failure: %v", err)
+		logrus.Fatalf("Marshal enclaveinfo failure: %v", err)
 	}
 
 	cache.ID = ID
