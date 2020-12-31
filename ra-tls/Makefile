@@ -65,11 +65,10 @@ $(LIBDIR)/libwolfssl.a: $(LIBDIR) wolfssl
 
 wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --enable-writedup --enable-static --enable-keygen --enable-certgen --enable-certext --with-pic --disable-examples --disable-crypttests --enable-aesni --enable-tlsv10 $(WOLFSSL_CONFFLAGS)
 wolfssl:
-	test -d wolfssl || git clone https://github.com/wolfSSL/wolfssl
-	cd wolfssl && git stash && git checkout 57e5648a5dd734d1c219d385705498ad12941dd0 && \
-	  patch -p1 < ../patch/wolfssl.patch && \
-	  ./autogen.sh && \
-	  CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS)
+	[ ! -d wolfssl ] && git clone https://github.com/wolfSSL/wolfssl && \
+	  cd wolfssl && git checkout 57e5648a5dd734d1c219d385705498ad12941dd0 && \
+	  patch -p1 < ../patch/wolfssl.patch && ./autogen.sh && \
+	  CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true
 
 ifdef ECDSA
   $(LIBDIR)/libra-challenger.a: $(SGX_RA_TLS)/ecdsa-sample-data/real/sample_data.o
