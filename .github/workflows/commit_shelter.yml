@@ -13,7 +13,7 @@ jobs:
       matrix:
         tag: [ubuntu18.04, centos8.1]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
@@ -22,7 +22,7 @@ jobs:
 
     - name: Create container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
+        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
     # ra-tls is buggy on parallel compilation. Always use -j1.
@@ -32,15 +32,13 @@ jobs:
         touch ra-tls.sock;
         cp -r /root/inclavare-containers /root/inclavare-containers-test;
         cd /root/inclavare-containers-test/ra-tls;
-        touch rune/libenclave/attestation/proto/shelterd-attestation.pb.go;
-        touch rune/libenclave/intelsgx/proto/aesm-service.pb.go;
-        touch rune/libenclave/proto/agent-service.pb.go;
+        find ../ -name *.pb.go | xargs -I files touch files;
         export SPID=${{ secrets.SPID }};
         export EPID_SUBSCRIPTION_KEY=${{ secrets.SUB_KEY }};
         export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE;
         make -j1;
-        cd /root/inclavare-containers-test/ra-tls/build/bin";
-        docker exec $rune_test bash -c "./ra-tls-server run &"
+        cd /root/inclavare-containers-test/ra-tls/build/bin;
+        ./ra-tls-server run &"
 
     - name: Build and run shelter
       run: |
