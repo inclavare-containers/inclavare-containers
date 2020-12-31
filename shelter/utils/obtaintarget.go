@@ -80,7 +80,7 @@ func GetSrcCode(srcurl string, branch string, commitid string, localpath string)
 	}
 
 	if ret := checkurl(srcurl, repoKeyWord); !ret {
-		fmt.Errorf("checkurl failed,srcurl is %s, repokeyword is %s.\n", srcurl, repokeyword)
+		fmt.Errorf("checkurl failed,srcurl is %s, repokeyword is %s.\n", srcurl, repoKeyWord)
 		return false
 	}
 
