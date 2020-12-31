@@ -20,7 +20,7 @@ var version = "0.0.1"
  */
 var gitCommit = ""
 
-const usage = "shelter as a remote attestation tool for workload runing in runE cloud encalved containers."
+const usage = "shelter as a remote attestation tool for workload runing in enclave containers."
 
 func main() {
 	app := cli.NewApp()
