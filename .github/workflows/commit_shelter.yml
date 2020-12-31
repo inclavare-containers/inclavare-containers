@@ -25,6 +25,7 @@ jobs:
         rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
+    # ra-tls is buggy on parallel compilation. Always use -j1.
     - name: Build and run ra-tls-server 
       run: |
         docker exec $rune_test bash -c "mkdir -p /run/rune;
@@ -37,14 +38,14 @@ jobs:
         export SPID=${{ secrets.SPID }};
         export EPID_SUBSCRIPTION_KEY=${{ secrets.SUB_KEY }};
         export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE;
-        make -j${CPU_NUM};
+        make -j1;
         cd /root/inclavare-containers-test/ra-tls/build/bin";
         docker exec $rune_test bash -c "./ra-tls-server run &"
 
     - name: Build and run shelter
       run: |
         docker exec $rune_test bash -c "cd /root/inclavare-containers-test/shelter;
-        make -j${CPU_NUM}"
+        make -j1"
         docker exec $rune_test bash -c "./shelter remoteattestation"
 
     - name: Kill the container
