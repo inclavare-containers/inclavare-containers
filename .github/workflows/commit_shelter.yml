@@ -43,8 +43,8 @@ jobs:
     - name: Build and run shelter
       run: |
         docker exec $rune_test bash -c "cd /root/inclavare-containers-test/shelter;
-        make -j1"
-        docker exec $rune_test bash -c "./shelter remoteattestation"
+        make -j1;
+        ./shelter remoteattestation"
 
     - name: Kill the container
       run: docker stop $rune_test
