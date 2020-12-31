@@ -97,5 +97,5 @@ Assuming you have an OCI bundle from the previous step you can execute the conta
 
 ```shell
 cd "$HOME/rune_workdir/rune-container"
-sudo rune run hello-nitro-encalve-container
+sudo rune run hello-nitro-enclave-container
 ```
