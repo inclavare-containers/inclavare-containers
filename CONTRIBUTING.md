@@ -45,6 +45,7 @@ Before submitting a PR, we suggest you could take a look at the PR rules here.
 - [Format C Codes](#format-c-codes)
 - [Commit Rules](#commit-rules)
 - [PR Description](#pr-description)
+- [CI/CD Development](#cicd-development)
 
 ### Workspace Preparation
 
@@ -221,6 +222,12 @@ the PR will be rejected by the automated DCO check.
 ### PR Description
 
 PR is the only way to make change to Inclavare Containers project. To help reviewers, we actually encourage contributors to make PR description as detailed as possible.
+
+### CI/CD Development
+
+When a PR involves the development of new features, the contributor **REQUIRES** to write a new CI/CD workflow or integrate the test codes into existing workflow.
+
+CI/CD development is as important as code development, which can detect the potential errors as early as possible and save the debugging time. Please refer to [WIKI](https://github.com/alibaba/inclavare-containers/wiki) page for the detailed contents about Inclavare Containers CI/CD development.
 
 ## Engage to help anything
 
