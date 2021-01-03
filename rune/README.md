@@ -87,15 +87,28 @@ rune spec
 To find features and documentation for fields in the spec please refer to the [specs](https://github.com/opencontainers/runtime-spec) repository.
 
 In order to run the hello world demo program in Occlum with `rune`, you need to change the entrypoint from `sh` to `/bin/hello_world`
+
 ``` json
   "process": {
       "args": [
-          "/bin/hello_world"
+	   "/bin/hello_world"
       ],
   }
 ```
 
-and then configure enclave runtime as following:
+and then set the `OCCLUM_RELEASE_ENCLAVE` process.env to configure the enclave mode. The default mode is debug. Please specify `OCCLUM_RELEASE_ENCLAVE=1` if using a product enclave
+
+``` json
+  "process": {
+      "env": [
+	   "OCCLUM_RELEASE_ENCLAVE=1",
+	   ...
+      ],
+  }
+```
+
+finally, configure enclave runtime as following:
+
 ``` json
   "annotations": {
       "enclave.type": "intelSgx",
