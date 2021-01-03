@@ -17,7 +17,13 @@ Please refer to [this guide](https://github.com/alibaba/inclavare-containers/tre
 
 # Running Occlum container image
 
-Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to build your Occlum container image. Then run pouch with Occlum container images refer to
+Please refer to [this guide](https://github.com/occlum/occlum/blob/master/docs/rune_quick_start.md) to build your Occlum container image. 
+
+Use the environment variable OCCLUM_RELEASE_ENCLAVE to specify your enclave type
+- OCCLUM_RELEASE_ENCLAVE=0: debug enclave
+- OCCLUM_RELEASE_ENCLAVE=1: product enclave
+
+Then run pouch with Occlum container images refer to
 
 ```shell
 pouch run -it --rm --runtime=rune \
@@ -25,6 +31,7 @@ pouch run -it --rm --runtime=rune \
   -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
   -e ENCLAVE_RUNTIME_ARGS=occlum_instance \
   -e ENCLAVE_RUNTIME_LOGLEVEL=info \
+  -e OCCLUM_RELEASE_ENCLAVE=0 \
   occlum-app
 ```
 
@@ -36,5 +43,6 @@ pouch run -it --rm --runtime=rune \
   --annotation "enclave.runtime.path=/opt/occlum/build/lib/libocclum-pal.so" \
   --annotation "enclave.runtime.args=occlum_instance" \
   --annotation "enclave.runtime.loglevel=info" \
+  -e OCCLUM_RELEASE_ENCLAVE=0 \
   occlum-app
 ```
