@@ -18,9 +18,7 @@ jobs:
 
     - name: Compile "rune shim-rune sgx-tools epm pal"
       run: cd $GITHUB_WORKSPACE;
-        touch rune/libenclave/attestation/proto/shelterd-attestation.pb.go;
-        touch rune/libenclave/intelsgx/proto/aesm-service.pb.go;
-        touch rune/libenclave/proto/agent-service.pb.go;
+        find ./ -name *.pb.go | xargs -I files touch files;
         make -j${CPU_NUM} && make install -j${CPU_NUM};
         cd rune/libenclave/internal/runtime/pal/skeleton && make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
         cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;

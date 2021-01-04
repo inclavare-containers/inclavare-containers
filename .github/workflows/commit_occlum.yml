@@ -33,9 +33,7 @@ jobs:
     - name: Build and install packages
       run: docker exec $rune_test bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-test; 
         cd inclavare-containers-test/rune; 
-        touch libenclave/attestation/proto/shelterd-attestation.pb.go;
-        touch libenclave/intelsgx/proto/aesm-service.pb.go;
-        touch libenclave/proto/agent-service.pb.go;
+        find ../ -name *.pb.go | xargs -I files touch files;
         make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
     - name: Start docker daemon
