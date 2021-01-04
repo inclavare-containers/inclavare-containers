@@ -33,9 +33,7 @@ jobs:
         cp -r /root/inclavare-containers /root/inclavare-containers-test;
         cp /root/inclavare-containers-test/epm/conf/config.toml /etc/epm/;
         cd /root/inclavare-containers-test;
-        touch rune/libenclave/attestation/proto/shelterd-attestation.pb.go;
-        touch rune/libenclave/intelsgx/proto/aesm-service.pb.go;
-        touch rune/libenclave/proto/agent-service.pb.go;
+        find ./ -name *.pb.go | xargs -I files touch files;
         make -j${CPU_NUM} && make install -j${CPU_NUM}";
         docker exec $rune_test bash -c "epm &"
 
