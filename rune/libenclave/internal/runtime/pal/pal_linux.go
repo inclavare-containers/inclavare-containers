@@ -10,7 +10,6 @@ import (
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"log"
 	"os"
-	"strings"
 )
 
 const (
@@ -33,33 +32,27 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 		return api.init(args, logLevel)
 	}
 
-	/* FIXME: If EPM provides epm existence detect API, the static
-	 * check will be substituted. Enclave pool will be distinguished
-	 * by pal.Type and Pal.subType once subType can be provided by new
-	 * PAL interface in future.
-	 */
 	var addr uint64 = 0
 	var fd int = -1
 
 	apiV3 := &enclaveRuntimePalApiV3{}
 
-	if strings.Contains(args, "epm") {
-		/* enclaveinfo.Layout retrieves from /proc/pid/mmaps, in file
-		 * mmaps /dev/sgx/enclave mmaping address is sorted from low
-		 * address to high one. So layout[0].Addr will be minimum.
-		 */
-		enclaveinfo := epm.GetEnclave()
-		if enclaveinfo != nil {
-			epm.SgxMmap(*enclaveinfo)
-			addr = enclaveinfo.Layout[0].Addr
-			fd = int(enclaveinfo.Fd)
-		}
+       /* enclaveinfo.Layout retrieves from /proc/pid/mmaps, in file
+	* mmaps /dev/sgx/enclave mmaping address is sorted from low
+	* address to high one. So layout[0].Addr will be minimum.
+	*/
+	enclaveinfo := epm.GetEnclave()
+	if enclaveinfo != nil {
+		epm.SgxMmap(*enclaveinfo)
+		addr = enclaveinfo.Layout[0].Addr
+		fd = int(enclaveinfo.Fd)
 	}
 
 	err := apiV3.init(args, logLevel, fd, addr)
-	if err == nil && strings.Contains(args, "epm") {
+	if err == nil {
 		pal.enclavePoolID = epm.SavePreCache()
 	}
+
 	return err
 }
 
