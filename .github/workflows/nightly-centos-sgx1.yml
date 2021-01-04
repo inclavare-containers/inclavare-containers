@@ -10,7 +10,7 @@ on:
 env:
     WORK_DIR: /root/pkgs
     HOME: /root
-    OCCLUM_VERSION: 0.18.1
+    OCCLUM_VERSION: 0.19.0
     kubernetes_version: 1.16.9
     nap_time: 60
 
