@@ -6,19 +6,19 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"syscall"
 	"time"
 
-	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 
 const (
-	address     = "/var/run/epm/epm.sock"
-	sockpathdir = "/var/run/epm"
+	InvalidEpmID string = "InvalidEPMID"
+	address             = "/var/run/epm/epm.sock"
+	sockpathdir         = "/var/run/epm"
 )
 
 func UnixConnect(addr string, t time.Duration) (net.Conn, error) {
@@ -31,13 +31,14 @@ func GetEnclave() *v1alpha1.Enclave {
 	ID := CreateRand()
 	return GetCache(ID)
 }
+
 func GetCache(ID string) *v1alpha1.Enclave {
 	var fd int = 0
 	var enclaveinfo v1alpha1.Enclave
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
 	if err != nil {
-		logrus.Fatalf("did not connect: %v", err)
+		logrus.Warnf("Fail to connect: %v", err)
 	}
 	defer conn.Close()
 	c := v1alpha1.NewEnclavePoolManagerClient(conn)
@@ -51,10 +52,9 @@ func GetCache(ID string) *v1alpha1.Enclave {
 	Type := "enclave-cache-pool"
 	cacheResp, err := c.GetCache(ctx, &v1alpha1.GetCacheRequest{Type: Type, ID: ID})
 	if err != nil {
-		logrus.Fatalf("could not get cache from enclave cache pool: %v", err)
+		return nil
 	}
 	if cacheResp.Cache == nil {
-		syscall.Unlink(sockpath)
 		logrus.Infof("There is no enclave in cache pool")
 		return nil
 	}
@@ -65,16 +65,20 @@ func GetCache(ID string) *v1alpha1.Enclave {
 
 func SavePreCache() string {
 	ID := CreateRand()
-	SaveCache(ID)
+	err := SaveCache(ID)
+	if err != nil {
+		return InvalidEpmID
+	}
+
 	return ID
 }
 
-func SaveCache(ID string) {
+func SaveCache(ID string) error {
 	var cache v1alpha1.Cache
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
 	if err != nil {
-		logrus.Fatalf("did not connect: %v", err)
+		logrus.Warnf("Fail to connect: %v", err)
 	}
 	defer conn.Close()
 	c := v1alpha1.NewEnclavePoolManagerClient(conn)
@@ -93,10 +97,18 @@ func SaveCache(ID string) {
 	cache.ID = ID
 	cache.Type = "enclave-cache-pool"
 
-	c.SaveCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})
+	_, err = c.SaveCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})
+	if err != nil {
+		return err
+	}
 
 	unisock := filepath.Join(sockpathdir, ID)
-	sendFd(unisock, int(enclaveinfo.Fd))
+	err = sendFd(unisock, int(enclaveinfo.Fd))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func SaveEnclave(ID string) {
@@ -104,7 +116,7 @@ func SaveEnclave(ID string) {
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
 	if err != nil {
-		logrus.Fatalf("did not connect: %v", err)
+		logrus.Warnf("Fail to connect: %v", err)
 	}
 	defer conn.Close()
 	c := v1alpha1.NewEnclavePoolManagerClient(conn)

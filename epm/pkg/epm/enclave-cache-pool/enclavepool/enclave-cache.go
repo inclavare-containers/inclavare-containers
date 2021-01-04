@@ -5,11 +5,11 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/golang/protobuf/ptypes"
 	cache_manager "github.com/inclavare-containers/epm/pkg/epm"
 	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/inclavare-containers/epm/pkg/epm/enclave-cache-pool/types"
 	"github.com/inclavare-containers/epm/pkg/utils"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 )
 
