@@ -41,8 +41,8 @@ jobs:
 
       - name: Clear the environment
         run: |
-          sudo kubectl delete pod --all || true
-          sudo kubeadm reset -f || true
+          sudo kubectl delete pod --all 2>/dev/null || true
+          sudo kubeadm reset -f 2>/dev/null || true
           for service in kubelet containerd epm
           do
             sudo systemctl stop $service || true
