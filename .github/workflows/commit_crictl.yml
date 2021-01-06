@@ -47,22 +47,22 @@ jobs:
       run: docker exec $rune_test bash -c "containerd" &
 
         docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 3s hello.yaml pod.yaml && ./show.sh"
+        crictl run --timeout 30s hello.yaml pod.yaml && ./show.sh"
 
     - name: Run dragonwell-web pod
       if: always()
       run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 3s dragonwell.yaml pod.yaml && ./show.sh"
+        crictl run --timeout 30s dragonwell.yaml pod.yaml && ./show.sh"
 
     - name: Run openjdk-web pod
       if: always()
       run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 3s jdk.yaml pod.yaml && ./show.sh"
+        crictl run --timeout 30s jdk.yaml pod.yaml && ./show.sh"
 
     - name: Run golang-web pod
       if: always()
       run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 3s golang.yaml pod.yaml && ./show.sh"
+        crictl run --timeout 30s golang.yaml pod.yaml && ./show.sh"
 
     - name: Kill the container
       run: docker stop $rune_test
