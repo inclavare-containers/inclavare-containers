@@ -28,6 +28,12 @@
 #define SGX_REG_PAGE_FLAGS \
 	(SGX_SECINFO_REG | SGX_SECINFO_R | SGX_SECINFO_W | SGX_SECINFO_X)
 
+#ifdef TLS_SERVER
+bool tls_server = true;
+#else
+bool tls_server = false;
+#endif
+
 struct sgx_secs secs;
 static pal_stdio_fds pal_stdio = { -1, -1, -1 };
 
@@ -816,7 +822,7 @@ int __pal_create_process(pal_create_process_args *args)
 		return -1;
 	}
 
-	if (backend_kvm)
+	if (backend_kvm || tls_server)
 		return 0;
 
 	/* SGX out-of-tree driver disallows the creation of shared enclave mapping
@@ -910,7 +916,7 @@ int __pal_get_local_report(void *targetinfo, int targetinfo_len,
 		return -1;
 	}
 
-	if (backend_kvm)
+	if (backend_kvm || tls_server)
 		/* No implementation */
 		return 0;
 
@@ -962,7 +968,7 @@ int __pal_kill(int pid, int sig)
 		return -1;
 	}
 
-	if (backend_kvm)
+	if (backend_kvm || tls_server)
 		return 0;	/* TODO: libvmm_vm_kill(kvm_vm); */
 
 	/* No implementation */
@@ -987,6 +993,9 @@ int __pal_destroy(void)
 
 	if (backend_kvm)
 		return libvmm_vm_exit(kvm_vm);
+
+	if (tls_server)
+		return 0;
 
 	close(enclave_fd);
 

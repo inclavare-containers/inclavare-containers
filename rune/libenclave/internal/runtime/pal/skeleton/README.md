@@ -212,9 +212,14 @@ Skeleton supports the following features right now:
 
 ## Remote attestation
 
+### `rune attest` command
 `rune attest` command can get the local report or IAS report of enclave runtimes, you can refer to [this guide](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/running_skeleton_with_rune_attest_command.md) to run skeleton with `rune attest` command.
 
 Note that only liberpal-skeleton-v3.so supports `rune attest` command.
+
+### TLS Server
+
+You can refer to [this guide](running_skeleton_with_tls_server.md) to run skelton with tls server.
 
 ## Enclave metadata
 

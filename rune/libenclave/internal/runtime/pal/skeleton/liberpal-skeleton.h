@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "tls-server.h"
 
 #define	PAGE_SIZE	4096
 #define	IMAGE		"encl.bin"
