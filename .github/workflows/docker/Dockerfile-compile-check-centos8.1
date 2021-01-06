@@ -4,8 +4,8 @@ LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
 RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y which wget git \
-    make gcc libseccomp-devel binutils-devel protobuf-devel \
-    protobuf-c-devel openssl openssl-devel
+    make gcc gcc-c++ libseccomp-devel binutils-devel protobuf \
+    protobuf-devel protobuf-c-devel openssl openssl-devel
 
 WORKDIR /root
 
@@ -20,3 +20,8 @@ ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
 ENV GO111MODULE  on
+
+# install dcap
+RUN wget https://download.01.org/intel-sgx/sgx-linux/2.12/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
+    tar -zxvf sgx_rpm_local_repo.tgz && rm sgx_rpm_local_repo.tgz && cd sgx_rpm_local_repo && rpm -ivh *.rpm && \
+    rm -rf sgx_rpm_local_repo
