@@ -84,7 +84,7 @@ EXTRA_CLEAN := \
 	$(OUTPUT)/encl.ss \
 	$(OUTPUT)/sgx_call.o \
 	$(OUTPUT)/aesm.o \
-	$(OUTPUT)/aesm.pb-c.* \
+	$(OUTPUT)/aesm.pb-c.o \
 	$(OUTPUT)/sgxutils.o \
 	$(OUTPUT)/sgxsign \
 	$(OUTPUT)/liberpal-skeleton*.o \
