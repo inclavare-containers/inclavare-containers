@@ -63,9 +63,9 @@ func GetCache(ID string) *v1alpha1.Enclave {
 	return &enclaveinfo
 }
 
-func SavePreCache() string {
+func SavePreCache(enclaveinfo *v1alpha1.Enclave) string {
 	ID := CreateRand()
-	err := SaveCache(ID)
+	err := SaveCache(ID, enclaveinfo)
 	if err != nil {
 		return InvalidEpmID
 	}
@@ -73,7 +73,7 @@ func SavePreCache() string {
 	return ID
 }
 
-func SaveCache(ID string) error {
+func SaveCache(ID string, enclaveinfo *v1alpha1.Enclave) error {
 	var cache v1alpha1.Cache
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
@@ -86,8 +86,9 @@ func SaveCache(ID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	enclaveinfo := &v1alpha1.Enclave{}
-	enclaveinfo = GetParseMaps(os.Getpid())
+	if enclaveinfo == nil {
+		enclaveinfo = GetParseMaps(os.Getpid())
+	}
 
 	cache.Options, err = ptypes.MarshalAny(enclaveinfo)
 	if err != nil {

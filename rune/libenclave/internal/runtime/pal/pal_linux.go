@@ -50,7 +50,7 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 
 	err := apiV3.init(args, logLevel, fd, addr)
 	if err == nil {
-		pal.enclavePoolID = epm.SavePreCache()
+		pal.enclavePoolID = epm.SavePreCache(enclaveinfo)
 	}
 
 	return err
