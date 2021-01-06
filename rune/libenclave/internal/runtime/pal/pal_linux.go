@@ -118,13 +118,19 @@ func (pal *enclaveRuntimePal) Attest(isDCAP bool, isRA bool, spid string, subscr
 		return nil, nil
 	}
 
-	if isDCAP {
-		return nil, fmt.Errorf("Unsupport the DCAP attestation type")
-	}
+	var targetInfo []byte
+	var err error
 
-	targetInfo, err := intelsgx.GetQeTargetInfo()
-	if err != nil {
-		return nil, err
+	if isDCAP {
+		targetInfo, err = intelsgx.GetDCAPTargetInfo()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		targetInfo, err = intelsgx.GetQeTargetInfo()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(targetInfo) != intelsgx.TargetinfoLength {
@@ -145,6 +151,10 @@ func (pal *enclaveRuntimePal) Attest(isDCAP bool, isRA bool, spid string, subscr
 		return report, nil
 	}
 
+	if isDCAP {
+		return nil, fmt.Errorf("unsupported to get DCAP remote attestion!")
+	}
+
 	// get quote from QE(aesmd)
 	linkable := false
 	if quoteType == intelsgx.QuoteSignatureTypeLinkable {
@@ -156,7 +166,7 @@ func (pal *enclaveRuntimePal) Attest(isDCAP bool, isRA bool, spid string, subscr
 	}
 
 	q := &intelsgx.Quote{}
-	if err := restruct.Unpack(quote, binary.LittleEndian, &q); err != nil {
+	if err = restruct.Unpack(quote, binary.LittleEndian, &q); err != nil {
 		return nil, err
 	}
 
