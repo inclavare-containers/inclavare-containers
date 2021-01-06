@@ -11,9 +11,9 @@
 	# - RDI, RSI, RDX, RCX, R8 and R9 are parameters
 	# - R10 contains the ecall number
 	# - R11 contains the base of TCS
-	.global sgx_ecall
-	.type sgx_ecall, @function
-sgx_ecall:
+	.global sgx_enclave_call
+	.type sgx_enclave_call, @function
+sgx_enclave_call:
 	mov	$1, %rax
 	push	%rbx
 	mov	tcs_busy(%rip), %rbx	
