@@ -24,7 +24,7 @@
 		asm volatile( \
 			"mov %1, %%r10\n\t" \
 			"mov %2, %%r11\n\t" \
-			"call sgx_ecall\n\t" \
+			"call sgx_enclave_call\n\t" \
 			: "=a" (__ret) \
 			: "r" ((uint64_t)ecall_num), "r" (tcs), \
 			  "D" (a0) \
@@ -39,7 +39,7 @@
 		asm volatile( \
 			"mov %1, %%r10\n\t" \
 			"mov %2, %%r11\n\t" \
-			"call sgx_ecall\n\t" \
+			"call sgx_enclave_call\n\t" \
 			: "=a" (__ret) \
 			: "r" ((uint64_t)ecall_num), "r" (tcs), \
 			  "D" (a0), "S" (a1), "d" (a2) \
