@@ -23,13 +23,16 @@ func loadLibrary(p string) {
 
 // Due to the design of runelet, the Enclave Runtime PAL is loaded
 // in host but launched in container. The fact that certain libraries
-// from Intel SGX PSW would use dlopen() to further load
-// libsgx_launch.so, which means the container has to have it. In
-// order to ensure all libraries dependent by Enclave Runtime PAL
-// are completely loaded in host, preload them prior to switch
-// into container.
+// from Intel SGX PSW would use dlopen() to further load supporting
+// libraries, which means the container has to contain them. In order
+// to ensure all libraries dependent by Enclave Runtime PAL are completely
+// loaded in host, preload them prior to switch into container.
 func preloadSgxPswLib() {
+	// Required for launch token generation for non-FLC platform
 	loadLibrary("libsgx_launch.so.1")
+
+	// Required for EPID-based remote attestation
+	loadLibrary("libsgx_epid.so.1")
 }
 
 func PreloadLib() {
