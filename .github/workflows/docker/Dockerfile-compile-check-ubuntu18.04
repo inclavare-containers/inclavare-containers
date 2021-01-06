@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
-RUN apt-get update && apt-get install -y autoconf gcc make wget git \
+RUN apt-get update && apt-get install -y autoconf gcc g++ make wget git \
     libseccomp-dev binutils-dev libprotoc-dev libprotobuf-c0-dev \
     protobuf-c-compiler pkg-config libssl-dev openssl
 
@@ -19,3 +19,8 @@ ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
 ENV GO111MODULE  on
+
+# install dcap
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
+
+RUN apt-get update -y  && apt-get install -y libsgx-launch libsgx-epid libsgx-urts libsgx-quote-ex libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-ql-dev libsgx-headers
