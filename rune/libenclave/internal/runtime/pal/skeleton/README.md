@@ -284,7 +284,7 @@ According to previous steps about how to build [skeleton docker image](https://g
 docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
-  -e ENCLAVE_RUNTIME_ARGS="epm" \
+  -e ENCLAVE_RUNTIME_ARGS="debug" \
   skeleton-enclave
 ```
 
@@ -296,7 +296,7 @@ Assuming you have an OCI bundle according to previous steps, please add config i
 "annotations": {
 	"enclave.type": "intelSgx",
 	"enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
-	"enclave.runtime.args": "epm"
+	"enclave.runtime.args": "debug"
 }
 ```
 
