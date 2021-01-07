@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/golang/glog"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -23,7 +23,7 @@ func (s *EnclavePoolManagerServer) GetCache(ctx context.Context, req *v1alpha1.G
 		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	cache, err := manager.GetCache(req.ID)
+	cache, err := manager.GetCache(req.ID, req.SubType)
 	if err != nil {
 		glog.Errorf("get cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -70,7 +70,7 @@ func (s *EnclavePoolManagerServer) SaveFinalCache(ctx context.Context, req *v1al
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	if err := manager.SaveFinalCache(cache.ID); err != nil {
+	if err := manager.SaveFinalCache(cache.ID, cache.SubType); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	return &v1alpha1.SaveCacheResponse{Ok: true}, nil
@@ -99,7 +99,7 @@ func (s *EnclavePoolManagerServer) DeleteCache(ctx context.Context, req *v1alpha
 		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	if err := manager.DeleteCache(req.ID); err != nil {
+	if err := manager.DeleteCache(req.ID, req.SubType); err != nil {
 		glog.Errorf("delete cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -114,7 +114,7 @@ func (s *EnclavePoolManagerServer) LoadCache(ctx context.Context, req *v1alpha1.
 		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	if err := manager.LoadCache(req.ID, req.TargetPath); err != nil {
+	if err := manager.LoadCache(req.ID, req.SubType, req.TargetPath); err != nil {
 		glog.Errorf("load cache failed. request: %++v, error: %++v", req, err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

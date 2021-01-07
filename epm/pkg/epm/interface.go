@@ -17,19 +17,19 @@ import (
 // EnclavePool represents a kind of enclave pool
 type EnclavePool interface {
 	// GetCache gets the cache by ID
-	GetCache(ID string) (*v1alpha1.Cache, error)
+	GetCache(ID string, subtype string) (*v1alpha1.Cache, error)
 	// PickCache represents pick a suitable cache from pool
 	PickCache(subType string, filters map[string]string) ([]*v1alpha1.Cache, error)
 	// SaveCache saves the data to a cache directory and record the cache metadata
 	SaveCache(sourcePath string, cache *v1alpha1.Cache) error
 	// SaveFinalCache save the final enclave cache info
-	SaveFinalCache(ID string) error
+	SaveFinalCache(ID string, subtype string) error
 	// ListCache lists part of or all of the cache metadata
 	ListCache(subType string, lastCacheID string, limit int32) ([]*v1alpha1.Cache, error)
 	// DeleteCache deletes the specified cached data and remove the corresponding cache metadata
-	DeleteCache(ID string) error
+	DeleteCache(ID string, subtype string) error
 	// LoadCache loads the specified cache data to work directory
-	LoadCache(ID, targetPath string) error
+	LoadCache(ID string, subtype string, targetPath string) error
 	// GetPoolType gets the pool type of current pool
 	GetPoolType() string
 	// Healthz is used to check if the pool manager is working healthy or not
@@ -40,11 +40,10 @@ type EnclavePool interface {
 type DefaultEnclavePool struct {
 	Root          string
 	Type          string
-	Enclaveinfo   map[int]*v1alpha1.Enclave
 	CacheMetadata *cache_metadata.Metadata
 }
 
-func (d *DefaultEnclavePool) GetCache(ID string) (*v1alpha1.Cache, error) {
+func (d *DefaultEnclavePool) GetCache(ID string, subtype string) (*v1alpha1.Cache, error) {
 	return d.CacheMetadata.GetCache(d.Type, ID)
 }
 
@@ -91,7 +90,7 @@ func (d *DefaultEnclavePool) SaveCache(sourcePath string, cache *v1alpha1.Cache)
 	return d.CacheMetadata.SaveCache(d.GetPoolType(), cache.ID, cache)
 }
 
-func (d *DefaultEnclavePool) SaveFinalCache(ID string) error {
+func (d *DefaultEnclavePool) SaveFinalCache(ID string, subtype string) error {
 	return nil
 }
 
@@ -99,8 +98,8 @@ func (d *DefaultEnclavePool) ListCache(subType string, lastCacheID string, limit
 	return d.CacheMetadata.ListCache(d.GetPoolType(), subType, lastCacheID, limit)
 }
 
-func (d *DefaultEnclavePool) DeleteCache(ID string) error {
-	cache, err := d.GetCache(ID)
+func (d *DefaultEnclavePool) DeleteCache(ID string, subtype string) error {
+	cache, err := d.GetCache(ID, subtype)
 	if err != nil {
 		return err
 	}
@@ -110,8 +109,8 @@ func (d *DefaultEnclavePool) DeleteCache(ID string) error {
 	return d.CacheMetadata.DeleteCache(d.GetPoolType(), ID)
 }
 
-func (d *DefaultEnclavePool) LoadCache(ID, targetPath string) error {
-	cache, err := d.GetCache(ID)
+func (d *DefaultEnclavePool) LoadCache(ID string, subtype string, targetPath string) error {
+	cache, err := d.GetCache(ID, subtype)
 	if err != nil {
 		return err
 	}
