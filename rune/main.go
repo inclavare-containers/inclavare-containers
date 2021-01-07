@@ -113,6 +113,7 @@ func main() {
 		},
 	}
 	app.Commands = []cli.Command{
+		attestCommand,
 		checkpointCommand,
 		createCommand,
 		deleteCommand,
@@ -130,7 +131,6 @@ func main() {
 		startCommand,
 		stateCommand,
 		updateCommand,
-		attestCommand,
 	}
 	app.Before = func(context *cli.Context) error {
 		if !context.IsSet("root") && xdgRuntimeDir != "" {
