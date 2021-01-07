@@ -9,6 +9,7 @@ import (
 	"github.com/inclavare-containers/rune/libenclave/epm"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"log"
+	"io"
 	"os"
 	"strings"
 )
@@ -118,14 +119,38 @@ func (pal *enclaveRuntimePal) Attest(isDCAP bool, isRA bool, spid string, subscr
 		return nil, nil
 	}
 
-	var targetInfo []byte
+	targetInfo := make([]byte, intelsgx.TargetinfoLength)
 	var err error
 
 	if isDCAP {
-		targetInfo, err = intelsgx.GetDCAPTargetInfo()
+		rf, err := os.Open("/opt/qe_targetinfo.bin")
+                if err != nil {
+                        if os.IsNotExist(err) {
+                                return nil, fmt.Errorf("/opt/qe_targetinfo.bin not found")
+                        }
+                        return nil, err
+                }
+                defer rf.Close()
+
+                var rfi os.FileInfo
+                rfi, err = rf.Stat()
+                if err != nil {
+                        return nil, err
+                }
+
+                if rfi.Size() != intelsgx.TargetinfoLength {
+                        return nil, fmt.Errorf("not match Targetinfo")
+                }
+
+                if _, err = io.ReadFull(rf, targetInfo); err != nil {
+                        return nil, fmt.Errorf("read failed")
+                }
+
+		fmt.Printf("len(targetInfo) = %d\n", len(targetInfo))
+		/* targetInfo, err = intelsgx.GetDCAPTargetInfo()
 		if err != nil {
 			return nil, err
-		}
+		} */
 	} else {
 		targetInfo, err = intelsgx.GetQeTargetInfo()
 		if err != nil {
