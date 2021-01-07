@@ -18,10 +18,12 @@ const (
 )
 
 var mut sync.Mutex
-var EnclavePoolStore map[int]*v1alpha1.Enclave
-var EnclavePoolPreStore map[string]*v1alpha1.Enclave
+var EnclavePoolStore map[string]map[int]*v1alpha1.Enclave
+var EnclavePoolPreStore map[string]map[string]*v1alpha1.Enclave
+var EnclavePoolTmpStore map[string]*v1alpha1.Enclave
+var EnclavePoolTmpPreStore map[int]*v1alpha1.Enclave
 
-// EnclaveCacheManager declared as process pool management.
+// EnclaveCacheManager declared as enclave pool management.
 type EnclaveCacheManager struct {
 	cache_manager.DefaultEnclavePool
 }
@@ -31,34 +33,34 @@ func NewEnclaveCacheManager(root string) *EnclaveCacheManager {
 	InitEnclavePool()
 	return &EnclaveCacheManager{
 		DefaultEnclavePool: cache_manager.DefaultEnclavePool{
-			Root:        root,
-			Type:        string(types.EnclavePoolType),
-			Enclaveinfo: EnclavePoolStore,
+			Root: root,
+			Type: string(types.EnclavePoolType),
 		}}
 }
 
 func InitEnclavePool() {
-	EnclavePoolPreStore = make(map[string]*v1alpha1.Enclave)
-	EnclavePoolStore = make(map[int]*v1alpha1.Enclave)
+	EnclavePoolPreStore = make(map[string]map[string]*v1alpha1.Enclave)
+	EnclavePoolStore = make(map[string]map[int]*v1alpha1.Enclave)
+	EnclavePoolTmpPreStore = make(map[int]*v1alpha1.Enclave)
+	EnclavePoolTmpStore = make(map[string]*v1alpha1.Enclave)
 }
 
-func (d *EnclaveCacheManager) PreStoreEnclave(enclaveinfo v1alpha1.Enclave, ID string) {
+func (d *EnclaveCacheManager) PreStoreEnclave(enclaveinfo v1alpha1.Enclave, ID string, subtype string) {
 	mut.Lock()
 	defer mut.Unlock()
-	EnclavePoolPreStore[ID] = &enclaveinfo
+	EnclavePoolTmpStore[ID] = &enclaveinfo
+	EnclavePoolPreStore[subtype] = EnclavePoolTmpStore
 }
 
-func (d *EnclaveCacheManager) DeleteEnclave(nr int) {
-	delete(EnclavePoolStore, nr)
+func (d *EnclaveCacheManager) DeleteEnclave(nr int, subtype string) {
+	delete(EnclavePoolStore[subtype], nr)
 }
 
-func (d *EnclaveCacheManager) GetEnclave() *v1alpha1.Enclave {
-	for _, v := range EnclavePoolStore {
-		if v == nil {
-			logrus.Infof("Enclave Pool is empty")
-		}
+func (d *EnclaveCacheManager) GetEnclave(subtype string) *v1alpha1.Enclave {
+	for _, v := range EnclavePoolStore[subtype] {
 		return v
 	}
+
 	return nil
 }
 
@@ -67,13 +69,13 @@ func (d *EnclaveCacheManager) GetPoolType() string {
 	return d.Type
 }
 
-func SaveFd(cacheID string, err *error) {
+func SaveFd(cacheID string, subtype string, err *error) {
 	var fd int
 
 	sockpath := filepath.Join(EPMDir, cacheID)
 	fd, *err = utils.RecvFd(sockpath)
 	if fd != -1 {
-		EnclavePoolPreStore[cacheID].Fd = int64(fd)
+		EnclavePoolPreStore[subtype][cacheID].Fd = int64(fd)
 	}
 }
 
@@ -82,22 +84,22 @@ func (d *EnclaveCacheManager) SaveCache(sourcePath string, cache *v1alpha1.Cache
 	var err error
 	var enclaveinfo v1alpha1.Enclave
 
-	go SaveFd(cache.ID, &err)
+	go SaveFd(cache.ID, cache.SubType, &err)
 	ptypes.UnmarshalAny(cache.Options, &enclaveinfo)
-	d.PreStoreEnclave(enclaveinfo, cache.ID)
+	d.PreStoreEnclave(enclaveinfo, cache.ID, cache.SubType)
 
 	return err
 }
 
 // GetCache gets the cache by ID
-func (d *EnclaveCacheManager) GetCache(ID string) (*v1alpha1.Cache, error) {
+func (d *EnclaveCacheManager) GetCache(ID string, subtype string) (*v1alpha1.Cache, error) {
 	var cache v1alpha1.Cache
 	var err error
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	enclaveinfo := d.GetEnclave()
+	enclaveinfo := d.GetEnclave(subtype)
 	if enclaveinfo == nil {
 		return nil, nil
 	}
@@ -114,7 +116,7 @@ func (d *EnclaveCacheManager) GetCache(ID string) (*v1alpha1.Cache, error) {
 	if err != nil {
 		logrus.Warnf("send fd to epm client failure!", err)
 	}
-	d.DeleteEnclave(int(fd))
+	d.DeleteEnclave(int(fd), subtype)
 
 	err = syscall.Close(int(fd))
 	if err != nil {
@@ -123,11 +125,13 @@ func (d *EnclaveCacheManager) GetCache(ID string) (*v1alpha1.Cache, error) {
 	return &cache, err
 }
 
-func (d *EnclaveCacheManager) SaveFinalCache(ID string) error {
+func (d *EnclaveCacheManager) SaveFinalCache(ID string, subtype string) error {
 	var Enc *v1alpha1.Enclave
 	mut.Lock()
 	defer mut.Unlock()
-	Enc = EnclavePoolPreStore[ID]
-	EnclavePoolStore[int(Enc.Fd)] = EnclavePoolPreStore[ID]
+	Enc = EnclavePoolPreStore[subtype][ID]
+	EnclavePoolTmpPreStore[int(Enc.Fd)] = Enc
+	EnclavePoolStore[subtype] = EnclavePoolTmpPreStore
+
 	return nil
 }
