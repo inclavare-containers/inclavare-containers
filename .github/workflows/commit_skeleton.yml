@@ -90,10 +90,21 @@ jobs:
       if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "rune --debug run skeleton-enclave-container" &
 
+    - name: Wait RA containers Running
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      timeout-minutes: 2
+      run: |
+        docker exec $rune_test bash -c "while true; do
+        rune state skeleton-enclave-container
+        if [ $? -eq 0 ]; then
+          break
+        fi
+        sleep 5
+        done"
+
     - name: Get remote report with rune attest command
       if: ${{ contains(matrix.sgx, 'SGX1') }}
-      run: docker exec $rune_test bash -c "sleep 10;
-        rune --debug attest --isRA --linkable=false --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
+      run: docker exec $rune_test bash -c "rune --debug attest --isRA --linkable=false --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
 
     - name: Get local report with rune attest command
       if: ${{ contains(matrix.sgx, 'SGX1') }}
