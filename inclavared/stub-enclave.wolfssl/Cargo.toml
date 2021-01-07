@@ -1,0 +1,44 @@
+[package]
+name = "stub"
+version = "0.1.0"
+authors = ["stormgbs <stormgbs@gmail.com>"]
+edition = "2018"
+build = "build.rs"
+
+[lib]
+name = "stubenclave"
+crate-type = ["staticlib"]
+
+[build-dependencies]
+bindgen = "0.55.1"
+
+[target.'cfg(not(target_env = "sgx"))'.dependencies]
+sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+sgx_tstd = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["backtrace"] }
+sgx_trts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+
+[patch.'https://github.com/apache/teaclave-sgx-sdk.git']
+sgx_alloc = { path = "../rust-sgx/sgx_alloc" }
+sgx_build_helper = { path = "../rust-sgx/sgx_build_helper" }
+sgx_cov = { path = "../rust-sgx/sgx_cov" }
+sgx_crypto_helper = { path = "../rust-sgx/sgx_crypto_helper" }
+sgx_libc = { path = "../rust-sgx/sgx_libc" }
+sgx_rand = { path = "../rust-sgx/sgx_rand" }
+sgx_rand_derive = { path = "../rust-sgx/sgx_rand_derive" }
+sgx_serialize = { path = "../rust-sgx/sgx_serialize" }
+sgx_serialize_derive = { path = "../rust-sgx/sgx_serialize_derive" }
+sgx_serialize_derive_internals = { path = "../rust-sgx/sgx_serialize_derive_internals" }
+sgx_tcrypto = { path = "../rust-sgx/sgx_tcrypto" }
+sgx_tcrypto_helper = { path = "../rust-sgx/sgx_tcrypto_helper" }
+sgx_tdh = { path = "../rust-sgx/sgx_tdh" }
+sgx_tkey_exchange = { path = "../rust-sgx/sgx_tkey_exchange" }
+sgx_tprotected_fs = { path = "../rust-sgx/sgx_tprotected_fs" }
+sgx_trts = { path = "../rust-sgx/sgx_trts" }
+sgx_tse = { path = "../rust-sgx/sgx_tse" }
+sgx_tseal = { path = "../rust-sgx/sgx_tseal" }
+sgx_tstd = { path = "../rust-sgx/sgx_tstd" }
+sgx_tunittest = { path = "../rust-sgx/sgx_tunittest" }
+sgx_types = { path = "../rust-sgx/sgx_types" }
+sgx_ucrypto = { path = "../rust-sgx/sgx_ucrypto" }
+sgx_unwind = { path = "../rust-sgx/sgx_unwind" }
+sgx_urts = { path = "../rust-sgx/sgx_urts" }
