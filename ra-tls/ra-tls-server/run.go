@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"github.com/urfave/cli"
 	"net"
+	"syscall"
 )
 
 const (
@@ -67,6 +68,8 @@ EXAMPLE:
 		if addr == "" {
 			addr = defaultAddress
 		}
+
+		syscall.Unlink(addr)
 
 		ln, err := net.Listen("unix", addr)
 		if err != nil {
