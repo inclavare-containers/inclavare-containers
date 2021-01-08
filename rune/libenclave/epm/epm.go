@@ -27,12 +27,12 @@ func UnixConnect(addr string, t time.Duration) (net.Conn, error) {
 	return conn, err
 }
 
-func GetEnclave() *v1alpha1.Enclave {
+func GetEnclave(subtype string) *v1alpha1.Enclave {
 	ID := CreateRand()
-	return GetCache(ID)
+	return GetCache(ID, subtype)
 }
 
-func GetCache(ID string) *v1alpha1.Enclave {
+func GetCache(ID string, subtype string) *v1alpha1.Enclave {
 	var fd int = 0
 	var enclaveinfo v1alpha1.Enclave
 
@@ -50,7 +50,7 @@ func GetCache(ID string) *v1alpha1.Enclave {
 	go recvFd(sockpath, &fd)
 
 	Type := "enclave-cache-pool"
-	cacheResp, err := c.GetCache(ctx, &v1alpha1.GetCacheRequest{Type: Type, ID: ID})
+	cacheResp, err := c.GetCache(ctx, &v1alpha1.GetCacheRequest{Type: Type, SubType: subtype, ID: ID})
 	if err != nil {
 		return nil
 	}
@@ -63,9 +63,9 @@ func GetCache(ID string) *v1alpha1.Enclave {
 	return &enclaveinfo
 }
 
-func SavePreCache(enclaveinfo *v1alpha1.Enclave) string {
+func SavePreCache(subtype string, enclaveinfo *v1alpha1.Enclave) string {
 	ID := CreateRand()
-	err := SaveCache(ID, enclaveinfo)
+	err := SaveCache(ID, subtype, enclaveinfo)
 	if err != nil {
 		return InvalidEpmID
 	}
@@ -73,7 +73,7 @@ func SavePreCache(enclaveinfo *v1alpha1.Enclave) string {
 	return ID
 }
 
-func SaveCache(ID string, enclaveinfo *v1alpha1.Enclave) error {
+func SaveCache(ID string, subtype string, enclaveinfo *v1alpha1.Enclave) error {
 	var cache v1alpha1.Cache
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
@@ -97,6 +97,7 @@ func SaveCache(ID string, enclaveinfo *v1alpha1.Enclave) error {
 
 	cache.ID = ID
 	cache.Type = "enclave-cache-pool"
+	cache.SubType = subtype
 
 	_, err = c.SaveCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})
 	if err != nil {
@@ -112,7 +113,7 @@ func SaveCache(ID string, enclaveinfo *v1alpha1.Enclave) error {
 	return nil
 }
 
-func SaveEnclave(ID string) {
+func SaveEnclave(ID string, subtype string) {
 	var cache v1alpha1.Cache
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
@@ -127,6 +128,7 @@ func SaveEnclave(ID string) {
 
 	cache.Type = "enclave-cache-pool"
 	cache.ID = ID
+	cache.SubType = subtype
 	c.SaveFinalCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})
 }
 
