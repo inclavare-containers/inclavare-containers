@@ -55,19 +55,31 @@ static void exit_usage(const char *program)
 	exit(1);
 }
 
-/* *INDENT-OFF* */
-static inline const BIGNUM *get_modulus(RSA *key)
+static const BIGNUM *get_modulus(RSA * key)
 {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-	return key->n;
-#else
 	const BIGNUM *n;
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	n = key->n;
+#else
 	RSA_get0_key(key, &n, NULL, NULL);
-	return n;
 #endif
+
+	return n;
 }
-/* *INDENT-ON* */
+
+static const BIGNUM *get_exponent(RSA * key)
+{
+	const BIGNUM *e;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	e = key->e;
+#else
+	RSA_get0_key(key, NULL, &e, NULL);
+#endif
+
+	return e;
+}
 
 static RSA *load_sign_key(const char *path)
 {
@@ -79,6 +91,7 @@ static RSA *load_sign_key(const char *path)
 		fprintf(stderr, "Unable to open %s\n", path);
 		return NULL;
 	}
+
 	key = RSA_new();
 	if (!PEM_read_RSAPrivateKey(f, &key, NULL, NULL))
 		return NULL;
@@ -87,6 +100,13 @@ static RSA *load_sign_key(const char *path)
 	if (BN_num_bytes(get_modulus(key)) != SGX_MODULUS_SIZE) {
 		fprintf(stderr, "Invalid key size %d\n",
 			BN_num_bytes(get_modulus(key)));
+		RSA_free(key);
+		return NULL;
+	}
+
+	const BIGNUM *e = get_exponent(key);
+	if (!BN_is_word(e, 3)) {
+		fprintf(stderr, "Exponent must be set to 3.\n");
 		RSA_free(key);
 		return NULL;
 	}
@@ -709,7 +729,6 @@ int main(int argc, char **argv)
 	ss.header.header1[1] = header1[1];
 	ss.header.header2[0] = header2[0];
 	ss.header.header2[1] = header2[1];
-	ss.exponent = 3;
 
 	if (calc_sgx_attributes(&ss.body.attributes, &ss.body.attributes_mask))
 		return -1;
@@ -727,7 +746,13 @@ int main(int argc, char **argv)
 	if (!sign_key)
 		goto out;
 
-	BN_bn2bin(get_modulus(sign_key), ss.modulus);
+	if (BN_bn2bin(get_modulus(sign_key), ss.modulus) != SGX_MODULUS_SIZE)
+		goto out;
+
+	// *INDENT-OFF*
+	if (BN_bn2bin(get_exponent(sign_key), (unsigned char *) &ss.exponent) != SGX_EXPONENT_SIZE)
+		goto out;
+	// *INDENT-OFF*
 
 	/* *INDENT-OFF* */
 	if (!measure_encl(argv[1], ss.body.mrenclave, ss.body.miscselect,

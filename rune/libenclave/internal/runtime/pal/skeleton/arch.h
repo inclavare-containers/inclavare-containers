@@ -49,6 +49,7 @@ enum sgx_sub_leaf_types {
 #define SGX_CPUID_SUB_LEAF_TYPE_MASK	GENMASK(3, 0)
 
 #define SGX_MODULUS_SIZE 384
+#define SGX_EXPONENT_SIZE 1
 
 /**
  * enum sgx_miscselect - additional information to an SSA frame
