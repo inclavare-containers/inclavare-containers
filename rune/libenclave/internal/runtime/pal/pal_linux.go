@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	palApiVersion        = 3
-	InvalidEpmID  string = "InvalidEPMID"
+	palApiVersion         = 3
+	InvalidEpmID   string = "InvalidEPMID"
+	EnclaveSubType string = "skeleton-0.0.0"
 )
 
 func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
@@ -41,7 +42,8 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	* mmaps /dev/sgx/enclave mmaping address is sorted from low
 	* address to high one. So layout[0].Addr will be minimum.
 	*/
-	enclaveinfo := epm.GetEnclave()
+	pal.enclaveSubType = EnclaveSubType
+	enclaveinfo := epm.GetEnclave(pal.enclaveSubType)
 	if enclaveinfo != nil {
 		epm.SgxMmap(*enclaveinfo)
 		addr = enclaveinfo.Layout[0].Addr
@@ -50,7 +52,7 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 
 	err := apiV3.init(args, logLevel, fd, addr)
 	if err == nil {
-		pal.enclavePoolID = epm.SavePreCache(enclaveinfo)
+		pal.enclavePoolID = epm.SavePreCache(pal.enclaveSubType, enclaveinfo)
 	}
 
 	return err
@@ -79,7 +81,7 @@ func (pal *enclaveRuntimePal) Destroy() error {
 	api := &enclaveRuntimePalApiV1{}
 
 	if pal.enclavePoolID != InvalidEpmID {
-		epm.SaveEnclave(pal.enclavePoolID)
+		epm.SaveEnclave(pal.enclavePoolID, pal.enclaveSubType)
 	}
 	return api.destroy()
 }
