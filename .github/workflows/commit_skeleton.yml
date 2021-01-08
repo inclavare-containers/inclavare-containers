@@ -95,7 +95,7 @@ jobs:
       timeout-minutes: 2
       run: |
         docker exec $rune_test bash -c "while true; do
-        status=\$(rune list | grep skeleton-enclave-container | awk '{print \$3}')
+        status=\$(rune list 2>/dev/null | grep skeleton-enclave-container | awk '{print \$3}')
         echo Current status: \$status
         if [[ \$status = 'running' ]]; then
           break
