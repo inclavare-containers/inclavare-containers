@@ -95,8 +95,9 @@ jobs:
       timeout-minutes: 2
       run: |
         docker exec $rune_test bash -c "while true; do
-        rune state skeleton-enclave-container
-        if [ $? -eq 0 ]; then
+        status=\$(rune list | grep skeleton-enclave-container | awk '{print \$3}')
+        echo Current status: \$status
+        if [[ \$status = 'running' ]]; then
           break
         fi
         sleep 5
