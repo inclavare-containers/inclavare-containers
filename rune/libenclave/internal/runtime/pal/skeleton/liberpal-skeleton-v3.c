@@ -19,6 +19,12 @@ int pal_get_version(void)
 /* *INDENT-OFF* */
 int pal_init(pal_attr_v3_t *attr)
 {
+	if (tls_server) {
+		initialized = true;
+
+		return 0;
+	}
+
 	int ret;
 
 	parse_args(attr->attr_v1.args);
@@ -78,6 +84,9 @@ int pal_create_process(pal_create_process_args *args)
 
 int pal_exec(pal_exec_args *attr)
 {
+        if (tls_server)
+                return ra_tls_server();
+
 	return wait4child(attr);
 }
 /* *INDENT-ON* */
