@@ -25,8 +25,13 @@ jobs:
         rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
+    - name: Config git proxy
+      run: |
+        docker exec $rune_test bash -c "git config --global http.proxy socks5://localhost:5432"
+        docker exec $rune_test bash -c "git config --global https.proxy socks5://localhost:5432"
+
     # ra-tls is buggy on parallel compilation. Always use -j1.
-    - name: Build and run ra-tls-server 
+    - name: Build and run ra-tls-server
       run: |
         docker exec $rune_test bash -c "mkdir -p /run/rune;
         touch ra-tls.sock;
