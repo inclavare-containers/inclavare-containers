@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/boltdb/bolt v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/prometheus/procfs v0.0.5 // indirect
 	github.com/sirupsen/logrus v1.2.0
@@ -17,6 +17,6 @@ require (
 	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/grpc v1.28.0
-	google.golang.org/protobuf v1.23.0
+	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
