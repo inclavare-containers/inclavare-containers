@@ -17,7 +17,7 @@ extern const size_t ias_oid_len;
 
 void get_quote_from_extension
 (
-    uint8_t* ext,
+    const uint8_t* ext,
     size_t ext_len,
     sgx_quote_t* q
 );
@@ -31,14 +31,14 @@ int find_oid
 
 void extract_x509_extensions
 (
-    uint8_t* ext,
+    const uint8_t* ext,
     int ext_len,
     attestation_verification_report_t* attn_report
 );
 
 int extract_x509_extension
 (
-    uint8_t* ext,
+    const uint8_t* ext,
     int ext_len,
     const uint8_t* oid,
     size_t oid_len,

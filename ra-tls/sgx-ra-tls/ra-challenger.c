@@ -25,7 +25,7 @@ void *memmem(const void *h0, size_t k, const void *n0, size_t l);
 
 void get_quote_from_extension
 (
-    uint8_t* exts,
+    const uint8_t* exts,
     size_t exts_len,
     sgx_quote_t* q
 )
@@ -90,7 +90,7 @@ int find_oid
  */
 int extract_x509_extension
 (
-    uint8_t* ext,
+    const uint8_t* ext,
     int ext_len,
     const uint8_t* oid,
     size_t oid_len,
@@ -118,7 +118,7 @@ int extract_x509_extension
  */
 void extract_x509_extensions
 (
-    uint8_t* ext,
+    const uint8_t* ext,
     int ext_len,
     attestation_verification_report_t* attn_report
 )
