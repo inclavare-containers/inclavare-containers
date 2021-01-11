@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <time.h>
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 25
 #  include <sys/types.h>
 #else
@@ -799,8 +800,15 @@ int __pal_exec(char *path, char *argv[], pal_stdio_fds *stdio, int *exit_code)
 	for (int i = 0; argv[i]; i++) {
 		if (!strcmp(argv[i], "wait_timeout") && argv[i + 1]) {
 			wait_timeout = atoi(argv[i + 1]);
-			if (wait_timeout > 0)
-				sleep(wait_timeout);
+			if (wait_timeout > 0) {
+				struct timespec req, rem;
+				req.tv_sec = wait_timeout;
+				nanosleep(&req, &rem);
+				while (rem.tv_sec > 0 || rem.tv_nsec > 0) {
+					req = rem;
+					nanosleep(&req, &rem);
+				}
+			}
 			break;
 		}
 	}
