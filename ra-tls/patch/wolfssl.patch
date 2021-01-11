@@ -1,15 +1,31 @@
+From db0c700416f593f5a996cc18d7d72c84f7ddcd3b Mon Sep 17 00:00:00 2001
+From: Shirong Hao <shirong@linux.alibaba.com>
+Date: Mon, 11 Jan 2021 10:16:40 +0800
+Subject: [PATCH] patch
+
+---
+ IDE/LINUX-SGX/sgx_t_static.mk  |   3 +-
+ configure.ac                   |   2 +-
+ m4/ax_vcs_checkout.m4          |   1 -
+ pre-commit.sh                  |   6 +-
+ wolfcrypt/src/asn.c            | 293 ++++++++++++++++++++++++++++++++-
+ wolfssl/internal.h             |   2 +-
+ wolfssl/wolfcrypt/asn_public.h |  30 ++++
+ wolfssl/wolfcrypt/settings.h   |   2 +
+ 8 files changed, 330 insertions(+), 9 deletions(-)
+
 diff --git a/IDE/LINUX-SGX/sgx_t_static.mk b/IDE/LINUX-SGX/sgx_t_static.mk
-index c7ee276c9..bb27f2dc4 100644
+index 41ff666f2..1767078e2 100644
 --- a/IDE/LINUX-SGX/sgx_t_static.mk
 +++ b/IDE/LINUX-SGX/sgx_t_static.mk
-@@ -2,6 +2,7 @@
+@@ -1,6 +1,7 @@
+ ######## Intel(R) SGX SDK Settings ########
  SGX_SDK ?= /opt/intel/sgxsdk
  SGX_MODE ?= SIM
- SGX_ARCH ?= x64
 +SGX_DEBUG ?= 1
+ SGX_ARCH ?= x64
  WOLFSSL_ROOT ?= $(shell readlink -f ../..)
  
- ifeq ($(shell getconf LONG_BIT), 32)
 @@ -29,7 +30,7 @@ endif
  endif
  
@@ -20,12 +36,12 @@ index c7ee276c9..bb27f2dc4 100644
          SGX_COMMON_CFLAGS += -O2
  endif
 diff --git a/configure.ac b/configure.ac
-index 6a6edefe4..683445cc1 100644
+index 8ab179faf..b501b7877 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -110,7 +110,7 @@ LT_LIB_M
- OPTIMIZE_CFLAGS="-Os -fomit-frame-pointer"
- OPTIMIZE_FAST_CFLAGS="-O2 -fomit-frame-pointer"
+@@ -116,7 +116,7 @@ LT_LIB_M
+ OPTIMIZE_CFLAGS="-Os"
+ OPTIMIZE_FAST_CFLAGS="-O2"
  OPTIMIZE_HUGE_CFLAGS="-funroll-loops -DTFM_SMALL_SET -DTFM_HUGE_SET"
 -DEBUG_CFLAGS="-g -DDEBUG -DDEBUG_WOLFSSL"
 +DEBUG_CFLAGS="-g -ggdb -DDEBUG -DDEBUG_WOLFSSL"
@@ -45,10 +61,10 @@ index 4636b58ed..58c1af256 100644
      AC_DEFINE_UNQUOTED([VCS_SYSTEM],["$ac_cv_vcs_system"],[VCS system])
      ])
 diff --git a/pre-commit.sh b/pre-commit.sh
-index cbac1b5e3..71c79767d 100755
+index 9c76f4b30..992ecfe2a 100755
 --- a/pre-commit.sh
 +++ b/pre-commit.sh
-@@ -3,6 +3,8 @@
+@@ -3,10 +3,12 @@
  #
  # Our "pre-commit" hook.
  
@@ -57,67 +73,42 @@ index cbac1b5e3..71c79767d 100755
  # save current config
  echo "\n\nSaving current config\n\n"
  cp config.status tmp.status
-diff --git a/src/internal.c b/src/internal.c
-index a6989c419..9036910ba 100644
---- a/src/internal.c
-+++ b/src/internal.c
-@@ -9777,11 +9777,14 @@ static int DoHandShakeMsg(WOLFSSL* ssl, byte* input, word32* inOutIdx,
-         ret = DoHandShakeMsgType(ssl, input, inOutIdx, type, size, totalSz);
-     }
-     else {
--        if (inputLength + ssl->arrays->pendingMsgOffset
--                                                  > ssl->arrays->pendingMsgSz) {
-+        word32 pendSz =
-+            ssl->arrays->pendingMsgSz - ssl->arrays->pendingMsgOffset;
+-cp wolfssl/options.h tmp.options.h 
++cp wolfssl/options.h tmp.options.h
  
--            return BUFFER_ERROR;
--        }
-+        /* Catch the case where there may be the remainder of a fragmented
-+         * handshake message and the next handshake message in the same
-+         * record. */
-+        if (inputLength > pendSz)
-+            inputLength = pendSz;
+ # stash modified files, if any, that are not part of this commit, don't test
+ # them
+@@ -35,7 +37,7 @@ echo "\nRestoring current config\n"
+ mv tmp.status config.status
+ # don't show output in case error from above
+ ./config.status >/dev/null 2>&1
+-mv tmp.options.h wolfssl/options.h 
++mv tmp.options.h wolfssl/options.h
+ make clean >/dev/null 2>&1
+ make -j 8 >/dev/null 2>&1
  
-         XMEMCPY(ssl->arrays->pendingMsg + ssl->arrays->pendingMsgOffset,
-                 input + *inOutIdx, inputLength);
-@@ -9790,13 +9793,11 @@ static int DoHandShakeMsg(WOLFSSL* ssl, byte* input, word32* inOutIdx,
- 
-         if (ssl->arrays->pendingMsgOffset == ssl->arrays->pendingMsgSz)
-         {
--            word32 idx = 0;
-+            word32 idx = HANDSHAKE_HEADER_SZ;
-             ret = DoHandShakeMsgType(ssl,
--                                     ssl->arrays->pendingMsg
--                                                          + HANDSHAKE_HEADER_SZ,
-+                                     ssl->arrays->pendingMsg,
-                                      &idx, ssl->arrays->pendingMsgType,
--                                     ssl->arrays->pendingMsgSz
--                                                          - HANDSHAKE_HEADER_SZ,
-+                                     ssl->arrays->pendingMsgSz - idx,
-                                      ssl->arrays->pendingMsgSz);
-         #ifdef WOLFSSL_ASYNC_CRYPT
-             if (ret == WC_PENDING_E) {
 diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
-index e23425311..5cdeae542 100644
+index 12ada17af..676f36d02 100644
 --- a/wolfcrypt/src/asn.c
 +++ b/wolfcrypt/src/asn.c
-@@ -19,6 +19,7 @@
+@@ -18,7 +18,7 @@
+  * along with this program; if not, write to the Free Software
   * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
   */
- 
+-
 +#include <assert.h>
+ /*
  
- #ifdef HAVE_CONFIG_H
-     #include <config.h>
-@@ -61,6 +62,7 @@ ASN Options:
- #include <wolfssl/wolfcrypt/pwdbased.h>
- #include <wolfssl/wolfcrypt/des3.h>
+ DESCRIPTION
+@@ -76,6 +76,7 @@ ASN Options:
+ #include <wolfssl/wolfcrypt/rc2.h>
+ #include <wolfssl/wolfcrypt/wc_encrypt.h>
  #include <wolfssl/wolfcrypt/logging.h>
 +#include <wolfssl/wolfcrypt/wc_port.h>
  
  #include <wolfssl/wolfcrypt/random.h>
  #include <wolfssl/wolfcrypt/hash.h>
-@@ -6346,7 +6348,10 @@ int wc_DerToPemEx(const byte* der, word32 derSz, byte* output, word32 outSz,
+@@ -11448,7 +11449,10 @@ int wc_PemPubKeyToDer(const char* fileName,
  /* USER RSA ifdef portions used instead of refactor in consideration for
     possible fips build */
  /* Write a public RSA key to output */
@@ -129,7 +120,7 @@ index e23425311..5cdeae542 100644
                             int outLen, int with_header)
  {
  #ifdef WOLFSSL_SMALL_STACK
-@@ -6710,6 +6715,20 @@ typedef struct DerCert {
+@@ -11851,6 +11855,20 @@ typedef struct DerCert {
      byte extKeyUsage[MAX_EXTKEYUSAGE_SZ]; /* Extended Key Usage extension */
      byte certPolicies[MAX_CERTPOL_NB*MAX_CERTPOL_SZ]; /* Certificate Policies */
  #endif
@@ -150,7 +141,7 @@ index e23425311..5cdeae542 100644
  #ifdef WOLFSSL_CERT_REQ
      byte attrib[MAX_ATTRIB_SZ];        /* Cert req attributes encoded */
  #endif
-@@ -6732,6 +6751,20 @@ typedef struct DerCert {
+@@ -11873,6 +11891,20 @@ typedef struct DerCert {
      int  extKeyUsageSz;                /* encoded ExtendedKeyUsage extension length */
      int  certPoliciesSz;               /* encoded CertPolicies extension length*/
  #endif
@@ -171,59 +162,7 @@ index e23425311..5cdeae542 100644
  #ifdef WOLFSSL_ALT_NAMES
      int  altNamesSz;                   /* encoded AltNames extension length */
  #endif
-@@ -7104,13 +7137,26 @@ static int SetValidity(byte* output, int daysValid)
- 
-     /* subtract 1 day for more compliance */
-     local.tm_mday -= 1;
-+#if !defined(WOLFSSL_SGX_ATTESTATION)
-     normalTime = mktime(&local);
-+#endif
-     RebuildTime(&normalTime, &local);
- 
-     /* adjust */
-     local.tm_year += 1900;
-     local.tm_mon  +=    1;
- 
-+#ifdef WOLFSSL_SGX_ATTESTATION
-+    /* To work around the abscence of a trusted time source in SGX, we
-+       hard-code the certificate validity period. */
-+    bzero(&local, sizeof(local));
-+    local.tm_year = 2020;
-+    local.tm_mday = 14;
-+    local.tm_wday = 6;          /* 6 is Friday */
-+    local.tm_mon  = 1;          /* 1 is February */
-+    local.tm_hour = 9;
-+#endif
-+
-     SetTime(&local, before + beforeSz);
-     beforeSz += ASN_GEN_TIME_SZ;
- 
-@@ -7121,13 +7167,24 @@ static int SetValidity(byte* output, int daysValid)
- 
-     /* add daysValid */
-     local.tm_mday += daysValid;
-+#if !defined(WOLFSSL_SGX_ATTESTATION)
-     normalTime = mktime(&local);
-+#endif
-     RebuildTime(&normalTime, &local);
- 
-     /* adjust */
-     local.tm_year += 1900;
-     local.tm_mon  +=    1;
- 
-+#ifdef WOLFSSL_SGX_ATTESTATION
-+    bzero(&local, sizeof(local));
-+    local.tm_year = 2030;
-+    local.tm_mday = 14;
-+    local.tm_wday = 5;          /* 5 is Thursday */
-+    local.tm_mon  = 1;          /* 1 is February */
-+    local.tm_hour = 9;
-+#endif
-+
-     SetTime(&local, after + afterSz);
-     afterSz += ASN_GEN_TIME_SZ;
- 
-@@ -7445,7 +7502,16 @@ static int SetKeyUsage(byte* output, word32 outSz, word16 input)
+@@ -12736,7 +12768,16 @@ static int SetKeyUsage(byte* output, word32 outSz, word16 input)
                         ku, idx);
  }
  
@@ -241,7 +180,7 @@ index e23425311..5cdeae542 100644
      const byte* oid, word32 oidSz)
  {
      /* verify room */
-@@ -7459,6 +7525,53 @@ static int SetOjectIdValue(byte* output, word32 outSz, int* idx,
+@@ -12750,6 +12791,53 @@ static int SetOjectIdValue(byte* output, word32 outSz, int* idx,
      return 0;
  }
  
@@ -253,7 +192,7 @@ index e23425311..5cdeae542 100644
 +    byte oid_enc[16];
 +    int idx = 0, ext_lenSz;
 +    int oid_enc_lenSz = 0;
-+    
++
 +    if (output == NULL || input == NULL || oid == NULL)
 +        return BAD_FUNC_ARG;
 +
@@ -262,7 +201,7 @@ index e23425311..5cdeae542 100644
 +    SetLength(length + ext_lenSz, ext_enc_len);
 +
 +    SetOjectIdValue(oid_enc, sizeof(oid_enc), &oid_enc_lenSz, oid, oidSz);
-+    
++
 +    if (outSz < 3)
 +        return BUFFER_E;
 +
@@ -293,9 +232,43 @@ index e23425311..5cdeae542 100644
 +#endif
 +
  /* encode Extended Key Usage (RFC 5280 4.2.1.12), return total bytes written */
- static int SetExtKeyUsage(byte* output, word32 outSz, byte input)
+ static int SetExtKeyUsage(Cert* cert, byte* output, word32 outSz, byte input)
  {
-@@ -8055,6 +8168,103 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
+@@ -13431,6 +13519,17 @@ static int SetValidity(byte* output, int daysValid)
+     localTime.tm_year += 1900;
+     localTime.tm_mon +=    1;
+ 
++#ifdef WOLFSSL_SGX_ATTESTATION
++    /* To work around the abscence of a trusted time source in SGX, we
++       hard-code the certificate validity period. */
++    bzero(&localTime, sizeof(localTime));
++    localTime.tm_year = 2020;
++    localTime.tm_mday = 14;
++    localTime.tm_wday = 6;          /* 6 is Friday */
++    localTime.tm_mon  = 1;          /* 1 is February */
++    localTime.tm_hour = 9;
++#endif
++
+     SetTime(&localTime, before + beforeSz);
+     beforeSz += ASN_GEN_TIME_SZ;
+ 
+@@ -13450,6 +13549,15 @@ static int SetValidity(byte* output, int daysValid)
+     localTime.tm_year += 1900;
+     localTime.tm_mon  +=    1;
+ 
++#ifdef WOLFSSL_SGX_ATTESTATION
++    bzero(&localTime, sizeof(localTime));
++    localTime.tm_year = 2030;
++    localTime.tm_mday = 14;
++    localTime.tm_wday = 5;          /* 5 is Thursday */
++    localTime.tm_mon  = 1;          /* 1 is February */
++    localTime.tm_hour = 9;
++#endif
++
+     SetTime(&localTime, after + afterSz);
+     afterSz += ASN_GEN_TIME_SZ;
+ 
+@@ -13752,6 +13860,103 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
          der->certPoliciesSz = 0;
  #endif /* WOLFSSL_CERT_EXT */
  
@@ -395,11 +368,11 @@ index e23425311..5cdeae542 100644
 +            der->pckCrlSz;
 +}
 +#endif
-+    
++
      /* put extensions */
      if (der->extensionsSz > 0) {
  
-@@ -8131,6 +8341,88 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
+@@ -13828,6 +14033,88 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
                  return EXTENSIONS_E;
          }
  #endif /* WOLFSSL_CERT_EXT */
@@ -465,7 +438,7 @@ index e23425311..5cdeae542 100644
 +                                der->tcbSignChain, der->tcbSignChainSz);
 +            if (ret <= 0)
 +                return EXTENSIONS_E;
-+            
++
 +            ret = SetExtensions(der->extensions, sizeof(der->extensions),
 +                                &der->extensionsSz,
 +                                der->qeIdentity, der->qeIdentitySz);
@@ -489,10 +462,10 @@ index e23425311..5cdeae542 100644
  
      der->total = der->versionSz + der->serialSz + der->sigAlgoSz +
 diff --git a/wolfssl/internal.h b/wolfssl/internal.h
-index 9c77120a1..3c922dd88 100644
+index 73581fe90..03c7aaae1 100644
 --- a/wolfssl/internal.h
 +++ b/wolfssl/internal.h
-@@ -1272,7 +1272,7 @@ enum Misc {
+@@ -1574,7 +1574,7 @@ enum Misc {
  
  /* max size of a handshake message, currently set to the certificate */
  #ifndef MAX_HANDSHAKE_SZ
@@ -502,10 +475,10 @@ index 9c77120a1..3c922dd88 100644
  
  #ifndef SESSION_TICKET_LEN
 diff --git a/wolfssl/wolfcrypt/asn_public.h b/wolfssl/wolfcrypt/asn_public.h
-index b73084634..870ffdb44 100644
+index 480b64f64..e9028ea4b 100644
 --- a/wolfssl/wolfcrypt/asn_public.h
 +++ b/wolfssl/wolfcrypt/asn_public.h
-@@ -164,6 +164,32 @@ typedef struct Cert {
+@@ -332,6 +332,32 @@ typedef struct Cert {
      char    certPolicies[CTC_MAX_CERTPOL_NB][CTC_MAX_CERTPOL_SZ];
      word16  certPoliciesNb;              /* Number of Cert Policy */
  #endif
@@ -535,27 +508,27 @@ index b73084634..870ffdb44 100644
 +    byte    pckCrl[1024];
 +    int     pckCrlSz;
 +#endif
- #ifdef WOLFSSL_CERT_REQ
-     char     challengePw[CTC_NAME_SIZE];
- #endif
-@@ -330,6 +356,10 @@ WOLFSSL_API int wc_CreatePKCS8Key(byte* out, word32* outSz,
- */
+ #if defined(WOLFSSL_CERT_EXT) || defined(OPENSSL_EXTRA)
+     byte     issRaw[sizeof(CertName)];   /* raw issuer info */
+     byte     sbjRaw[sizeof(CertName)];   /* raw subject info */
+@@ -583,6 +609,10 @@ WOLFSSL_API int wc_CreatePKCS8Key(byte* out, word32* outSz,
  WOLFSSL_API int wc_GetTime(void* timePtr, word32 timeSize);
+ #endif
  
 +#ifdef WOLFSSL_SGX_ATTESTATION
 +WOLFSSL_API int SetRsaPublicKey(byte* output, RsaKey* key, int outLen, int with_header);
 +#endif
 +
- #ifdef __cplusplus
-     } /* extern "C" */
- #endif
+ #ifdef WOLFSSL_ENCRYPTED_KEYS
+     WOLFSSL_API int wc_EncryptedInfoGet(EncryptedInfo* info,
+         const char* cipherInfo);
 diff --git a/wolfssl/wolfcrypt/settings.h b/wolfssl/wolfcrypt/settings.h
-index 6254b727d..9a204138c 100644
+index 7e6fa8b06..1893b8c1f 100644
 --- a/wolfssl/wolfcrypt/settings.h
 +++ b/wolfssl/wolfcrypt/settings.h
-@@ -1228,7 +1228,9 @@ extern void uITRON4_free(void *p) ;
-         #define WC_RSA_BLINDING
-     #endif
+@@ -1717,7 +1717,9 @@ extern void uITRON4_free(void *p) ;
+     #define ECC_TIMING_RESISTANT
+     #define TFM_TIMING_RESISTANT
      #define SINGLE_THREADED
 +#if !defined(WOLFSSL_SGX_ATTESTATION)
      #define NO_ASN_TIME /* can not use headers such as windows.h */
@@ -564,5 +537,5 @@ index 6254b727d..9a204138c 100644
      #define USE_CERT_BUFFERS_2048
      #define USE_FAST_MATH
 -- 
-2.17.1
+2.18.4
 

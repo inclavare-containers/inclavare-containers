@@ -65,9 +65,8 @@ $(LIBDIR)/libwolfssl.a: $(LIBDIR) wolfssl
 
 wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --enable-writedup --enable-static --enable-keygen --enable-certgen --enable-certext --with-pic --disable-examples --disable-crypttests --enable-aesni --enable-tlsv10 $(WOLFSSL_CONFFLAGS)
 wolfssl:
-	[ ! -d wolfssl ] && git clone https://github.com/wolfSSL/wolfssl && \
-	  cd wolfssl && git checkout 57e5648a5dd734d1c219d385705498ad12941dd0 && \
-	  patch -p1 < ../patch/wolfssl.patch && ./autogen.sh && \
+	[ ! -d wolfssl ] && git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && \
+	  cd wolfssl && git apply ../patch/wolfssl.patch && ./autogen.sh && \
 	  CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true
 
 ifdef ECDSA
