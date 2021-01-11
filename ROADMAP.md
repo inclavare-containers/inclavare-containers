@@ -12,7 +12,7 @@ This document provides the roadmap of Inclavare Containers project.
 
 ## libenclave & runelet
 
-- Implement Enclave VMM to launch the enclave in form of confidential VM based on vSGX (0.7.0), SEV (0.8.0) and TDX (1.0.0) technologies.
+- Implement Enclave VMM to launch the enclave in form of confidential VM based on vSGX (0.8.0) technologies.
 
 ## shim-rune
 
@@ -20,8 +20,8 @@ This document provides the roadmap of Inclavare Containers project.
 
 ## Enclave Runtimes
 
-- Support more enclave runtimes such as [Graphene](https://github.com/oscarlab/graphene)(0.5.0), [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime)(0.6.0), [sgx-lkl](https://github.com/lsds/sgx-lkl)(0.8.0), [enarx](https://github.com/enarx/enarx)(0.9.0), [openenclave](https://github.com/openenclave/openenclave)(1.0.0) and so on.
-- (0.7.0) Provide a reference Enclave OS for confidential VM.
+- Support more enclave runtimes such as [Graphene](https://github.com/oscarlab/graphene)(0.7.0), [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime)(0.5.0), [sgx-lkl](https://github.com/lsds/sgx-lkl)(0.8.0), [enarx](https://github.com/enarx/enarx)(0.9.0), [openenclave](https://github.com/openenclave/openenclave)(1.0.0) and so on.
+- (0.8.0) Provide a reference Enclave OS for confidential VM.
 
 ## Enclave Pooling Manager
 
