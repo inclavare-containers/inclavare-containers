@@ -179,17 +179,19 @@ If you were to write an SGX Hello World project using some SGX SDK, the project 
     **Note**: The field `runtimeClassName` should be set to `rune` which means the container will be handled by rune, specify the environment `RUNE_CARRIER` to `occlum` telling the `shim-rune`  to create and run an occlum application.<br />
 <br />You can also configure enclave through these environment variables：
 
-    | Environment Variable Name | Default Value |
-    | --- | --- |
-    | OCCLUM_USER_SPACE_SIZE | 256MB |
-    | OCCLUM_KERNEL_SPACE_HEAP_SIZE | 32MB |
-    | OCCLUM_KERNEL_SPACE_STACK_SIZE | 1MB |
-    | OCCLUM_MAX_NUM_OF_THREADS | 32 |
-    | OCCLUM_PROCESS_DEFAULT_STACK_SIZE | 4MB |
-    | OCCLUM_PROCESS_DEFAULT_HEAP_SIZE | 32MB |
-    | OCCLUM_PROCESS_DEFAULT_MMAP_SIZE | 80MB |
-    | OCCLUM_DEFAULT_ENV | OCCLUM=yes |
-    | OCCLUM_UNTRUSTED_ENV | EXAMPLE |
+    | Environment Variable Name | Default Value | Other Value |
+    | --- | --- | --- |
+    | OCCLUM_RELEASE_ENCLAVE | 0 (debug enclave) | 1 (product enclave) |
+    | ENCLAVE_RUNTIME_LOGLEVEL | "info" | "trace", "debug", "warning", "error", "fatal", "panic", "off" |
+    | OCCLUM_USER_SPACE_SIZE | 256MB | |
+    | OCCLUM_KERNEL_SPACE_HEAP_SIZE | 32MB | |
+    | OCCLUM_KERNEL_SPACE_STACK_SIZE | 1MB | |
+    | OCCLUM_MAX_NUM_OF_THREADS | 32 | |
+    | OCCLUM_PROCESS_DEFAULT_STACK_SIZE | 4MB | |
+    | OCCLUM_PROCESS_DEFAULT_HEAP_SIZE | 32MB | |
+    | OCCLUM_PROCESS_DEFAULT_MMAP_SIZE | 80MB | |
+    | OCCLUM_DEFAULT_ENV | OCCLUM=yes | |
+    | OCCLUM_UNTRUSTED_ENV | EXAMPLE | |
 
 
 
