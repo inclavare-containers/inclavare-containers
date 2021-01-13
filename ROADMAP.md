@@ -7,16 +7,12 @@ This document provides the roadmap of Inclavare Containers project.
 
 ## rune
 
-- (0.6.0) Code refactoring for minimizing the dependency on libcontainer.
+- (0.5.0) Code refactoring for minimizing the dependency on libcontainer.
 - (0.7.0) Leave this CLI to using docker.
-
-## libenclave & runelet
-
-- Implement Enclave VMM to launch the enclave in form of confidential VM based on vSGX (0.8.0) technologies.
 
 ## shim-rune
 
-- (0.7.0) Integrate libenclave and libcontainer.
+- (0.9.0) Integrate libenclave and libcontainer.
 
 ## Enclave Runtimes
 
@@ -29,12 +25,12 @@ This document provides the roadmap of Inclavare Containers project.
 
 ## shelter
 
-- (0.5.0) kubectl plugin for confidential K8s management.
+- (0.7.0) kubectl plugin for confidential K8s management.
 
 ## shelterd
 
 - (0.8.0) Daemon server for shelter clients.
 
-## enclaved & stub enclave
+## inclavared & stub enclave
 
-- (0.5.0) Implement general attestation service and infrastructure for confidential Kubernetes.
+- (0.7.0) Implement general attestation service and infrastructure for confidential Kubernetes.
