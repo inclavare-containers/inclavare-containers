@@ -69,6 +69,11 @@ func (d *EnclaveCacheManager) GetPoolType() string {
 	return d.Type
 }
 
+func (d *EnclaveCacheManager) Healthz() bool {
+	/* FIXME: If there are more states in epm service, please rich the interface */
+	return true
+}
+
 func SaveFd(cacheID string, subtype string, err *error) {
 	var fd int
 
@@ -114,7 +119,7 @@ func (d *EnclaveCacheManager) GetCache(ID string, subtype string) (*v1alpha1.Cac
 	sockpath := filepath.Join(EPMDir, cache.ID)
 	err = utils.SendFd(sockpath, int(fd))
 	if err != nil {
-		logrus.Warnf("send fd to epm client failure!", err)
+		logrus.Warnf("Send fd to epm client failure!", err)
 	}
 	d.DeleteEnclave(int(fd), subtype)
 

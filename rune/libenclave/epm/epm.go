@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -35,6 +36,7 @@ func GetEnclave(subtype string) *v1alpha1.Enclave {
 func GetCache(ID string, subtype string) *v1alpha1.Enclave {
 	var fd int = 0
 	var enclaveinfo v1alpha1.Enclave
+	Type := "enclave-cache-pool"
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
 	if err != nil {
@@ -46,15 +48,27 @@ func GetCache(ID string, subtype string) *v1alpha1.Enclave {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	healthzResp, err := c.Healthz(ctx, &v1alpha1.HealthzRequest{Type: Type})
+	if err != nil {
+		return nil
+	}
+	if !healthzResp.Ok {
+		logrus.Warnf("EPM service is not in good running state!")
+		return nil
+	}
+
 	sockpath := filepath.Join(sockpathdir, ID)
 	go recvFd(sockpath, &fd)
 
-	Type := "enclave-cache-pool"
 	cacheResp, err := c.GetCache(ctx, &v1alpha1.GetCacheRequest{Type: Type, SubType: subtype, ID: ID})
 	if err != nil {
 		return nil
 	}
 	if cacheResp.Cache == nil {
+	       /* FIXME: If enclave cache pool is empty, there is no SendFd from epm service. The goroutine recvFd
+		* above will be suspended on accept, sockpath will not be unlinked. Here is unlinked manually.
+		*/
+		syscall.Unlink(sockpath)
 		logrus.Infof("There is no enclave in cache pool")
 		return nil
 	}
@@ -75,6 +89,7 @@ func SavePreCache(subtype string, enclaveinfo *v1alpha1.Enclave) string {
 
 func SaveCache(ID string, subtype string, enclaveinfo *v1alpha1.Enclave) error {
 	var cache v1alpha1.Cache
+	Type := "enclave-cache-pool"
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithDialer(UnixConnect))
 	if err != nil {
@@ -86,6 +101,15 @@ func SaveCache(ID string, subtype string, enclaveinfo *v1alpha1.Enclave) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	healthzResp, err := c.Healthz(ctx, &v1alpha1.HealthzRequest{Type: Type})
+	if err != nil {
+		return nil
+	}
+	if !healthzResp.Ok {
+		logrus.Warnf("EPM service is not in good running state!")
+		return nil
+	}
+
 	if enclaveinfo == nil {
 		enclaveinfo = GetParseMaps(os.Getpid())
 	}
@@ -96,7 +120,7 @@ func SaveCache(ID string, subtype string, enclaveinfo *v1alpha1.Enclave) error {
 	}
 
 	cache.ID = ID
-	cache.Type = "enclave-cache-pool"
+	cache.Type = Type
 	cache.SubType = subtype
 
 	_, err = c.SaveCache(ctx, &v1alpha1.SaveCacheRequest{Cache: &cache})

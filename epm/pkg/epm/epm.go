@@ -122,6 +122,21 @@ func (s *EnclavePoolManagerServer) LoadCache(ctx context.Context, req *v1alpha1.
 	return &v1alpha1.LoadCacheResponse{Ok: true}, nil
 }
 
+// Healthz represents epm service's running state
+func (s *EnclavePoolManagerServer) Healthz(ctx context.Context, req *v1alpha1.HealthzRequest) (*v1alpha1.HealthzResponse, error) {
+	manager, err := s.getCachePoolManager(req.Type)
+	if err != nil {
+		glog.Errorf("cache pool type %s is not found. error: %++v", req.Type, err)
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	if !manager.Healthz() {
+		glog.Errorf("health check failed!")
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	glog.Infof("health check successfully!")
+	return &v1alpha1.HealthzResponse{Ok: true}, nil
+}
+
 // RegisterCachePoolManager register the cache pool manager to the cache pool manager server
 func (s *EnclavePoolManagerServer) RegisterCachePoolManager(m EnclavePool) {
 	if s.cachePools == nil {
