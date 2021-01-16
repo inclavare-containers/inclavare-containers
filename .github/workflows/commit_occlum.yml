@@ -53,7 +53,7 @@ jobs:
         docker build . -t occlum-app -f /root/Dockerfile-occlum"
 
     - name: Run Occlum image
-      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance occlum-app"
+      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance -e ENCLAVE_RUNTIME_LOGLEVEL="info" occlum-app"
 
     - name: Run Occlum bundle
       if: always()

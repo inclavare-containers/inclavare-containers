@@ -56,7 +56,7 @@ jobs:
         count=0;
         while true; do
         let count++;
-        docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave;
+        docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave;
         if [ $? -eq 0 ]; then
           break;
         elif [ $count -ge 5 ]; then
@@ -72,11 +72,11 @@ jobs:
 
     - name: Run skeleton v2
       if: always()
-      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
 
     - name: Run skeleton v3
       if: always()
-      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug skeleton-enclave"
+      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
 
     - name: Run skeleton v2 bundle
       if: always()
