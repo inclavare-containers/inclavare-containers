@@ -113,7 +113,8 @@ finally, configure enclave runtime as following:
   "annotations": {
       "enclave.type": "intelSgx",
       "enclave.runtime.path": "/opt/occlum/build/lib/libocclum-pal.so",
-      "enclave.runtime.args": "occlum_instance"
+      "enclave.runtime.args": "occlum_instance",
+      "enclave.runtime.loglevel": "info"
   }
 ```
 
@@ -121,6 +122,7 @@ where:
 - @enclave.type: specify the type of enclave hardware to use, such as `intelSgx`.
 - @enclave.runtime.path: specify the path to enclave runtime to launch. For an Occlum application, you need to specify the path to `libocclum-pal.so`.
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, separated by the comma.
+- @enclave.runtime.loglevel: specify the log level of the enclave runtime, such as "trace", "debug", "info", "warning", "error", "fatal", "panic", "off".
 
 ## Run Occlum application
 Assuming you have an OCI bundle from the previous step you can execute the container in this way.

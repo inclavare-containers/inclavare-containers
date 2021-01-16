@@ -132,6 +132,7 @@ docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v${SKELETON_PAL_VERSION}.so \
   -e ENCLAVE_RUNTIME_ARGS="debug" \
+  -e ENCLAVE_RUNTIME_LOGLEVEL="info" \
   skeleton-enclave
 ```
 
@@ -181,7 +182,8 @@ In order to run the skeleton bundle with `rune`, you need to configure enclave r
   "annotations": {
       "enclave.type": "intelSgx",
       "enclave.runtime.path": "/usr/lib/liberpal-skeleton-v${SKELETON_PAL_VERSION}.so",
-      "enclave.runtime.args": "debug"
+      "enclave.runtime.args": "debug",
+      "enclave.runtime.loglevel": "info"
   }
 ```
 
@@ -189,6 +191,7 @@ where:
 - @enclave.type: specify the type of enclave hardware to use, such as intelSgx.
 - @enclave.runtime.path: specify the path to enclave runtime to launch.
 - @enclave.runtime.args: specify the specific arguments to enclave runtime, seperated by the comma.
+- @enclave.runtime.loglevel: specify the log level of the enclave runtime, such as "trace", "debug", "info", "warning", "error", "fatal", "panic", "off".
 
 ## Run skeleton OCI bundle
 
@@ -290,6 +293,7 @@ docker run -it --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
   -e ENCLAVE_RUNTIME_ARGS="debug" \
+  -e ENCLAVE_RUNTIME_LOGLEVEL="info" \
   skeleton-enclave
 ```
 
@@ -301,7 +305,8 @@ Assuming you have an OCI bundle according to previous steps, please add config i
 "annotations": {
 	"enclave.type": "intelSgx",
 	"enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
-	"enclave.runtime.args": "debug"
+	"enclave.runtime.args": "debug",
+	"enclave.runtime.loglevel": "info"
 }
 ```
 
@@ -327,6 +332,7 @@ Assuming you have an OCI bundle according to previous steps, please add config i
 	"annotations": {
 		"enclave.runtime.args": "debug backend-kvm kvm-kernel=/path/to/bzImage kvm-rootfs=/ kvm-init=/bin/bash",
 		"enclave.runtime.path": "/path/to/liberpal-skeleton-v2.so",
+		"enclave.runtime.loglevel": "info"
 	},
 	"linux": {
 		"devices": [
