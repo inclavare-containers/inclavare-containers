@@ -94,7 +94,7 @@ base_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 occlum_workspace=${base_dir}/occlum_workspace
 
 temp=$(getopt -a -o a:r:w:p:c:e:u:m:s:k:n: -l action:,rootfs:,work_dir:,entry_point:,occlum_config_path:,enclave_config_path:,\
-unsigned_encalve_path:,unsigned_material_path:,signed_enclave_path:,public_key_path:,signature_path: -- "$@")
+unsigned_enclave_path:,unsigned_material_path:,signed_enclave_path:,public_key_path:,signature_path: -- "$@")
 eval set -- "$temp"
 
 while true
@@ -112,8 +112,8 @@ do
       occlum_config_path=$2; shift;;
     -e|--enclave_config_path)
       enclave_config_path=$2; shift;;
-    -u|--unsigned_encalve_path)
-      unsigned_encalve_path=$2; shift;;
+    -u|--unsigned_enclave_path)
+      unsigned_enclave_path=$2; shift;;
     -m|--unsigned_material_path)
       unsigned_material_path=$2; shift;;
     -s|--signed_enclave_path)
@@ -220,23 +220,23 @@ function buildUnsignedEnclaveWithBundleCache0(){
 }
 
 function generateSigningMaterial() {
-  if [[ "${enclave_config_path}" == "" || "${unsigned_encalve_path}" == "" || "${unsigned_material_path}" == ""  ]]; then
-    echo "GenerateSigningMaterial:: the argumentes should not be empty: enclave_config_path, unsigned_encalve_path, unsigned_material_path"
+  if [[ "${enclave_config_path}" == "" || "${unsigned_enclave_path}" == "" || "${unsigned_material_path}" == ""  ]]; then
+    echo "GenerateSigningMaterial:: the argumentes should not be empty: enclave_config_path, unsigned_enclave_path, unsigned_material_path"
     exit 1
   fi
   #if [[ -f ${occlum_json_file_path} && ! -f ${enclave_config_path} ]]; then
   #	/opt/occlum/build/bin/gen_enclave_conf -i ${occlum_json_file_path} -o ${enclave_config_path}
   #fi
-  /opt/intel/sgxsdk/bin/x64/sgx_sign gendata -enclave ${unsigned_encalve_path} -config ${enclave_config_path} -out ${unsigned_material_path}
+  /opt/intel/sgxsdk/bin/x64/sgx_sign gendata -enclave ${unsigned_enclave_path} -config ${enclave_config_path} -out ${unsigned_material_path}
 }
 
 function cascadeEnclaveSignature() {
-  if [[ "${enclave_config_path}" == "" || "${unsigned_encalve_path}" == "" || "${unsigned_material_path}" == "" \
+  if [[ "${enclave_config_path}" == "" || "${unsigned_enclave_path}" == "" || "${unsigned_material_path}" == "" \
 	|| "${signed_enclave_path}" == "" || "${public_key_path}" == "" || "${signature_path}" == "" ]]; then
-    echo "CascadeEnclaveSignature:: the argumentes should not be empty: enclave_config_path, unsigned_encalve_path, unsigned_material_path, signed_enclave_path, public_key_path, signature_path"
+    echo "CascadeEnclaveSignature:: the argumentes should not be empty: enclave_config_path, unsigned_enclave_path, unsigned_material_path, signed_enclave_path, public_key_path, signature_path"
     exit 1
   fi
-  /opt/intel/sgxsdk/bin/x64/sgx_sign catsig -enclave ${unsigned_encalve_path} -config ${enclave_config_path} -out ${signed_enclave_path} -key ${public_key_path} \
+  /opt/intel/sgxsdk/bin/x64/sgx_sign catsig -enclave ${unsigned_enclave_path} -config ${enclave_config_path} -out ${signed_enclave_path} -key ${public_key_path} \
     -sig ${signature_path} -unsigned ${unsigned_material_path}
 }
 
