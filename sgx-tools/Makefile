@@ -12,8 +12,12 @@ COMMIT ?= $(if $(shell git status --porcelain --untracked-files=no),"${COMMIT_NO
 
 VERSION := ${shell cat ./VERSION}
 SOURCES := $(shell find . 2>&1 | grep -E '.*\.(c|h|go)$$')
-$(APP): $(SOURCES)
+PROTO_DIR := proto
+$(APP): $(SOURCES) $(patsubst %.proto,%.pb.go,$(wildcard $(PROTO_DIR)/*.proto))
 	$(GO) build -buildmode=pie $(EXTRA_FLAGS) -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION} $(EXTRA_LDFLAGS)" -o $(APP) .
+
+%.pb.go: %.proto
+	@protoc --proto_path=$(PROTO_DIR) --go_out=$(PROTO_DIR) $^
 
 clean:
 	@rm -f $(APP) test/*.token

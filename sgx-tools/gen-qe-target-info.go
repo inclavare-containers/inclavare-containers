@@ -1,10 +1,12 @@
 package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
-	"github.com/inclavare-containers/rune/libenclave/intelsgx"
+	"fmt"
+	// "github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"io/ioutil"
+	"strings"
 )
 
 var generateQeTargetInfoCommand = cli.Command{
@@ -18,6 +20,10 @@ For example, save the target information file about Quoting Enclave retrieved fr
 	# sgx-tools gen-qe-target-info --targetinfo foo`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
+			Name:  "quoteType",
+			Usage: "specify the SGX quote type such as epid for unlinkable, epid for linkable and ecdsa",
+		},
+		cli.StringFlag{
 			Name:  "targetinfo",
 			Usage: "path to the output target information file containing TARGETINFO",
 		},
@@ -27,9 +33,13 @@ For example, save the target information file about Quoting Enclave retrieved fr
 			logrus.SetLevel(logrus.DebugLevel)
 		}
 
-		ti, err := intelsgx.GetQeTargetInfo()
+		quoteType := context.String("quoteType")
+		if !strings.EqualFold(quoteType, quoteTypeEcdsa) && !strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) && !strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+			return fmt.Errorf("Unsupport quote type: %v", quoteType)
+		}
+
+		ti, err := GetQeTargetInfoEx(quoteType)
 		if err != nil {
-			logrus.Print(err)
 			return err
 		}
 
