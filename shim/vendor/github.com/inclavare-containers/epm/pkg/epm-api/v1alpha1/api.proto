@@ -40,6 +40,8 @@ service EnclavePoolManager {
     rpc DeleteCache(DeleteCacheRequest) returns (DeleteCacheResponse) {}
     // LoadCache represents load the specified cache data to work directory
     rpc LoadCache(LoadCacheRequest) returns (LoadCacheResponse) {}
+    // Healthz represents epm service is in running state
+    rpc Healthz(HealthzRequest) returns (HealthzResponse) {}
 }
 
 // GetCacheRequest
@@ -109,6 +111,7 @@ message DeleteCacheRequest {
     // ID represents the id of the cache
     string ID = 3;
 }
+
 message DeleteCacheResponse {
     // Ok represents whether the cache is deleted successfully
     bool ok = 1;
@@ -124,7 +127,18 @@ message LoadCacheRequest {
     // TargetPath represents the work directory for loading the cache data
     string targetPath = 4;
 }
+
 message LoadCacheResponse {
     // Ok represents whether the cache is loaded successfully
+    bool ok = 1;
+}
+
+message HealthzRequest {
+	// Type represents the type of enclave pool
+	string type = 1;
+}
+
+message HealthzResponse {
+    // Ok represents whether epm service is running successfully
     bool ok = 1;
 }
