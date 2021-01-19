@@ -94,7 +94,7 @@ func (o *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 		return "", err
 	}
 
-	// Copy the script files that are used to build encalve.so by occlum into rootfs
+	// Copy the script files that are used to build enclave.so by occlum into rootfs
 	rootfsDir := filepath.Join(req.Bundle, rootfsDirName)
 	dataDir := filepath.Join(req.Bundle, dataDirName)
 	os.MkdirAll(dataDir, 0755)
@@ -232,7 +232,7 @@ func (o *occlum) GenerateSigningMaterial(req *task.CreateTaskRequest, args *carr
 		filepath.Join(dataDir, carrierScriptFileName),
 		"--action", "generateSigningMaterial",
 		"--enclave_config_path", args.Config,
-		"--unsigned_encalve_path", args.Enclave,
+		"--unsigned_enclave_path", args.Enclave,
 		"--unsigned_material_path", signingMaterial,
 	}
 	logrus.Debugf("GenerateSigningMaterial: sgx_sign gendata command: %v", cmdArgs)
@@ -289,7 +289,7 @@ func (o *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carr
 		filepath.Join(dataDir, carrierScriptFileName),
 		"--action", "cascadeEnclaveSignature",
 		"--enclave_config_path", args.Config,
-		"--unsigned_encalve_path", args.Enclave,
+		"--unsigned_enclave_path", args.Enclave,
 		"--unsigned_material_path", args.SigningMaterial,
 		"--signed_enclave_path", signedEnclave,
 		"--public_key_path", args.Key,
