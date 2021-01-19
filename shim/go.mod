@@ -19,7 +19,7 @@ require (
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000
 	github.com/inclavare-containers/rune v0.0.0-00010101000000-000000000000
