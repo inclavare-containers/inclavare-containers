@@ -69,5 +69,14 @@ jobs:
         sed -i '145 c \"enclave.runtime.path\": \"/var/run/rune/liberpal-skeleton-v3.so\",' config.json;
         rune --debug run ra"
 
+    - name: Run skeleton v3 with no epm
+      if: always()
+      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug,no-epm -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
+
+    - name: Run skeleton v3 bundle with no epm
+      run: |
+        docker exec $rune_test bash -c "sed -i '143 c \"enclave.runtime.args\": \"debug,no-epm\",' config.json;
+        rune --debug run ra"
+
     - name: Kill the container
       run: docker stop $rune_test
