@@ -4,12 +4,14 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/go-restruct/restruct"
+	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
 	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 	"github.com/inclavare-containers/rune/libenclave/epm"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"log"
 	"os"
+	"strings"
 )
 
 const (
@@ -19,6 +21,7 @@ const (
 )
 
 func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
+	var enclaveinfo *v1alpha1.Enclave
 	/* Assuming v1 is used */
 	api := &enclaveRuntimePalApiV1{}
 	ver := api.get_version()
@@ -38,20 +41,23 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 
 	apiV3 := &enclaveRuntimePalApiV3{}
 
-       /* enclaveinfo.Layout retrieves from /proc/pid/mmaps, in file
-	* mmaps /dev/sgx/enclave mmaping address is sorted from low
-	* address to high one. So layout[0].Addr will be minimum.
-	*/
-	pal.enclaveSubType = EnclaveSubType
-	enclaveinfo := epm.GetEnclave(pal.enclaveSubType)
-	if enclaveinfo != nil {
-		epm.SgxMmap(*enclaveinfo)
-		addr = enclaveinfo.Layout[0].Addr
-		fd = int(enclaveinfo.Fd)
+	no_epm := true
+	if !strings.Contains(args, "no-epm") {
+		no_epm = false
+	       /* enclaveinfo.Layout retrieves from /proc/pid/mmaps, in file
+		* mmaps /dev/sgx/enclave mmaping address is sorted from low
+		* address to high one. So layout[0].Addr will be minimum.
+		*/
+		pal.enclaveSubType = EnclaveSubType
+		enclaveinfo = epm.GetEnclave(pal.enclaveSubType)
+		if enclaveinfo != nil {
+			epm.SgxMmap(*enclaveinfo)
+			addr = enclaveinfo.Layout[0].Addr
+			fd = int(enclaveinfo.Fd)
+		}
 	}
-
 	err := apiV3.init(args, logLevel, fd, addr)
-	if err == nil {
+	if err == nil && !no_epm {
 		pal.enclavePoolID = epm.SavePreCache(pal.enclaveSubType, enclaveinfo)
 	}
 
