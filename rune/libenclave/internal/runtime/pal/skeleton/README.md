@@ -297,6 +297,17 @@ docker run -it --rm --runtime=rune \
   skeleton-enclave
 ```
 
+For users who don't want to use epm, please append "no-epm" as below:
+
+```shell
+docker run -it --rm --runtime=rune \
+  -e ENCLAVE_TYPE=intelSgx \
+  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
+  -e ENCLAVE_RUNTIME_ARGS="debug,no-epm" \
+  -e ENCLAVE_RUNTIME_LOGLEVEL="info" \
+  skeleton-enclave
+```
+
 #### Run skeleton with epm by OCI bundle
 
 Assuming you have an OCI bundle according to previous steps, please add config into config.json as following:
@@ -307,6 +318,17 @@ Assuming you have an OCI bundle according to previous steps, please add config i
 	"enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
 	"enclave.runtime.args": "debug",
 	"enclave.runtime.loglevel": "info"
+}
+```
+
+For users who don't want to use epm, please append "no-epm" as below:
+
+```json
+"annotations": {
+        "enclave.type": "intelSgx",
+        "enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
+        "enclave.runtime.args": "debug,no-epm",
+        "enclave.runtime.loglevel": "info"
 }
 ```
 
