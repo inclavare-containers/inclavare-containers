@@ -1,0 +1,81 @@
+From 9ddf888865980f011ca458bf4d664a0947beaa04 Mon Sep 17 00:00:00 2001
+From: Jia Zhang <zhang.jia@linux.alibaba.com>
+Date: Sat, 23 Jan 2021 21:59:10 +0800
+Subject: [PATCH] QVL: allow to use SBX platform
+
+Both untrusted QVL and trusted QvE uses the built-in Intel Root CA
+certificate for product platforms to authenticate the root ca
+certificate in PCK certificate chain of the quote.
+
+This means the user cannot use QVL and QvE to verify the quote with
+the PCK certificate provided by Intel provisioning service for SBX
+platforms.
+
+The modified QVL applied to this patch at least allows the user to
+verify the quote rooting to Intel Root CA certificate for SBX platforms.
+
+For the details about the usage of this patch, please refer to
+https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platform/README.md
+
+Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
+---
+ QuoteVerification/QvE/Include/sgx_qve_def.h       | 4 ++++
+ QuoteVerification/dcap_quoteverify/linux/Makefile | 5 +++++
+ SampleCode/QuoteVerificationSample/Makefile       | 2 +-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/QuoteVerification/QvE/Include/sgx_qve_def.h b/QuoteVerification/QvE/Include/sgx_qve_def.h
+index a77eb8e..8fef95a 100644
+--- a/QuoteVerification/QvE/Include/sgx_qve_def.h
++++ b/QuoteVerification/QvE/Include/sgx_qve_def.h
+@@ -56,7 +56,11 @@
+ #define PLATFORM_ISSUER_ID "platform"
+ #define TRUSTED_ROOT_CA_CERT "-----BEGIN CERTIFICATE-----\nMIICjjCCAjSgAwIBAgIUImUM1lqdNInzg7SVUr9QGzknBqwwCgYIKoZIzj0EAwIw\naDEaMBgGA1UEAwwRSW50ZWwgU0dYIFJvb3QgQ0ExGjAYBgNVBAoMEUludGVsIENv\ncnBvcmF0aW9uMRQwEgYDVQQHDAtTYW50YSBDbGFyYTELMAkGA1UECAwCQ0ExCzAJ\nBgNVBAYTAlVTMB4XDTE4MDUyMTEwNDExMVoXDTMzMDUyMTEwNDExMFowaDEaMBgG\nA1UEAwwRSW50ZWwgU0dYIFJvb3QgQ0ExGjAYBgNVBAoMEUludGVsIENvcnBvcmF0\naW9uMRQwEgYDVQQHDAtTYW50YSBDbGFyYTELMAkGA1UECAwCQ0ExCzAJBgNVBAYT\nAlVTMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEC6nEwMDIYZOj/iPWsCzaEKi7\n1OiOSLRFhWGjbnBVJfVnkY4u3IjkDYYL0MxO4mqsyYjlBalTVYxFP2sJBK5zlKOB\nuzCBuDAfBgNVHSMEGDAWgBQiZQzWWp00ifODtJVSv1AbOScGrDBSBgNVHR8ESzBJ\nMEegRaBDhkFodHRwczovL2NlcnRpZmljYXRlcy50cnVzdGVkc2VydmljZXMuaW50\nZWwuY29tL0ludGVsU0dYUm9vdENBLmNybDAdBgNVHQ4EFgQUImUM1lqdNInzg7SV\nUr9QGzknBqwwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwCgYI\nKoZIzj0EAwIDSAAwRQIgQQs/08rycdPauCFk8UPQXCMAlsloBe7NwaQGTcdpa0EC\nIQCUt8SGvxKmjpcM/z0WP9Dvo8h2k5du1iWDdBkAn+0iiA==\n-----END CERTIFICATE-----"
+ 
++#ifndef USE_SBX_PLATFORM // For product platfrom
+ #define TRUSTED_ROOT_CA_CERT_V3 "-----BEGIN CERTIFICATE-----\nMIICjzCCAjSgAwIBAgIUImUM1lqdNInzg7SVUr9QGzknBqwwCgYIKoZIzj0EAwIw\naDEaMBgGA1UEAwwRSW50ZWwgU0dYIFJvb3QgQ0ExGjAYBgNVBAoMEUludGVsIENv\ncnBvcmF0aW9uMRQwEgYDVQQHDAtTYW50YSBDbGFyYTELMAkGA1UECAwCQ0ExCzAJ\nBgNVBAYTAlVTMB4XDTE4MDUyMTEwNDUxMFoXDTQ5MTIzMTIzNTk1OVowaDEaMBgG\nA1UEAwwRSW50ZWwgU0dYIFJvb3QgQ0ExGjAYBgNVBAoMEUludGVsIENvcnBvcmF0\naW9uMRQwEgYDVQQHDAtTYW50YSBDbGFyYTELMAkGA1UECAwCQ0ExCzAJBgNVBAYT\nAlVTMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEC6nEwMDIYZOj/iPWsCzaEKi7\n1OiOSLRFhWGjbnBVJfVnkY4u3IjkDYYL0MxO4mqsyYjlBalTVYxFP2sJBK5zlKOB\nuzCBuDAfBgNVHSMEGDAWgBQiZQzWWp00ifODtJVSv1AbOScGrDBSBgNVHR8ESzBJ\nMEegRaBDhkFodHRwczovL2NlcnRpZmljYXRlcy50cnVzdGVkc2VydmljZXMuaW50\nZWwuY29tL0ludGVsU0dYUm9vdENBLmRlcjAdBgNVHQ4EFgQUImUM1lqdNInzg7SV\nUr9QGzknBqwwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwCgYI\nKoZIzj0EAwIDSQAwRgIhAOW/5QkR+S9CiSDcNoowLuPRLsWGf/Yi7GSX94BgwTwg\nAiEA4J0lrHoMs+Xo5o/sX6O9QWxHRAvZUGOdRQ7cvqRXaqI=\n-----END CERTIFICATE-----"
++#else // For pre-product (SBX) platform
++#define TRUSTED_ROOT_CA_CERT_V3 "-----BEGIN CERTIFICATE-----\nMIIClDCCAjmgAwIBAgIVAOnoRFJTNlxLGJoR/EMYLKXcIIBIMAoGCCqGSM49BAMC\nMGgxGjAYBgNVBAMMEUludGVsIFNHWCBSb290IENBMRowGAYDVQQKDBFJbnRlbCBD\nb3Jwb3JhdGlvbjEUMBIGA1UEBwwLU2FudGEgQ2xhcmExCzAJBgNVBAgMAkNBMQsw\nCQYDVQQGEwJVUzAeFw0xOTEwMzEwOTQ5MjFaFw00OTEyMzEyMzU5NTlaMGgxGjAY\nBgNVBAMMEUludGVsIFNHWCBSb290IENBMRowGAYDVQQKDBFJbnRlbCBDb3Jwb3Jh\ndGlvbjEUMBIGA1UEBwwLU2FudGEgQ2xhcmExCzAJBgNVBAgMAkNBMQswCQYDVQQG\nEwJVUzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABE/6D/1WHNrWwPmNMIyBKMW5\nJ6JzMsjo6xP2vkK1cdZGb1PGRP/C/8ECgiDkmklmzwLzLi+000m7LLrtKJA3oC2j\ngb8wgbwwHwYDVR0jBBgwFoAU6ehEUlM2XEsYmhH8QxgspdwggEgwVgYDVR0fBE8w\nTTBLoEmgR4ZFaHR0cHM6Ly9zYngtY2VydGlmaWNhdGVzLnRydXN0ZWRzZXJ2aWNl\ncy5pbnRlbC5jb20vSW50ZWxTR1hSb290Q0EuZGVyMB0GA1UdDgQWBBTp6ERSUzZc\nSxiaEfxDGCyl3CCASDAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIB\nATAKBggqhkjOPQQDAgNJADBGAiEAzw9zdUiUHPMUd0C4mx41jlFZkrM3y5f1lgnV\nO7FbjOoCIQCoGtUmT4cXt7V+ySHbJ8Hob9AanpvXNH1ER+/gZF+opQ==\n-----END CERTIFICATE-----"
++#endif
+ 
+ #define UNUSED_PARAM(x) (void)(x)
+ #define CHECK_MANDATORY_PARAMS(param, param_size) (param == NULL || param_size == 0)
+diff --git a/QuoteVerification/dcap_quoteverify/linux/Makefile b/QuoteVerification/dcap_quoteverify/linux/Makefile
+index 2d3b3e5..dcc390d 100644
+--- a/QuoteVerification/dcap_quoteverify/linux/Makefile
++++ b/QuoteVerification/dcap_quoteverify/linux/Makefile
+@@ -32,6 +32,8 @@
+ 
+ include ../../buildenv.mk
+ 
++USE_SBX_PLATFORM ?=
++
+ INSTALL_PATH 	?= /usr/lib/x86_64-linux-gnu
+ QVE_SRC_PATH	:= $(DCAP_QV_DIR)/QvE
+ 
+@@ -50,6 +52,9 @@ QVL_VERIFY_INC	:= -I$(QVE_SRC_PATH)/Include \
+ 
+ SGX_COMMON_CFLAGS	+= -fPIC -Wno-attributes -USGX_TRUSTED
+ SGX_COMMON_CXXFLAGS += -fPIC -USGX_TRUSTED
++ifneq ($(USE_SBX_PLATFORM),)
++SGX_COMMON_CXXFLAGS += -DUSE_SBX_PLATFORM
++endif
+ 
+ QVL_LIB_OBJS := $(QVL_LIB_FILES:.cpp=_untrusted.o)
+ QVL_PARSER_OBJS := $(QVL_PARSER_FILES:.cpp=_untrusted.o)
+diff --git a/SampleCode/QuoteVerificationSample/Makefile b/SampleCode/QuoteVerificationSample/Makefile
+index 752b28a..d54fd92 100644
+--- a/SampleCode/QuoteVerificationSample/Makefile
++++ b/SampleCode/QuoteVerificationSample/Makefile
+@@ -173,7 +173,7 @@ all: .config_$(Build_Mode)_$(SGX_ARCH)
+ 	@$(MAKE) target
+ 
+ ifeq ($(Build_Mode), HW_RELEASE)
+-target:  $(App_Name) $(Enclave_Name)
++target:  $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name)
+ 	@echo "The project has been built in release hardware mode."
+ 	@echo "Please sign the $(Enclave_Name) first with your signing key before you run the $(App_Name) to launch and access the enclave."
+ 	@echo "To sign the enclave use the command:"
+-- 
+2.27.0
+
