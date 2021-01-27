@@ -164,18 +164,21 @@ func (o *occlum) BuildUnsignedEnclave(req *task.CreateTaskRequest, args *carrier
 		// Save bundle cache0
 		if cache, err := o.saveBundleCache(types.BundleCache0PoolType, &inputs0, nil, occlumInstanceDir); err != nil {
 			logrus.Warningf("BuildUnsignedEnclave: save bundle cache %s failed. error: %++v", types.BundleCache0PoolType, err)
-		} else if cache != nil && cache0ID == "" {
+		} else if cache != nil {
 			cache0ID = cache.ID
+			o.bundleCacheConfig.cacheIDMap[types.BundleCache0PoolType] = cache0ID
 		}
 	}
 	if o.bundleCacheConfig.cacheLevel == "" || o.bundleCacheConfig.cacheLevel == types.BundleCache0PoolType {
 		// Save bundle cache1
 		logrus.Debugf("BuildUnsignedEnclave: inputs1: %++v", inputs1)
-		if _, err := o.saveBundleCache(types.BundleCache1PoolType, &inputs1, &epm_api.Cache{
+		if cache, err := o.saveBundleCache(types.BundleCache1PoolType, &inputs1, &epm_api.Cache{
 			Type: string(types.BundleCache0PoolType),
 			ID:   cache0ID},
 			occlumInstanceDir); err != nil {
 			logrus.Warningf("BuildUnsignedEnclave: save bundle cache %s failed. error: %++v", types.BundleCache1PoolType, err)
+		} else if cache != nil {
+			o.bundleCacheConfig.cacheIDMap[types.BundleCache1PoolType] = cache.ID
 		}
 	}
 

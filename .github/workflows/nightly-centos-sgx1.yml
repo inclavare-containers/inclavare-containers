@@ -33,6 +33,7 @@ jobs:
         sudo pkill -9 kube-controller-manager || true
         sudo pkill -9 kube-proxy || true
         sudo pkill -9 kube-scheduler || true
+        sudo pkill -9 signatureserver || true
         sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
         sudo rpm -e shim-rune || true
         sudo rpm -e rune || true
@@ -47,6 +48,7 @@ jobs:
         sudo rm -fr /var/lib/etcd
         sudo rm -f /etc/yum.repos.d/occlum.repo
         sudo rm -f /etc/yum.repos.d/kubernetes.repo
+        sudo rm -fr /var/local/epm
         sudo ip link set cni0 down || true
         sudo ip link delete cni0 || true
         sudo ip link set flannel.1 down || true
@@ -95,6 +97,14 @@ jobs:
         rpm -ivh rune-$RUNE_VERSION*.rpm
         rpm -ivh shim-rune-$RUNE_VERSION*.rpm
         rpm -ivh epm-$RUNE_VERSION*.rpm
+        cd shim
+        openssl genrsa -out private_key.pem -3 3072
+        openssl rsa -in private_key.pem -pubout -out public_key.pem
+        go build -mod=vendor -o signatureserver cmd/signature-server/main.go || exit 1
+        chmod +x signatureserver
+        nohup ./signatureserver --public-key public_key.pem --private-key private_key.pem &
+        netstat -natp | grep 9080 || exit 1
+        echo -e "[signature]\n    server_address = \"http://127.0.0.1:9080\"" >> /etc/inclavare-containers/config.toml
         popd
 
     - name: Configure containerd
@@ -231,6 +241,8 @@ jobs:
             env:
             - name: RUNE_CARRIER
               value: occlum
+            - name: IMAGE_DIGEST
+              value: "408fbccd943bb"
             image: docker.io/inclavarecontainers/occlum-hello-world:scratch
             imagePullPolicy: IfNotPresent
             name: helloworld
@@ -352,6 +364,50 @@ jobs:
       run:
         timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
 
+    - name: Check epm bundle cache
+      run: |
+        test -d /var/local/epm/bundle-cache.occlum.cache0/408fbccd943bb/bundle-cache.occlum.cache1/4c7a9ce227326174b628f474aaaebe7b/bundle-cache.occlum.cache2 \
+          || exit 1
+
+    - name: Rerun hello-world pod
+      timeout-minutes: 10
+      run: |
+        kubectl delete pod helloworld
+        cat <<- EOF >$WORK_DIR/helloworld.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: helloworld
+          name: helloworld
+        spec:
+          runtimeClassName: rune
+          containers:
+          - command:
+            - /bin/hello_world
+            env:
+            - name: RUNE_CARRIER
+              value: occlum
+            - name: IMAGE_DIGEST
+              value: "408fbccd943bb"
+            image: docker.io/inclavarecontainers/occlum-hello-world:scratch
+            imagePullPolicy: IfNotPresent
+            name: helloworld
+            workingDir: /run/rune
+        EOF
+
+        kubectl apply -f $WORK_DIR/helloworld.yaml
+        sleep $nap_time
+        while true; do
+          count=$(kubectl get pod helloworld | grep "Running" | grep -c "1/1")
+          if [ $count -eq 1 ]; then
+            break
+          fi
+          sleep 5
+        done
+
+        timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
+
     - name: Clear the environment
       run: |
         sudo kubectl delete pod --all || true
@@ -365,6 +421,7 @@ jobs:
         sudo pkill -9 kube-controller-manager || true
         sudo pkill -9 kube-proxy || true
         sudo pkill -9 kube-scheduler || true
+        sudo pkill -9 signatureserver || true
         sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
         sudo rpm -e shim-rune || true
         sudo rpm -e rune || true
@@ -379,6 +436,7 @@ jobs:
         sudo rm -fr /var/lib/etcd
         sudo rm -f /etc/yum.repos.d/occlum.repo
         sudo rm -f /etc/yum.repos.d/kubernetes.repo
+        sudo rm -fr /var/local/epm
         sudo ip link set cni0 down || true
         sudo ip link delete cni0 || true
         sudo ip link set flannel.1 down || true
