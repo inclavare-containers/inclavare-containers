@@ -14,6 +14,9 @@ import (
 
 const (
 	aesmdSocket = "/var/run/aesmd/aesm.socket"
+	// In millisecond
+	aesmdTimeOut     = 15000
+	rawMessageLength = 4
 )
 
 func dialAesmd() (*net.UnixConn, error) {
@@ -47,7 +50,7 @@ func transmitAesmd(conn *net.UnixConn, req *pb.AesmServiceRequest) ([]byte, erro
 		return nil, err
 	}
 
-	rdata = append(rdata[:4])
+	rdata = append(rdata[:rawMessageLength])
 	if _, err = conn.Read(rdata); err != nil {
 		return nil, err
 	}
@@ -70,6 +73,64 @@ func transmitAesmd(conn *net.UnixConn, req *pb.AesmServiceRequest) ([]byte, erro
 	}
 
 	return rdata, nil
+}
+
+func DumpTargetInfo(targetInfo []byte) error {
+	ti := &Targetinfo{}
+	if err := restruct.Unpack(targetInfo, binary.LittleEndian, &ti); err != nil {
+		return err
+	}
+
+	logrus.Debugf("Quoting Enclave's TARGETINFO:\n")
+	logrus.Debugf("  Enclave Hash:       0x%v\n",
+		hex.EncodeToString(ti.Measurement[:]))
+	logrus.Debugf("  Enclave Attributes: 0x%v\n",
+		hex.EncodeToString(ti.Attributes[:]))
+	logrus.Debugf("  CET Attributes:     %#02x\n",
+		ti.CetAttributes)
+	logrus.Debugf("  Config SVN:         %#04x\n",
+		ti.ConfigSvn)
+	logrus.Debugf("  Misc Select:        %#08x\n",
+		ti.MiscSelect)
+	logrus.Debugf("  Config ID:          0x%v\n",
+		hex.EncodeToString(ti.ConfigId[:]))
+
+	return nil
+}
+
+func DumpLocalReport(report []byte) error {
+	r := &Report{}
+	if err := restruct.Unpack(report, binary.LittleEndian, &r); err != nil {
+		return err
+	}
+
+	logrus.Debugf("REPORT:")
+	logrus.Debugf("  CPU SVN:                        0x%v\n",
+		hex.EncodeToString(r.CpuSvn[:]))
+	logrus.Debugf("  Misc Select:                    %#08x\n",
+		r.MiscSelect)
+	logrus.Debugf("  Product ID:                     0x%v\n",
+		hex.EncodeToString(r.IsvExtProdId[:]))
+	logrus.Debugf("  Attributes:                     0x%v\n",
+		hex.EncodeToString(r.Attributes[:]))
+	logrus.Debugf("  Enclave Hash:                   0x%v\n",
+		hex.EncodeToString(r.MrEnclave[:]))
+	logrus.Debugf("  Enclave Signer:                 0x%v\n",
+		hex.EncodeToString(r.MrSigner[:]))
+	logrus.Debugf("  Config ID:                      0x%v\n",
+		hex.EncodeToString(r.ConfigId[:]))
+	logrus.Debugf("  ISV assigned Produdct ID:       %#04x\n",
+		r.IsvProdId)
+	logrus.Debugf("  ISV assigned SVN:               %d\n",
+		r.IsvSvn)
+	logrus.Debugf("  Config SVN:                     %#04x\n",
+		r.ConfigSvn)
+	logrus.Debugf("  ISV assigned Product Family ID: 0x%v\n",
+		hex.EncodeToString(r.IsvFamilyId[:]))
+	logrus.Debugf("  Report Data:                    0x%v\n",
+		hex.EncodeToString(r.ReportData[:]))
+
+	return nil
 }
 
 func GetLaunchToken(sig []byte) ([]byte, error) {
@@ -133,7 +194,7 @@ func GetLaunchToken(sig []byte) ([]byte, error) {
 		Enclavehash: mrenclave,
 		Modulus:     modulus,
 		Attributes:  attributes,
-		Timeout:     10000,
+		Timeout:     aesmdTimeOut,
 	}
 
 	rdata, err := transmitAesmd(conn, &req)
@@ -199,7 +260,7 @@ func GetQeTargetInfo() ([]byte, error) {
 
 	req := pb.AesmServiceRequest{}
 	req.GetQeTargetInfo = &pb.AesmServiceRequest_GetQeTargetInfo{
-		Timeout: 10000,
+		Timeout: aesmdTimeOut,
 	}
 
 	rdata, err := transmitAesmd(conn, &req)
@@ -224,24 +285,9 @@ func GetQeTargetInfo() ([]byte, error) {
 			len(targetInfo), TargetinfoLength)
 	}
 
-	ti := &Targetinfo{}
-	if err := restruct.Unpack(targetInfo, binary.LittleEndian, &ti); err != nil {
+	if err := DumpTargetInfo(targetInfo); err != nil {
 		return nil, err
 	}
-
-	logrus.Debugf("Quoting Enclave's TARGETINFO:\n")
-	logrus.Debugf("  Enclave Hash:       0x%v\n",
-		hex.EncodeToString(ti.Measurement[:]))
-	logrus.Debugf("  Enclave Attributes: 0x%v\n",
-		hex.EncodeToString(ti.Attributes[:]))
-	logrus.Debugf("  CET Attributes:     %#02x\n",
-		ti.CetAttributes)
-	logrus.Debugf("  Config SVN:         %#04x\n",
-		ti.ConfigSvn)
-	logrus.Debugf("  Misc Select:        %#08x\n",
-		ti.MiscSelect)
-	logrus.Debugf("  Config ID:          0x%v\n",
-		hex.EncodeToString(ti.ConfigId[:]))
 
 	return resp.GetQeTargetInfo.GetTargetinfo(), nil
 }
@@ -259,36 +305,9 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 		return nil, fmt.Errorf("SPID is not 16-byte long")
 	}
 
-	r := &Report{}
-	if err := restruct.Unpack(report, binary.LittleEndian, &r); err != nil {
+	if err := DumpLocalReport(report); err != nil {
 		return nil, err
 	}
-
-	logrus.Debugf("REPORT:")
-	logrus.Debugf("  CPU SVN:                        0x%v\n",
-		hex.EncodeToString(r.CpuSvn[:]))
-	logrus.Debugf("  Misc Select:                    %#08x\n",
-		r.MiscSelect)
-	logrus.Debugf("  Product ID:                     0x%v\n",
-		hex.EncodeToString(r.IsvExtProdId[:]))
-	logrus.Debugf("  Attributes:                     0x%v\n",
-		hex.EncodeToString(r.Attributes[:]))
-	logrus.Debugf("  Enclave Hash:                   0x%v\n",
-		hex.EncodeToString(r.MrEnclave[:]))
-	logrus.Debugf("  Enclave Signer:                 0x%v\n",
-		hex.EncodeToString(r.MrSigner[:]))
-	logrus.Debugf("  Config ID:                      0x%v\n",
-		hex.EncodeToString(r.ConfigId[:]))
-	logrus.Debugf("  ISV assigned Produdct ID:       %#04x\n",
-		r.IsvProdId)
-	logrus.Debugf("  ISV assigned SVN:               %d\n",
-		r.IsvSvn)
-	logrus.Debugf("  Config SVN:                     %#04x\n",
-		r.ConfigSvn)
-	logrus.Debugf("  ISV assigned Product Family ID: 0x%v\n",
-		hex.EncodeToString(r.IsvFamilyId[:]))
-	logrus.Debugf("  Report Data:                    0x%v\n",
-		hex.EncodeToString(r.ReportData[:]))
 
 	conn, err := dialAesmd()
 	if err != nil {
@@ -308,7 +327,7 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 		Spid:             s,
 		BufSize:          SgxMaxQuoteLength,
 		QeReportPresent:  &pb.AesmServiceRequest_GetQuote_QeReport{QeReport: false},
-		Timeout:          10000,
+		Timeout:          aesmdTimeOut,
 	}
 
 	rdata, err := transmitAesmd(conn, &req)
