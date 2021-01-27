@@ -21,12 +21,18 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type AesmServiceRequest struct {
-	GetQeTargetInfo      *AesmServiceRequest_GetQeTargetInfo `protobuf:"bytes,1,opt,name=getQeTargetInfo,proto3" json:"getQeTargetInfo,omitempty"`
-	GetQuote             *AesmServiceRequest_GetQuote        `protobuf:"bytes,2,opt,name=getQuote,proto3" json:"getQuote,omitempty"`
-	GetLaunchToken       *AesmServiceRequest_GetLaunchToken  `protobuf:"bytes,3,opt,name=getLaunchToken,proto3" json:"getLaunchToken,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                            `json:"-"`
-	XXX_unrecognized     []byte                              `json:"-"`
-	XXX_sizecache        int32                               `json:"-"`
+	GetQeTargetInfo            *AesmServiceRequest_GetQeTargetInfo                `protobuf:"bytes,1,opt,name=getQeTargetInfo,proto3" json:"getQeTargetInfo,omitempty"`
+	GetQuote                   *AesmServiceRequest_GetQuote                       `protobuf:"bytes,2,opt,name=getQuote,proto3" json:"getQuote,omitempty"`
+	GetLaunchToken             *AesmServiceRequest_GetLaunchToken                 `protobuf:"bytes,3,opt,name=getLaunchToken,proto3" json:"getLaunchToken,omitempty"`
+	InitQuoteExReq             *AesmServiceRequest_InitQuoteExRequest             `protobuf:"bytes,15,opt,name=initQuoteExReq,proto3" json:"initQuoteExReq,omitempty"`
+	GetQuoteSizeExReq          *AesmServiceRequest_GetQuoteSizeExRequest          `protobuf:"bytes,16,opt,name=getQuoteSizeExReq,proto3" json:"getQuoteSizeExReq,omitempty"`
+	GetQuoteExReq              *AesmServiceRequest_GetQuoteExRequest              `protobuf:"bytes,17,opt,name=getQuoteExReq,proto3" json:"getQuoteExReq,omitempty"`
+	SelectAttKeyIDReq          *AesmServiceRequest_SelectAttKeyIDRequest          `protobuf:"bytes,19,opt,name=selectAttKeyIDReq,proto3" json:"selectAttKeyIDReq,omitempty"`
+	GetSupportedAttKeyIDNumReq *AesmServiceRequest_GetSupportedAttKeyIDNumRequest `protobuf:"bytes,21,opt,name=getSupportedAttKeyIDNumReq,proto3" json:"getSupportedAttKeyIDNumReq,omitempty"`
+	GetSupportedAttKeyIDsReq   *AesmServiceRequest_GetSupportedAttKeyIDsRequest   `protobuf:"bytes,22,opt,name=getSupportedAttKeyIDsReq,proto3" json:"getSupportedAttKeyIDsReq,omitempty"`
+	XXX_NoUnkeyedLiteral       struct{}                                           `json:"-"`
+	XXX_unrecognized           []byte                                             `json:"-"`
+	XXX_sizecache              int32                                              `json:"-"`
 }
 
 func (m *AesmServiceRequest) Reset()         { *m = AesmServiceRequest{} }
@@ -71,6 +77,48 @@ func (m *AesmServiceRequest) GetGetQuote() *AesmServiceRequest_GetQuote {
 func (m *AesmServiceRequest) GetGetLaunchToken() *AesmServiceRequest_GetLaunchToken {
 	if m != nil {
 		return m.GetLaunchToken
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest) GetInitQuoteExReq() *AesmServiceRequest_InitQuoteExRequest {
+	if m != nil {
+		return m.InitQuoteExReq
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest) GetGetQuoteSizeExReq() *AesmServiceRequest_GetQuoteSizeExRequest {
+	if m != nil {
+		return m.GetQuoteSizeExReq
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest) GetGetQuoteExReq() *AesmServiceRequest_GetQuoteExRequest {
+	if m != nil {
+		return m.GetQuoteExReq
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest) GetSelectAttKeyIDReq() *AesmServiceRequest_SelectAttKeyIDRequest {
+	if m != nil {
+		return m.SelectAttKeyIDReq
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest) GetGetSupportedAttKeyIDNumReq() *AesmServiceRequest_GetSupportedAttKeyIDNumRequest {
+	if m != nil {
+		return m.GetSupportedAttKeyIDNumReq
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest) GetGetSupportedAttKeyIDsReq() *AesmServiceRequest_GetSupportedAttKeyIDsRequest {
+	if m != nil {
+		return m.GetSupportedAttKeyIDsReq
 	}
 	return nil
 }
@@ -318,13 +366,372 @@ func (m *AesmServiceRequest_GetLaunchToken) GetTimeout() uint32 {
 	return 0
 }
 
+type AesmServiceRequest_InitQuoteExRequest struct {
+	AttKeyId []byte `protobuf:"bytes,1,opt,name=att_key_id,json=attKeyId,proto3" json:"att_key_id,omitempty"`
+	// Types that are valid to be assigned to BPubKeyIdPresent:
+	//	*AesmServiceRequest_InitQuoteExRequest_BPubKeyId
+	BPubKeyIdPresent     isAesmServiceRequest_InitQuoteExRequest_BPubKeyIdPresent `protobuf_oneof:"b_pub_key_id_present"`
+	BufSize              uint64                                                   `protobuf:"varint,4,opt,name=buf_size,json=bufSize,proto3" json:"buf_size,omitempty"`
+	Timeout              uint32                                                   `protobuf:"varint,9,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                                 `json:"-"`
+	XXX_unrecognized     []byte                                                   `json:"-"`
+	XXX_sizecache        int32                                                    `json:"-"`
+}
+
+func (m *AesmServiceRequest_InitQuoteExRequest) Reset()         { *m = AesmServiceRequest_InitQuoteExRequest{} }
+func (m *AesmServiceRequest_InitQuoteExRequest) String() string { return proto.CompactTextString(m) }
+func (*AesmServiceRequest_InitQuoteExRequest) ProtoMessage()    {}
+func (*AesmServiceRequest_InitQuoteExRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{0, 3}
+}
+
+func (m *AesmServiceRequest_InitQuoteExRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceRequest_InitQuoteExRequest.Unmarshal(m, b)
+}
+func (m *AesmServiceRequest_InitQuoteExRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceRequest_InitQuoteExRequest.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceRequest_InitQuoteExRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceRequest_InitQuoteExRequest.Merge(m, src)
+}
+func (m *AesmServiceRequest_InitQuoteExRequest) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceRequest_InitQuoteExRequest.Size(m)
+}
+func (m *AesmServiceRequest_InitQuoteExRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceRequest_InitQuoteExRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceRequest_InitQuoteExRequest proto.InternalMessageInfo
+
+func (m *AesmServiceRequest_InitQuoteExRequest) GetAttKeyId() []byte {
+	if m != nil {
+		return m.AttKeyId
+	}
+	return nil
+}
+
+type isAesmServiceRequest_InitQuoteExRequest_BPubKeyIdPresent interface {
+	isAesmServiceRequest_InitQuoteExRequest_BPubKeyIdPresent()
+}
+
+type AesmServiceRequest_InitQuoteExRequest_BPubKeyId struct {
+	BPubKeyId bool `protobuf:"varint,3,opt,name=b_pub_key_id,json=bPubKeyId,proto3,oneof"`
+}
+
+func (*AesmServiceRequest_InitQuoteExRequest_BPubKeyId) isAesmServiceRequest_InitQuoteExRequest_BPubKeyIdPresent() {
+}
+
+func (m *AesmServiceRequest_InitQuoteExRequest) GetBPubKeyIdPresent() isAesmServiceRequest_InitQuoteExRequest_BPubKeyIdPresent {
+	if m != nil {
+		return m.BPubKeyIdPresent
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest_InitQuoteExRequest) GetBPubKeyId() bool {
+	if x, ok := m.GetBPubKeyIdPresent().(*AesmServiceRequest_InitQuoteExRequest_BPubKeyId); ok {
+		return x.BPubKeyId
+	}
+	return false
+}
+
+func (m *AesmServiceRequest_InitQuoteExRequest) GetBufSize() uint64 {
+	if m != nil {
+		return m.BufSize
+	}
+	return 0
+}
+
+func (m *AesmServiceRequest_InitQuoteExRequest) GetTimeout() uint32 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*AesmServiceRequest_InitQuoteExRequest) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*AesmServiceRequest_InitQuoteExRequest_BPubKeyId)(nil),
+	}
+}
+
+type AesmServiceRequest_GetQuoteSizeExRequest struct {
+	AttKeyId             []byte   `protobuf:"bytes,1,opt,name=att_key_id,json=attKeyId,proto3" json:"att_key_id,omitempty"`
+	Timeout              uint32   `protobuf:"varint,9,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) Reset() {
+	*m = AesmServiceRequest_GetQuoteSizeExRequest{}
+}
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) String() string { return proto.CompactTextString(m) }
+func (*AesmServiceRequest_GetQuoteSizeExRequest) ProtoMessage()    {}
+func (*AesmServiceRequest_GetQuoteSizeExRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{0, 4}
+}
+
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceRequest_GetQuoteSizeExRequest.Unmarshal(m, b)
+}
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceRequest_GetQuoteSizeExRequest.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceRequest_GetQuoteSizeExRequest.Merge(m, src)
+}
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceRequest_GetQuoteSizeExRequest.Size(m)
+}
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceRequest_GetQuoteSizeExRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceRequest_GetQuoteSizeExRequest proto.InternalMessageInfo
+
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) GetAttKeyId() []byte {
+	if m != nil {
+		return m.AttKeyId
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest_GetQuoteSizeExRequest) GetTimeout() uint32 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
+type AesmServiceRequest_GetQuoteExRequest struct {
+	Report               []byte   `protobuf:"bytes,1,opt,name=report,proto3" json:"report,omitempty"`
+	AttKeyId             []byte   `protobuf:"bytes,2,opt,name=att_key_id,json=attKeyId,proto3" json:"att_key_id,omitempty"`
+	QeReportInfo         []byte   `protobuf:"bytes,3,opt,name=qe_report_info,json=qeReportInfo,proto3" json:"qe_report_info,omitempty"`
+	BufSize              uint32   `protobuf:"varint,4,opt,name=buf_size,json=bufSize,proto3" json:"buf_size,omitempty"`
+	Timeout              uint32   `protobuf:"varint,9,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceRequest_GetQuoteExRequest) Reset()         { *m = AesmServiceRequest_GetQuoteExRequest{} }
+func (m *AesmServiceRequest_GetQuoteExRequest) String() string { return proto.CompactTextString(m) }
+func (*AesmServiceRequest_GetQuoteExRequest) ProtoMessage()    {}
+func (*AesmServiceRequest_GetQuoteExRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{0, 5}
+}
+
+func (m *AesmServiceRequest_GetQuoteExRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceRequest_GetQuoteExRequest.Unmarshal(m, b)
+}
+func (m *AesmServiceRequest_GetQuoteExRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceRequest_GetQuoteExRequest.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceRequest_GetQuoteExRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceRequest_GetQuoteExRequest.Merge(m, src)
+}
+func (m *AesmServiceRequest_GetQuoteExRequest) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceRequest_GetQuoteExRequest.Size(m)
+}
+func (m *AesmServiceRequest_GetQuoteExRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceRequest_GetQuoteExRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceRequest_GetQuoteExRequest proto.InternalMessageInfo
+
+func (m *AesmServiceRequest_GetQuoteExRequest) GetReport() []byte {
+	if m != nil {
+		return m.Report
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest_GetQuoteExRequest) GetAttKeyId() []byte {
+	if m != nil {
+		return m.AttKeyId
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest_GetQuoteExRequest) GetQeReportInfo() []byte {
+	if m != nil {
+		return m.QeReportInfo
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest_GetQuoteExRequest) GetBufSize() uint32 {
+	if m != nil {
+		return m.BufSize
+	}
+	return 0
+}
+
+func (m *AesmServiceRequest_GetQuoteExRequest) GetTimeout() uint32 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
+type AesmServiceRequest_SelectAttKeyIDRequest struct {
+	AttKeyIdList         []byte   `protobuf:"bytes,1,opt,name=att_key_id_list,json=attKeyIdList,proto3" json:"att_key_id_list,omitempty"`
+	Timeout              uint32   `protobuf:"varint,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) Reset() {
+	*m = AesmServiceRequest_SelectAttKeyIDRequest{}
+}
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) String() string { return proto.CompactTextString(m) }
+func (*AesmServiceRequest_SelectAttKeyIDRequest) ProtoMessage()    {}
+func (*AesmServiceRequest_SelectAttKeyIDRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{0, 6}
+}
+
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceRequest_SelectAttKeyIDRequest.Unmarshal(m, b)
+}
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceRequest_SelectAttKeyIDRequest.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceRequest_SelectAttKeyIDRequest.Merge(m, src)
+}
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceRequest_SelectAttKeyIDRequest.Size(m)
+}
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceRequest_SelectAttKeyIDRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceRequest_SelectAttKeyIDRequest proto.InternalMessageInfo
+
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) GetAttKeyIdList() []byte {
+	if m != nil {
+		return m.AttKeyIdList
+	}
+	return nil
+}
+
+func (m *AesmServiceRequest_SelectAttKeyIDRequest) GetTimeout() uint32 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
+type AesmServiceRequest_GetSupportedAttKeyIDNumRequest struct {
+	Timeout              uint32   `protobuf:"varint,9,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) Reset() {
+	*m = AesmServiceRequest_GetSupportedAttKeyIDNumRequest{}
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AesmServiceRequest_GetSupportedAttKeyIDNumRequest) ProtoMessage() {}
+func (*AesmServiceRequest_GetSupportedAttKeyIDNumRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{0, 7}
+}
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDNumRequest.Unmarshal(m, b)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDNumRequest.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDNumRequest.Merge(m, src)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDNumRequest.Size(m)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDNumRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDNumRequest proto.InternalMessageInfo
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDNumRequest) GetTimeout() uint32 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
+type AesmServiceRequest_GetSupportedAttKeyIDsRequest struct {
+	BufSize              uint32   `protobuf:"varint,1,opt,name=buf_size,json=bufSize,proto3" json:"buf_size,omitempty"`
+	Timeout              uint32   `protobuf:"varint,9,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) Reset() {
+	*m = AesmServiceRequest_GetSupportedAttKeyIDsRequest{}
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AesmServiceRequest_GetSupportedAttKeyIDsRequest) ProtoMessage() {}
+func (*AesmServiceRequest_GetSupportedAttKeyIDsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{0, 8}
+}
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDsRequest.Unmarshal(m, b)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDsRequest.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDsRequest.Merge(m, src)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDsRequest.Size(m)
+}
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceRequest_GetSupportedAttKeyIDsRequest proto.InternalMessageInfo
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) GetBufSize() uint32 {
+	if m != nil {
+		return m.BufSize
+	}
+	return 0
+}
+
+func (m *AesmServiceRequest_GetSupportedAttKeyIDsRequest) GetTimeout() uint32 {
+	if m != nil {
+		return m.Timeout
+	}
+	return 0
+}
+
 type AesmServiceResponse struct {
-	GetQeTargetInfo      *AesmServiceResponse_GetQeTargetInfo `protobuf:"bytes,1,opt,name=getQeTargetInfo,proto3" json:"getQeTargetInfo,omitempty"`
-	GetQuote             *AesmServiceResponse_GetQuote        `protobuf:"bytes,2,opt,name=getQuote,proto3" json:"getQuote,omitempty"`
-	GetLaunchToken       *AesmServiceResponse_GetLaunchToken  `protobuf:"bytes,3,opt,name=getLaunchToken,proto3" json:"getLaunchToken,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                             `json:"-"`
-	XXX_unrecognized     []byte                               `json:"-"`
-	XXX_sizecache        int32                                `json:"-"`
+	GetQeTargetInfo            *AesmServiceResponse_GetQeTargetInfo                 `protobuf:"bytes,1,opt,name=getQeTargetInfo,proto3" json:"getQeTargetInfo,omitempty"`
+	GetQuote                   *AesmServiceResponse_GetQuote                        `protobuf:"bytes,2,opt,name=getQuote,proto3" json:"getQuote,omitempty"`
+	GetLaunchToken             *AesmServiceResponse_GetLaunchToken                  `protobuf:"bytes,3,opt,name=getLaunchToken,proto3" json:"getLaunchToken,omitempty"`
+	InitQuoteExRes             *AesmServiceResponse_InitQuoteExResponse             `protobuf:"bytes,15,opt,name=initQuoteExRes,proto3" json:"initQuoteExRes,omitempty"`
+	GetQuoteSizeExRes          *AesmServiceResponse_GetQuoteSizeExResponse          `protobuf:"bytes,16,opt,name=getQuoteSizeExRes,proto3" json:"getQuoteSizeExRes,omitempty"`
+	GetQuoteExRes              *AesmServiceResponse_GetQuoteExResponse              `protobuf:"bytes,17,opt,name=getQuoteExRes,proto3" json:"getQuoteExRes,omitempty"`
+	SelectAttKeyIDRes          *AesmServiceResponse_SelectAttKeyIDResponse          `protobuf:"bytes,19,opt,name=selectAttKeyIDRes,proto3" json:"selectAttKeyIDRes,omitempty"`
+	GetSupportedAttKeyIDNumRes *AesmServiceResponse_GetSupportedAttKeyIDNumResponse `protobuf:"bytes,21,opt,name=getSupportedAttKeyIDNumRes,proto3" json:"getSupportedAttKeyIDNumRes,omitempty"`
+	GetSupportedAttKeyIDsRes   *AesmServiceResponse_GetSupportedAttKeyIDsResponse   `protobuf:"bytes,22,opt,name=getSupportedAttKeyIDsRes,proto3" json:"getSupportedAttKeyIDsRes,omitempty"`
+	XXX_NoUnkeyedLiteral       struct{}                                             `json:"-"`
+	XXX_unrecognized           []byte                                               `json:"-"`
+	XXX_sizecache              int32                                                `json:"-"`
 }
 
 func (m *AesmServiceResponse) Reset()         { *m = AesmServiceResponse{} }
@@ -369,6 +776,48 @@ func (m *AesmServiceResponse) GetGetQuote() *AesmServiceResponse_GetQuote {
 func (m *AesmServiceResponse) GetGetLaunchToken() *AesmServiceResponse_GetLaunchToken {
 	if m != nil {
 		return m.GetLaunchToken
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse) GetInitQuoteExRes() *AesmServiceResponse_InitQuoteExResponse {
+	if m != nil {
+		return m.InitQuoteExRes
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse) GetGetQuoteSizeExRes() *AesmServiceResponse_GetQuoteSizeExResponse {
+	if m != nil {
+		return m.GetQuoteSizeExRes
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse) GetGetQuoteExRes() *AesmServiceResponse_GetQuoteExResponse {
+	if m != nil {
+		return m.GetQuoteExRes
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse) GetSelectAttKeyIDRes() *AesmServiceResponse_SelectAttKeyIDResponse {
+	if m != nil {
+		return m.SelectAttKeyIDRes
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse) GetGetSupportedAttKeyIDNumRes() *AesmServiceResponse_GetSupportedAttKeyIDNumResponse {
+	if m != nil {
+		return m.GetSupportedAttKeyIDNumRes
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse) GetGetSupportedAttKeyIDsRes() *AesmServiceResponse_GetSupportedAttKeyIDsResponse {
+	if m != nil {
+		return m.GetSupportedAttKeyIDsRes
 	}
 	return nil
 }
@@ -530,15 +979,353 @@ func (m *AesmServiceResponse_GetLaunchToken) GetToken() []byte {
 	return nil
 }
 
+type AesmServiceResponse_InitQuoteExResponse struct {
+	ErrorCode            uint32   `protobuf:"varint,1,opt,name=errorCode,proto3" json:"errorCode,omitempty"`
+	TargetInfo           []byte   `protobuf:"bytes,2,opt,name=target_info,json=targetInfo,proto3" json:"target_info,omitempty"`
+	PubKeyIdSize         uint64   `protobuf:"varint,3,opt,name=pub_key_id_size,json=pubKeyIdSize,proto3" json:"pub_key_id_size,omitempty"`
+	PubKeyId             []byte   `protobuf:"bytes,4,opt,name=pub_key_id,json=pubKeyId,proto3" json:"pub_key_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceResponse_InitQuoteExResponse) Reset() {
+	*m = AesmServiceResponse_InitQuoteExResponse{}
+}
+func (m *AesmServiceResponse_InitQuoteExResponse) String() string { return proto.CompactTextString(m) }
+func (*AesmServiceResponse_InitQuoteExResponse) ProtoMessage()    {}
+func (*AesmServiceResponse_InitQuoteExResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{1, 3}
+}
+
+func (m *AesmServiceResponse_InitQuoteExResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceResponse_InitQuoteExResponse.Unmarshal(m, b)
+}
+func (m *AesmServiceResponse_InitQuoteExResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceResponse_InitQuoteExResponse.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceResponse_InitQuoteExResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceResponse_InitQuoteExResponse.Merge(m, src)
+}
+func (m *AesmServiceResponse_InitQuoteExResponse) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceResponse_InitQuoteExResponse.Size(m)
+}
+func (m *AesmServiceResponse_InitQuoteExResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceResponse_InitQuoteExResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceResponse_InitQuoteExResponse proto.InternalMessageInfo
+
+func (m *AesmServiceResponse_InitQuoteExResponse) GetErrorCode() uint32 {
+	if m != nil {
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_InitQuoteExResponse) GetTargetInfo() []byte {
+	if m != nil {
+		return m.TargetInfo
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse_InitQuoteExResponse) GetPubKeyIdSize() uint64 {
+	if m != nil {
+		return m.PubKeyIdSize
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_InitQuoteExResponse) GetPubKeyId() []byte {
+	if m != nil {
+		return m.PubKeyId
+	}
+	return nil
+}
+
+type AesmServiceResponse_GetQuoteSizeExResponse struct {
+	ErrorCode            uint32   `protobuf:"varint,1,opt,name=errorCode,proto3" json:"errorCode,omitempty"`
+	QuoteSize            uint32   `protobuf:"varint,2,opt,name=quote_size,json=quoteSize,proto3" json:"quote_size,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) Reset() {
+	*m = AesmServiceResponse_GetQuoteSizeExResponse{}
+}
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AesmServiceResponse_GetQuoteSizeExResponse) ProtoMessage() {}
+func (*AesmServiceResponse_GetQuoteSizeExResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{1, 4}
+}
+
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceResponse_GetQuoteSizeExResponse.Unmarshal(m, b)
+}
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceResponse_GetQuoteSizeExResponse.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceResponse_GetQuoteSizeExResponse.Merge(m, src)
+}
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceResponse_GetQuoteSizeExResponse.Size(m)
+}
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceResponse_GetQuoteSizeExResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceResponse_GetQuoteSizeExResponse proto.InternalMessageInfo
+
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) GetErrorCode() uint32 {
+	if m != nil {
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_GetQuoteSizeExResponse) GetQuoteSize() uint32 {
+	if m != nil {
+		return m.QuoteSize
+	}
+	return 0
+}
+
+type AesmServiceResponse_GetQuoteExResponse struct {
+	ErrorCode            uint32   `protobuf:"varint,1,opt,name=errorCode,proto3" json:"errorCode,omitempty"`
+	Quote                []byte   `protobuf:"bytes,2,opt,name=quote,proto3" json:"quote,omitempty"`
+	QeReportInfo         []byte   `protobuf:"bytes,3,opt,name=qe_report_info,json=qeReportInfo,proto3" json:"qe_report_info,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceResponse_GetQuoteExResponse) Reset() {
+	*m = AesmServiceResponse_GetQuoteExResponse{}
+}
+func (m *AesmServiceResponse_GetQuoteExResponse) String() string { return proto.CompactTextString(m) }
+func (*AesmServiceResponse_GetQuoteExResponse) ProtoMessage()    {}
+func (*AesmServiceResponse_GetQuoteExResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{1, 5}
+}
+
+func (m *AesmServiceResponse_GetQuoteExResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceResponse_GetQuoteExResponse.Unmarshal(m, b)
+}
+func (m *AesmServiceResponse_GetQuoteExResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceResponse_GetQuoteExResponse.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceResponse_GetQuoteExResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceResponse_GetQuoteExResponse.Merge(m, src)
+}
+func (m *AesmServiceResponse_GetQuoteExResponse) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceResponse_GetQuoteExResponse.Size(m)
+}
+func (m *AesmServiceResponse_GetQuoteExResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceResponse_GetQuoteExResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceResponse_GetQuoteExResponse proto.InternalMessageInfo
+
+func (m *AesmServiceResponse_GetQuoteExResponse) GetErrorCode() uint32 {
+	if m != nil {
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_GetQuoteExResponse) GetQuote() []byte {
+	if m != nil {
+		return m.Quote
+	}
+	return nil
+}
+
+func (m *AesmServiceResponse_GetQuoteExResponse) GetQeReportInfo() []byte {
+	if m != nil {
+		return m.QeReportInfo
+	}
+	return nil
+}
+
+type AesmServiceResponse_SelectAttKeyIDResponse struct {
+	ErrorCode            uint32   `protobuf:"varint,1,opt,name=errorCode,proto3" json:"errorCode,omitempty"`
+	SelectedAttKeyId     []byte   `protobuf:"bytes,2,opt,name=selected_att_key_id,json=selectedAttKeyId,proto3" json:"selected_att_key_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) Reset() {
+	*m = AesmServiceResponse_SelectAttKeyIDResponse{}
+}
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AesmServiceResponse_SelectAttKeyIDResponse) ProtoMessage() {}
+func (*AesmServiceResponse_SelectAttKeyIDResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{1, 6}
+}
+
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceResponse_SelectAttKeyIDResponse.Unmarshal(m, b)
+}
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceResponse_SelectAttKeyIDResponse.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceResponse_SelectAttKeyIDResponse.Merge(m, src)
+}
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceResponse_SelectAttKeyIDResponse.Size(m)
+}
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceResponse_SelectAttKeyIDResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceResponse_SelectAttKeyIDResponse proto.InternalMessageInfo
+
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) GetErrorCode() uint32 {
+	if m != nil {
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_SelectAttKeyIDResponse) GetSelectedAttKeyId() []byte {
+	if m != nil {
+		return m.SelectedAttKeyId
+	}
+	return nil
+}
+
+type AesmServiceResponse_GetSupportedAttKeyIDNumResponse struct {
+	ErrorCode            uint32   `protobuf:"varint,1,opt,name=errorCode,proto3" json:"errorCode,omitempty"`
+	AttKeyIdNum          uint32   `protobuf:"varint,2,opt,name=att_key_id_num,json=attKeyIdNum,proto3" json:"att_key_id_num,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) Reset() {
+	*m = AesmServiceResponse_GetSupportedAttKeyIDNumResponse{}
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AesmServiceResponse_GetSupportedAttKeyIDNumResponse) ProtoMessage() {}
+func (*AesmServiceResponse_GetSupportedAttKeyIDNumResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{1, 7}
+}
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDNumResponse.Unmarshal(m, b)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDNumResponse.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDNumResponse.Merge(m, src)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDNumResponse.Size(m)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDNumResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDNumResponse proto.InternalMessageInfo
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) GetErrorCode() uint32 {
+	if m != nil {
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDNumResponse) GetAttKeyIdNum() uint32 {
+	if m != nil {
+		return m.AttKeyIdNum
+	}
+	return 0
+}
+
+type AesmServiceResponse_GetSupportedAttKeyIDsResponse struct {
+	ErrorCode            uint32   `protobuf:"varint,1,opt,name=errorCode,proto3" json:"errorCode,omitempty"`
+	AttKeyIds            []byte   `protobuf:"bytes,2,opt,name=att_key_ids,json=attKeyIds,proto3" json:"att_key_ids,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) Reset() {
+	*m = AesmServiceResponse_GetSupportedAttKeyIDsResponse{}
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AesmServiceResponse_GetSupportedAttKeyIDsResponse) ProtoMessage() {}
+func (*AesmServiceResponse_GetSupportedAttKeyIDsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85fe23d8fdbcfe93, []int{1, 8}
+}
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDsResponse.Unmarshal(m, b)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDsResponse.Marshal(b, m, deterministic)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDsResponse.Merge(m, src)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) XXX_Size() int {
+	return xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDsResponse.Size(m)
+}
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AesmServiceResponse_GetSupportedAttKeyIDsResponse proto.InternalMessageInfo
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) GetErrorCode() uint32 {
+	if m != nil {
+		return m.ErrorCode
+	}
+	return 0
+}
+
+func (m *AesmServiceResponse_GetSupportedAttKeyIDsResponse) GetAttKeyIds() []byte {
+	if m != nil {
+		return m.AttKeyIds
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*AesmServiceRequest)(nil), "aesm_service.AesmServiceRequest")
 	proto.RegisterType((*AesmServiceRequest_GetQeTargetInfo)(nil), "aesm_service.AesmServiceRequest.GetQeTargetInfo")
 	proto.RegisterType((*AesmServiceRequest_GetQuote)(nil), "aesm_service.AesmServiceRequest.GetQuote")
 	proto.RegisterType((*AesmServiceRequest_GetLaunchToken)(nil), "aesm_service.AesmServiceRequest.GetLaunchToken")
+	proto.RegisterType((*AesmServiceRequest_InitQuoteExRequest)(nil), "aesm_service.AesmServiceRequest.InitQuoteExRequest")
+	proto.RegisterType((*AesmServiceRequest_GetQuoteSizeExRequest)(nil), "aesm_service.AesmServiceRequest.GetQuoteSizeExRequest")
+	proto.RegisterType((*AesmServiceRequest_GetQuoteExRequest)(nil), "aesm_service.AesmServiceRequest.GetQuoteExRequest")
+	proto.RegisterType((*AesmServiceRequest_SelectAttKeyIDRequest)(nil), "aesm_service.AesmServiceRequest.SelectAttKeyIDRequest")
+	proto.RegisterType((*AesmServiceRequest_GetSupportedAttKeyIDNumRequest)(nil), "aesm_service.AesmServiceRequest.GetSupportedAttKeyIDNumRequest")
+	proto.RegisterType((*AesmServiceRequest_GetSupportedAttKeyIDsRequest)(nil), "aesm_service.AesmServiceRequest.GetSupportedAttKeyIDsRequest")
 	proto.RegisterType((*AesmServiceResponse)(nil), "aesm_service.AesmServiceResponse")
 	proto.RegisterType((*AesmServiceResponse_GetQeTargetInfo)(nil), "aesm_service.AesmServiceResponse.GetQeTargetInfo")
 	proto.RegisterType((*AesmServiceResponse_GetQuote)(nil), "aesm_service.AesmServiceResponse.GetQuote")
 	proto.RegisterType((*AesmServiceResponse_GetLaunchToken)(nil), "aesm_service.AesmServiceResponse.GetLaunchToken")
+	proto.RegisterType((*AesmServiceResponse_InitQuoteExResponse)(nil), "aesm_service.AesmServiceResponse.InitQuoteExResponse")
+	proto.RegisterType((*AesmServiceResponse_GetQuoteSizeExResponse)(nil), "aesm_service.AesmServiceResponse.GetQuoteSizeExResponse")
+	proto.RegisterType((*AesmServiceResponse_GetQuoteExResponse)(nil), "aesm_service.AesmServiceResponse.GetQuoteExResponse")
+	proto.RegisterType((*AesmServiceResponse_SelectAttKeyIDResponse)(nil), "aesm_service.AesmServiceResponse.SelectAttKeyIDResponse")
+	proto.RegisterType((*AesmServiceResponse_GetSupportedAttKeyIDNumResponse)(nil), "aesm_service.AesmServiceResponse.GetSupportedAttKeyIDNumResponse")
+	proto.RegisterType((*AesmServiceResponse_GetSupportedAttKeyIDsResponse)(nil), "aesm_service.AesmServiceResponse.GetSupportedAttKeyIDsResponse")
 }
 
 func init() {
@@ -546,37 +1333,72 @@ func init() {
 }
 
 var fileDescriptor_85fe23d8fdbcfe93 = []byte{
-	// 508 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
-	0x14, 0xc4, 0x6d, 0x92, 0x3a, 0xaf, 0x4e, 0x0b, 0xaf, 0x01, 0x19, 0x23, 0x20, 0xea, 0x29, 0x80,
-	0x08, 0x05, 0xae, 0x5c, 0xa8, 0x04, 0x14, 0x89, 0x0b, 0x9b, 0x48, 0x7c, 0x1d, 0x2c, 0x27, 0x7d,
-	0x71, 0x2c, 0x12, 0xaf, 0xbd, 0xbb, 0xae, 0xd4, 0x1e, 0x41, 0xe2, 0xd7, 0xf1, 0xa3, 0x90, 0x77,
-	0x1d, 0xe3, 0x24, 0xb8, 0xe4, 0xb6, 0x33, 0xda, 0x19, 0xbf, 0x37, 0x3b, 0x32, 0x60, 0x40, 0x72,
-	0xf1, 0x54, 0x92, 0xb8, 0x88, 0x26, 0x34, 0x48, 0x04, 0x57, 0x1c, 0x9d, 0x9c, 0xf3, 0x0b, 0xee,
-	0xf8, 0x77, 0x13, 0xf0, 0x35, 0xc9, 0xc5, 0xd0, 0x60, 0x46, 0x69, 0x46, 0x52, 0xe1, 0x57, 0x38,
-	0x0c, 0x49, 0x7d, 0xa4, 0x51, 0x20, 0x42, 0x52, 0xef, 0xe3, 0x29, 0x77, 0xad, 0x9e, 0xd5, 0xdf,
-	0x7f, 0x71, 0x32, 0xa8, 0xca, 0x07, 0x9b, 0xd2, 0xc1, 0xbb, 0x55, 0x1d, 0x5b, 0x37, 0xc2, 0x37,
-	0x60, 0xe7, 0x54, 0xc6, 0x15, 0xb9, 0x3b, 0xda, 0xf4, 0xd1, 0x56, 0xa6, 0xb9, 0x80, 0x95, 0x52,
-	0xfc, 0x04, 0x07, 0x21, 0xa9, 0x0f, 0x41, 0x16, 0x4f, 0x66, 0x23, 0xfe, 0x9d, 0x62, 0x77, 0x57,
-	0x9b, 0x3d, 0xdb, 0xc6, 0xac, 0x22, 0x63, 0x6b, 0x36, 0xde, 0x13, 0x38, 0x5c, 0xdb, 0x01, 0x5d,
-	0xd8, 0x53, 0xd1, 0x82, 0x78, 0xa6, 0xdc, 0x76, 0xcf, 0xea, 0x77, 0xd8, 0x12, 0x7a, 0x3f, 0x77,
-	0xc0, 0x5e, 0x0e, 0x87, 0x77, 0xa0, 0x25, 0x28, 0xe1, 0x42, 0xe9, 0xb0, 0x1c, 0x56, 0x20, 0x7c,
-	0x08, 0x90, 0xe6, 0x17, 0x7c, 0x75, 0x99, 0x98, 0x9d, 0x3b, 0x67, 0x37, 0x58, 0x5b, 0x73, 0xa3,
-	0xcb, 0x84, 0x10, 0xa1, 0x21, 0x93, 0xe8, 0x5c, 0x6f, 0xe0, 0x30, 0x7d, 0xc6, 0x2e, 0x34, 0x63,
-	0x1e, 0x4f, 0xc8, 0x6d, 0x68, 0xd2, 0x00, 0xbc, 0x0d, 0x2d, 0x19, 0x85, 0xbe, 0x98, 0xbb, 0x4d,
-	0x43, 0xcb, 0x28, 0x64, 0x73, 0xbc, 0x0b, 0xf6, 0x38, 0x9b, 0xfa, 0x32, 0xba, 0x22, 0xb7, 0x65,
-	0x26, 0x1c, 0x67, 0xd3, 0x61, 0x74, 0x45, 0x78, 0x1f, 0xda, 0x29, 0xf9, 0xc5, 0x5c, 0x7b, 0x3d,
-	0xab, 0x6f, 0x9f, 0x59, 0xcc, 0x4e, 0x89, 0x99, 0xd9, 0x6a, 0x57, 0x3b, 0xed, 0x02, 0xfe, 0x9d,
-	0xda, 0x4f, 0x04, 0x49, 0x8a, 0xd5, 0xe9, 0x11, 0xdc, 0x2a, 0xed, 0x96, 0xa4, 0xf7, 0xcb, 0x82,
-	0x83, 0xd5, 0x54, 0xb1, 0x07, 0xfb, 0x14, 0x4f, 0xe6, 0xc1, 0x05, 0xcd, 0x02, 0x39, 0x2b, 0x02,
-	0xa9, 0x52, 0xf9, 0x97, 0x17, 0xfc, 0x3c, 0x9b, 0x67, 0x52, 0x47, 0xe2, 0xb0, 0x25, 0xc4, 0x07,
-	0x00, 0x81, 0x52, 0x22, 0x1a, 0x67, 0x8a, 0x64, 0x11, 0x4a, 0x85, 0xa9, 0x9f, 0xf9, 0xf8, 0x47,
-	0x03, 0x8e, 0x56, 0x5e, 0x5c, 0x26, 0x3c, 0x96, 0x84, 0xdf, 0xea, 0xfa, 0xfc, 0xfc, 0x9a, 0xb6,
-	0x18, 0xed, 0xff, 0x0b, 0xfd, 0x76, 0xa3, 0xd0, 0x8f, 0xb7, 0x73, 0x5d, 0x6b, 0xf4, 0xe7, 0x9a,
-	0x46, 0x9f, 0x6c, 0xe5, 0x76, 0x5d, 0xa5, 0xbf, 0x6c, 0x56, 0xba, 0x0b, 0x4d, 0x12, 0x82, 0x0b,
-	0x9d, 0x43, 0x87, 0x19, 0x90, 0x27, 0xaf, 0xf4, 0x9d, 0x28, 0x8f, 0xc8, 0x3c, 0x4b, 0x85, 0xc1,
-	0x9b, 0xb0, 0x1b, 0x96, 0x3d, 0xcd, 0x8f, 0xde, 0xb0, 0xd2, 0xff, 0x7f, 0x7b, 0x76, 0xa1, 0x99,
-	0x96, 0xd9, 0x38, 0xcc, 0x00, 0xbc, 0x57, 0xad, 0xa5, 0xf1, 0x2b, 0x4b, 0xe9, 0xbd, 0xda, 0xa8,
-	0x53, 0xad, 0xb5, 0xd2, 0x41, 0x15, 0xd6, 0x1a, 0x8c, 0x5b, 0xfa, 0x47, 0xf7, 0xf2, 0x4f, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x78, 0xa8, 0xff, 0xa7, 0xfe, 0x04, 0x00, 0x00,
+	// 1063 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x57, 0x5b, 0x8f, 0xdb, 0x54,
+	0x10, 0xae, 0x77, 0xbb, 0xdb, 0x64, 0x92, 0x4d, 0x76, 0x27, 0xd9, 0xc8, 0x98, 0xbd, 0x51, 0xa8,
+	0xb4, 0x80, 0xba, 0x94, 0x16, 0x10, 0x42, 0xa0, 0x6a, 0x0b, 0x85, 0xae, 0xa8, 0x0a, 0x38, 0x8b,
+	0x58, 0x5a, 0x55, 0x56, 0x12, 0x9f, 0xcd, 0x5a, 0x4d, 0x6c, 0xc7, 0xe7, 0xb8, 0x22, 0xe5, 0x01,
+	0x21, 0x24, 0xfe, 0x03, 0x0f, 0xbc, 0x20, 0xfe, 0x11, 0x7f, 0x08, 0xf9, 0x5c, 0x12, 0x5f, 0xe2,
+	0x8b, 0xfa, 0x96, 0x19, 0x7b, 0xbe, 0x6f, 0x66, 0x8e, 0x67, 0xbe, 0x13, 0xc0, 0x01, 0xa1, 0xd3,
+	0xdb, 0x94, 0x04, 0x2f, 0x9d, 0x11, 0x39, 0xf1, 0x03, 0x8f, 0x79, 0xd8, 0x8c, 0x7c, 0x96, 0xf4,
+	0xdd, 0xfc, 0xaf, 0x0d, 0x78, 0x4a, 0xe8, 0xb4, 0x2f, 0x6c, 0x93, 0xcc, 0x42, 0x42, 0x19, 0x3e,
+	0x85, 0xf6, 0x98, 0xb0, 0x1f, 0xc8, 0xf9, 0x20, 0x18, 0x13, 0x76, 0xe6, 0x5e, 0x7a, 0xba, 0x76,
+	0xa4, 0x1d, 0x37, 0xee, 0xde, 0x39, 0x89, 0x87, 0x9f, 0x64, 0x43, 0x4f, 0xbe, 0x49, 0xc6, 0x99,
+	0x69, 0x20, 0x7c, 0x08, 0xb5, 0xc8, 0x15, 0x7a, 0x8c, 0xe8, 0x6b, 0x1c, 0xf4, 0xdd, 0x4a, 0xa0,
+	0x51, 0x80, 0xb9, 0x08, 0xc5, 0x9f, 0xa0, 0x35, 0x26, 0xec, 0xf1, 0x20, 0x74, 0x47, 0x57, 0xe7,
+	0xde, 0x0b, 0xe2, 0xea, 0xeb, 0x1c, 0xec, 0x83, 0x2a, 0x60, 0xb1, 0x30, 0x33, 0x05, 0x83, 0xcf,
+	0xa0, 0xe5, 0xb8, 0x8e, 0x60, 0x79, 0xf8, 0x8b, 0x49, 0x66, 0x7a, 0x9b, 0x03, 0xdf, 0x2b, 0x05,
+	0x3e, 0x4b, 0x84, 0x45, 0x2e, 0x33, 0x05, 0x85, 0x36, 0xec, 0xa8, 0x0a, 0xfa, 0xce, 0x2b, 0x89,
+	0xbf, 0xcd, 0xf1, 0x3f, 0xa9, 0xdc, 0x85, 0x45, 0x24, 0xa7, 0xc8, 0x02, 0xe2, 0x05, 0x6c, 0x29,
+	0xa7, 0x60, 0xd8, 0xe1, 0x0c, 0x77, 0x2b, 0x33, 0x2c, 0xd1, 0x93, 0x40, 0x51, 0xfe, 0x94, 0x4c,
+	0xc8, 0x88, 0x9d, 0x32, 0xf6, 0x2d, 0x99, 0x9f, 0x7d, 0x15, 0xa1, 0x77, 0x2a, 0xe6, 0xdf, 0x4f,
+	0x47, 0x8a, 0xfc, 0x33, 0x80, 0xf8, 0x1b, 0x18, 0x63, 0xc2, 0xfa, 0xa1, 0xef, 0x7b, 0x01, 0x23,
+	0xb6, 0x7a, 0xf4, 0x24, 0x9c, 0x46, 0x74, 0xbb, 0x9c, 0xee, 0x7e, 0x95, 0x62, 0x72, 0x20, 0x38,
+	0x6f, 0x01, 0x05, 0xce, 0x41, 0x5f, 0xf5, 0x94, 0x46, 0xf4, 0x3d, 0x4e, 0xff, 0xc5, 0x6b, 0xd1,
+	0x53, 0x45, 0x9e, 0x0b, 0x6f, 0xbc, 0x0f, 0xed, 0xd4, 0x08, 0xa1, 0x0e, 0x37, 0x98, 0x33, 0x25,
+	0x5e, 0xc8, 0xf4, 0xfa, 0x91, 0x76, 0xbc, 0x65, 0x2a, 0xd3, 0xf8, 0x63, 0x0d, 0x6a, 0xea, 0xcc,
+	0xb0, 0x07, 0x9b, 0x01, 0x89, 0x10, 0xf9, 0xac, 0x36, 0x4d, 0x69, 0xe1, 0x21, 0xc0, 0x2c, 0x7a,
+	0xc1, 0x62, 0x73, 0x5f, 0x8c, 0xdc, 0xd6, 0xa3, 0x6b, 0x66, 0x9d, 0xfb, 0xce, 0xe7, 0x3e, 0x41,
+	0x84, 0xeb, 0xd4, 0x77, 0x6c, 0x3e, 0x40, 0x4d, 0x93, 0xff, 0xc6, 0x2e, 0x6c, 0xb8, 0x9e, 0x3b,
+	0x22, 0xfa, 0x75, 0xee, 0x14, 0x06, 0xee, 0xc2, 0x26, 0x75, 0xc6, 0x56, 0x30, 0xd1, 0x37, 0x84,
+	0x9b, 0x3a, 0x63, 0x73, 0x82, 0x6f, 0x40, 0x6d, 0x18, 0x5e, 0x5a, 0xd4, 0x79, 0x45, 0xf4, 0x4d,
+	0x91, 0xe1, 0x30, 0xbc, 0x8c, 0xbe, 0x47, 0xdc, 0x87, 0xfa, 0x8c, 0x58, 0x32, 0xaf, 0x1b, 0x47,
+	0xda, 0x71, 0xed, 0x91, 0x66, 0xd6, 0x66, 0xc4, 0x14, 0xb9, 0xe5, 0x96, 0xf6, 0xa0, 0x0b, 0xb8,
+	0xcc, 0xda, 0xf2, 0x03, 0x42, 0x89, 0xcb, 0x1e, 0x74, 0x60, 0x67, 0x01, 0xa7, 0x9c, 0xc6, 0x9f,
+	0x1a, 0xb4, 0x92, 0x43, 0x8d, 0x47, 0xd0, 0x20, 0xee, 0x68, 0x32, 0x78, 0x49, 0xae, 0x06, 0xf4,
+	0x4a, 0x36, 0x24, 0xee, 0x8a, 0x98, 0xa7, 0x9e, 0x1d, 0x4e, 0x42, 0xca, 0x5b, 0xd2, 0x34, 0x95,
+	0x89, 0x07, 0x00, 0x03, 0xc6, 0x02, 0x67, 0x18, 0x32, 0x42, 0x65, 0x53, 0x62, 0x9e, 0x82, 0xe3,
+	0xf8, 0x47, 0x03, 0xcc, 0x2e, 0x01, 0xdc, 0xe3, 0x80, 0xd6, 0x0b, 0x32, 0xb7, 0x1c, 0x5b, 0xe6,
+	0x52, 0x1b, 0x88, 0x43, 0xb7, 0xf1, 0x2d, 0x68, 0x0e, 0x2d, 0x3f, 0x1c, 0xaa, 0xe7, 0xeb, 0xbc,
+	0x49, 0xd7, 0xcc, 0xfa, 0xf0, 0xfb, 0x70, 0x28, 0x5e, 0x89, 0xf7, 0x37, 0x3a, 0x8f, 0xeb, 0xcb,
+	0xfe, 0xe6, 0x37, 0xb0, 0x07, 0xdd, 0x38, 0xee, 0xa2, 0x5b, 0xdf, 0xc1, 0xee, 0xca, 0x45, 0x52,
+	0x92, 0x66, 0x7e, 0xd5, 0xff, 0x6a, 0xb0, 0x93, 0x59, 0x1c, 0xb9, 0x5f, 0x63, 0x92, 0x65, 0x2d,
+	0xc5, 0xf2, 0x0e, 0xb4, 0x96, 0xe7, 0xeb, 0x44, 0xba, 0x23, 0xfa, 0xdf, 0x54, 0x5f, 0x0c, 0x1f,
+	0x88, 0x74, 0x3f, 0xb6, 0x2a, 0xf4, 0xc3, 0xb8, 0x80, 0xdd, 0x95, 0x0b, 0x08, 0x6f, 0x41, 0x7b,
+	0x99, 0x91, 0x35, 0x71, 0xa8, 0x4a, 0xb9, 0xa9, 0xd2, 0x7a, 0xec, 0xd0, 0xc4, 0xa7, 0xba, 0x96,
+	0x44, 0xfe, 0x0c, 0x0e, 0x8a, 0x77, 0x4d, 0x41, 0x56, 0x7d, 0xd8, 0x2b, 0x5a, 0x14, 0x89, 0x52,
+	0xb5, 0x8a, 0xa5, 0xde, 0xfc, 0xbb, 0x05, 0x9d, 0xc4, 0x46, 0xa2, 0xbe, 0xe7, 0x52, 0x82, 0xcf,
+	0xf2, 0x64, 0xfd, 0xc3, 0x82, 0x6d, 0x26, 0x62, 0xcb, 0x75, 0xfd, 0xeb, 0x8c, 0xae, 0xbf, 0x57,
+	0x0d, 0x35, 0x25, 0xec, 0x17, 0x39, 0xc2, 0x7e, 0xa7, 0x12, 0x5a, 0x91, 0xb2, 0x3f, 0x4f, 0x29,
+	0x3b, 0x95, 0xca, 0xfe, 0x71, 0x39, 0x72, 0x62, 0xaa, 0x85, 0x2f, 0xa5, 0xed, 0x14, 0x2f, 0xb3,
+	0xda, 0x4e, 0xa5, 0xb6, 0x7f, 0x5a, 0xbd, 0x13, 0x8b, 0x50, 0x41, 0x92, 0x85, 0xc4, 0xa7, 0x49,
+	0x75, 0xa7, 0x52, 0xdd, 0x3f, 0xaa, 0xce, 0x11, 0xc3, 0x4f, 0x42, 0x45, 0x35, 0xa4, 0xe5, 0x98,
+	0x4a, 0x7d, 0xaf, 0x50, 0x43, 0x7a, 0xbe, 0x54, 0x0d, 0x19, 0x48, 0xfc, 0x5d, 0x2b, 0x90, 0x78,
+	0x2a, 0x25, 0xfe, 0xb4, 0x52, 0x45, 0x39, 0x18, 0x82, 0xba, 0x80, 0x04, 0x7f, 0xcd, 0x15, 0x79,
+	0x2a, 0x45, 0xfe, 0xfe, 0xeb, 0x25, 0x40, 0x17, 0xf4, 0xb9, 0x04, 0xc6, 0xcf, 0x59, 0x99, 0xef,
+	0xc2, 0x06, 0x09, 0x02, 0x2f, 0x90, 0x73, 0x2e, 0x8c, 0x48, 0x8d, 0x18, 0x7f, 0x87, 0x6f, 0x43,
+	0xb1, 0x2f, 0x63, 0x1e, 0xdc, 0x86, 0xf5, 0xf1, 0x42, 0xbb, 0xa3, 0x9f, 0x46, 0x3f, 0x76, 0x27,
+	0x58, 0x8d, 0xd9, 0x85, 0x8d, 0xd9, 0x62, 0x4e, 0x9b, 0xa6, 0x30, 0xf0, 0xcd, 0xb8, 0x54, 0x0b,
+	0xbc, 0x85, 0x50, 0x1b, 0x9f, 0x67, 0x24, 0x36, 0x17, 0x9a, 0xf1, 0xa1, 0x95, 0xd0, 0xdc, 0x30,
+	0xfe, 0xd2, 0xa0, 0xb3, 0x62, 0x84, 0x70, 0x0f, 0xea, 0x3c, 0xec, 0x4b, 0xcf, 0x56, 0xeb, 0x6d,
+	0xe9, 0xc0, 0x43, 0x68, 0x88, 0x42, 0xad, 0x6c, 0xed, 0xbc, 0x63, 0xb7, 0xa0, 0x1d, 0x13, 0x38,
+	0xbe, 0x23, 0xd7, 0xb9, 0x3c, 0x36, 0x7d, 0x29, 0x9d, 0x7c, 0x51, 0xee, 0x01, 0xc4, 0xf4, 0x55,
+	0x5c, 0x68, 0x6a, 0xea, 0x0d, 0xe3, 0x47, 0xe8, 0xad, 0x9e, 0xbd, 0x92, 0xec, 0xf6, 0xd5, 0xb5,
+	0x8a, 0xf3, 0x0a, 0x49, 0x10, 0x97, 0xaa, 0x08, 0xc6, 0x70, 0x01, 0xb3, 0xe3, 0x56, 0x02, 0xb9,
+	0xfa, 0x5c, 0x2a, 0x69, 0xa2, 0x41, 0xa0, 0xb7, 0x7a, 0xfc, 0x4a, 0x38, 0x6f, 0x43, 0x47, 0x8c,
+	0x27, 0xb1, 0xad, 0x8c, 0x30, 0x6f, 0xab, 0x47, 0x12, 0xd4, 0x36, 0x6c, 0x38, 0x2c, 0x99, 0xb9,
+	0x12, 0xbe, 0xb7, 0xa1, 0x15, 0x53, 0x5b, 0x37, 0x9c, 0xca, 0xd6, 0x35, 0x94, 0xd8, 0x3e, 0x09,
+	0xa7, 0xc6, 0x73, 0xd8, 0x2f, 0x1c, 0xac, 0x12, 0x8e, 0x03, 0x68, 0x2c, 0x39, 0xd4, 0xfd, 0xae,
+	0xae, 0x08, 0xe8, 0x70, 0x93, 0xff, 0x15, 0xbe, 0xf7, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x81,
+	0x2a, 0xb7, 0xc7, 0x20, 0x0f, 0x00, 0x00,
 }
