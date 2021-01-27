@@ -10,10 +10,12 @@ import (
 	pb "github.com/inclavare-containers/rune/libenclave/intelsgx/proto"
 	"github.com/sirupsen/logrus"
 	"net"
+	"strings"
 )
 
 const (
 	aesmdSocket = "/var/run/aesmd/aesm.socket"
+	nonceLength = 16
 	// In millisecond
 	aesmdTimeOut     = 15000
 	rawMessageLength = 4
@@ -131,6 +133,265 @@ func DumpLocalReport(report []byte) error {
 		hex.EncodeToString(r.ReportData[:]))
 
 	return nil
+}
+
+func initQuoteExRequest(akId []byte, akPubKeyRequired bool, bufSize uint64) ([]byte, uint64, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return nil, 0, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.InitQuoteExReq = &pb.AesmServiceRequest_InitQuoteExRequest{
+		AttKeyId:         akId,
+		BufSize:          bufSize,
+		BPubKeyIdPresent: &pb.AesmServiceRequest_InitQuoteExRequest_BPubKeyId{BPubKeyId: akPubKeyRequired},
+		Timeout:          aesmdTimeOut,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.InitQuoteExRes = &pb.AesmServiceResponse_InitQuoteExResponse{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return nil, 0, err
+	}
+
+	if errCode := resp.InitQuoteExRes.GetErrorCode(); errCode != 0 {
+		return nil, 0, fmt.Errorf("failed to call initQuoteExRequest (error code = %d)", errCode)
+	}
+
+	return resp.InitQuoteExRes.GetTargetInfo(), resp.InitQuoteExRes.GetPubKeyIdSize(), err
+}
+
+func getQuoteSizeExRequest(akId []byte) (uint32, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return 0, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.GetQuoteSizeExReq = &pb.AesmServiceRequest_GetQuoteSizeExRequest{
+		AttKeyId: akId,
+		Timeout:  aesmdTimeOut,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return 0, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.GetQuoteSizeExRes = &pb.AesmServiceResponse_GetQuoteSizeExResponse{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return 0, err
+	}
+
+	if errCode := resp.GetQuoteSizeExRes.GetErrorCode(); errCode != 0 {
+		return 0, fmt.Errorf("failed to call getQuoteSizeExRequest (error code = %d)", errCode)
+	}
+
+	return resp.GetQuoteSizeExRes.GetQuoteSize(), err
+}
+
+func getQuoteExRequest(akId []byte, report []byte, quoteSize uint32) ([]byte, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.GetQuoteExReq = &pb.AesmServiceRequest_GetQuoteExRequest{
+		Report:       report,
+		AttKeyId:     akId,
+		QeReportInfo: nil,
+		BufSize:      quoteSize,
+		Timeout:      aesmdTimeOut,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.GetQuoteExRes = &pb.AesmServiceResponse_GetQuoteExResponse{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return nil, err
+	}
+
+	if errCode := resp.GetQuoteExRes.GetErrorCode(); errCode != 0 {
+		return nil, fmt.Errorf("failed to call getQuoteExRequest (error code = %d)", errCode)
+	}
+
+	return resp.GetQuoteExRes.GetQuote(), err
+}
+
+func selectAttKeyIDRequest() ([]byte, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.SelectAttKeyIDReq = &pb.AesmServiceRequest_SelectAttKeyIDRequest{
+		/* aesmd will automatically find and traverse the attestation key identity list to
+		 * return the appropriate attestation key identity so that we don't need to
+		 * fill in the list any more.
+		 */
+		AttKeyIdList: nil,
+		Timeout:      aesmdTimeOut,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.SelectAttKeyIDRes = &pb.AesmServiceResponse_SelectAttKeyIDResponse{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return nil, err
+	}
+
+	if errCode := resp.SelectAttKeyIDRes.GetErrorCode(); errCode != 0 {
+		return nil, fmt.Errorf("failed to call selectAttKeyIDRequest (error code = %d)", errCode)
+	}
+
+	return resp.SelectAttKeyIDRes.GetSelectedAttKeyId(), err
+}
+
+func getSupportedAttKeyIDNumRequest() (uint32, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return 0, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.GetSupportedAttKeyIDNumReq = &pb.AesmServiceRequest_GetSupportedAttKeyIDNumRequest{
+		Timeout: aesmdTimeOut,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return 0, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.GetSupportedAttKeyIDNumRes = &pb.AesmServiceResponse_GetSupportedAttKeyIDNumResponse{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return 0, err
+	}
+
+	if errCode := resp.GetSupportedAttKeyIDNumRes.GetErrorCode(); errCode != 0 {
+		return 0, fmt.Errorf("failed to call getSupportedAttKeyIDNumRequest (error code = %d)", errCode)
+	}
+
+	return resp.GetSupportedAttKeyIDNumRes.GetAttKeyIdNum(), err
+}
+
+func getSupportedAttKeyIDsRequest(num uint32) ([]byte, error) {
+	conn, err := dialAesmd()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	req := pb.AesmServiceRequest{}
+	req.GetSupportedAttKeyIDsReq = &pb.AesmServiceRequest_GetSupportedAttKeyIDsRequest{
+		BufSize: num * attestationKeyIdentityLength,
+		Timeout: aesmdTimeOut,
+	}
+
+	rdata, err := transmitAesmd(conn, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := pb.AesmServiceResponse{}
+	resp.GetSupportedAttKeyIDsRes = &pb.AesmServiceResponse_GetSupportedAttKeyIDsResponse{}
+	if err := proto.Unmarshal(rdata, &resp); err != nil {
+		return nil, err
+	}
+
+	if errCode := resp.GetSupportedAttKeyIDsRes.GetErrorCode(); errCode != 0 {
+		return nil, fmt.Errorf("failed to call getSupportedAttKeyIDsRequest (error code = %d)", errCode)
+	}
+
+	return resp.GetSupportedAttKeyIDsRes.GetAttKeyIds(), err
+}
+
+func getAttestationKeyIdentity(quoteType string) ([]byte, error) {
+	akId, err := selectAttKeyIDRequest()
+	if err != nil {
+		return nil, err
+	}
+	if akId == nil {
+		return nil, fmt.Errorf("failed to call selectAttKeyIDRequest")
+	}
+
+	akIdentity := &attestationKeyIdentity{}
+	if err = restruct.Unpack(akId, binary.LittleEndian, &akIdentity); err != nil {
+		return nil, err
+	}
+
+	if strings.EqualFold(quoteType, quoteTypeEcdsa) && (akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP256 || akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP384) {
+		return akId, err
+	}
+
+	if (strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable)) && akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEpid {
+		return akId, err
+	}
+
+	/* If the attestation key identity returned by aesmd does not match the quote type specified by the user,
+	 * then traversing the attestation key identity list of aesmd to find the attestation key identity
+	 * that matches the user's quote type.
+	 */
+	akIdNum, err := getSupportedAttKeyIDNumRequest()
+	if err != nil {
+		return nil, err
+	}
+	if akIdNum == 0 {
+		return nil, fmt.Errorf("failed to call getSupportedAttKeyIDNumRequest: invalid Attestation Key Identity Number = %d", akIdNum)
+	}
+
+	akIdList, err := getSupportedAttKeyIDsRequest(akIdNum)
+	if err != nil {
+		return nil, err
+	}
+	if akIdList == nil {
+		return nil, fmt.Errorf("failed to call getSupportedAttKeyIDsRequest")
+	}
+
+	var i uint32 = 0
+	for i < akIdNum {
+		akId := akIdList[i*attestationKeyIdentityLength : (i+1)*attestationKeyIdentityLength]
+
+		akIdentity := &attestationKeyIdentity{}
+		if err = restruct.Unpack(akId, binary.LittleEndian, &akIdentity); err != nil {
+			return nil, err
+		}
+
+		if strings.EqualFold(quoteType, quoteTypeEcdsa) && (akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP256 || akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP384) {
+			return akId, err
+		}
+
+		if (strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable)) && akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEpid {
+			return akId, err
+		}
+
+		i++
+	}
+
+	return nil, err
 }
 
 func GetLaunchToken(sig []byte) ([]byte, error) {
@@ -375,4 +636,97 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 		q.SigLen)
 
 	return quote[0 : q.SigLen+QuoteLength], nil
+}
+
+func GetQeTargetInfoEx(quoteType string) ([]byte, error) {
+	var ti []byte
+
+	akId, err := getAttestationKeyIdentity(quoteType)
+	if err != nil {
+		return nil, err
+	}
+	if len(akId) != attestationKeyIdentityLength {
+		return nil, fmt.Errorf("len(attKeyId) is not %d but %d", attestationKeyIdentityLength, len(akId))
+	}
+
+	if strings.EqualFold(quoteType, quoteTypeEcdsa) {
+		_, bufSize, err := initQuoteExRequest(akId, false, uint64(0))
+		if err != nil {
+			return nil, err
+		}
+		if bufSize == 0 {
+			return nil, fmt.Errorf("failed to call initQuoteExRequest: invalid Public Key Identity Size: %d\n", bufSize)
+		}
+
+		ti, _, err = initQuoteExRequest(akId, true, bufSize)
+		if err != nil {
+			return nil, err
+		}
+		if len(ti) != TargetinfoLength {
+			return nil, fmt.Errorf("failed to call initQuoteExRequest: invalid length of targetinfo (returned %d, expected %d)", len(ti), TargetinfoLength)
+		}
+		if err = DumpTargetInfo(ti); err != nil {
+			return nil, fmt.Errorf("Invalid target info")
+		}
+	} else if strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+		ti, err = GetQeTargetInfo()
+	} else {
+		return nil, fmt.Errorf("failed to call GetQeTargetInfoEx: unsupported SGX quote type!")
+	}
+
+	return ti, err
+}
+
+func GetQuoteEx(quoteType string, report []byte, spid string) ([]byte, error) {
+	var quote []byte
+
+	err := DumpLocalReport(report)
+	if err != nil {
+		return nil, err
+	}
+
+	akId, err := getAttestationKeyIdentity(quoteType)
+	if err != nil {
+		return nil, err
+	}
+	if len(akId) != attestationKeyIdentityLength {
+		return nil, fmt.Errorf("len(attKeyId) is not %d but %d", attestationKeyIdentityLength, len(akId))
+	}
+
+	if strings.EqualFold(quoteType, quoteTypeEcdsa) {
+		quoteSize, err := getQuoteSizeExRequest(akId)
+		if err != nil {
+			return nil, err
+		}
+		if quoteSize == 0 {
+			return nil, fmt.Errorf("failed to call getQuoteSizeExRequest: invalid Quote Size %d", quoteSize)
+		}
+
+		quote, err = getQuoteExRequest(akId, report, quoteSize)
+		if err != nil {
+			return nil, err
+		}
+		if quote == nil {
+			return nil, fmt.Errorf("failed to call getQuoteExRequest")
+		}
+		if len(quote) != (int)(quoteSize) {
+			return nil, fmt.Errorf("failed to call getQuoteExRequest: len(quote) is not %d but %d\n",
+				quoteSize, len(quote))
+		}
+	} else if strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+		if spid == "" {
+			return nil, fmt.Errorf("failed to call GetQuoteEx: spid argument cannot be empty")
+		}
+
+		linkable := false
+		if strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+			linkable = true
+		}
+
+		quote, err = GetQuote(report, spid, linkable)
+	} else {
+		return nil, fmt.Errorf("failed to call GetQuoteEx: unsupported SGX quote type!")
+	}
+
+	return quote, err
 }
