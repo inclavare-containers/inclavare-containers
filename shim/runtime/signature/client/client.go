@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/inclavare-containers/shim/runtime/signature/types"
@@ -70,13 +71,10 @@ func (c *pkcs1Client) Sign(data []byte) (signature []byte, publicKey []byte, err
 	} else {
 		url = fmt.Sprintf("%s/%s", c.serviceBaseURL.String(), string(c.standard))
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		glog.Errorf("failed to new sign request, %v", err)
-		return nil, nil, err
+	client := &http.Client{
+		Timeout: 10 * time.Second,
 	}
-	req.Header.Set("Content-Type", "text/plain")
-	resp, err := c.internalClient.Do(req)
+	resp, err := client.Post(url, "text/plain", bytes.NewBuffer(data))
 	if err != nil || resp.StatusCode != 200 {
 		glog.Errorf("request sign error,%v", err)
 		return nil, nil, err
@@ -108,7 +106,10 @@ func (c *pkcs1Client) GetPublicKey() (publicKey []byte, err error) {
 	} else {
 		url = fmt.Sprintf("%s/%s", c.serviceBaseURL.String(), string(subURI))
 	}
-	resp, err := http.Get(url)
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	resp, err := client.Get(url)
 	defer resp.Body.Close()
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
