@@ -343,11 +343,11 @@ func getAttestationKeyIdentity(quoteType string) ([]byte, error) {
 		return nil, err
 	}
 
-	if strings.EqualFold(quoteType, quoteTypeEcdsa) && (akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP256 || akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP384) {
+	if strings.EqualFold(quoteType, QuoteTypeEcdsa) && (akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP256 || akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP384) {
 		return akId, err
 	}
 
-	if (strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable)) && akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEpid {
+	if (strings.EqualFold(quoteType, QuoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, QuoteTypeEpidLinkable)) && akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEpid {
 		return akId, err
 	}
 
@@ -380,11 +380,11 @@ func getAttestationKeyIdentity(quoteType string) ([]byte, error) {
 			return nil, err
 		}
 
-		if strings.EqualFold(quoteType, quoteTypeEcdsa) && (akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP256 || akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP384) {
+		if strings.EqualFold(quoteType, QuoteTypeEcdsa) && (akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP256 || akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEcdsaP384) {
 			return akId, err
 		}
 
-		if (strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable)) && akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEpid {
+		if (strings.EqualFold(quoteType, QuoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, QuoteTypeEpidLinkable)) && akIdentity.AlgorithmId == sgxQuoteLibraryAlgorithmEpid {
 			return akId, err
 		}
 
@@ -649,7 +649,7 @@ func GetQeTargetInfoEx(quoteType string) ([]byte, error) {
 		return nil, fmt.Errorf("len(attKeyId) is not %d but %d", attestationKeyIdentityLength, len(akId))
 	}
 
-	if strings.EqualFold(quoteType, quoteTypeEcdsa) {
+	if strings.EqualFold(quoteType, QuoteTypeEcdsa) {
 		_, bufSize, err := initQuoteExRequest(akId, false, uint64(0))
 		if err != nil {
 			return nil, err
@@ -668,7 +668,7 @@ func GetQeTargetInfoEx(quoteType string) ([]byte, error) {
 		if err = DumpTargetInfo(ti); err != nil {
 			return nil, fmt.Errorf("Invalid target info")
 		}
-	} else if strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+	} else if strings.EqualFold(quoteType, QuoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, QuoteTypeEpidLinkable) {
 		ti, err = GetQeTargetInfo()
 	} else {
 		return nil, fmt.Errorf("failed to call GetQeTargetInfoEx: unsupported SGX quote type!")
@@ -693,7 +693,7 @@ func GetQuoteEx(quoteType string, report []byte, spid string) ([]byte, error) {
 		return nil, fmt.Errorf("len(attKeyId) is not %d but %d", attestationKeyIdentityLength, len(akId))
 	}
 
-	if strings.EqualFold(quoteType, quoteTypeEcdsa) {
+	if strings.EqualFold(quoteType, QuoteTypeEcdsa) {
 		quoteSize, err := getQuoteSizeExRequest(akId)
 		if err != nil {
 			return nil, err
@@ -713,13 +713,13 @@ func GetQuoteEx(quoteType string, report []byte, spid string) ([]byte, error) {
 			return nil, fmt.Errorf("failed to call getQuoteExRequest: len(quote) is not %d but %d\n",
 				quoteSize, len(quote))
 		}
-	} else if strings.EqualFold(quoteType, quoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+	} else if strings.EqualFold(quoteType, QuoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, QuoteTypeEpidLinkable) {
 		if spid == "" {
 			return nil, fmt.Errorf("failed to call GetQuoteEx: spid argument cannot be empty")
 		}
 
 		linkable := false
-		if strings.EqualFold(quoteType, quoteTypeEpidLinkable) {
+		if strings.EqualFold(quoteType, QuoteTypeEpidLinkable) {
 			linkable = true
 		}
 

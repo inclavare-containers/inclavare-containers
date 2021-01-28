@@ -46,9 +46,9 @@ const (
 )
 
 const (
-	quoteTypeEcdsa          = "ecdsa"
-	quoteTypeEpidUnlinkable = "epidUnlinkable"
-	quoteTypeEpidLinkable   = "epidLinkable"
+	QuoteTypeEcdsa          = "ecdsa"
+	QuoteTypeEpidUnlinkable = "epidUnlinkable"
+	QuoteTypeEpidLinkable   = "epidLinkable"
 )
 
 type attestationKeyIdentity struct {
