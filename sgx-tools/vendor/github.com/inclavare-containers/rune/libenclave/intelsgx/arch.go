@@ -1,5 +1,10 @@
 package intelsgx // import "github.com/inclavare-containers/rune/libenclave/intelsgx"
 
+import (
+	"fmt"
+	"unsafe"
+)
+
 var (
 	sgx1Supported           bool = false
 	sgx2Supported           bool = false
@@ -22,6 +27,41 @@ const (
 	SubscriptionKeyLength = 16
 	SgxMaxQuoteLength     = 2048
 )
+
+const (
+	attestationKeyIdentityLength = 256
+	qeReportInfoLength           = 960
+)
+
+const (
+	// EPID 2.0 - Anonymous
+	sgxQuoteLibraryAlgorithmEpid = 0
+	// Reserved
+	sgxQuoteLibraryAlgorithmReseverd1 = 1
+	// ECDSA-256-with-P-256 curve, Non - Anonymous
+	sgxQuoteLibraryAlgorithmEcdsaP256 = 2
+	// ECDSA-384-with-P-384 curve (Note: currently not supported), Non-Anonymous
+	sgxQuoteLibraryAlgorithmEcdsaP384 = 3
+	sgxQuoteLibraryAlgorithmMax       = 4
+)
+
+const (
+	QuoteTypeEcdsa          = "ecdsa"
+	QuoteTypeEpidUnlinkable = "epidUnlinkable"
+	QuoteTypeEpidLinkable   = "epidLinkable"
+)
+
+type attestationKeyIdentity struct {
+	Id             uint16    `struct:"uint16,little"`
+	Version        uint16    `struct:"uint16,little"`
+	MrsignerLength uint16    `struct:"uint16,little"`
+	Mrsigner       [48]uint8 `struct:"[48]uint8"`
+	ProdId         uint32    `struct:"uint32,little"`
+	ExtendedProdId [16]uint8 `struct:"[16]uint8"`
+	ConfigId       [64]uint8 `struct:"[64]uint8"`
+	FamilyId       [16]uint8 `struct:"[16]uint8"`
+	AlgorithmId    uint32    `struct:"uint32,little"`
+}
 
 type SigStruct struct {
 	Header         [16]byte  `struct:"[16]byte"`
@@ -203,4 +243,17 @@ func GetExtendedSGXFeatures() uint32 {
 // Get the max enclave size value
 func GetMaxEnclaveSizeBits() uint32 {
 	return maxEnclaveSizeBits
+}
+
+// Check whether the enclave is a product enclave or not
+func IsProductEnclave(reportBody ReportBody) (bool, error) {
+	if unsafe.Sizeof(reportBody) != ReportBodyLength {
+		return false, fmt.Errorf("len(report) is not %d, but %d", ReportBodyLength, unsafe.Sizeof(reportBody))
+	}
+
+	if reportBody.Attributes[0]&0x02 != 0x0 {
+		return false, nil
+	}
+
+	return false, nil
 }

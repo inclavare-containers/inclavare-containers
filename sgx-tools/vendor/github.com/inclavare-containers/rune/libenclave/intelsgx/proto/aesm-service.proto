@@ -6,57 +6,138 @@ package aesm_service; // import "github.com/inclavare-containers/rune/libenclave
 
 message AesmServiceRequest {
 
-    message GetQeTargetInfo {
-        uint32 timeout = 9;
-    }
-
-    message GetQuote {
-        bytes report      = 1;
-        oneof quote_type_present {
-                uint32 quote_type = 2;
+        message GetQeTargetInfo {
+                uint32 timeout = 9;
         }
-        bytes spid        = 3;
-        bytes nonce       = 4;
-        bytes sig_rl      = 5;
-        uint32 buf_size   = 6;
-        oneof qe_report_present {
-                bool qe_report = 7;
+
+        message GetQuote {
+                bytes report                    = 1;
+                oneof quote_type_present {
+                        uint32 quote_type       = 2;
+                }
+                bytes spid                      = 3;
+                bytes nonce                     = 4;
+                bytes sig_rl                    = 5;
+                uint32 buf_size                 = 6;
+                oneof qe_report_present {
+                        bool qe_report          = 7;
+                }
+                uint32 timeout                  = 9;
         }
-        uint32 timeout    = 9;
-    }
 
-    message GetLaunchToken {
-        bytes enclavehash = 1;
-        bytes modulus     = 2;
-        bytes attributes  = 3;
-        uint32 timeout    = 9;
-    }
+        message GetLaunchToken {
+                bytes  enclavehash      = 1;
+                bytes  modulus          = 2;
+                bytes  attributes       = 3;
+                uint32 timeout          = 9;
+        }
 
-    GetQeTargetInfo getQeTargetInfo = 1;
-    GetQuote getQuote               = 2;
-    GetLaunchToken getLaunchToken   = 3;
+        message InitQuoteExRequest {
+                bytes att_key_id                = 1;
+                oneof b_pub_key_id_present {
+                        bool b_pub_key_id       = 3;
+                }
+                uint64 buf_size                 = 4;
+                uint32 timeout                  = 9;
+        }
+
+        message GetQuoteSizeExRequest {
+                bytes   att_key_id      = 1;
+                uint32  timeout         = 9;
+        }
+
+        message GetQuoteExRequest {
+                bytes   report          = 1;
+                bytes   att_key_id      = 2;
+                bytes   qe_report_info  = 3;
+                uint32  buf_size        = 4;
+                uint32  timeout         = 9;
+        }
+
+        message SelectAttKeyIDRequest {
+                bytes   att_key_id_list = 1;
+                uint32  timeout         = 2;
+        }
+
+        message GetSupportedAttKeyIDNumRequest {
+                uint32  timeout = 9;
+        }
+
+        message GetSupportedAttKeyIDsRequest {
+                uint32  buf_size        = 1;
+                uint32  timeout         = 9;
+        }
+
+        GetQeTargetInfo getQeTargetInfo                                 = 1;
+        GetQuote getQuote                                               = 2;
+        GetLaunchToken getLaunchToken                                   = 3;
+        InitQuoteExRequest initQuoteExReq                               = 15;
+        GetQuoteSizeExRequest getQuoteSizeExReq                         = 16;
+        GetQuoteExRequest getQuoteExReq                                 = 17;
+        SelectAttKeyIDRequest selectAttKeyIDReq                         = 19;
+        GetSupportedAttKeyIDNumRequest getSupportedAttKeyIDNumReq       = 21;
+        GetSupportedAttKeyIDsRequest getSupportedAttKeyIDsReq           = 22;
 }
 
 message AesmServiceResponse {
 
-    message GetQeTargetInfo {
-        uint32 error     = 1;
-        bytes targetinfo = 2;
-        bytes gid        = 3;
-    }
+        message GetQeTargetInfo {
+                uint32 error      = 1;
+                bytes  targetinfo = 2;
+                bytes  gid        = 3;
+        }
 
-    message GetQuote {
-        uint32 error    = 1;
-        bytes quote     = 2;
-        bytes qe_report = 3;
-    }
+        message GetQuote {
+                uint32 error            = 1;
+                bytes  quote            = 2;
+                bytes  qe_report        = 3;
+        }
 
-    message GetLaunchToken {
-        uint32 error = 1;
-        bytes token  = 2;
-    }
+        message GetLaunchToken {
+                uint32 error    = 1;
+                bytes  token    = 2;
+        }
 
-    GetQeTargetInfo getQeTargetInfo = 1;
-    GetQuote getQuote               = 2;
-    GetLaunchToken getLaunchToken   = 3;
+        message InitQuoteExResponse {
+                uint32 errorCode        = 1;
+                bytes  target_info      = 2;
+                uint64 pub_key_id_size  = 3;
+                bytes  pub_key_id       = 4;
+        }
+
+        message GetQuoteSizeExResponse {
+                uint32 errorCode        = 1;
+                uint32 quote_size       = 2;
+        }
+
+        message GetQuoteExResponse {
+                uint32 errorCode        = 1;
+                bytes  quote            = 2;
+                bytes  qe_report_info   = 3;
+        }
+
+        message SelectAttKeyIDResponse {
+                uint32 errorCode                = 1;
+                bytes  selected_att_key_id      = 2;
+        }
+
+        message GetSupportedAttKeyIDNumResponse {
+                uint32 errorCode        = 1;
+                uint32 att_key_id_num   = 2;
+        }
+
+        message GetSupportedAttKeyIDsResponse {
+                uint32 errorCode        = 1;
+                bytes  att_key_ids      = 2;
+        }
+
+        GetQeTargetInfo getQeTargetInfo                                 = 1;
+        GetQuote getQuote                                               = 2;
+        GetLaunchToken getLaunchToken                                   = 3;
+        InitQuoteExResponse initQuoteExRes                              = 15;
+        GetQuoteSizeExResponse getQuoteSizeExRes                        = 16;
+        GetQuoteExResponse getQuoteExRes                                = 17;
+        SelectAttKeyIDResponse selectAttKeyIDRes                        = 19;
+        GetSupportedAttKeyIDNumResponse getSupportedAttKeyIDNumRes      = 21;
+        GetSupportedAttKeyIDsResponse getSupportedAttKeyIDsRes          = 22;
 }
