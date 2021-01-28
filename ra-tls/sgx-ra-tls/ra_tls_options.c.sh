@@ -2,7 +2,7 @@
 
 # set -x
 
-if [[ -z "$ECDSA_SUBSCRIPTION_KEY" ]] && ( [[ -z "$SPID" ]] || [[ -z "$EPID_SUBSCRIPTION_KEY" ]] ); then
+if ( [[ -z "$SPID" ]] || [[ -z "$EPID_SUBSCRIPTION_KEY" ]] ); then
     echo "//Either SPID and EPID_SUBSCRIPTION_KEY or ECDSA_SUBSCRIPTION_KEY is required!"
 fi
 
@@ -28,10 +28,5 @@ struct ra_tls_options my_ra_tls_options = {
     .ias_server = "api.trustedservices.intel.com/sgx/dev",
     // EPID_SUBSCRIPTION_KEY format is "012345679abcdef012345679abcdef"
     .subscription_key = "$EPID_SUBSCRIPTION_KEY"
-};
-
-struct ecdsa_ra_tls_options my_ecdsa_ra_tls_options = {
-    // ECDSA_SUBSCRIPTION_KEY format is "012345679abcdef012345679abcdef"
-    .subscription_key = "$ECDSA_SUBSCRIPTION_KEY"
 };
 HEREDOC

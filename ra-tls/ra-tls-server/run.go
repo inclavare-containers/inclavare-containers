@@ -3,6 +3,9 @@ package main // import "github.com/inclavare-containers/inclavared"
 /*
 #cgo CFLAGS: -I../build/include -I/opt/intel/sgxsdk/include -I../sgx-ra-tls
 #cgo LDFLAGS: -L../build/lib -L/opt/intel/sgxsdk/lib64 -Llib -lra-tls-server -l:libcurl-wolfssl.a -l:libwolfssl.a -lsgx_uae_service -lsgx_urts -lz -lm
+#ifdef RATLS_ECDSA
+#cgo LDFLAGS: -lsgx_dcap_ql
+#endif
 
 #include <stdio.h>
 #include <string.h>

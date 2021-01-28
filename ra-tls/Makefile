@@ -19,19 +19,17 @@ ifdef ECDSA
   SGX_DCAP_URI := https://github.com/intel/SGXDataCenterAttestationPrimitives
   SGX_DCAP_COMMIT := bfab1376480f760757738092399d0d99b22f4dfd
   SGX_DCAP ?= SGXDataCenterAttestationPrimitives
-  SGX_DCAP_INC := -I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/common/inc -I$(SGX_DCAP)/QuoteGeneration/pce_wrapper/inc -I$(SGX_DCAP)/QuoteVerification/Src/AttestationLibrary/include
+  SGX_DCAP_INC := -I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/common/inc \
+		  -I$(SGX_DCAP)/QuoteGeneration/pce_wrapper/inc \
+		  -I$(SGX_DCAP)/QuoteVerification/QVL/Src/AttestationLibrary/include
 endif
 
-#EPID_SDK := $(SGX_SDK)/external/epid-sdk
-
 CFLAGS += -std=gnu99 -I$(SGX_RA_TLS) -I$(SGX_SDK)/include -I$(INCDIR) $(SGX_DCAP_INC) -fPIC
-#CFLAGSERRORS := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow -Werror
 CFLAGS += $(CFLAGSERRORS) -g -ggdb -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_EXT # -DDEBUG -DDYNAMIC_RSA
 CFLAGS += -DSGX_GROUP_OUT_OF_DATE
 ifdef ECDSA
   CFLAGS += -DRATLS_ECDSA
 endif
-#CFLAGS += -I$(SGX_GIT)/common/inc/internal -I$(EPID_SDK) -I$(SGX_GIT)/common/inc
 
 CC ?= gcc
 
@@ -64,14 +62,23 @@ $(LIBDIR)/libwolfssl.a: $(LIBDIR) wolfssl
 	cd wolfssl && $(MAKE) install
 
 wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --enable-writedup --enable-static --enable-keygen --enable-certgen --enable-certext --with-pic --disable-examples --disable-crypttests --enable-aesni --enable-tlsv10 $(WOLFSSL_CONFFLAGS)
+# To avoid unneccessary macro definition to be wrote into options.h. If make ECDSA=1(compiling attestation based on ECDSA) firstly,
+# then RATLS_ECDSA will be wrote into options.h, even just make(compiling attestation based on EPID), the RATLS_ECDSA will still be in
+# options.h. So it needs be reconfigured before compiling, options.h will be re-generated according to new configuration.
 wolfssl:
-	[ ! -d wolfssl ] && git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && \
-	  cd wolfssl && git apply ../patch/wolfssl.patch && ./autogen.sh && \
-	  CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true
+	if [ -d "./wolfssl" ]; then \
+		cd wolfssl && ./autogen.sh && CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
+	fi
+	if [ ! -d "./wolfssl" ]; then \
+		git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && \
+		cd wolfssl && git apply ../patch/wolfssl.patch && \
+		./autogen.sh && CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
+	fi
 
 ifdef ECDSA
   $(LIBDIR)/libra-challenger.a: $(SGX_RA_TLS)/ecdsa-sample-data/real/sample_data.o
 endif
+
 # sgx-ra-tls needs the header files from wolfssl.
 $(LIBDIR)/libra-challenger.a: $(LIBDIR) $(LIBDIR)/libwolfssl.a $(SGX_RA_TLS)/ra.o $(SGX_RA_TLS)/wolfssl-ra-challenger.o $(SGX_RA_TLS)/wolfssl-ra.o $(SGX_RA_TLS)/ra-challenger.o $(SGX_RA_TLS)/ias_sign_ca_cert.o
 	$(AR) rcs "$@" $(filter %.o, $^)
@@ -107,19 +114,6 @@ curl-wolfssl:
 	git clone https://github.com/curl/curl.git -b curl-7_47_0 curl-wolfssl && \
 	  cd curl-wolfssl && ./buildconf && \
 	  CFLAGS="-fPIC" ./configure $(CURL_CONFFLAGS) --without-ssl --with-cyassl=$(shell readlink -f $(PREFIX))
-
-ifdef ECDSA
-  wolfssl-ra-attester.o: ecdsa-sample-data/real/sample_data.h ecdsa-attestation-collateral.h
-  ecdsa-ra-attester.o: ecdsa-aesmd-messages.pb-c.c
-
-ecdsa-aesmd-messages.pb-c.c:
-	cp $(SGX_DCAP)/SampleCode/QuoteServiceSample/App/ecdsa-aesmd-messages.proto .
-	protoc-c ecdsa-aesmd-messages.proto --c_out=.
-
-messages.pb-c.c:
-	( cd linux-sgx/psw/ae/common/proto/ ; protoc-c messages.proto --c_out=. )
-	cp linux-sgx/psw/ae/common/proto/messages.pb-c.c linux-sgx/psw/ae/common/proto/messages.pb-c.h .
-endif
 
 $(LIBDIR)/libra-attester.a: wolfssl wolfssl-ra-attester.o wolfssl-ra.o ias-ra.o
 	$(AR) rcs $@ $(filter %.o, $^)

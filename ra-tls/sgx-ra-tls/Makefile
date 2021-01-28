@@ -14,6 +14,18 @@ SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
 SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
 SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
 
+ifdef ECDSA
+SGX_DCAP ?= SGXDataCenterAttestationPrimitives
+SGX_DCAP_INC := -I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/ql/inc \
+		-I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/common/inc \
+		-I$(SGX_DCAP)/QuoteGeneration/pce_wrapper/inc \
+		-I$(SGX_DCAP)/QuoteVerification/dcap_quoteverify/inc \
+		-I$(SGX_DCAP)/QuoteVerification/QVL/Src/AttestationLibrary/include \
+		-I../build/include  \
+		-I/usr/x86_64-linux-gnu/include \
+		-I/usr/include/x86_64-linux-gnu
+endif
+
 ifeq ($(SGX_DEBUG), 1)
 ifeq ($(SGX_PRERELEASE), 1)
 $(error Cannot set SGX_DEBUG and SGX_PRERELEASE at the same time!!)
@@ -36,8 +48,10 @@ endif
 
 Library_Name := sgx_ra_tls_wolfssl
 
-# -DFP_MAX_BITS=8192 required for RSA keys > 2048 bits to work
 Wolfssl_C_Extra_Flags := -DSGX_SDK -DWOLFSSL_SGX -DWOLFSSL_SGX_ATTESTATION -DUSER_TIME -DWOLFSSL_CERT_EXT -DFP_MAX_BITS=8192
+ifdef ECDSA
+	Wolfssl_C_Extra_Flags += -DRATLS_ECDSA
+endif
 
 Wolfssl_C_Files := \
 	wolfssl-ra-attester.c \
@@ -45,8 +59,11 @@ Wolfssl_C_Files := \
 	sgxsdk-ra-attester_t.c \
 	ra-challenger.c \
 	wolfssl-ra.c \
-	ra_tls_t.c \
-	ra_tls_options.c
+	ra_tls_t.c
+
+ifndef ECDSA
+	Wolfssl_C_Files += ra_tls_options.c
+endif
 
 Wolfssl_Include_Paths := \
 	-I$(WOLFSSL_ROOT) \
@@ -58,7 +75,7 @@ Wolfssl_Include_Paths := \
 
 Compiler_Warnings := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow
 Flags_Just_For_C := -Wno-implicit-function-declaration -std=c11
-Common_C_Cpp_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Wolfssl_Include_Paths) -fno-builtin-printf -I.
+Common_C_Cpp_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Wolfssl_Include_Paths) $(SGX_DCAP_INC) -fno-builtin-printf -I.
 Wolfssl_C_Flags := $(Compiler_Warnings) $(Flags_Just_For_C) $(Common_C_Cpp_Flags) $(Wolfssl_C_Extra_Flags)
 
 Wolfssl_C_Objects := $(Wolfssl_C_Files:.c=.o)
@@ -70,11 +87,13 @@ CFLAGS += $(Wolfssl_C_Flags)
 all: libsgx_ra_tls_wolfssl.a
 
 ######## Library Objects ########
+ra_tls.edl: ra_tls.edl.sh
+	bash $^ > $@
 
 ra_tls_t.c ra_tls_u.c ra_tls_t.h ra_tls_u.h : ra_tls.edl
 	$(SGX_EDGER8R) $^ --search-path $(SGX_SDK)/include
 
-libsgx_ra_tls_wolfssl.a: ra_tls_t.o ra_tls_u.o $(Wolfssl_C_Objects)
+libsgx_ra_tls_wolfssl.a: ra_tls_t.o $(Wolfssl_C_Objects)
 	ar rcs $@ $(Wolfssl_C_Objects)
 	@echo "LINK =>  $@"
 
@@ -83,7 +102,7 @@ ra_tls_options.c: ra_tls_options.c.sh
 
 clean:
 	@rm -f $(Wolfssl_C_Objects)
-	@rm -f ra_tls_options.c ra_tls_t.* ra_tls_u.* libsgx_ra_tls_wolfssl.a
+	@rm -f ra_tls_options.c ra_tls.edl ra_tls_t.* ra_tls_u.* libsgx_ra_tls_wolfssl.a
 
 mrproper: clean
-	@rm -f ra_tls_options.c ra_tls_t.c ra_tls_t.h ra_tls_u.h ra_tls_u.c libsgx_ra_tls_wolfssl.a
+	@rm -f ra_tls_options.c ra_tls.edl ra_tls_t.c ra_tls_t.h ra_tls_u.h ra_tls_u.c libsgx_ra_tls_wolfssl.a
