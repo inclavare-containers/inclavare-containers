@@ -51,24 +51,7 @@ jobs:
 
     - name: Run skeleton v1
       if: always()
-      run: |
-        docker exec $rune_test bash -c 'cd /root/inclavare-containers-test/rune/libenclave/internal/runtime/pal/skeleton;
-        count=0;
-        while true; do
-        let count++;
-        docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave;
-        if [ $? -eq 0 ]; then
-          break;
-        elif [ $count -ge 5 ]; then
-          echo falied;
-          exit -1;
-        else
-          rm -rf signing_key.pem encl.ss 2>/dev/null;
-          openssl genrsa -3 -out signing_key.pem 3072 2>/dev/null;
-          ./sgxsign signing_key.pem encl.bin encl.ss 2>/dev/null;
-          docker build . -t skeleton-enclave -f /root/Dockerfile-skeleton 2>/dev/null;
-        fi
-        done'
+      run: docker exec $rune_test bash -c 'docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave'
 
     - name: Run skeleton v2
       if: always()
