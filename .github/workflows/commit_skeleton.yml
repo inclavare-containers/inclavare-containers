@@ -152,12 +152,12 @@ jobs:
     - name: Get target info with sgx-tools
       if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "cd rootfs;
-        sgx-tools -verbose gen-qe-target-info"
+        sgx-tools -verbose gen-qe-target-info --quote-type=epidUnlinkable"
 
     - name: Get quote with sgx-tools
       if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $rune_test bash -c "cd rootfs;
-        sgx-tools -verbose gen-quote --report report.bin --spid=${{ secrets.SPID }}"
+        sgx-tools -verbose gen-quote --report report.bin --spid=${{ secrets.SPID }} --quote-type=epidUnlinkable"
 
     - name: Get remote report with sgx-tools
       if: ${{ contains(matrix.sgx, 'SGX1') }}
