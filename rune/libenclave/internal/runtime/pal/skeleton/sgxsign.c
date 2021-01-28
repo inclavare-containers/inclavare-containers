@@ -84,7 +84,6 @@ static const BIGNUM *get_exponent(RSA * key)
 static RSA *load_sign_key(const char *path)
 {
 	FILE *f;
-	RSA *key;
 
 	f = fopen(path, "rb");
 	if (!f) {
@@ -92,10 +91,10 @@ static RSA *load_sign_key(const char *path)
 		return NULL;
 	}
 
-	key = RSA_new();
-	if (!PEM_read_RSAPrivateKey(f, &key, NULL, NULL))
-		return NULL;
+	RSA *key = PEM_read_RSAPrivateKey(f, NULL, NULL, NULL);
 	fclose(f);
+	if (!key)
+		return NULL;
 
 	if (BN_num_bytes(get_modulus(key)) != SGX_MODULUS_SIZE) {
 		fprintf(stderr, "Invalid key size %d\n",
