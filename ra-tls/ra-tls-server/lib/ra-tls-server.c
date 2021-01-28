@@ -77,7 +77,7 @@ int ra_tls_server_startup(sgx_enclave_id_t id, int connd)
 	if (sgxStatus != SGX_SUCCESS || ret != SSL_SUCCESS)
 		goto err_ssl;
 
-	printf("Client connected successfully\n");
+	fprintf(stdout, "Client connected successfully\n");
 
 	char buff[256];
 	size_t len;
@@ -86,7 +86,7 @@ int ra_tls_server_startup(sgx_enclave_id_t id, int connd)
 	if (sgxStatus != SGX_SUCCESS || ret == -1)
 		goto err_ssl;
 
-	printf("Client: %s\n", buff);
+	fprintf(stdout, "Client: %s\n", buff);
 
 	/* Write our reply into buff */
 	memset(buff, 0, sizeof(buff));

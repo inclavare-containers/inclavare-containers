@@ -9,6 +9,18 @@ WOLFSSL_ROOT ?= $(shell readlink -f $(TOPDIR)/wolfssl)
 SGX_WOLFSSL_LIB ?= $(shell readlink -f $(WOLFSSL_ROOT)/IDE/LINUX-SGX)
 SGX_RA_TLS_ROOT ?= $(shell readlink -f $(TOPDIR)/sgx-ra-tls)
 
+ifdef ECDSA
+SGX_DCAP ?= SGXDataCenterAttestationPrimitives
+SGX_DCAP_INC := -I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/ql/inc \
+		-I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/common/inc  \
+	        -I$(SGX_DCAP)/QuoteGeneration/pce_wrapper/inc \
+		-I$(SGX_DCAP)/QuoteVerification/QVL/Src/AttestationLibrary/include \
+		-I$(SGX_DCAP)/QuoteGeneration/qpl/inc \
+		-I../build/include \
+		-I/usr/x86_64-linux-gnu/include \
+		-I/usr/include/x86_64-linux-gnu 
+endif
+
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
 else ifeq ($(findstring -m32, $(CXXFLAGS)), -m32)
@@ -48,6 +60,10 @@ else
 endif
 
 Wolfssl_C_Extra_Flags := -DWOLFSSL_SGX -DUSE_WOLFSSL
+ifdef ECDSA
+	Wolfssl_C_Extra_Flags += -DRATLS_ECDSA
+endif
+
 Wolfssl_Include_Paths := -I$(WOLFSSL_ROOT) \
 	-I$(WOLFSSL_ROOT)/wolfcrypt
 
@@ -61,10 +77,13 @@ ifeq ($(HAVE_WOLFSSL_BENCHMARK), 1)
 	Wolfssl_C_Extra_Flags += -DHAVE_WOLFSSL_BENCHMARK
 endif
 
-App_C_Files := App.c ra-tls-server.c sgxsdk-ra-attester_u.c ias-ra.c
-App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I$(INCDIR) -I$(shell readlink -f .)
+App_C_Files := App.c ra-tls-server.c sgxsdk-ra-attester_u.c
+ifndef ECDSA
+	App_C_Files += ias-ra.c
+endif
 
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -shared -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
+App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I$(INCDIR) $(SGX_DCAP_INC) -I$(shell readlink -f .)
+App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIE -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.

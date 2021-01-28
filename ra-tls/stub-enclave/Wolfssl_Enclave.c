@@ -213,16 +213,20 @@ size_t send(int sockfd, const void *buf, size_t len, int flags)
 extern struct ra_tls_options my_ra_tls_options;
 
 void enc_create_key_and_x509(WOLFSSL_CTX* ctx) {
+    int ret;
     uint8_t der_key[2048];
     uint8_t der_cert[8 * 1024];
     uint32_t der_key_len = sizeof(der_key);
     uint32_t der_cert_len = sizeof(der_cert);
 
-    create_key_and_x509(&der_key, &der_key_len,
-                        &der_cert, &der_cert_len,
+#ifdef RATLS_ECDSA
+    ecdsa_create_key_and_x509(der_key, &der_key_len,
+		              der_cert, &der_cert_len);
+#else
+    create_key_and_x509(der_key, &der_key_len,
+                        der_cert, &der_cert_len,
                         &my_ra_tls_options);
-
-    int ret;
+#endif
     ret = wolfSSL_CTX_use_certificate_buffer(ctx, der_cert, der_cert_len,
                                              SSL_FILETYPE_ASN1);
     assert(ret == SSL_SUCCESS);

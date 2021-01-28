@@ -6,6 +6,7 @@
 #ifndef _RA_PRIVATE_H
 #define _RA_PRIVATE_H
 
+#ifndef RATLS_ECDSA
 struct ra_tls_options;
 
 void do_remote_attestation(sgx_report_data_t* report_data,
@@ -16,16 +17,7 @@ extern const uint8_t ias_response_body_oid[];
 extern const uint8_t ias_root_cert_oid[];
 extern const uint8_t ias_leaf_cert_oid[];
 extern const uint8_t ias_report_signature_oid[];
-
-extern const uint8_t quote_oid[];
-extern const uint8_t pck_crt_oid[];
-extern const uint8_t pck_sign_chain_oid[];
-extern const uint8_t tcb_info_oid[];
-extern const uint8_t tcb_sign_chain_oid[];
-extern const uint8_t qe_identity_oid[];
-extern const uint8_t root_ca_crl_oid[];
-extern const uint8_t pck_crl_oid[];
-
 extern const size_t ias_oid_len;
-
+#endif
+extern const uint8_t quote_oid[];
 #endif
