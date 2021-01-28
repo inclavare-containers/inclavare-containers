@@ -283,16 +283,18 @@ struct sgx_pcmd {
 /**
  * struct sgx_sigstruct_header -  defines author of the enclave
  * @header1:		constant byte string
+ * @type:		bit 31: 0 = prod, 1 = debug; Bit 30-0: Must be zero
  * @vendor:		must be either 0x0000 or 0x8086
  * @date:		YYYYMMDD in BCD
  * @header2:		costant byte string
  * @swdefined:		software defined value
  */
 struct sgx_sigstruct_header {
-	uint64_t header1[2];
+	uint8_t header1[12];
+	uint32_t type;
 	uint32_t vendor;
 	uint32_t date;
-	uint64_t header2[2];
+	uint8_t header2[16];
 	uint32_t swdefined;
 	uint8_t reserved1[84];
 } __packed;

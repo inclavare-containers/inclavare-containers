@@ -658,8 +658,8 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	uint64_t header1[2] = { 0x000000E100000006, 0x0000000000010000 };
-	uint64_t header2[2] = { 0x0000006000000101, 0x0000000100000060 };
+	uint8_t header1[12] = {6, 0, 0, 0, 0xe1, 0, 0, 0, 0, 0, 1, 0};
+	uint8_t header2[16] = {1, 1, 0, 0, 0x60, 0, 0, 0, 0x60, 0, 0, 0, 1, 0, 0, 0};
 	struct sgx_sigstruct ss;
 	const char *program;
 	int opt;
@@ -724,10 +724,11 @@ int main(int argc, char **argv)
 		exit_usage(program);
 
 	memset(&ss, 0, sizeof(ss));
-	ss.header.header1[0] = header1[0];
-	ss.header.header1[1] = header1[1];
-	ss.header.header2[0] = header2[0];
-	ss.header.header2[1] = header2[1];
+	memcpy(ss.header.header1, header1, sizeof(ss.header.header1));
+	memcpy(ss.header.header2, header2, sizeof(ss.header.header2));
+
+	if (enclave_debug)
+		ss.header.type = 1 << 31;
 
 	if (calc_sgx_attributes(&ss.body.attributes, &ss.body.attributes_mask))
 		return -1;
