@@ -20,8 +20,9 @@ const (
 	TargetinfoLength      = 512
 	ReportLength          = ReportBodyLength + 48
 	ReportBodyLength      = 384
-	QuoteLength           = QuoteBodyLength + ReportBodyLength + 4
-	QuoteBodyLength       = 48
+	QuoteLength           = QuoteHeaderLength + QuoteBodyLength + ReportBodyLength + 4
+	QuoteHeaderLength     = 4
+	QuoteBodyLength       = 44
 	NonceLength           = 16
 	SpidLength            = 16
 	SubscriptionKeyLength = 16
@@ -147,7 +148,8 @@ type ReportBody struct {
 }
 
 type Quote struct {
-	QuoteBody
+	QuoteHeader
+	QuoteBody [44]byte `struct:"[44]byte"`
 	ReportBody
 	SigLen uint32 `struct:"uint32"`
 }
@@ -159,17 +161,30 @@ const (
 )
 
 const (
-	QuoteVersion = 2
+	QuoteVersion2 = 2
+	QuoteVersion3 = 3
 )
 
-type QuoteBody struct {
-	Version       uint16   `struct:"uint16"`
-	SignatureType uint16   `struct:"uint16"`
-	Gid           uint32   `struct:"uint32"`
-	ISVSvnQe      uint16   `struct:"uint16"`
-	ISVSvnPce     uint16   `struct:"uint16"`
-	_             [4]byte  `struct:"[4]byte"`
-	Basename      [32]byte `struct:"[32]byte"`
+type QuoteHeader struct {
+	Version       uint16 `struct:"uint16"`
+	SignatureType uint16 `struct:"uint16"`
+}
+
+type QuoteBodyV2 struct {
+	Gid       uint32   `struct:"uint32"`
+	ISVSvnQe  uint16   `struct:"uint16"`
+	ISVSvnPce uint16   `struct:"uint16"`
+	_         [4]byte  `struct:"[4]byte"`
+	Basename  [32]byte `struct:"[32]byte"`
+}
+
+type QuoteBodyV3 struct {
+	TeeType    uint16    `struct:"uint16"`
+	_          uint16    `struct:"uint16"`
+	QeSvn      uint16    `struct:"uint16"`
+	PceSvn     uint16    `struct:"uint16"`
+	QeVendorId [16]uint8 `struct:"[16]uint8"`
+	UserData   [20]uint8 `struct:"[20]uint8"`
 }
 
 // Check whether CPUs support SGX or not
