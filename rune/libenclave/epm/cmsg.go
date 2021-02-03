@@ -76,6 +76,7 @@ func recvFd(socksPath string, fd *int) error {
 		logrus.Warnf("In recvFd connection close error: %v", err)
 		return err
 	}
+	epmchan <- nil
 
 	return nil
 }
