@@ -55,7 +55,6 @@ endif
 
 Wolfssl_C_Files := \
 	wolfssl-ra-attester.c \
-	wolfssl-ra-challenger.c \
 	sgxsdk-ra-attester_t.c \
 	ra-challenger.c \
 	wolfssl-ra.c \
@@ -102,7 +101,7 @@ ra_tls_options.c: ra_tls_options.c.sh
 
 clean:
 	@rm -f $(Wolfssl_C_Objects)
-	@rm -f ra_tls_options.c ra_tls.edl ra_tls_t.* ra_tls_u.* libsgx_ra_tls_wolfssl.a
+	@rm -f ra_tls_options.c ra_tls.edl ra_tls_t.* ra_tls_u.* libsgx_ra_tls_wolfssl.a *.o
 
 mrproper: clean
-	@rm -f ra_tls_options.c ra_tls.edl ra_tls_t.c ra_tls_t.h ra_tls_u.h ra_tls_u.c libsgx_ra_tls_wolfssl.a
+	@rm -f ra_tls_options.c ra_tls.edl ra_tls_t.c ra_tls_t.h ra_tls_u.h ra_tls_u.c libsgx_ra_tls_wolfssl.a *.o

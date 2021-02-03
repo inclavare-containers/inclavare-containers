@@ -50,7 +50,6 @@
 static int cert_verify_callback(int preverify, WOLFSSL_X509_STORE_CTX * store)
 {
 	(void)preverify;
-
 	int ret = verify_sgx_cert_extensions(store->certs->buffer,
 					     store->certs->length);
 
@@ -111,17 +110,16 @@ int ra_tls_echo(int sockfd)
 
 	int derSz;
 	const unsigned char *der = wolfSSL_X509_get_der(srvcrt, &derSz);
-
-	sgx_quote_t quote;
-	get_quote_from_cert(der, derSz, &quote);
-	sgx_report_body_t *body = &quote.report_body;
-
+	sgx_report_body_t *body = NULL;
+	uint8_t quote_buff[8192] = {0,};
+	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
+	sgx_quote_t* quote = (sgx_quote_t*)quote_buff;
+	body = &quote->report_body;
 	printf("Server's SGX identity:\n");
 	printf("  . MRENCLAVE = ");
 	for (int i = 0; i < SGX_HASH_SIZE; ++i)
 		printf("%02x", body->mr_enclave.m[i]);
 	printf("\n");
-
 	printf("  . MRSIGNER  = ");
 	for (int i = 0; i < SGX_HASH_SIZE; ++i)
 		printf("%02x", body->mr_signer.m[i]);
@@ -133,16 +131,13 @@ int ra_tls_echo(int sockfd)
 		fprintf(stderr, "ERROR: failed to write\n");
 		goto err_ssl;
 	}
-
 	char buff[256];
 	memset(buff, 0, sizeof(buff));
 	if (wolfSSL_read(ssl, buff, sizeof(buff) - 1) == -1) {
 		fprintf(stderr, "ERROR: failed to read\n");
 		goto err_ssl;
 	}
-
 	printf("Server:\n%s\n", buff);
-
 err_ssl:
 	wolfSSL_free(ssl);
 err_ctx:

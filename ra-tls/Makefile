@@ -21,7 +21,8 @@ ifdef ECDSA
   SGX_DCAP ?= SGXDataCenterAttestationPrimitives
   SGX_DCAP_INC := -I$(SGX_DCAP)/QuoteGeneration/quote_wrapper/common/inc \
 		  -I$(SGX_DCAP)/QuoteGeneration/pce_wrapper/inc \
-		  -I$(SGX_DCAP)/QuoteVerification/QVL/Src/AttestationLibrary/include
+		  -I$(SGX_DCAP)/QuoteVerification/QVL/Src/AttestationLibrary/include \
+		  -I$(SGX_DCAP)/QuoteVerification/dcap_quoteverify/inc
 endif
 
 CFLAGS += -std=gnu99 -I$(SGX_RA_TLS) -I$(SGX_SDK)/include -I$(INCDIR) $(SGX_DCAP_INC) -fPIC
@@ -74,10 +75,6 @@ wolfssl:
 		cd wolfssl && git apply ../patch/wolfssl.patch && \
 		./autogen.sh && CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
 	fi
-
-ifdef ECDSA
-  $(LIBDIR)/libra-challenger.a: $(SGX_RA_TLS)/ecdsa-sample-data/real/sample_data.o
-endif
 
 # sgx-ra-tls needs the header files from wolfssl.
 $(LIBDIR)/libra-challenger.a: $(LIBDIR) $(LIBDIR)/libwolfssl.a $(SGX_RA_TLS)/ra.o $(SGX_RA_TLS)/wolfssl-ra-challenger.o $(SGX_RA_TLS)/wolfssl-ra.o $(SGX_RA_TLS)/ra-challenger.o $(SGX_RA_TLS)/ias_sign_ca_cert.o

@@ -3,6 +3,9 @@ package main
 /*
 #cgo CFLAGS: -I../build/include -I/opt/intel/sgxsdk/include -I../sgx-ra-tls
 #cgo LDFLAGS: -L../build/lib -l:libra-challenger.a -l:libwolfssl.a -lm
+#ifdef RATLS_ECDSA
+#cgo LDFLAGS:  -lsgx_dcap_quoteverify -lsgx_urts -lpthread -ldl -lsgx_dcap_ql
+#endif
 
 extern int ra_tls_echo(int sockfd);
 */
