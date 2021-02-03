@@ -16,6 +16,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+var epmchan = make(chan error, 1)
+
 const (
 	InvalidEpmID string = "InvalidEPMID"
 	address             = "/var/run/epm/epm.sock"
@@ -73,6 +75,8 @@ func GetCache(ID string, subtype string) *v1alpha1.Enclave {
 		return nil
 	}
 	ptypes.UnmarshalAny(cacheResp.Cache.Options, &enclaveinfo)
+	<-epmchan
+	close(epmchan)
 	enclaveinfo.Fd = int64(fd)
 	return &enclaveinfo
 }
