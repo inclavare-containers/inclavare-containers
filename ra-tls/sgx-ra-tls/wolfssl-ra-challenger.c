@@ -6,7 +6,15 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+
+#ifdef RATLS_ECDSA
+#include <sgx_quote_3.h>
+#include <sgx_ql_quote.h>
+#include <sgx_dcap_quoteverify.h>
+#endif
 
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
@@ -17,18 +25,12 @@
 #include <wolfssl/wolfcrypt/sha256.h>
 #include <wolfssl/wolfcrypt/signature.h>
 
-#ifdef RATLS_ECDSA
-#include <SgxEcdsaAttestation/QuoteVerification.h>
-#endif
+#include <sgx_urts.h>
 
 #include "ra.h"
 #include "wolfssl-ra.h"
 #include "ra-challenger.h"
 #include "ra-challenger_private.h"
-
-#ifdef RATLS_ECDSA
-#include "ecdsa-sample-data/real/sample_data.h"
-#endif
 
 extern unsigned char ias_sign_ca_cert_der[];
 extern unsigned int ias_sign_ca_cert_der_len;
@@ -53,6 +55,28 @@ void get_quote_from_cert
     FreeDecodedCert(&crt);
 }
 
+#ifdef RATLS_ECDSA
+void ecdsa_get_quote_from_dcap_cert
+(
+    const uint8_t* der_crt,
+    uint32_t der_crt_len,
+    sgx_quote3_t* q
+)
+{
+    DecodedCert crt;
+    int ret;
+
+    InitDecodedCert(&crt, (byte*) der_crt, der_crt_len, NULL);
+    InitSignatureCtx(&crt.sigCtx, NULL, INVALID_DEVID);
+    ret = ParseCertRelative(&crt, CERT_TYPE, NO_VERIFY, 0);
+    assert(ret == 0);
+    ecdsa_get_quote_from_extension(crt.extensions, crt.extensionsSz, q);
+
+    FreeDecodedCert(&crt);
+
+}
+#endif
+
 void get_quote_from_report
 (
     const uint8_t* report /* in */,
@@ -75,6 +99,10 @@ void get_quote_from_report
 
     const int quote_base64_len = p_end - p_begin;
     uint8_t* quote_bin = malloc(quote_base64_len);
+    if (!quote_bin) {
+        fprintf(stderr, "ERROR: failed to malloc quote bin buffer.\n");
+        return;
+    }
     uint32_t quote_bin_len = quote_base64_len;
 
     Base64_Decode((const byte*) p_begin, quote_base64_len,
@@ -241,6 +269,111 @@ int verify_enclave_quote_status
     return 1;
 }
 
+#ifdef RATLS_ECDSA
+static
+int ecdsa_verify_sgx_cert_extensions
+(
+    uint8_t* der_crt,
+    uint32_t der_crt_len
+)
+{
+    int ret = 0;
+    time_t current_time = 0;
+    uint32_t supplemental_data_size = 0;
+    uint8_t *p_supplemental_data = NULL;
+    sgx_status_t sgx_ret = SGX_SUCCESS;
+    quote3_error_t dcap_ret = SGX_QL_ERROR_UNEXPECTED;
+    sgx_ql_qv_result_t quote_verification_result = SGX_QL_QV_RESULT_UNSPECIFIED;
+    uint32_t collateral_expiration_status = 1;
+    quote3_error_t verify_qveid_ret = SGX_QL_ERROR_UNEXPECTED;
+    //specified defined for trusted veirification based on qve.
+    //sgx_enclave_id_t eid = 0;
+    //sgx_launch_token_t token = { 0 };
+    //sgx_ql_qe_report_info_t qve_report_info;
+    //unsigned char rand_nonce[16] = "59jslk201fgjmm;";
+    //int updated = 0;
+
+    //get quote from dcap cert extensions
+    sgx_quote3_t* pquote = NULL;
+    pquote = malloc(8192);
+    if (!pquote) {
+        fprintf(stderr, "ERROR: failed to malloc pquote buffer.\n");
+        return -1;
+    }
+    ecdsa_get_quote_from_dcap_cert(der_crt, der_crt_len, pquote);
+    uint32_t quote_size = 436 + pquote->signature_data_len;
+    printf("quote size is %d;  quote signature_data_len is %d.\n", quote_size, pquote->signature_data_len);
+
+    bool verify_by_qve = 0; //1 means trusted verify methond by QvE, 0 means verify by untructed QPL;
+    if (verify_by_qve) { //In current stage, some machine is for pre-prouction and verifying by QvE is not supported;
+        printf("verify by trusted model.\n");
+        ret = 1;
+    }
+    else {
+        //call DCAP quote verify library to get supplemental data size
+        dcap_ret = sgx_qv_get_quote_supplemental_data_size(&supplemental_data_size);
+        if (dcap_ret == SGX_QL_SUCCESS && supplemental_data_size == sizeof(sgx_ql_qv_supplemental_t)) {
+            printf("sgx_qv_get_quote_supplemental_data_size successfully returned.\n");
+            p_supplemental_data = (uint8_t*)malloc(supplemental_data_size);
+	    if (!p_supplemental_data) {
+		fprintf(stderr, "ERROR: failed to malloc p_supplemental_data buffer.\n");
+		return -1;
+	    }
+        }
+        else {
+            fprintf(stderr, "ERROR: sgx_qv_get_quote_supplemental_data_size failed: 0x%04x.\n", dcap_ret);
+            supplemental_data_size = 0;
+        }
+        //set current time. This is only for sample purposes, in production mode a trusted time should be used.
+        current_time = time(NULL);
+        //call DCAP quote verify library for quote verification
+        //here you can choose 'untrusted' quote verification by specifying parameter '&qve_report_info' as NULL
+        dcap_ret = sgx_qv_verify_quote(
+            pquote, quote_size,
+            NULL,
+            current_time,
+            &collateral_expiration_status,
+            &quote_verification_result,
+            NULL,
+            supplemental_data_size,
+            p_supplemental_data);
+        if (dcap_ret == SGX_QL_SUCCESS) {
+            printf("App: sgx_qv_verify_quote successfully returned.\n");
+        }
+        else {
+            fprintf(stderr, "ERROR: App: sgx_qv_verify_quote failed: 0x%04x\n", dcap_ret);
+        }
+        //check verification result
+        switch (quote_verification_result)
+        {
+        case SGX_QL_QV_RESULT_OK:
+            printf("App: Verification completed successfully.\n");
+            ret = 0;
+            break;
+        case SGX_QL_QV_RESULT_CONFIG_NEEDED:
+        case SGX_QL_QV_RESULT_OUT_OF_DATE:
+        case SGX_QL_QV_RESULT_OUT_OF_DATE_CONFIG_NEEDED:
+        case SGX_QL_QV_RESULT_SW_HARDENING_NEEDED:
+        case SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED:
+            printf("Warning: App: Verification completed with Non-terminal result: %x\n", quote_verification_result);
+            ret = 1;
+            break;
+        case SGX_QL_QV_RESULT_INVALID_SIGNATURE:
+        case SGX_QL_QV_RESULT_REVOKED:
+        case SGX_QL_QV_RESULT_UNSPECIFIED:
+        default:
+            fprintf(stderr, "ERROR: App: Verification completed with Terminal result: %x\n", quote_verification_result);
+            ret = -1;
+            break;
+        }
+        if (p_supplemental_data != NULL)
+            free(p_supplemental_data);
+        if (pquote != NULL)
+            free(pquote);
+    }
+    return ret;
+}
+#else
 static
 int epid_verify_sgx_cert_extensions
 (
@@ -257,7 +390,7 @@ int epid_verify_sgx_cert_extensions
     InitSignatureCtx(&crt.sigCtx, NULL, INVALID_DEVID);
     ret = ParseCertRelative(&crt, CERT_TYPE, NO_VERIFY, 0);
     assert(ret == 0);
-    
+
     extract_x509_extensions(crt.extensions, crt.extensionsSz, &attn_report);
 
     /* Base64 decode attestation report signature. */
@@ -266,7 +399,7 @@ int epid_verify_sgx_cert_extensions
     int rc = Base64_Decode(sig_base64, attn_report.ias_report_signature_len,
                            attn_report.ias_report_signature, &attn_report.ias_report_signature_len);
     assert(0 == rc);
-    
+
     ret = verify_ias_certificate_chain(&attn_report);
     assert(ret == 0);
 
@@ -276,7 +409,7 @@ int epid_verify_sgx_cert_extensions
     ret = verify_enclave_quote_status((const char*) attn_report.ias_report,
                                       attn_report.ias_report_len);
     assert(ret == 0);
-    
+
     sgx_quote_t quote = {0, };
     get_quote_from_report(attn_report.ias_report,
                           attn_report.ias_report_len,
@@ -288,87 +421,6 @@ int epid_verify_sgx_cert_extensions
 
     return 0;
 }
-
-#ifdef RATLS_ECDSA
-static
-int ecdsa_verify_sgx_cert_extensions
-(
-    uint8_t* der_crt,
-    uint32_t der_crt_len
-)
-{
-    DecodedCert crt;
-    int ret;
-
-    InitDecodedCert(&crt, der_crt, der_crt_len, NULL);
-    InitSignatureCtx(&crt.sigCtx, NULL, INVALID_DEVID);
-    ret = ParseCertRelative(&crt, CERT_TYPE, NO_VERIFY, 0);
-    assert(ret == 0);
-
-    ecdsa_attestation_evidence_t evidence;
-    ecdsa_extract_x509_extensions(crt.extensions,
-                                  crt.extensionsSz,
-                                  &evidence);
-    FreeDecodedCert(&crt);
-
-    /* pem_cert_chain := pck cert + pck CA cert + root CA cert */
-    /* crls := root ca crl + pck crl */
-    /* pem_trusted_root_ca_cert */
-    size_t pck_cert_chain_len = evidence.pck_sign_chain_len + evidence.pck_crt_len + 1;
-    char pck_cert_chain[pck_cert_chain_len];
-    memcpy(pck_cert_chain, evidence.pck_crt, evidence.pck_crt_len);
-    memcpy(pck_cert_chain + evidence.pck_crt_len, evidence.pck_sign_chain, evidence.pck_sign_chain_len);
-    pck_cert_chain[sizeof(pck_cert_chain) - 1] = '\0';
-
-    assert(evidence.root_ca_crl_len < sizeof(evidence.root_ca_crl));
-    evidence.root_ca_crl[evidence.root_ca_crl_len] = '\0';
-    assert(evidence.pck_crl_len < sizeof(evidence.pck_crl));
-    evidence.pck_crl[evidence.pck_crl_len] = '\0';
-
-    const char* const crls[] = {(char*) evidence.root_ca_crl,
-                                (char*) evidence.pck_crl};
-
-    /* SGXDataCenterAttestationPrimitives/QuoteVerification/Src/ThirdParty/CMakeLists.txt depends on openssl-1.1.0i.tar.gz" */
-    /* libQuoteVerification.so seems to link in OpenSSL dependencies statically?! */
-
-    /* QVL expects zero terminated strings as input! */
-
-    int pck_crt_status = sgxAttestationVerifyPCKCertificate(pck_cert_chain, crls,
-                                                            (char*) ecdsa_sample_data_real_trustedRootCaCert_pem);
-
-    assert(evidence.tcb_info_len < sizeof(evidence.tcb_info));
-    evidence.tcb_info[evidence.tcb_info_len] = '\0';
-    assert(evidence.tcb_sign_chain_len < sizeof(evidence.tcb_sign_chain));
-    evidence.tcb_sign_chain[evidence.tcb_sign_chain_len] = '\0';
-    int tcb_info_status = sgxAttestationVerifyTCBInfo((char*) evidence.tcb_info,
-                                                      (char*) evidence.tcb_sign_chain,
-                                                      (char*) evidence.root_ca_crl,
-                                                      (char*) ecdsa_sample_data_real_trustedRootCaCert_pem);
-
-    assert(evidence.qe_identity_len < sizeof(evidence.qe_identity));
-    evidence.qe_identity[evidence.qe_identity_len] = '\0';
-
-    int qe_identity_status = sgxAttestationVerifyQEIdentity((char*) evidence.qe_identity,
-                                                            (char*) evidence.tcb_sign_chain,
-                                                            (char*) evidence.root_ca_crl,
-                                                            (char*) ecdsa_sample_data_real_trustedRootCaCert_pem);
-
-    int quote_status = sgxAttestationVerifyQuote(evidence.quote, evidence.quote_len,
-                                                 (char*) evidence.pck_crt,
-                                                 (char*) evidence.pck_crl,
-                                                 (char*) evidence.tcb_info,
-                                                 (char*) evidence.qe_identity);
-
-    // TODO Update DCAP SDK to newest version.
-    if (quote_status == STATUS_TCB_OUT_OF_DATE) {
-        printf("!!! WARNING: quote verification resulted in STATUS_TCB_OUT_OF_DATE\n");
-        quote_status = 0;
-    }
-
-    int report_user_data_status = verify_report_data_against_server_cert(&crt, (sgx_quote_t*) evidence.quote);
-
-    return pck_crt_status || tcb_info_status || qe_identity_status || quote_status || report_user_data_status;
-}
 #endif
 
 int verify_sgx_cert_extensions
@@ -377,13 +429,13 @@ int verify_sgx_cert_extensions
     uint32_t der_crt_len
 )
 {
+#ifdef RATLS_ECDSA
+    return ecdsa_verify_sgx_cert_extensions(der_crt, der_crt_len);
+#else
     if (is_epid_ratls_cert(der_crt, der_crt_len)) {
         return epid_verify_sgx_cert_extensions(der_crt, der_crt_len);
-    } else {
-#ifdef RATLS_ECDSA
-        return ecdsa_verify_sgx_cert_extensions(der_crt, der_crt_len);
-#endif
     }
+#endif
     assert(0);
     // Avoid compiler error: control reaches end of non-void function
     // [-Werror=return-type]

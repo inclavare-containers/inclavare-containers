@@ -48,13 +48,6 @@ int extract_x509_extension
     uint32_t data_max_len
 );
 
-void ecdsa_extract_x509_extensions
-(
-    uint8_t* ext,
-    int ext_len,
-    ecdsa_attestation_evidence_t* evidence
-);
-
 /**
  * @return 1 if it is an EPID-based attestation RA-TLS
  * certificate. Otherwise, 0.
