@@ -20,7 +20,7 @@ const (
 )
 
 //for local tcp connection
-func RemoteTlsSetupTCP(address string, mrencalve unsafe.Pointer, mrsigner unsafe.Pointer) error {
+func RemoteTlsSetupTCP(address string, mrenclave unsafe.Pointer, mrsigner unsafe.Pointer) error {
 	addr := address
 	if addr == "" {
 		addr = defaulttcpAddress
@@ -42,12 +42,12 @@ func RemoteTlsSetupTCP(address string, mrencalve unsafe.Pointer, mrsigner unsafe
 	if err != nil {
 		return err
 	}
-	C.ra_tls_echo(C.int(sockfd.Fd()), (*C.uchar)(mrencalve), (*C.uchar)(mrsigner))
+	C.ra_tls_echo(C.int(sockfd.Fd()), (*C.uchar)(mrenclave), (*C.uchar)(mrsigner))
 	return nil
 }
 
 //for local unix socket connection
-func RemoteTlsSetupSock(address string, mrencalve unsafe.Pointer, mrsigner unsafe.Pointer) error {
+func RemoteTlsSetupSock(address string, mrenclave unsafe.Pointer, mrsigner unsafe.Pointer) error {
 	addr := address
 	if addr == "" {
 		addr = defaultsockAddress
@@ -68,6 +68,6 @@ func RemoteTlsSetupSock(address string, mrencalve unsafe.Pointer, mrsigner unsaf
 	if err != nil {
 		return err
 	}
-	C.ra_tls_echo(C.int(sockfd.Fd()), (*C.uchar)(mrencalve), (*C.uchar)(mrsigner))
+	C.ra_tls_echo(C.int(sockfd.Fd()), (*C.uchar)(mrenclave), (*C.uchar)(mrsigner))
 	return nil
 }

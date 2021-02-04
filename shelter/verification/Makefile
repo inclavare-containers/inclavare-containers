@@ -40,11 +40,11 @@ opensslevp.o: opensslevp.c
 	@echo $(GO_BUILD) -o $@ .
 	$(GO_BUILD) -o $@ .
 
-verification.a: opensslevp.o mrencalve.o  
+verification.a: opensslevp.o mrenclave.o 
 	@echo $(AR) rcs $@ $^
 	$(AR) rcs $@ $^
 
 clean:
 	rm -f *.o *.a
 
-.PHONY: clean 
+.PHONY: clean
