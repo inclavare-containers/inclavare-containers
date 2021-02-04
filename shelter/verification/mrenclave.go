@@ -55,7 +55,7 @@ const (
 )
 
 const (
-	MRENCALVE_HASH_SIZE = 32
+	MRENCLAVE_HASH_SIZE = 32
 	STD_PAGE_SIZE       = 0x1000
 	SIGSTRUCT_SIZE      = 1808
 )
@@ -309,7 +309,7 @@ func Measure_Encl(path string, mrenclave unsafe.Pointer, maxmapsize uint64) bool
 	mmapsize = temp + ((uint64)(ssa_frame_size))*STD_PAGE_SIZE
 	if maxmapsize != 0 {
 		if maxmapsize < mmapsize {
-			fmt.Printf("invlid enclave mmap size 0x%x, please set encalve size large than 0x%x.\n", maxmapsize, mmapsize)
+			fmt.Printf("invlid enclave mmap size 0x%x, please set enclave size large than 0x%x.\n", maxmapsize, mmapsize)
 			return false
 		}
 		mmapsize = maxmapsize
@@ -384,23 +384,23 @@ func Measure_Encl(path string, mrenclave unsafe.Pointer, maxmapsize uint64) bool
 
 }
 
-func Mrencalve_Verify(targetmrenclave unsafe.Pointer, newmrenclave unsafe.Pointer) bool {
+func Mrenclave_Verify(targetmrenclave unsafe.Pointer, newmrenclave unsafe.Pointer) bool {
 	targetptr := uintptr(unsafe.Pointer(targetmrenclave))
 	newptr := uintptr(unsafe.Pointer(newmrenclave))
-	for i := 0; i < MRENCALVE_HASH_SIZE; i++ {
+	for i := 0; i < MRENCLAVE_HASH_SIZE; i++ {
 		targetByte := (*byte)(unsafe.Pointer(targetptr + uintptr(i)))
 		newByte := (*byte)(unsafe.Pointer(newptr + uintptr(i)))
 		if *targetByte != *newByte {
-			fmt.Printf("mrencalve compare failed: target meenclave 0x%x ; new mrenclave 0x%x.\n", *targetByte, *newByte)
+			fmt.Printf("mrenclave compare failed: target meenclave 0x%x ; new mrenclave 0x%x.\n", *targetByte, *newByte)
 			return false
 		} else {
-			fmt.Printf("mrencalve compare success: this is the %d byte with value 0x%x.\n", i, *targetByte)
+			fmt.Printf("mrenclave compare success: this is the %d byte with value 0x%x.\n", i, *targetByte)
 		}
 	}
 	return true
 }
 
-func Mrencalve_VerifybySigstruct(sigstruct string, newmrenclave unsafe.Pointer) bool {
+func Mrenclave_VerifybySigstruct(sigstruct string, newmrenclave unsafe.Pointer) bool {
 
 	f, err := os.OpenFile(sigstruct, os.O_RDONLY, 0600)
 	defer f.Close()
@@ -435,16 +435,16 @@ func Mrencalve_VerifybySigstruct(sigstruct string, newmrenclave unsafe.Pointer) 
 		return false
 	}
 
-	var mrencalve [MRENCALVE_HASH_SIZE]byte
-	mrencalve = sigstructobj.EnclaveHash
+	var mrenclave [MRENCLAVE_HASH_SIZE]byte
+	mrenclave = sigstructobj.EnclaveHash
 	ptr := uintptr(unsafe.Pointer(newmrenclave))
-	for i := 0; i < MRENCALVE_HASH_SIZE; i++ {
+	for i := 0; i < MRENCLAVE_HASH_SIZE; i++ {
 		pByte := (*byte)(unsafe.Pointer(ptr + uintptr(i)))
-		if mrencalve[i] != *pByte {
-			fmt.Printf("mrencalve compare failed: target meenclave 0x%x ; new mrenclave 0x%x.\n", mrencalve[i], *pByte)
+		if mrenclave[i] != *pByte {
+			fmt.Printf("mrenclave compare failed: target meenclave 0x%x ; new mrenclave 0x%x.\n", mrenclave[i], *pByte)
 			return false
 		} else {
-			fmt.Printf("mrencalve compare success: this is the %d byte with value 0x%x.\n", i, mrencalve[i])
+			fmt.Printf("mrenclave compare success: this is the %d byte with value 0x%x.\n", i, mrenclave[i])
 		}
 	}
 	return true

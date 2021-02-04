@@ -35,7 +35,7 @@ var mrverifyCommand = cli.Command{
 	ArgsUsage: `[command options]
 
 EXAMPLE:
-       # shelter mrencalve`,
+       # shelter mrenclave`,
 	/*	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "addr",
@@ -81,7 +81,7 @@ EXAMPLE:
 			return fmt.Errorf("measure mrEnclave failed.\n")
 		}
 
-		if !verification.Mrencalve_VerifybySigstruct(defaultEncss, unsafe.Pointer(&mrEnclave[0])) {
+		if !verification.Mrenclave_VerifybySigstruct(defaultEncss, unsafe.Pointer(&mrEnclave[0])) {
 			return fmt.Errorf("mismatch with sigstruct mrEnclave value.\n")
 		}
 		fmt.Printf("new mrEnclave match the vallue in sigstruct file successfully.\n")

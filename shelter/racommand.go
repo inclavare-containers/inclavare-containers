@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	remoteMrencalve [32]byte
+	remoteMrenclave [32]byte
 	remoteMrsigner  [32]byte
 )
 
@@ -18,7 +18,7 @@ var sgxraCommand = cli.Command{
 	ArgsUsage: `[command options]
 
 EXAMPLE:
-       # shelter mrencalve`,
+       # shelter mrenclave`,
 	/*	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "none",
@@ -36,10 +36,10 @@ EXAMPLE:
 
 		var socketAddr string
 		socketAddr = cliContext.String("addr")
-		//connect to encalved by TCP socket
-		//ret := remoteattestation.RemoteTlsSetupTCP(socketAddr, (unsafe.Pointer)(&RemoteMrencalve[0]), (unsafe.Pointer)(&RemoteMrsigner[0]))
+		//connect to inclavared by TCP socket
+		//ret := remoteattestation.RemoteTlsSetupTCP(socketAddr, (unsafe.Pointer)(&remoteMrenclave[0]), (unsafe.Pointer)(&remoteMrsigner[0]))
 		//connect to ra-tls-server by unix socket
-		ret := remoteattestation.RemoteTlsSetupSock(socketAddr, (unsafe.Pointer)(&remoteMrencalve[0]), (unsafe.Pointer)(&remoteMrsigner[0]))
+		ret := remoteattestation.RemoteTlsSetupSock(socketAddr, (unsafe.Pointer)(&remoteMrenclave[0]), (unsafe.Pointer)(&remoteMrsigner[0]))
 		if ret != nil {
 			return fmt.Errorf("RemotTlsSetup failed with err: %s \n", ret)
 		}
