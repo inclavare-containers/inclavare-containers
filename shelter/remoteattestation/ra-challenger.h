@@ -2,6 +2,21 @@
 #define _RA_CHALLENGER_H_
 
 #include <sgx_quote.h>
+#ifdef RATLS_ECDSA
+#include <sgx_quote_3.h>
+#endif
+
+/**
+ * Extract an Intel SGX quote from an DCAP extension.
+ */
+#ifdef RATLS_ECDSA
+void ecdsa_get_quote_from_extension
+(
+    const uint8_t* exts,
+    size_t exts_len,
+    sgx_quote3_t* q
+);
+#endif
 
 /**
  * Extract an Intel SGX quote from an Intel Attestation Service (IAS) report.
@@ -32,15 +47,4 @@ int verify_sgx_cert_extensions
     uint8_t* der_crt,
     uint32_t der_crt_len
 );
-
-/**
- * Pretty-print information of RA-TLS certificate to file descriptor.
- */
-void dprintf_ratls_cert
-(
-    int fd,
-    uint8_t* der_crt,
-    uint32_t der_crt_len
-);
-
 #endif
