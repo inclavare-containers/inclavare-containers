@@ -10,7 +10,7 @@ use reqwest::header::HeaderMap;
 use sgx_types::{
     c_int, c_void, sgx_attributes_t, sgx_calc_quote_size, sgx_epid_group_id_t, sgx_get_quote,
     sgx_init_quote, sgx_launch_token_t, sgx_misc_attribute_t, sgx_report_t, sgx_status_t,
-    sgx_target_info_t, SgxResult,
+    sgx_target_info_t, SgxResult, sgx_enclave_id_t
 };
 use sgx_urts::SgxEnclave;
 use std::default::Default;
@@ -18,8 +18,10 @@ use std::ffi::CStr;
 use std::net::Shutdown;
 use std::os::unix::io::AsRawFd;
 use std::os::unix::net::UnixListener;
+use std::os::unix::net::UnixStream;
 use std::ptr;
 use std::str;
+use clap::{Arg, App};
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 const IAS_REPORT_API_URL: &'static str =
@@ -152,7 +154,7 @@ fn parse_response_attn_report(
         println!("{:?}: {:?}", k, v);
     }
 
-    let mut cert = resp_headers
+    let cert = resp_headers
         .get("X-IASReport-Signing-Certificate")
         .unwrap()
         .as_bytes();
@@ -350,27 +352,16 @@ pub extern "C" fn ocall_remote_attestation(
 //     )
 // }
 
-fn main() {
-    let enclave = match init_enclave() {
-        Ok(r) => {
-            println!("[+] Init Enclave Successful {}!", r.geteid());
-            r
-        }
-        Err(x) => {
-            println!("[-] Init Enclave Failed {}!", x.as_str());
-            return;
-        }
-    };
-
-    let mut sgxstatus = ratlsffi::_status_t_SGX_SUCCESS;
+fn run_server(eid: sgx_enclave_id_t, sockpath: &str, xfer: Option<&str>) {
+    let mut sgxstatus;
     let mut retval: c_int = 0;
     let mut ctx: *mut ratlsffi::WOLFSSL_CTX = ptr::null_mut();
 
     unsafe {
-        sgxstatus = ratlsffi::ecall_wolfSSL_Debugging_ON(enclave.geteid());
+        sgxstatus = ratlsffi::ecall_wolfSSL_Debugging_ON(eid);
         panicIfEcallFailed("ecall_wolfSSL_Debugging_ON", sgxstatus);
 
-        sgxstatus = ratlsffi::ecall_wolfSSL_Init(enclave.geteid(), &mut retval as *mut c_int);
+        sgxstatus = ratlsffi::ecall_wolfSSL_Init(eid, &mut retval as *mut c_int);
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval != ratlsffi::WOLFSSL_SUCCESS {
             panic!(
                 "wolfssl_Init failed: sgx_status={}, retval={}",
@@ -380,7 +371,7 @@ fn main() {
 
         let mut method: *mut ratlsffi::WOLFSSL_METHOD = ptr::null_mut();
         sgxstatus =
-            ratlsffi::ecall_wolfTLSv1_2_server_method(enclave.geteid(), &mut method as *mut *mut _);
+            ratlsffi::ecall_wolfTLSv1_2_server_method(eid, &mut method as *mut *mut _);
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || method.is_null() {
             panic!(
                 "ecall_wolfTLSv1_2_server_method failed: sgx_status={}, method is_null={}",
@@ -390,7 +381,7 @@ fn main() {
         }
 
         sgxstatus = ratlsffi::ecall_wolfSSL_CTX_new(
-            enclave.geteid(),
+            eid,
             &mut ctx as *mut *mut ratlsffi::WOLFSSL_CTX,
             method,
         );
@@ -402,7 +393,7 @@ fn main() {
             );
         }
 
-        sgxstatus = ratlsffi::ecall_create_key_and_x509(enclave.geteid(), ctx);
+        sgxstatus = ratlsffi::ecall_create_key_and_x509(eid, ctx);
         if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS {
             panic!("ecall_create_key_and_x509 failed: sgx_status={}", sgxstatus);
         }
@@ -410,10 +401,9 @@ fn main() {
 
     println!("Running server(based on wolfssl)...");
 
-    let sock_path = "/run/rune/ra-tls.sock";
-    let _ = std::fs::remove_file(sock_path);
+    let _ = std::fs::remove_file(sockpath);
 
-    let listener = UnixListener::bind(sock_path).unwrap();
+    let listener = UnixListener::bind(sockpath).unwrap();
     loop {
         match listener.accept() {
             Ok((socket, addr)) => {
@@ -423,7 +413,7 @@ fn main() {
                     let mut ssl: *mut ratlsffi::WOLFSSL = ptr::null_mut();
 
                     sgxstatus =
-                        ratlsffi::ecall_wolfSSL_new(enclave.geteid(), &mut ssl as *mut *mut _, ctx);
+                        ratlsffi::ecall_wolfSSL_new(eid, &mut ssl as *mut *mut _, ctx);
                     if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || ssl.is_null() {
                         panic!(
                             "ecall_wolfSSL_new failed: sgx_status={}, ssl is_null={}",
@@ -433,7 +423,7 @@ fn main() {
                     }
 
                     sgxstatus = ratlsffi::ecall_wolfSSL_set_fd(
-                        enclave.geteid(),
+                        eid,
                         &mut retval as *mut c_int,
                         ssl,
                         socket.as_raw_fd(),
@@ -445,12 +435,11 @@ fn main() {
                             "ecall_wolfSSL_set_fd failed: sgx_status={}, retval={}",
                             sgxstatus, retval
                         );
-                        continue;
                     }
 
                     let mut buff: [u8; 256] = [0; 256];
                     sgxstatus = ratlsffi::ecall_wolfSSL_read(
-                        enclave.geteid(),
+                        eid,
                         &mut retval as *mut c_int,
                         ssl,
                         buff.as_mut_ptr() as *mut c_void,
@@ -459,7 +448,7 @@ fn main() {
                     if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval <= 0 {
                         if retval == ratlsffi::WOLFSSL_FATAL_ERROR {
                             ratlsffi::ecall_wolfSSL_get_error(
-                                enclave.geteid(),
+                                eid,
                                 &mut retval as *mut _,
                                 ssl,
                                 retval,
@@ -470,22 +459,45 @@ fn main() {
                             "ecall_wolfSSL_read failed: sgx_status={}, retval={}",
                             sgxstatus, retval
                         );
-                        ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl);
+                        ratlsffi::ecall_wolfSSL_free(eid, ssl);
                         continue;
                     }
 
-                    let msg = "Hello, Inclavare Containers!\n";
-                    sgxstatus = ratlsffi::ecall_wolfSSL_write(
-                        enclave.geteid(),
-                        &mut retval,
-                        ssl,
-                        msg.as_ptr() as *const c_void,
-                        msg.len() as c_int,
-                    );
+                    let mut xfersock: Option<UnixStream> = None;
+                    if let Some(xfer) = xfer {
+                        xfersock = match UnixStream::connect(xfer) {
+                            Ok(sock) => Some(sock),
+                            Err(e) => {
+                                println!("Couldn't connect: {:?}", e);
+                                None
+                            }
+                        };
+                    }
+
+                    if let Some(xfersock) = xfersock {
+                        retval = ra_tls_send(xfersock.as_raw_fd(),
+                                        buff.as_ptr() as *const c_void, retval,
+                                        buff.as_mut_ptr() as *mut c_void, 256);
+
+                        sgxstatus = ratlsffi::ecall_wolfSSL_write(eid,
+                            &mut retval, ssl,
+                            buff.as_ptr() as *const c_void,
+                            retval);
+                    } else {
+                        let msg = "Hello, Inclavare Containers!\n";
+                        sgxstatus = ratlsffi::ecall_wolfSSL_write(
+                            eid,
+                            &mut retval,
+                            ssl,
+                            msg.as_ptr() as *const c_void,
+                            msg.len() as c_int,
+                        );
+                    }
+
                     if sgxstatus != ratlsffi::_status_t_SGX_SUCCESS || retval <= 0 {
                         if retval == ratlsffi::WOLFSSL_FATAL_ERROR {
                             ratlsffi::ecall_wolfSSL_get_error(
-                                enclave.geteid(),
+                                eid,
                                 &mut retval as *mut _,
                                 ssl,
                                 retval,
@@ -497,7 +509,7 @@ fn main() {
                         );
                     }
 
-                    ratlsffi::ecall_wolfSSL_free(enclave.geteid(), ssl);
+                    ratlsffi::ecall_wolfSSL_free(eid, ssl);
                 }
 
                 socket.shutdown(Shutdown::Both).expect("shutdown failed");
@@ -508,15 +520,94 @@ fn main() {
 
     unsafe {
         if !ctx.is_null() {
-            ratlsffi::ecall_wolfSSL_CTX_free(enclave.geteid(), ctx);
+            ratlsffi::ecall_wolfSSL_CTX_free(eid, ctx);
         }
 
-        ratlsffi::ecall_wolfSSL_Cleanup(enclave.geteid(), &mut retval as *mut _);
+        ratlsffi::ecall_wolfSSL_Cleanup(eid, &mut retval as *mut _);
     }
+}
 
-    println!("Destroying enclave ...");
+extern "C" {
+    fn ra_tls_echo(sockfd: c_int) -> c_int;
+    fn ra_tls_send(sockfd: c_int, bufsnd: *const c_void, sz_bufsnd: c_int, bufrcv: *mut c_void, sz_bufrcv: c_int) -> c_int;
+}
 
-    enclave.destroy();
+fn run_client(sockpath: &str) {
+    let sock = match UnixStream::connect(sockpath) {
+        Ok(sock) => sock,
+        Err(e) => {
+            println!("Couldn't connect: {:?}", e);
+            return
+        }
+    };
+
+    unsafe {
+        ra_tls_echo(sock.as_raw_fd());
+    }
+}
+
+fn main() {
+    let matches = App::new("inclavared")
+                    .version("0.1")
+                    .author("Inclavare-Containers Team")
+                    .arg(Arg::with_name("listen")
+                        .short("l")
+                        .long("listen")
+                        .value_name("unixsock")
+                        .help("Work in listen mode")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("xfer")
+                        .short("x")
+                        .long("xfer")
+                        .value_name("unixsock")
+                        .help("Xfer data from client to server")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("connect")
+                        .short("c")
+                        .long("connect")
+                        .value_name("unixsock")
+                        .help("Work in client mode")
+                        .takes_value(true)
+                    )
+                    .get_matches();
+
+    if matches.is_present("listen") {
+        let listen = matches.value_of("listen").unwrap();
+
+        println!("Running as server on {}", listen);
+
+        let enclave = match init_enclave() {
+            Ok(r) => {
+                println!("[+] Init Enclave Successful {}!", r.geteid());
+                r
+            }
+            Err(x) => {
+                println!("[-] Init Enclave Failed {}!", x.as_str());
+                return;
+            }
+        };
+
+        if matches.is_present("xfer") {
+            let xfer = matches.value_of("xfer").unwrap();
+
+            println!("Running as xfer to {}", xfer);
+
+            run_server(enclave.geteid(), listen, Some(xfer));
+        } else {
+            run_server(enclave.geteid(), listen, None);
+        }
+
+        println!("Destroying enclave ...");
+        enclave.destroy();
+    } else {
+        let sockpath = matches.value_of("connect").unwrap_or("/run/rune/ra-tls.sock");
+
+        println!("Running as client to {}", sockpath);
+
+        run_client(sockpath);
+    }
 }
 
 fn panicIfFailed(prefix: &str, retval: c_int) {

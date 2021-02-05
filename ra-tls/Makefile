@@ -40,7 +40,9 @@ deps := $(LIBDIR)/libwolfssl.sgx.static.lib.a $(LIBDIR)/libsgx_ra_tls_wolfssl.a 
 all: $(deps) $(BINDIR)/elv $(BINDIR)/ra-tls-server $(BINDIR)/Wolfssl_Enclave.signed.so
 
 $(BINDIR)/elv: $(BINDIR) $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
-	make -C $(ELV) && cp -f $(ELV)/elv $@
+	make -C $(ELV)
+	cp -f $(ELV)/libra-tls-client.a $(LIBDIR)/libra-tls-client.a
+	cp -f $(ELV)/elv $@
 
 $(BINDIR)/ra-tls-server: $(BINDIR) $(LIBDIR)/libcurl-wolfssl.a $(LIBDIR)/libwolfssl.a
 	make -C $(RA_TLS_SERVER) && cp -f $(RA_TLS_SERVER)/ra-tls-server $@

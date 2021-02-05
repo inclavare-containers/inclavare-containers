@@ -62,8 +62,9 @@ static int cert_verify_callback(int preverify, WOLFSSL_X509_STORE_CTX * store)
 extern struct ra_tls_options my_ra_tls_options;
 #endif
 
-int ra_tls_echo(int sockfd)
+int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, size_t sz_bufrcv)
 {
+    int ret = -1;
 	wolfSSL_Debugging_ON();
 
 	wolfSSL_Init();
@@ -125,19 +126,15 @@ int ra_tls_echo(int sockfd)
 		printf("%02x", body->mr_signer.m[i]);
 	printf("\n");
 
-	const char *http_request = "GET / HTTP/1.0\r\n\r\n";
-	size_t len = strlen(http_request);
-	if (wolfSSL_write(ssl, http_request, len) != (int)len) {
+	if (wolfSSL_write(ssl, bufsnd, sz_bufsnd) != (int)sz_bufsnd) {
 		fprintf(stderr, "ERROR: failed to write\n");
 		goto err_ssl;
 	}
-	char buff[256];
-	memset(buff, 0, sizeof(buff));
-	if (wolfSSL_read(ssl, buff, sizeof(buff) - 1) == -1) {
+	ret = wolfSSL_read(ssl, bufrcv, sz_bufrcv);
+	if (ret == -1) {
 		fprintf(stderr, "ERROR: failed to read\n");
 		goto err_ssl;
 	}
-	printf("Server:\n%s\n", buff);
 err_ssl:
 	wolfSSL_free(ssl);
 err_ctx:
@@ -145,5 +142,18 @@ err_ctx:
 err:
 	wolfSSL_Cleanup();
 
-	return 0;
+	return ret;
+}
+
+int ra_tls_echo(int sockfd)
+{
+    char buffer[256];
+	const char *http_request = "GET / HTTP/1.0\r\n\r\n";
+	size_t len = strlen(http_request);
+
+	memset(buffer, 0, sizeof(buffer));
+	ra_tls_send(sockfd, http_request, len, buffer, sizeof(buffer));
+	printf("Server:\n%s\n", buffer);
+
+    return 0;
 }
