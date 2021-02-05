@@ -5,6 +5,10 @@ package remoteattestation
 #cgo CFLAGS:  -I../../ra-tls/build/include
 #cgo LDFLAGS: -L../../ra-tls/build/lib
 #cgo LDFLAGS: -l:libra-challenger.a -l:libwolfssl.a -lm
+#ifdef RATLS_ECDSA
+#cgo LDFLAGS:  -lsgx_dcap_quoteverify -lsgx_urts -lpthread -ldl -lsgx_dcap_ql
+#endif
+
 extern int ra_tls_echo(int sockfd, unsigned char* mrenclave, unsigned char* mrsigner);
 */
 import "C"
