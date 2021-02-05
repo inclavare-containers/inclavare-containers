@@ -22,7 +22,7 @@ func (epid *sgxEpidChallenger) Name() string {
 func (epid *sgxEpidChallenger) New(cfg map[string]string) error {
 	ias, err := ias.NewIasAttestation(cfg)
 	if err != nil {
-		return nil
+		return err
 	}
 	epid.ias = ias
 
