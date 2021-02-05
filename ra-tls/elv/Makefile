@@ -43,16 +43,17 @@ COMMIT ?= $(if $(shell git status --porcelain --untracked-files=no),"$(COMMIT_NO
 GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) \
   -ldflags "-X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)"
 
-elv: ra-tls-client.a $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
+elv: libra-tls-client.a $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
 	$(GO_BUILD) -o $@ .
 
-ra-tls-client.a: ra-tls-client.o
+libra-tls-client.a: ra-tls-client.o
 	$(AR) rcs "$@" $(filter %.o, $^)
 
 install: elv
 	cp -f elv $(BINDIR)
+	cp -f libra-tls-client.a $(LIBDIR)
 
 clean:
-	rm -f *.o elv ra-tls-client.a
+	rm -f *.o elv libra-tls-client.a
 
 .PHONY: clean install
