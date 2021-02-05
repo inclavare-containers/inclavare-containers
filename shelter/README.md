@@ -28,9 +28,20 @@ git clone https://github.com/alibaba/inclavare-containers
 
 2. Prepare the dependence libs required by shelter
 
+### For EPID RA
+
 ```shell
 cd $WORKSPACE/inclavare-containers/shelter
 make
+```
+
+### For DCAP RA
+
+Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/README.md) to install DCAP. Note: If your platform is pre-product SGX platform (SBX), please follow this guide to resolve the quote verification problem on SBX platforms: https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platform/README.md.
+
+```shell
+cd $WORKSPACE/inclavare-containers/shelter
+make ECDSA=1
 ```
 
 ## Run
@@ -62,7 +73,7 @@ shelter help
       --version, -v  print the version
 ```
 
-2. remote attestation for epid-sgx-ra
+2. remote attestation for epid-sgx-ra & dcap-sgx-ra
 
 ```shell
 shelter remoteattestation
