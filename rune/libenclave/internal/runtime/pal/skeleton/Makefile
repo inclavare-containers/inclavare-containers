@@ -24,7 +24,7 @@ HOST_LDFLAGS := -fPIC -shared -Wl,-Bsymbolic
 LDFLAGS :=
 ifdef TLS_SERVER
 LDFLAGS += -L$(LIBDIR) -L/opt/intel/sgxsdk/lib64 \
-	   -L$(RA_TLS_SERVER)/lib -lsgx_uae_service -lsgx_urts \
+	   -L$(RA_TLS_SERVER)/lib -lsgx_uae_service -lsgx_urts -lsgx_dcap_ql \
 	   -lra-tls-server -l:libcurl-wolfssl.a -l:libwolfssl.a
 endif
 

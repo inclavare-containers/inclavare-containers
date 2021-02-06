@@ -33,6 +33,10 @@ func preloadSgxPswLib() {
 
 	// Required for EPID-based remote attestation
 	loadLibrary("libsgx_epid.so.1")
+
+	// Required for ECDSA-based remote attestation
+	loadLibrary("libdcap_quoteprov.so.1")
+	loadLibrary("libsgx_default_qcnl_wrapper.so.1")
 }
 
 func PreloadLib() {
