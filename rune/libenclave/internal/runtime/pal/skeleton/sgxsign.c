@@ -727,7 +727,7 @@ int main(int argc, char **argv)
 	memcpy(ss.header.header1, header1, sizeof(ss.header.header1));
 	memcpy(ss.header.header2, header2, sizeof(ss.header.header2));
 
-	if (enclave_debug)
+	if (enclave_debug && is_sgx1_supported() && !is_sgx2_supported())
 		ss.header.type = 1 << 31;
 
 	if (calc_sgx_attributes(&ss.body.attributes, &ss.body.attributes_mask))
