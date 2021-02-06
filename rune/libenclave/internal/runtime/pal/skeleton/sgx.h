@@ -175,6 +175,9 @@ void get_sgx_xfrm_by_cpuid(uint64_t *xfrm);
 uint32_t sgx_calc_ssaframesize(uint32_t miscselect, uint64_t xfrm);
 uint32_t get_sgx_miscselect_by_cpuid(void);
 bool is_launch_control_supported(void);
+bool is_sgx1_supported(void);
+bool is_sgx2_supported(void);
+
 /* *INDENT-OFF* */
 #endif   /* _UAPI_ASM_X86_SGX_H */
 /* *INDENT-ON* */

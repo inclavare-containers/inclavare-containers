@@ -133,6 +133,24 @@ bool is_launch_control_supported(void)
 	return !!(cpu_info[2] & 0x40000000);
 }
 
+bool is_sgx1_supported(void)
+{
+	int cpu_info[4] = { 0, 0, 0, 0 };
+
+	__cpuidex(cpu_info, SGX_CPUID, 0);
+
+	return !!(cpu_info[0] & 1);
+}
+
+bool is_sgx2_supported(void)
+{
+	int cpu_info[4] = { 0, 0, 0, 0 };
+
+	__cpuidex(cpu_info, SGX_CPUID, 0);
+
+	return !!(cpu_info[0] & 0x2);
+}
+
 /* *INDENT-OFF* */
 int get_mmap_min_addr(uint64_t *addr)
 {
