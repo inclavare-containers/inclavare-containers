@@ -6,13 +6,7 @@ This guide will show you how to use EPID-based remote attestation in skeleton wi
 
 - Build `rune` according to this [guide](https://github.com/alibaba/inclavare-containers/tree/master/rune#building).
 
-- Configure SGX RA settings with the following:
-
-```shell
-export SPID=<hex string>
-export EPID_SUBSCRIPTION_KEY=<hex string>
-export QUOTE_TYPE=<SGX_LINKABLE_SIGNATURE | SGX_UNLINKABLE_SIGNATURE>
-```
+- Build `EPID` or `DCAP` ra-tls according to this [guide](https://github.com/alibaba/inclavare-containers/blob/master/ra-tls/README.md#build).
 
 # Quick Start
 
@@ -29,6 +23,8 @@ cp liberpal-skeleton-v3.so /usr/lib
 ```
 
 ## Build skeleton docker image
+
+### Build EPID-based remote attestation skeleton docker image
 
 Skeleton enclave runtime requires to authenticate Intel IAS https server, so it is required to include the necessary certificates in skeleton docker image.
 
@@ -71,6 +67,38 @@ Then build the skeleton docker image with the command:
 docker build . -t skeleton-enclave
 ```
 
+### Build DCAP-based remote attestation skeleton docker image
+
+Assume your host is CentOS.
+
+Type the following commands to create a Dockerfile:
+
+```Shell
+cp ${path_to_inclavare_containers}/ra-tls/build/bin/Wolfssl_Enclave.signed.so ./
+cp /etc/sgx_default_qcnl.conf ./
+cp /usr/lib64/libsgx_pce.signed.so ./
+cp /usr/lib64/libsgx_qe3.signed.so ./
+
+cat >Dockerfile <<EOF
+FROM centos:8.1.1911
+
+WORKDIR /
+
+COPY Wolfssl_Enclave.signed.so /
+
+COPY sgx_default_qcnl.conf /etc/
+
+COPY libsgx_pce.signed.so /usr/lib64
+COPY libsgx_qe3.signed.so /usr/lib64
+EOF
+```
+
+Then build the skeleton docker image with the command:
+
+```shell
+docker build . -t skeleton-enclave
+```
+
 ## Integrate OCI Runtime rune with Docker
 
 Please refer to [guide](https://github.com/alibaba/inclavare-containers/tree/master/rune/libenclave/internal/runtime/pal/skeleton#integrate-oci-runtime-rune-with-docker) to integrate OCI runtime rune with docker.
@@ -79,10 +107,21 @@ Please refer to [guide](https://github.com/alibaba/inclavare-containers/tree/mas
 
 At present, TLS server based on EPID is only implemented in skeleton v3.
 
-### Run TLS server by docker image
+### Run EPID TLS server by docker image
 
 ```shell
 docker run -i --rm --runtime=rune \
+  -e ENCLAVE_TYPE=intelSgx \
+  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
+  -e ENCLAVE_RUNTIME_ARGS=debug \
+  -v /run/rune:/run/rune \
+  skeleton-enclave:latest
+```
+
+### Run DCAP TLS server by docker image
+
+```shell
+docker run -i --rm --net=host --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
   -e ENCLAVE_RUNTIME_ARGS=debug \
@@ -114,6 +153,25 @@ Assuming you have an OCI bundle according to [previous steps](skeleton#create-sk
                 "rprivate"
         ]
 }
+```
+
+If you want to run `DCAP` OCI bundle, you alse need to delete the network namespace configuration in config.json to ensure you run skeleton in host network mode. After doing this, your namespaces is as following without the network type namespace:
+
+```shell
+                "namespaces": [
+                        {
+                                "type": "pid"
+                        },
+                        {
+                                "type": "ipc"
+                        },
+                        {
+                                "type": "uts"
+                        },
+                        {
+                                "type": "mount"
+                        }
+                ],
 ```
 
 Assuming you have an OCI bundle from the previous step you can execute the container in this way.
