@@ -1,3 +1,9 @@
+rune (0.6.0-1) unstable; urgency=low
+
+  * Update to version 0.6.0.
+
+ -- Shirong Hao <shirong@linux.alibaba.com>  Sun, 07 Feb 2021 05:40:00 +0000
+
 rune (0.5.2-1) unstable; urgency=low
 
   * Update to version 0.5.2.
