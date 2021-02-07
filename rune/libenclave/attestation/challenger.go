@@ -55,7 +55,7 @@ func NewChallenger(aType string, cfg map[string]string) (Challenger, error) {
 
 var challengerList []Challenger
 
-func registerChallenger(challenger Challenger) error {
+func RegisterChallenger(challenger Challenger) error {
 	for _, c := range challengerList {
 		if c.Name() == challenger.Name() {
 			return fmt.Errorf("Attestation service %s registered already", challenger.Name())

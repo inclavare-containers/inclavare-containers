@@ -1,7 +1,8 @@
-package attestation // import "github.com/inclavare-containers/rune/libenclave/attestation"
+package sgx_challenger // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx/sgx_challenger"
 
 import (
 	"fmt"
+	"github.com/inclavare-containers/rune/libenclave/attestation"
 	"github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 	"github.com/sirupsen/logrus"
 )
@@ -33,14 +34,14 @@ func (epid *sgxEpidChallenger) Check(quote []byte) error {
 	return epid.ias.CheckQuote(quote)
 }
 
-func (epid *sgxEpidChallenger) Verify(quote []byte) (*ReportStatus, error) {
+func (epid *sgxEpidChallenger) Verify(quote []byte) (*attestation.ReportStatus, error) {
 	s, err := epid.ias.VerifyQuote(quote)
 	if err != nil {
 		return nil, err
 	}
 
 	/* FIXME: check whether the report status is acceptable */
-	status := &ReportStatus{
+	status := &attestation.ReportStatus{
 		StatusCode:     StatusSgxBit,
 		SpecificStatus: s,
 	}
@@ -48,13 +49,13 @@ func (epid *sgxEpidChallenger) Verify(quote []byte) (*ReportStatus, error) {
 	return status, nil
 }
 
-func (epid *sgxEpidChallenger) GetReport(quote []byte, nonce uint64) (*ReportStatus, map[string]string, error) {
+func (epid *sgxEpidChallenger) GetReport(quote []byte, nonce uint64) (*attestation.ReportStatus, map[string]string, error) {
 	s, report, err := epid.ias.RetrieveIasReport(quote, nonce)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	status := &ReportStatus{
+	status := &attestation.ReportStatus{
 		StatusCode:     StatusSgxBit,
 		SpecificStatus: s,
 	}
@@ -62,7 +63,7 @@ func (epid *sgxEpidChallenger) GetReport(quote []byte, nonce uint64) (*ReportSta
 	return status, report, nil
 }
 
-func (epid *sgxEpidChallenger) ShowReportStatus(status *ReportStatus) {
+func (epid *sgxEpidChallenger) ShowReportStatus(status *attestation.ReportStatus) {
 	if status.StatusCode&StatusSgxBit != StatusSgxBit {
 		logrus.Error("Report status is used for SGX EPID-based")
 		return
@@ -78,7 +79,7 @@ func (epid *sgxEpidChallenger) ShowReportStatus(status *ReportStatus) {
 }
 
 func init() {
-	if err := registerChallenger(&sgxEpidChallenger{}); err != nil {
+	if err := attestation.RegisterChallenger(&sgxEpidChallenger{}); err != nil {
 		fmt.Print(err)
 	}
 }
