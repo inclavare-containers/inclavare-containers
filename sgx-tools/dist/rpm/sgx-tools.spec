@@ -5,7 +5,7 @@
 %global BIN_DIR /usr/local/bin
 
 Name: sgx-tools
-Version: 0.5.2
+Version: 0.6.0
 Release: %{centos_base_release}%{?dist}
 Summary: sgx-tools is a commandline tool, used to interact Intel SGx aesm service.
 
@@ -51,6 +51,9 @@ install -p -m 755 %{name}/%{name} %{buildroot}%{BIN_DIR}
 %{BIN_DIR}/%{name}
 
 %changelog
+* Sun Feb 07 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.0
+- Update to version 0.6.0
+
 * Wed Dec 30 2020 Shirong Hao <shirong@linux.alibaba.com> - 0.5.2
 - Update to version 0.5.2
 
