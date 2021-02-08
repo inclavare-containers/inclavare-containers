@@ -6,7 +6,7 @@ import (
 	"github.com/go-restruct/restruct"
 	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
-	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/sgx_challenger"
+	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/challenger"
 	"github.com/inclavare-containers/rune/libenclave/epm"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"log"
