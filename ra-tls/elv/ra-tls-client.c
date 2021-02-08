@@ -40,6 +40,9 @@
 #define DEFAULT_PORT 11111
 
 #include <sgx_quote.h>
+#ifdef RATLS_ECDSA
+#include <sgx_quote_3.h>
+#endif
 
 #include "ra.h"
 #ifdef SGX_RATLS_MUTUAL
@@ -81,7 +84,12 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
 	int key_len = sizeof(key);
 	int crt_len = sizeof(crt);
 
+#ifdef RATLS_ECDSA
+	ecdsa_create_key_and_x509(key, &key_len, crt, &crt_len);
+#else
 	create_key_and_x509(key, &key_len, crt, &crt_len, &my_ra_tls_options);
+#endif
+
 	int ret = wolfSSL_CTX_use_PrivateKey_buffer(ctx, key, key_len,
 						    SSL_FILETYPE_ASN1);
 	assert(SSL_SUCCESS == ret);
@@ -113,8 +121,13 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
 	const unsigned char *der = wolfSSL_X509_get_der(srvcrt, &derSz);
 	sgx_report_body_t *body = NULL;
 	uint8_t quote_buff[8192] = {0,};
+#ifdef RATLS_ECDSA
+    ecdsa_get_quote_from_dcap_cert(der, derSz, (sgx_quote3_t*)quote_buff);
+	sgx_quote_t* quote = (sgx_quote3_t*)quote_buff;
+#else
 	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
 	sgx_quote_t* quote = (sgx_quote_t*)quote_buff;
+#endif
 	body = &quote->report_body;
 	printf("Server's SGX identity:\n");
 	printf("  . MRENCLAVE = ");

@@ -45,6 +45,12 @@ extern "C" {
         der_cert_len: *mut c_uint,
         opt: *mut ratlsffi::ra_tls_options,
     );
+    pub fn ecdsa_create_key_and_x509(
+        der_key: *mut c_uchar,
+        der_key_len: *mut c_uint,
+        der_cert: *mut c_uchar,
+        der_cert_len: *mut c_uint
+    );
 }
 
 #[no_mangle]
@@ -392,6 +398,15 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
     };
 
     unsafe {
+        #[cfg(feature = "RATLS_ECDSA")]
+        ecdsa_create_key_and_x509(
+            der_key.as_mut_ptr(),
+            &mut der_key_len as *mut _ as *mut c_uint,
+            der_cert.as_mut_ptr(),
+            &mut der_cert_len as *mut _ as *mut c_uint
+        );
+
+        #[cfg(not(feature = "RATLS_ECDSA"))]
         create_key_and_x509(
             der_key.as_mut_ptr(),
             &mut der_key_len as *mut _ as *mut c_uint,

@@ -14,11 +14,13 @@ fn main() {
     println!("cargo:rustc-link-lib=static=wolfssl");
     println!("cargo:rustc-link-lib=static=ra-challenger");
     println!("cargo:rustc-link-lib=static=ra-tls-client");
+    println!("cargo:rustc-link-lib=static=sgxsdk-ra-attester_u");
 
     println!("cargo:rustc-link-search=native={}/lib64", sdk_dir);
     println!("cargo:rustc-link-lib=dylib=sgx_urts");
     println!("cargo:rustc-link-lib=dylib=sgx_uae_service");
     println!("cargo:rustc-link-lib=dylib=sgx_dcap_quoteverify");
+    println!("cargo:rustc-link-lib=dylib=sgx_dcap_ql");
 
     println!("cargo:rerun-if-changed=build.rs");
 

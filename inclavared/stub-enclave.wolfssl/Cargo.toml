@@ -9,6 +9,11 @@ build = "build.rs"
 name = "stubenclave"
 crate-type = ["staticlib"]
 
+[features]
+default = []
+
+RATLS_ECDSA = []
+
 [build-dependencies]
 bindgen = "0.55.1"
 

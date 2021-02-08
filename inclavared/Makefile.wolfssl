@@ -149,9 +149,12 @@ $(Rust_SDK):
 
 ######## EDL Objects ########
 
-$(Enclave_EDL_Files): $(SGX_EDGER8R) stub-enclave.wolfssl/Enclave.edl
-	$(SGX_EDGER8R) --trusted stub-enclave.wolfssl/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --search-path $(RA_TLS_EDL_PATH) --search-path rust-sgx/edl/ --trusted-dir stub-enclave.wolfssl
-	$(SGX_EDGER8R) --untrusted stub-enclave.wolfssl/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --search-path $(RA_TLS_EDL_PATH) --search-path rust-sgx/edl/ --untrusted-dir app.wolfssl
+stub-enclave.wolfssl/Enclave.edl: stub-enclave.wolfssl/Enclave.edl.sh
+	bash $^ > $@
+
+$(Enclave_EDL_Files): stub-enclave.wolfssl/Enclave.edl
+	$(SGX_EDGER8R) --trusted $< --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --search-path $(RA_TLS_EDL_PATH) --search-path rust-sgx/edl/ --trusted-dir stub-enclave.wolfssl
+	$(SGX_EDGER8R) --untrusted $< --search-path $(SGX_SDK)/include --search-path $(CUSTOM_EDL_PATH) --search-path $(RA_TLS_EDL_PATH) --search-path rust-sgx/edl/ --untrusted-dir app.wolfssl
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
 ######## App Objects ########

@@ -45,7 +45,9 @@ $(BINDIR)/elv: $(BINDIR) $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
 	cp -f $(ELV)/elv $@
 
 $(BINDIR)/ra-tls-server: $(BINDIR) $(LIBDIR)/libcurl-wolfssl.a $(LIBDIR)/libwolfssl.a
-	make -C $(RA_TLS_SERVER) && cp -f $(RA_TLS_SERVER)/ra-tls-server $@
+	make -C $(RA_TLS_SERVER)
+	cp -f $(RA_TLS_SERVER)/lib/libsgxsdk-ra-attester_u.a $(LIBDIR)/
+	cp -f $(RA_TLS_SERVER)/ra-tls-server $@
 
 $(BINDIR)/Wolfssl_Enclave.signed.so: $(BINDIR)
 	$(MAKE) -C stub-enclave && \

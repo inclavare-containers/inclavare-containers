@@ -9,6 +9,12 @@ else ifeq ($(MITIGATION-CVE-2020-0551), CF)
 export MITIGATION_CVE_2020_0551=CF
 endif
 
+ifdef ECDSA
+	BUILD_FLAGS = --features=RATLS_ECDSA
+else
+	BUILD_FLAGS =
+endif
+
 .PHONY: all
 
 all: $(Rust_Enclave_Name)
@@ -23,10 +29,10 @@ else
 endif
 else
 ifneq ($(SGX_DEBUG), 1)
-	C_INCLUDE_PATH="../../ra-tls/wolfssl:/opt/intel/sgxsdk/include" cargo build --release
+	C_INCLUDE_PATH="../../ra-tls/wolfssl:/opt/intel/sgxsdk/include" cargo build --release $(BUILD_FLAGS)
 	cp ./target/release/libstubenclave.a ../lib/libenclave.a
 else
-	C_INCLUDE_PATH="../../ra-tls/wolfssl:/opt/intel/sgxsdk/include" cargo build
+	C_INCLUDE_PATH="../../ra-tls/wolfssl:/opt/intel/sgxsdk/include" cargo build $(BUILD_FLAGS)
 	cp ./target/debug/libstubenclave.a ../lib/libenclave.a
 endif
 endif
@@ -37,4 +43,5 @@ test:
 clean:
 	@cargo clean
 	@rm -f Enclave_t.o enclave.so
+	@rm -f Enclave.edl
 

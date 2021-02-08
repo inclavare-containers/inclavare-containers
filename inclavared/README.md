@@ -42,43 +42,56 @@ export ROOT_DIR=`pwd`
 
 #### Build
 
-* Server(inclavared.wolfssl)
+* Set EPID or DCAP environment variable
 
-```bash
+EPID environment variable:
 
-cd ${ROOT_DIR}/inclavared/
-make -f Makefile.wolfssl
-
+``` bash
+export SPID=<YOUR_SPID>
+export EPID_SUBSCRIPTION_KEY=<YOUR_SUBSCRIPTION_KEY>
+export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE (or SGX_LINKABLE_SIGNATURE)
 ```
 
-* Client
+DCAP environment variable:
+
+``` bash
+export SGX_DCAP=<DCAP_REPO_DIRECTORY>
+```
+
+* inclavared (inclavared.wolfssl)
 
 ```bash
+cd ${ROOT_DIR}/inclavared/
+make -f Makefile.wolfssl
+```
 
-cd ${ROOT_DIR}/ra-tls/
+* inclavared (inclavared.wolfssl) for DCAP
 
+```bash
+cd ${ROOT_DIR}/inclavared/
+make -f Makefile.wolfssl ECDSA=1
 ```
 
 #### Run
 
-* Server
+* Run as server
 
 ```bash
-
-export SPID=<YOUR_SPID>
-export EPID_SUBSCRIPTION_KEY=<YOUR_SUBSCRIPTION_KEY>
-export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE (or SGX_LINKABLE_SIGNATURE)
-
-${ROOT_DIR}/inclavared/bin/inclavared.wolfssl
-
+${ROOT_DIR}/inclavared/bin/inclavared.wolfssl --listen <unixsock>
 ```
 
-* Client: 
+* Xfer data between client and server
+
+recv data from unixsock1 and send to unixsock2, and recv data from unixsock2 and send to unixsock1
 
 ```bash
+${ROOT_DIR}/inclavared/bin/inclavared.wolfssl --listen <unixsock1> --xfer <unixsock2>
+```
 
-${ROOT_DIR}/ra-tls/elv/elv echo helloworld
+* Run as client
 
+```bash
+${ROOT_DIR}/inclavared/bin/inclavared.wolfssl --connect <unixsock>
 ```
 
 ### Base On Rust-sgx-sdk (DEPRECATED)
