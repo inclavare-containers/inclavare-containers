@@ -2,15 +2,21 @@ Rust_App_Name := app
 Rust_App_Files := $(wildcard src/*.rs)
 SGX_DEBUG ?=
 
+ifdef ECDSA
+	BUILD_FLAGS = --features=RATLS_ECDSA
+else
+	BUILD_FLAGS =
+endif
+
 .PHONY: all
 
 all: $(Rust_App_Name)
 
 $(Rust_App_Name): $(Rust_App_Files)
 ifneq ($(SGX_DEBUG), 1)
-	cargo build --release
+	cargo build --release $(BUILD_FLAGS)
 else
-	cargo build
+	cargo build $(BUILD_FLAGS)
 endif
 	[ ! -d ../bin ] && mkdir ../bin || true
 ifneq ($(SGX_DEBUG), 1)

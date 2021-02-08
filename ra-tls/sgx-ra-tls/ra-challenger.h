@@ -16,6 +16,13 @@ void ecdsa_get_quote_from_extension
     size_t exts_len,
     sgx_quote3_t* q
 );
+
+void ecdsa_get_quote_from_dcap_cert
+(
+    const uint8_t* der_crt,
+    uint32_t der_crt_len,
+    sgx_quote3_t* q
+);
 #endif
 
 /**

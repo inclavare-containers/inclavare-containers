@@ -5,6 +5,11 @@ authors = ["stormgbs <stormgbs@gmail.com>"]
 build = "build.rs"
 edition = "2018"
 
+[features]
+default = []
+
+RATLS_ECDSA = []
+
 [build-dependencies]
 bindgen = "0.55.1"
 
