@@ -8,5 +8,10 @@ const (
 )
 
 const (
-        SpidLength = 16
+	SpidLength = 16
+)
+
+const (
+	AttestationEpid  = "sgx-epid"
+	AttestationEcdsa = "sgx-ecdsa"
 )
