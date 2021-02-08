@@ -1,3 +1,9 @@
+epm (0.6.0-1) unstable; urgency=low
+
+  * Update to version 0.6.0.
+
+ -- Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com>  Mon, 8 Feb 2021 15:22:00 +0000
+
 epm (0.5.2-1) unstable; urgency=low
 
   * Update to version 0.5.2.
