@@ -6,7 +6,6 @@ import (
 	"github.com/go-restruct/restruct"
 	"github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
-	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/challenger"
 	"github.com/inclavare-containers/rune/libenclave/epm"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"log"
@@ -175,12 +174,12 @@ func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey str
 		return nil, err
 	}
 
-	status, _, err := challenger.GetReport(quote, 0)
+	statusCode, specificStatus, _, err := challenger.GetReport(quote, 0)
 	if err != nil {
 		return nil, fmt.Errorf("%s", err)
 	}
 
-	challenger.ShowReportStatus(status)
+	challenger.ShowReportStatus(statusCode, specificStatus)
 
 	return report, nil
 }
