@@ -6,3 +6,7 @@ const (
 	EPID
 	DCAP
 )
+
+const (
+        SpidLength = 16
+)

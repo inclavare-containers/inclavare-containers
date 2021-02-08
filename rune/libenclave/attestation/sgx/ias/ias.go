@@ -12,6 +12,7 @@ import (
 	//pb "github.com/inclavare-containers/rune/libenclave/attestation/proto"
 	"encoding/binary"
 	"github.com/go-restruct/restruct"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -24,13 +25,12 @@ import (
 )
 
 const (
-	spidLength            = 16
 	subscriptionKeyLength = 16
 )
 
 type IasAttestation struct {
 	reportApiUrl    string
-	spid            [spidLength]byte
+	spid            [sgx.SpidLength]byte
 	subscriptionKey [subscriptionKeyLength]byte
 }
 
@@ -53,8 +53,8 @@ func NewIasAttestation(cfg map[string]string) (*IasAttestation, error) {
 		return nil, fmt.Errorf("EPID parameter spid not specified")
 	}
 
-	if len(spid) != spidLength*2 {
-		return nil, fmt.Errorf("Spid must be %d-character long", spidLength*2)
+	if len(spid) != sgx.SpidLength*2 {
+		return nil, fmt.Errorf("Spid must be %d-character long", sgx.SpidLength*2)
 	}
 
 	subKey, ok := cfg["subscription-key"]
@@ -122,7 +122,7 @@ func (ias *IasAttestation) CheckQuote(q []byte) error {
 		return fmt.Errorf("Unsupported signature type: %#04x", quote.SignatureType)
 	}
 
-	spid := [spidLength]byte{}
+	spid := [sgx.SpidLength]byte{}
 
 	if quote.Version == intelsgx.QuoteVersion2 {
 		quoteBody := &intelsgx.QuoteBodyV2{}
@@ -130,7 +130,7 @@ func (ias *IasAttestation) CheckQuote(q []byte) error {
 			return err
 		}
 
-		copy(spid[:], quoteBody.Basename[:spidLength])
+		copy(spid[:], quoteBody.Basename[:sgx.SpidLength])
 		if spid != ias.spid {
 			return fmt.Errorf("Invalid spid in quote body: 0x%v",
 				hex.EncodeToString(quoteBody.Basename[:]))
