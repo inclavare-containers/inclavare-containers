@@ -1,3 +1,9 @@
+# 2021-02-10 v0.6.0
+- Support SGX DCAP remote attestation
+- Support bundle cache level 2
+- Provide DCAP utilities in sgx-tools
+- Support Occlum 0.19.0
+
 # 2020-12-31 v0.5.2
 - Implement Shelter
 - Supply full CI/CD workflows
