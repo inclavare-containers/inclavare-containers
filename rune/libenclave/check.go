@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/opencontainers/runc/libcontainer/configs"
@@ -290,34 +289,19 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		raType = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_type")
 	}
 
-	var enclaveRaType, raEpidIsLinkable uint32 = sgx.UnknownRaType, intelsgx.InvalidQuoteSignatureType
-	var raEpidSpid, raEpidSubscriptionKey string
-	if raType != "" {
-		if strings.EqualFold(raType, "EPID") {
-			enclaveRaType = sgx.EPID
-		} else if strings.EqualFold(raType, "DCAP") {
-			enclaveRaType = sgx.DCAP
-		}
+	enclaveRaType := ""
+	if strings.EqualFold(raType, intelsgx.QuoteTypeEpidUnlinkable) || strings.EqualFold(raType, intelsgx.QuoteTypeEpidLinkable) || strings.EqualFold(raType, intelsgx.QuoteTypeEcdsa) {
+		enclaveRaType = raType
+	}
 
-		raEpidSpid = filterOut(env, "ENCLAVE_RA_EPID_SPID")
-		if raEpidSpid == "" {
-			raEpidSpid = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_spid")
-		}
+	raEpidSpid := filterOut(env, "ENCLAVE_RA_EPID_SPID")
+	if raEpidSpid == "" {
+		raEpidSpid = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_spid")
+	}
 
-		raEpidSubscriptionKey = filterOut(env, "ENCLAVE_RA_EPID_SUB_KEY")
-		if raEpidSubscriptionKey == "" {
-			raEpidSubscriptionKey = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_subscription_key")
-		}
-
-		linkable := filterOut(env, "ENCLAVE_RA_EPID_IS_LINKABLE")
-		if linkable == "" {
-			linkable = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_is_linkable")
-		}
-		if strings.EqualFold(linkable, "true") {
-			raEpidIsLinkable = intelsgx.QuoteSignatureTypeLinkable
-		} else if strings.EqualFold(linkable, "false") {
-			raEpidIsLinkable = intelsgx.QuoteSignatureTypeUnlinkable
-		}
+	raEpidSubscriptionKey := filterOut(env, "ENCLAVE_RA_EPID_SUB_KEY")
+	if raEpidSubscriptionKey == "" {
+		raEpidSubscriptionKey = libenclaveUtils.SearchLabels(config.Labels, "enclave.attestation.ra_epid_subscription_key")
 	}
 
 	enclave := &enclaveConfigs.Enclave{
@@ -328,7 +312,6 @@ func CreateEnclaveConfig(spec *specs.Spec, config *configs.Config) *enclaveConfi
 		RaType:                enclaveRaType,
 		RaEpidSpid:            raEpidSpid,
 		RaEpidSubscriptionKey: raEpidSubscriptionKey,
-		RaEpidIsLinkable:      raEpidIsLinkable,
 	}
 	enclaveConfig := &enclaveConfigs.EnclaveConfig{
 		Enclave: enclave,
@@ -366,17 +349,13 @@ func ValidateEnclave(config *enclaveConfigs.EnclaveConfig) error {
 		logrus.Debugf("Use default LogLevel: %s", enclaveConfigs.DefaultLogLevel)
 	}
 
-	if config.Enclave.RaType != sgx.UnknownRaType {
+	if strings.EqualFold(config.Enclave.RaType, intelsgx.QuoteTypeEpidUnlinkable) || strings.EqualFold(config.Enclave.RaType, intelsgx.QuoteTypeEpidLinkable) {
 		if config.Enclave.RaEpidSpid == "" {
 			return fmt.Errorf("The enclave.attestation.ra_epid_spid Configuration isn't set!\n")
 		}
 
 		if config.Enclave.RaEpidSubscriptionKey == "" {
 			return fmt.Errorf("The enclave.attestation.ra_epid_subscription_key Configuration isn't set!\n")
-		}
-
-		if config.Enclave.RaEpidIsLinkable == intelsgx.InvalidQuoteSignatureType {
-			return fmt.Errorf("Unsupported enclave.attestation.ra_epid_is_linkable Configuration!\n")
 		}
 	}
 

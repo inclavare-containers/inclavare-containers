@@ -113,7 +113,7 @@ func parseAttestParameters(spid string, subscriptionKey string, product bool) ma
 	return p
 }
 
-func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey string, quoteType uint32) ([]byte, error) {
+func (pal *enclaveRuntimePal) Attest(isRA bool, quoteType string, spid string, subscriptionKey string) ([]byte, error) {
 	if pal.GetLocalReport == nil {
 		return nil, nil
 	}
@@ -142,11 +142,7 @@ func (pal *enclaveRuntimePal) Attest(isRA bool, spid string, subscriptionKey str
 	}
 
 	// get quote from QE(aesmd)
-	linkable := false
-	if quoteType == intelsgx.QuoteSignatureTypeLinkable {
-		linkable = true
-	}
-	quote, err := intelsgx.GetQuote(report, spid, linkable)
+	quote, err := intelsgx.GetQuoteEx(quoteType, report, spid)
 	if err != nil {
 		return nil, err
 	}

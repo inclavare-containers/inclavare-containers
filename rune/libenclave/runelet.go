@@ -3,7 +3,6 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/inclavare-containers/rune/libenclave/internal/runtime"
@@ -16,7 +15,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 )
@@ -76,8 +74,8 @@ func StartInitialization(cmd []string, cfg *RuneletConfig) (exitCode int32, err 
 		}
 
 		// Launch a remote attestation to the enclave runtime.
-		if config.RaType == sgx.EPID {
-			if _, err := rt.LaunchAttestation(true, config.RaEpidSpid, config.RaEpidSubscriptionKey, config.RaEpidIsLinkable); err != nil {
+		if strings.EqualFold(config.RaType, intelsgx.QuoteTypeEpidUnlinkable) || strings.EqualFold(config.RaType, intelsgx.QuoteTypeEpidLinkable) {
+			if _, err := rt.LaunchAttestation(true, config.RaType, config.RaEpidSpid, config.RaEpidSubscriptionKey); err != nil {
 				return 1, err
 			}
 		}
@@ -233,12 +231,8 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 	}
 
 	quoteType := os.Getenv("QUOTE_TYPE")
-	raEpidQuoteType, err := strconv.ParseUint(quoteType, 10, 32)
-	if err != nil {
-		return 1, fmt.Errorf("Invalid Quote Type Configuration, error = %v!\n", err)
-	}
-	if raEpidQuoteType != (intelsgx.QuoteSignatureTypeUnlinkable) && raEpidQuoteType != (intelsgx.QuoteSignatureTypeLinkable) {
-		return 1, fmt.Errorf("Unsupported Quote Type Configuration %v!\n", raEpidQuoteType)
+	if !strings.EqualFold(quoteType, intelsgx.QuoteTypeEpidUnlinkable) && strings.EqualFold(quoteType, intelsgx.QuoteTypeEpidLinkable) && strings.EqualFold(quoteType, intelsgx.QuoteTypeEcdsa) {
+		return 1, fmt.Errorf("Unsupported Quote Type Configuration %v!\n", quoteType)
 	}
 
 	isRA := false
@@ -250,9 +244,9 @@ func remoteAttest(agentPipe *os.File, config *configs.InitEnclaveConfig, notifyS
 	req := &pb.AgentServiceRequest{}
 	req.Attest = &pb.AgentServiceRequest_Attest{
 		IsRA:            isRA,
+		QuoteType:       quoteType,
 		Spid:            os.Getenv("SPID"),
 		SubscriptionKey: os.Getenv("SUBSCRIPTION_KEY"),
-		QuoteType:       (uint32)(raEpidQuoteType),
 	}
 
 	if err = protoBufWrite(conn, req); err != nil {
