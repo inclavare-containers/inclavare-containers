@@ -133,7 +133,7 @@ The following method to run skeleton bundle with rune is usually provided for de
 
 ### Run TLS server by OCI bundle
 
-Assuming you have an OCI bundle according to [previous steps](skeleton#create-skeleton-bundle), please add config into config.json as following:
+Assuming you have an OCI bundle according to [previous steps](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton#create-skeleton-bundle), please add config into config.json as following:
 
 ```shell
 "cwd": "/",
