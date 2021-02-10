@@ -37,6 +37,13 @@ cd $src/ra-tls
 make ECDSA=1
 ```
 
+## For Local Report Attestation
+
+```shell
+cd $src/ra-tls
+make LA=1
+```
+
 # Run
 
 ``` shell
