@@ -8,8 +8,6 @@ import (
 	"unsafe"
 
 	"github.com/inclavare-containers/rune/libenclave"
-	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
-	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -31,16 +29,16 @@ Where "<container-id>" is the name for the instance of the container`,
 			Usage: "specify whether to get the remote or local report",
 		},
 		cli.StringFlag{
+			Name:  "quote-type",
+			Usage: "specify the SGX quote type such as epidUnlinkable, epidLinkable and ecdsa",
+		},
+		cli.StringFlag{
 			Name:  "spid",
 			Usage: "specify SPID",
 		},
 		cli.StringFlag{
 			Name:  "subscription-key, -key",
 			Usage: "specify the subscription key",
-		},
-		cli.BoolFlag{
-			Name:  "linkable",
-			Usage: "specify the EPID signatures policy type",
 		},
 		cli.StringFlag{
 			Name:  "reportFile",
@@ -146,15 +144,10 @@ func getAttestProcess(context *cli.Context, bundle string) (*specs.Process, erro
 	}
 	p.Env = append(p.Env, "IsRemoteAttestation"+envSeparator+isRemoteAttestation)
 
+	p.Env = append(p.Env, "QUOTE_TYPE"+envSeparator+context.String("quote-type"))
 	p.Env = append(p.Env, "SPID"+envSeparator+context.String("spid"))
 	p.Env = append(p.Env, "SUBSCRIPTION_KEY"+envSeparator+context.String("subscription-key"))
 	p.Env = append(p.Env, "REPORT_FILE"+envSeparator+context.String("reportFile"))
-
-	quoteType := strconv.Itoa(int(intelsgx.QuoteSignatureTypeUnlinkable))
-	if context.Bool("linkable") {
-		quoteType = strconv.Itoa(int(intelsgx.QuoteSignatureTypeLinkable))
-	}
-	p.Env = append(p.Env, "QUOTE_TYPE"+envSeparator+quoteType)
 
 	var AttestCommand string = "true"
 	p.Env = append(p.Env, "AttestCommand"+envSeparator+AttestCommand)
