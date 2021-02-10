@@ -135,8 +135,10 @@ void ecdsa_create_key_and_x509
 	ecdsa_wolfssl_create_key_and_x509(der_key, der_key_len,
 			der_cert, der_cert_len);
 }
-#else
+#endif
 
+#ifndef RATLS_ECDSA
+#ifndef LA_REPORT
 /**
  * Caller must allocate memory for certificate.
  *
@@ -270,6 +272,7 @@ void create_key_and_x509_pem
     assert(len > 0);
     *pem_cert_len = len;
 }
+#endif
 #endif
 
 #ifdef WOLFSSL_SGX

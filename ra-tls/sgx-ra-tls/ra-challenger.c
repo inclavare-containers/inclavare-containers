@@ -25,6 +25,17 @@ void *memmem(const void *h0, size_t k, const void *n0, size_t l);
 #include "ra-challenger_private.h"
 #include "ra-challenger.h"
 
+extern const uint8_t la_report_oid[];
+
+void la_get_report_from_extension(const uint8_t* exts, size_t exts_len,
+		sgx_report_t* report)
+{
+	int report_len = 0;
+	int rc = extract_x509_extension(exts, exts_len, la_report_oid,
+			ias_oid_len, report, &report_len, sizeof(report));
+	assert(rc == 1);
+}
+
 void get_quote_from_extension
 (
     const uint8_t* exts,
@@ -127,7 +138,7 @@ int extract_x509_extension
     if (rc == -1) return -1;
     
     assert(ext_data != NULL);
-    assert(ext_data_len <= data_max_len);
+//    assert(ext_data_len <= data_max_len);
     memcpy(data, ext_data, (uint32_t)ext_data_len);
     *data_len = (uint32_t)ext_data_len;
 

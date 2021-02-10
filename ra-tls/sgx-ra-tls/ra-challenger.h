@@ -6,6 +6,7 @@
 #include <sgx_quote_3.h>
 #endif
 
+extern int la_verify_sgx_cert_extensions(uint8_t* der_crt, uint32_t der_crt_len);
 /**
  * Extract an Intel SGX quote from an DCAP extension.
  */

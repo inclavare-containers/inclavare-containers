@@ -23,7 +23,7 @@ enclave {
 };
 EOF
 fi
-if ( [[ -z "$ECDSA" ]] ); then
+if ( [[ -z "$LA" ]] && [[ -z "$ECDSA" ]]); then
 cat >ra_tls.edl <<EOF
 enclave {
 
@@ -41,6 +41,20 @@ enclave {
 	void ocall_remote_attestation([in] sgx_report_t* report,
                                       [in] const struct ra_tls_options* opts,
                                       [out] attestation_verification_report_t* attn_report);
+    };
+};
+EOF
+fi
+if ( [[ ! -z "$LA" ]] ); then
+cat >ra_tls.edl <<EOF
+enclave {
+
+    include "ra.h"
+    include "ra-attester.h"
+    include "sgx_report.h"
+
+    trusted {
+    public int enc_la_sgx_verify_report([user_check]sgx_report_t* report);
     };
 };
 EOF

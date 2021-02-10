@@ -1,4 +1,5 @@
 ######## Intel(R) SGX SDK Settings ########
+TOPDIR ?= ../
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_DEBUG ?= 1
@@ -70,6 +71,10 @@ endif
 
 ifdef ECDSA
 	Wolfssl_C_Extra_Flags += -DRATLS_ECDSA
+endif
+
+ifdef LA
+	Wolfssl_C_Extra_Flags += -DLA_REPORT
 endif
 
 Flags_Just_For_C := -Wno-implicit-function-declaration -std=c11

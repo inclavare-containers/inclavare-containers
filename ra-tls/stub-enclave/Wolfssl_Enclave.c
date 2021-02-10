@@ -5,6 +5,7 @@
 #include "Wolfssl_Enclave_t.h"
 
 #include "sgx_trts.h"
+#include "sgx_utils.h"
 
 
 int wc_test(void* args)
@@ -220,13 +221,16 @@ void enc_create_key_and_x509(WOLFSSL_CTX* ctx) {
     uint32_t der_cert_len = sizeof(der_cert);
 
 #ifdef RATLS_ECDSA
-    ecdsa_create_key_and_x509(der_key, &der_key_len,
+	ecdsa_create_key_and_x509(der_key, &der_key_len,
 		              der_cert, &der_cert_len);
+#elif defined(LA_REPORT)
+	la_create_key_and_x509(der_key, &der_key_len, der_cert, &der_cert_len);
 #else
-    create_key_and_x509(der_key, &der_key_len,
+	create_key_and_x509(der_key, &der_key_len,
                         der_cert, &der_cert_len,
                         &my_ra_tls_options);
 #endif
+
     ret = wolfSSL_CTX_use_certificate_buffer(ctx, der_cert, der_cert_len,
                                              SSL_FILETYPE_ASN1);
     assert(ret == SSL_SUCCESS);

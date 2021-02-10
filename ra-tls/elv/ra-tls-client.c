@@ -106,15 +106,27 @@ int ra_tls_echo(int sockfd)
 		goto err_ssl;
 	}
 
+
 	WOLFSSL_X509 *srvcrt = wolfSSL_get_peer_certificate(ssl);
 
 	int derSz;
 	const unsigned char *der = wolfSSL_X509_get_der(srvcrt, &derSz);
 	sgx_report_body_t *body = NULL;
+
+#ifdef LA_REPORT
+	sgx_report_t report;
+	la_get_report_from_cert(der, derSz, &report);
+	body = &report.body;
+#endif
+
+#ifndef LA_REPORT
+	/* #else can't work here. If you have solution, please fix me */
 	uint8_t quote_buff[8192] = {0,};
 	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
 	sgx_quote_t* quote = (sgx_quote_t*)quote_buff;
 	body = &quote->report_body;
+#endif
+
 	printf("Server's SGX identity:\n");
 	printf("  . MRENCLAVE = ");
 	for (int i = 0; i < SGX_HASH_SIZE; ++i)
@@ -124,7 +136,6 @@ int ra_tls_echo(int sockfd)
 	for (int i = 0; i < SGX_HASH_SIZE; ++i)
 		printf("%02x", body->mr_signer.m[i]);
 	printf("\n");
-
 	const char *http_request = "GET / HTTP/1.0\r\n\r\n";
 	size_t len = strlen(http_request);
 	if (wolfSSL_write(ssl, http_request, len) != (int)len) {
