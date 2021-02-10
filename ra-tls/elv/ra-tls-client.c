@@ -123,7 +123,7 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
 	uint8_t quote_buff[8192] = {0,};
 #ifdef RATLS_ECDSA
     ecdsa_get_quote_from_dcap_cert(der, derSz, (sgx_quote3_t*)quote_buff);
-	sgx_quote_t* quote = (sgx_quote3_t*)quote_buff;
+	sgx_quote3_t* quote = (sgx_quote3_t*)quote_buff;
 #else
 	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
 	sgx_quote_t* quote = (sgx_quote_t*)quote_buff;
