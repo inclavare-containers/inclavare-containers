@@ -105,11 +105,11 @@ jobs:
 
     - name: Get local report with rune attest command
       if: ${{ contains(matrix.sgx, 'SGX1') }}
-      run: docker exec $rune_test bash -c "rune --debug attest --reportFile=/report.bin skeleton-enclave-container"
+      run: docker exec $rune_test bash -c "rune --debug attest --reportFile=/report.bin --quote-type=epidUnlinkable skeleton-enclave-container"
 
     - name: Get remote report with rune attest command
       if: ${{ contains(matrix.sgx, 'SGX1') }}
-      run: docker exec $rune_test bash -c "rune --debug attest --isRA --linkable=false --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
+      run: docker exec $rune_test bash -c "rune --debug attest --isRA --quote-type=epidUnlinkable --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
 
     - name: Kill RA containers with rune kill command
       if: ${{ contains(matrix.sgx, 'SGX1') }}
