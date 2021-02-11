@@ -60,8 +60,15 @@ sudo rune --debug run skeleton-enclave-container
 
 You can type the following command to use `rune attest` command with skeleton in another shell to get local report:
 ```shell
-rune --debug attest skeleton-enclave-container
+rune --debug attest --quote-type={SGX_QUOTE_TYPE} skeleton-enclave-container
 ```
+
+where:
+- @quote-type: specify the quote types of sgx, such as,
+        - `epidUnlinkable`: [epid for unlinkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
+        - `epidLinkable`: [epid for linkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
+        - `ecdsa`: **Note `rune attest` currently doesn't support the ecdsa quote type, and we will support it soon**.
+
 
 ## Get IAS report
 
@@ -69,7 +76,7 @@ You can type the following command to use `rune attest` command with skeleton in
 
 ```shell
 rune --debug attest --isRA \
-		--linkable=false \
+		--quote-type={SGX_QUOTE_TYPE} \
 		--spid=${EPID_SPID} \
 		--subscription-key=${EPID_SUBSCRIPTION_KEY} \
 		skeleton-enclave-container
@@ -77,6 +84,6 @@ rune --debug attest --isRA \
 
 where:
 - @isRA: specify the type of report is local or remote report.
-- @linkable: specify the type of `EPID` is `linkable` or `unlinkable`.
+- @quote-type: specify the quote types of sgx which is the same as the parameters of [Get local report](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/skeleton/running_skeleton_with_rune_attest_command.md#get-local-report).
 - @spid: specify the `SPID`.
 - @subscription-key: specify the `Subscription Key`.
