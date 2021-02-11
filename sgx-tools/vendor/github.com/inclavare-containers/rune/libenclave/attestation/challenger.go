@@ -2,24 +2,24 @@ package attestation // import "github.com/inclavare-containers/rune/libenclave/a
 
 import (
 	"fmt"
+	"github.com/inclavare-containers/rune/libenclave/attestation/registration"
+	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/challenger" // for the registration of sgx challengers
 )
 
 type Challenger interface {
 	Name() string
 	New(map[string]string) error
 	Check([]byte) error
-	Verify([]byte) (*ReportStatus, error)
-	GetReport([]byte, uint64) (*ReportStatus, map[string]string, error)
-	ShowReportStatus(*ReportStatus)
+	/* the return value significance of Verify(), GetReport(), and ShowReportStatus():
+	   - uint32: statusCode
+	   - interface{}: SpecificStatus
+	*/
+	Verify([]byte) (uint32, interface{}, error)
+	GetReport([]byte, uint64) (uint32, interface{}, map[string]string, error)
+	ShowReportStatus(uint32, interface{}) error
 	// TODO
 	// PrepareChallenge() (*pb.AttestChallenge, error)
 	// HandleChallengeResponse(*pb.AttestResponse) (*Quote, error)
-}
-
-type ReportStatus struct {
-	StatusCode     uint32
-	ErrorMessage   string
-	SpecificStatus interface{}
 }
 
 /*
@@ -40,7 +40,8 @@ const (
 )
 
 func NewChallenger(aType string, cfg map[string]string) (Challenger, error) {
-	for _, c := range challengerList {
+	for _, challenger := range registration.ChallengerRegisterationList {
+		c := challenger.Registeration.(Challenger)
 		if c.Name() == aType {
 			if err := c.New(cfg); err != nil {
 				return nil, err
@@ -51,20 +52,6 @@ func NewChallenger(aType string, cfg map[string]string) (Challenger, error) {
 	}
 
 	return nil, fmt.Errorf("Unsupported attestation service %s specified", aType)
-}
-
-var challengerList []Challenger
-
-func registerChallenger(challenger Challenger) error {
-	for _, c := range challengerList {
-		if c.Name() == challenger.Name() {
-			return fmt.Errorf("Attestation service %s registered already", challenger.Name())
-		}
-	}
-
-	challengerList = append(challengerList, challenger)
-
-	return nil
 }
 
 /*
