@@ -1,58 +1,66 @@
 package runtime // import "github.com/inclavare-containers/rune/libenclave/internal/runtime"
 
 import (
+	"fmt"
 	"github.com/inclavare-containers/rune/libenclave/configs"
-	core "github.com/inclavare-containers/rune/libenclave/internal/runtime/core"
-	pal "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
 )
 
+var runtimes = make(map[string]EnclaveRuntime)
+
+func RuntimeRegister(name string, rt EnclaveRuntime) {
+	runtimes[name] = rt
+}
+
+func RuntimeUnregister(name string) {
+	delete(runtimes, name)
+}
+
 type EnclaveRuntime interface {
-	Init(args string, logLevel string) error
-	Attest(bool, string, string, uint32) ([]byte, error)
-	Exec(cmd []string, envp []string, stdio [3]*os.File) (int32, error)
-	Kill(sig int, pid int) error
-	Destroy() error
+	Version() int32
+	Capability() uint32
+	Create(loglevel string, args string) (string, error)
+	Delete(id string) error
+	Init(id string) error
+	Spawn(id string, args string) (int, error)
+	Exec(id string, pid int, args []string, envp []string, stdio [3]*os.File) error
+	Kill(id string, pid int, sig int) error
+	Attest(id string) error
 }
 
 type EnclaveRuntimeWrapper struct {
-	runtime EnclaveRuntime
+	runtime   EnclaveRuntime
+	enclaveId string
 }
 
 func StartInitialization(config *configs.InitEnclaveConfig, logLevel string) (*EnclaveRuntimeWrapper, error) {
 	logrus.Debugf("enclave init config retrieved: %+v", config)
 
-	var (
-		runtime EnclaveRuntime
-		err     error
-	)
-	runtime, err = core.StartInitialization(config)
-	if err != nil {
-		runtime, err = pal.StartInitialization(config)
-		if err != nil {
-			return nil, err
+	for name, runtime := range runtimes {
+		if config.Type == name {
+			logrus.Infof("Initializing enclave runtime")
+			enclaveId, err := runtime.Create(logLevel, config.Args)
+			if err != nil {
+				return nil, err
+			}
+
+			rt := &EnclaveRuntimeWrapper{
+				runtime:   runtime,
+				enclaveId: enclaveId,
+			}
+			return rt, nil
 		}
 	}
-
-	logrus.Infof("Initializing enclave runtime")
-	err = runtime.Init(config.Args, logLevel)
-	if err != nil {
-		return nil, err
-	}
-
-	rt := &EnclaveRuntimeWrapper{
-		runtime: runtime,
-	}
-	return rt, nil
+	return nil, fmt.Errorf("Unknown enclave type")
 }
 
 func (rt *EnclaveRuntimeWrapper) LaunchAttestation(isRA bool, spid string, subscriptionKey string, quoteType uint32) ([]byte, error) {
 	logrus.Debugf("attesting enclave runtime")
 
-	return rt.runtime.Attest(isRA, spid, subscriptionKey, quoteType)
+	return nil, rt.runtime.Attest(rt.enclaveId /*, isRA, spid, subscriptionKey, quoteType*/)
 }
 
 func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, stdio [3]*os.File) (int32, error) {
@@ -65,7 +73,11 @@ func (rt *EnclaveRuntimeWrapper) ExecutePayload(cmd []string, envp []string, std
 	if fullPath, err := exec.LookPath(cmd[0]); err == nil {
 		cmd[0] = fullPath
 	}
-	return rt.runtime.Exec(cmd, envp, stdio)
+	err := rt.runtime.Exec(rt.enclaveId, -1, cmd, envp, stdio)
+	if err != nil {
+		return -1, err
+	}
+	return 0, nil
 }
 
 func (rt *EnclaveRuntimeWrapper) KillPayload(pid int, sig int) error {
@@ -75,11 +87,11 @@ func (rt *EnclaveRuntimeWrapper) KillPayload(pid int, sig int) error {
 		logrus.Debugf("enclave runtime killing all payloads with signal %d", sig)
 	}
 
-	return rt.runtime.Kill(pid, sig)
+	return rt.runtime.Kill(rt.enclaveId, pid, sig)
 }
 
 func (rt *EnclaveRuntimeWrapper) DestroyInstance() error {
 	logrus.Debugf("Destroying enclave runtime")
 
-	return rt.runtime.Destroy()
+	return rt.runtime.Delete(rt.enclaveId)
 }

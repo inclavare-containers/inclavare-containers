@@ -26,6 +26,7 @@ require (
 	golang.org/x/net v0.0.0-20201027133719-8eef5233e2a1
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 	google.golang.org/grpc v1.33.1
+	libvirt.org/libvirt-go v6.10.0+incompatible
 )
 
 replace github.com/inclavare-containers/epm => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
