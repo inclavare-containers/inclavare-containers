@@ -4,7 +4,7 @@
 `sgx-tools` is a command line tool based on inclavare-containers. `sgx-tools` can serve three kinds of quote types:
 - `epidUnlinkable`: [epid for unlinkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
 - `epidLinkable`: [epid for linkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
-- `ecdsa`: [ECDSA](https://github.com/intel/linux-sgx#ecdsa-attestation). ** Note `sgx-tools` currently only support `gen-qe-target-info` and `gen-quote` commands**.
+- `ecdsa`: [ECDSA](https://github.com/intel/linux-sgx#ecdsa-attestation). **Note `sgx-tools` currently only support `gen-qe-target-info` and `gen-quote` commands**.
 
 ### Commands
 
