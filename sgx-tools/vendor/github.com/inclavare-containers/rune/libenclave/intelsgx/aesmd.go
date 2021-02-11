@@ -100,37 +100,100 @@ func DumpTargetInfo(targetInfo []byte) error {
 	return nil
 }
 
-func DumpLocalReport(report []byte) error {
+/* The report can be used as a separate structure or as a member of the quote structure,
+ * so we add the indent paramter to both support to dump these two cases.
+ */
+func DumpLocalReport(report []byte, indent int) error {
 	r := &Report{}
 	if err := restruct.Unpack(report, binary.LittleEndian, &r); err != nil {
 		return err
 	}
 
-	logrus.Debugf("REPORT:")
-	logrus.Debugf("  CPU SVN:                        0x%v\n",
-		hex.EncodeToString(r.CpuSvn[:]))
-	logrus.Debugf("  Misc Select:                    %#08x\n",
-		r.MiscSelect)
-	logrus.Debugf("  Product ID:                     0x%v\n",
-		hex.EncodeToString(r.IsvExtProdId[:]))
-	logrus.Debugf("  Attributes:                     0x%v\n",
-		hex.EncodeToString(r.Attributes[:]))
-	logrus.Debugf("  Enclave Hash:                   0x%v\n",
-		hex.EncodeToString(r.MrEnclave[:]))
-	logrus.Debugf("  Enclave Signer:                 0x%v\n",
-		hex.EncodeToString(r.MrSigner[:]))
-	logrus.Debugf("  Config ID:                      0x%v\n",
-		hex.EncodeToString(r.ConfigId[:]))
-	logrus.Debugf("  ISV assigned Produdct ID:       %#04x\n",
-		r.IsvProdId)
-	logrus.Debugf("  ISV assigned SVN:               %d\n",
-		r.IsvSvn)
-	logrus.Debugf("  Config SVN:                     %#04x\n",
-		r.ConfigSvn)
-	logrus.Debugf("  ISV assigned Product Family ID: 0x%v\n",
-		hex.EncodeToString(r.IsvFamilyId[:]))
-	logrus.Debugf("  Report Data:                    0x%v\n",
-		hex.EncodeToString(r.ReportData[:]))
+	if indent < 0 {
+		return fmt.Errorf("indent:%d is less than 0", indent)
+	}
+	indentStr := strings.Repeat(" ", indent)
+
+	logrus.Debugf("%sREPORT:", indentStr)
+	logrus.Debugf("%s  CPU SVN:                        0x%v\n",
+		indentStr, hex.EncodeToString(r.CpuSvn[:]))
+	logrus.Debugf("%s  Misc Select:                    %#08x\n",
+		indentStr, r.MiscSelect)
+	logrus.Debugf("%s  Product ID:                     0x%v\n",
+		indentStr, hex.EncodeToString(r.IsvExtProdId[:]))
+	logrus.Debugf("%s  Attributes:                     0x%v\n",
+		indentStr, hex.EncodeToString(r.Attributes[:]))
+	logrus.Debugf("%s  Enclave Hash:                   0x%v\n",
+		indentStr, hex.EncodeToString(r.MrEnclave[:]))
+	logrus.Debugf("%s  Enclave Signer:                 0x%v\n",
+		indentStr, hex.EncodeToString(r.MrSigner[:]))
+	logrus.Debugf("%s  Config ID:                      0x%v\n",
+		indentStr, hex.EncodeToString(r.ConfigId[:]))
+	logrus.Debugf("%s  ISV assigned Produdct ID:       %#04x\n",
+		indentStr, r.IsvProdId)
+	logrus.Debugf("%s  ISV assigned SVN:               %d\n",
+		indentStr, r.IsvSvn)
+	logrus.Debugf("%s  Config SVN:                     %#04x\n",
+		indentStr, r.ConfigSvn)
+	logrus.Debugf("%s  ISV assigned Product Family ID: 0x%v\n",
+		indentStr, hex.EncodeToString(r.IsvFamilyId[:]))
+	logrus.Debugf("%s  Report Data:                    0x%v\n",
+		indentStr, hex.EncodeToString(r.ReportData[:]))
+
+	return nil
+}
+
+func DumpQuote(quote []byte) error {
+	q := &Quote{}
+	if err := restruct.Unpack(quote, binary.LittleEndian, &q); err != nil {
+		return err
+	}
+
+	logrus.Debugf("QUOTE:")
+	logrus.Debugf("  Version:					%d\n",
+		q.Version)
+	logrus.Debugf("  Signature Type:				%d\n",
+		q.SignatureType)
+
+	if q.Version == QuoteVersion2 {
+		quoteBody := &QuoteBodyV2{}
+		if err := restruct.Unpack(quote[QuoteHeaderLength:QuoteHeaderLength+QuoteBodyLength], binary.LittleEndian, &quoteBody); err != nil {
+			return err
+		}
+
+		logrus.Debugf("  Gid:					%#08x\n",
+			quoteBody.Gid)
+		logrus.Debugf("  ISV assigned SVN for Quoting Enclave:	%d\n",
+			quoteBody.ISVSvnQe)
+		logrus.Debugf("  ISV assigned SVN for PCE:		%d\n",
+			quoteBody.ISVSvnPce)
+		logrus.Debugf("  Base name:				0x%v\n",
+			hex.EncodeToString(quoteBody.Basename[:]))
+	} else if q.Version == QuoteVersion3 {
+		quoteBody := &QuoteBodyV3{}
+		if err := restruct.Unpack(quote[QuoteHeaderLength:QuoteHeaderLength+QuoteBodyLength], binary.LittleEndian, &quoteBody); err != nil {
+			return err
+		}
+
+		logrus.Debugf("  Quoting Enclave SVN:			%d\n",
+			quoteBody.QeSvn)
+		logrus.Debugf("  PCE SVN:				%d\n",
+			quoteBody.PceSvn)
+		logrus.Debugf("  Quoting Enclave Vendor Id:		0x%v\n",
+			hex.EncodeToString(quoteBody.QeVendorId[:]))
+		logrus.Debugf("  User Data:				0x%v\n",
+			hex.EncodeToString(quoteBody.UserData[:]))
+	} else {
+		return fmt.Errorf("Unsupported Quote Version: %d", q.Version)
+	}
+
+	err := DumpLocalReport(quote[QuoteHeaderLength+QuoteBodyLength:QuoteHeaderLength+QuoteBodyLength+ReportLength], 2)
+	if err != nil {
+		return nil
+	}
+
+	logrus.Debugf("  Signature Length:				%d\n",
+		q.SigLen)
 
 	return nil
 }
@@ -566,7 +629,7 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 		return nil, fmt.Errorf("SPID is not 16-byte long")
 	}
 
-	if err := DumpLocalReport(report); err != nil {
+	if err := DumpLocalReport(report, 0); err != nil {
 		return nil, err
 	}
 
@@ -613,27 +676,15 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 			len(quote), SgxMaxQuoteLength)
 	}
 
+	err = DumpQuote(quote)
+	if err != nil {
+		return nil, err
+	}
+
 	q := &Quote{}
 	if err := restruct.Unpack(quote, binary.LittleEndian, &q); err != nil {
 		return nil, err
 	}
-
-	logrus.Debugf("QUOTE:")
-	logrus.Debugf("  Version:                              %d\n",
-		q.Version)
-	logrus.Debugf("  Signature Type:                       %d\n",
-		q.SignatureType)
-	logrus.Debugf("  Gid:                                  %#08x\n",
-		q.Gid)
-	logrus.Debugf("  ISV assigned SVN for Quoting Enclave: %d\n",
-		q.ISVSvnQe)
-	logrus.Debugf("  ISV assigned SVN for PCE:             %d\n",
-		q.ISVSvnPce)
-	logrus.Debugf("  Base name:                            0x%v\n",
-		hex.EncodeToString(q.Basename[:]))
-	logrus.Debugf("  Report:                               ...\n")
-	logrus.Debugf("  Signature Length:                     %d\n",
-		q.SigLen)
 
 	return quote[0 : q.SigLen+QuoteLength], nil
 }
@@ -680,7 +731,7 @@ func GetQeTargetInfoEx(quoteType string) ([]byte, error) {
 func GetQuoteEx(quoteType string, report []byte, spid string) ([]byte, error) {
 	var quote []byte
 
-	err := DumpLocalReport(report)
+	err := DumpLocalReport(report, 0)
 	if err != nil {
 		return nil, err
 	}

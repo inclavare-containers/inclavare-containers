@@ -2,16 +2,13 @@ package main // import "github.com/inclavare-containers/sgx-tools"
 
 import (
 	"fmt"
-	_ "github.com/inclavare-containers/rune/libenclave/attestation"
+	"github.com/inclavare-containers/rune/libenclave/attestation"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"strings"
-)
-
-const (
-	spidLength = 16
 )
 
 var generateQuoteCommand = cli.Command{
@@ -66,18 +63,31 @@ For example, generate the quote file according to the given local report file:
 			return fmt.Errorf("Unsupport quote type: %v", quoteType)
 		}
 
+		var attestationType string
+		var p map[string]string
+
 		if strings.EqualFold(quoteType, intelsgx.QuoteTypeEpidUnlinkable) || strings.EqualFold(quoteType, intelsgx.QuoteTypeEpidLinkable) {
 			spid := context.String("spid")
 			if spid == "" {
 				return fmt.Errorf("spid can't be empty in both epid for unlinkable and epid for linkable modes")
 			}
 
-			if len(spid) != spidLength*2 {
-				return fmt.Errorf("Spid must be %d-character long", spidLength*2)
+			if len(spid) != sgx.SpidLength*2 {
+				return fmt.Errorf("Spid must be %d-character long", sgx.SpidLength*2)
 			}
+
+			p = parseSgxEpidAttester(quoteType, spid)
+			attestationType = sgx.AttestationEpid
+		} else {
+			attestationType = sgx.AttestationEcdsa
 		}
 
-		quote, err := intelsgx.GetQuoteEx(quoteType, report, context.String("spid"))
+		attester, err := attestation.NewAttester(attestationType, p)
+		if err != nil {
+			return err
+		}
+
+		quote, err := attester.GetQuote(report)
 		if err != nil {
 			return err
 		}

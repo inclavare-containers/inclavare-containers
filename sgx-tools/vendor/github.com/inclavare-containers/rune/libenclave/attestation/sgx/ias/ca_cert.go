@@ -1,4 +1,4 @@
-package ias
+package ias // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
 
 var caCert = []byte(`-----BEGIN CERTIFICATE-----
 MIIFSzCCA7OgAwIBAgIJANEHdl0yo7CUMA0GCSqGSIb3DQEBCwUAMH4xCzAJBgNV

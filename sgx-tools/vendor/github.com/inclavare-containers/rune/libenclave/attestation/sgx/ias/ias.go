@@ -10,6 +10,9 @@ import (
 	"encoding/pem"
 	"fmt"
 	//pb "github.com/inclavare-containers/rune/libenclave/attestation/proto"
+	"encoding/binary"
+	"github.com/go-restruct/restruct"
+	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -22,13 +25,12 @@ import (
 )
 
 const (
-	spidLength            = 16
 	subscriptionKeyLength = 16
 )
 
 type IasAttestation struct {
 	reportApiUrl    string
-	spid            [spidLength]byte
+	spid            [sgx.SpidLength]byte
 	subscriptionKey [subscriptionKeyLength]byte
 }
 
@@ -51,8 +53,8 @@ func NewIasAttestation(cfg map[string]string) (*IasAttestation, error) {
 		return nil, fmt.Errorf("EPID parameter spid not specified")
 	}
 
-	if len(spid) != spidLength*2 {
-		return nil, fmt.Errorf("Spid must be %d-character long", spidLength*2)
+	if len(spid) != sgx.SpidLength*2 {
+		return nil, fmt.Errorf("Spid must be %d-character long", sgx.SpidLength*2)
 	}
 
 	subKey, ok := cfg["subscription-key"]
@@ -104,59 +106,35 @@ func NewIasAttestation(cfg map[string]string) (*IasAttestation, error) {
 }
 
 func (ias *IasAttestation) CheckQuote(q []byte) error {
+	err := intelsgx.DumpQuote(q)
+	if err != nil {
+		return err
+	}
+
 	quote := (*intelsgx.Quote)(unsafe.Pointer(&q[0]))
 
-	logrus.Debugf("Target Platform's Quote")
-	logrus.Debugf("  Quote Body")
-	logrus.Debugf("    QUOTE Structure Version:                               %d",
-		quote.Version)
-	logrus.Debugf("    EPID Signature Type:                                   %d",
-		quote.SignatureType)
-	logrus.Debugf("    Platform's EPID Group ID:                              %#08x",
-		quote.Gid)
-	logrus.Debugf("    Quoting Enclave's ISV assigned SVN:                    %#04x",
-		quote.ISVSvnQe)
-	logrus.Debugf("    Provisioning Certification Enclave's ISV assigned SVN: %#04x",
-		quote.ISVSvnPce)
-	logrus.Debugf("    EPID Basename:                                         0x%v",
-		hex.EncodeToString(quote.Basename[:]))
-	logrus.Debugf("  Report Body")
-	logrus.Debugf("    Target CPU SVN:                                        0x%v",
-		hex.EncodeToString(quote.CpuSvn[:]))
-	logrus.Debugf("    Enclave Misc Select:                                   %#08x",
-		quote.MiscSelect)
-	logrus.Debugf("    Enclave Attributes:                                    0x%v",
-		hex.EncodeToString(quote.Attributes[:]))
-	logrus.Debugf("    Enclave Hash:                                          0x%v",
-		hex.EncodeToString(quote.MrEnclave[:]))
-	logrus.Debugf("    Enclave Signer:                                        0x%v",
-		hex.EncodeToString(quote.MrSigner[:]))
-	logrus.Debugf("    ISV assigned Product ID:                               %#04x",
-		quote.IsvProdId)
-	logrus.Debugf("    ISV assigned SVN:                                      %#04x",
-		quote.IsvSvn)
-	logrus.Debugf("    Report Data:                                           0x%v...",
-		hex.EncodeToString(quote.ReportData[:32]))
-	logrus.Debugf("  Encrypted EPID Signature")
-	logrus.Debugf("    Length:                                                %d",
-		quote.SigLen)
-	logrus.Debugf("    Signature:                                             0x%v...",
-		hex.EncodeToString(q[intelsgx.QuoteLength:intelsgx.QuoteLength+32]))
-
-	if quote.Version != intelsgx.QuoteVersion {
-		return fmt.Errorf("Invalid quote version: %d", quote.Version)
+	if quote.Version != intelsgx.QuoteVersion2 && quote.Version != intelsgx.QuoteVersion3 {
+		return fmt.Errorf("Unsupported quote version: %d", quote.Version)
 	}
 
 	if quote.SignatureType != intelsgx.QuoteSignatureTypeUnlinkable &&
 		quote.SignatureType != intelsgx.QuoteSignatureTypeLinkable {
-		return fmt.Errorf("Invalid signature type: %#04x", quote.SignatureType)
+		return fmt.Errorf("Unsupported signature type: %#04x", quote.SignatureType)
 	}
 
-	spid := [spidLength]byte{}
-	copy(spid[:], quote.Basename[:spidLength])
-	if spid != ias.spid {
-		return fmt.Errorf("Invalid spid in quote body: 0x%v",
-			hex.EncodeToString(quote.Basename[:]))
+	spid := [sgx.SpidLength]byte{}
+
+	if quote.Version == intelsgx.QuoteVersion2 {
+		quoteBody := &intelsgx.QuoteBodyV2{}
+		if err := restruct.Unpack(q[intelsgx.QuoteHeaderLength:intelsgx.QuoteHeaderLength+intelsgx.QuoteBodyLength], binary.LittleEndian, &quoteBody); err != nil {
+			return err
+		}
+
+		copy(spid[:], quoteBody.Basename[:sgx.SpidLength])
+		if spid != ias.spid {
+			return fmt.Errorf("Invalid spid in quote body: 0x%v",
+				hex.EncodeToString(quoteBody.Basename[:]))
+		}
 	}
 
 	return nil
@@ -365,7 +343,7 @@ func checkAttestationVerificationReport(resp *http.Response, quote []byte, nonce
 			report.IsvEnclaveQuoteBody)
 	}
 
-	if len(quoteBody) != intelsgx.QuoteBodyLength+intelsgx.ReportBodyLength {
+	if len(quoteBody) != intelsgx.QuoteHeaderLength+intelsgx.QuoteBodyLength+intelsgx.ReportBodyLength {
 		return status, "", fmt.Errorf("Invalid length of isvEnclaveQuoteBody: %d-byte",
 			len(quoteBody))
 	}

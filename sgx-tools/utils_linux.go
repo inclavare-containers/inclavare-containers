@@ -5,6 +5,7 @@ import (
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"io"
 	"os"
+	"strings"
 	"unsafe"
 )
 
@@ -46,4 +47,16 @@ func readAndCheckFile(file string, size int64) ([]byte, error) {
 	}
 
 	return buf, nil
+}
+
+func parseSgxEpidAttester(quoteType string, spid string) map[string]string {
+	p := make(map[string]string)
+
+	p["spid"] = spid
+	p["linkable"] = "unlinkable"
+	if strings.EqualFold(quoteType, intelsgx.QuoteTypeEpidLinkable) {
+		p["linkable"] = "linkable"
+	}
+
+	return p
 }

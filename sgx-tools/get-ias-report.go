@@ -112,12 +112,12 @@ For example, get remote attestation report from IAS according to quote file:
 			return err
 		}
 
-		status, iasReport, err := challenger.GetReport(quote, 0)
+		status, specificStatus, iasReport, err := challenger.GetReport(quote, 0)
 		if err != nil {
 			return fmt.Errorf("%s", err)
 		}
 
-		challenger.ShowReportStatus(status)
+		challenger.ShowReportStatus(status, specificStatus)
 
 		logrus.Infof("iasReport = %v", iasReport)
 

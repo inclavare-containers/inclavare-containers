@@ -13,5 +13,5 @@ require (
 
 replace (
 	github.com/inclavare-containers/epm => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
-	github.com/inclavare-containers/rune => github.com/alibaba/inclavare-containers/rune v0.0.0-20210128080841-1a37f4d4d1ed
+	github.com/inclavare-containers/rune => github.com/alibaba/inclavare-containers/rune v0.0.0-20210211091308-fcf82973a538
 )
