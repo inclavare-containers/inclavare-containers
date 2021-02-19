@@ -1,4 +1,4 @@
-package registration // import "github.com/inclavare-containers/rune/libenclave/attestation/registeration"
+package registration // import "github.com/inclavare-containers/rune/libenclave/attestation/internal/registeration"
 
 import (
 	"fmt"

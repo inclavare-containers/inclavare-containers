@@ -1,8 +1,8 @@
-package sgx_attester // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx/attester"
+package sgx_attester // import "github.com/inclavare-containers/rune/libenclave/attestation/internal/sgx/attester"
 
 import (
 	"fmt"
-	"github.com/inclavare-containers/rune/libenclave/attestation/registration"
+	"github.com/inclavare-containers/rune/libenclave/attestation/internal/registration"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"strings"
 )
