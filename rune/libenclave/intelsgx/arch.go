@@ -26,7 +26,11 @@ const (
 	NonceLength           = 16
 	SpidLength            = 16
 	SubscriptionKeyLength = 16
-	SgxMaxQuoteLength     = 2048
+)
+
+const (
+	SgxEpidMaxQuoteLength  = 2048
+	SgxEcdsaMinQuoteLength = 1020
 )
 
 const (
