@@ -34,7 +34,6 @@
 #include <unistd.h>
 
 /* wolfSSL */
-#include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
 
 #define DEFAULT_PORT 11111
@@ -67,7 +66,7 @@ extern struct ra_tls_options my_ra_tls_options;
 
 int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, size_t sz_bufrcv)
 {
-    int ret = -1;
+	int ret = -1;
 	wolfSSL_Debugging_ON();
 
 	wolfSSL_Init();
@@ -120,15 +119,26 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
 	int derSz;
 	const unsigned char *der = wolfSSL_X509_get_der(srvcrt, &derSz);
 	sgx_report_body_t *body = NULL;
-	uint8_t quote_buff[8192] = {0,};
+
 #ifdef RATLS_ECDSA
-    ecdsa_get_quote_from_dcap_cert(der, derSz, (sgx_quote3_t*)quote_buff);
+	uint8_t quote_buff[8192] = {0,};
+	ecdsa_get_quote_from_dcap_cert(der, derSz, (sgx_quote3_t*)quote_buff);
 	sgx_quote3_t* quote = (sgx_quote3_t*)quote_buff;
+	body = &quote->report_body;
+	printf("ECDSA verification\n");
+#elif defined LA_REPORT
+        sgx_report_t report = {0,};
+        la_get_report_from_cert(der, derSz, &report);
+        body = &report.body;
+        printf("Local report verification\n");
 #else
+	uint8_t quote_buff[8192] = {0,};
 	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
 	sgx_quote_t* quote = (sgx_quote_t*)quote_buff;
-#endif
 	body = &quote->report_body;
+	printf("EPID verification\n");
+#endif
+
 	printf("Server's SGX identity:\n");
 	printf("  . MRENCLAVE = ");
 	for (int i = 0; i < SGX_HASH_SIZE; ++i)
@@ -160,7 +170,7 @@ err:
 
 int ra_tls_echo(int sockfd)
 {
-    char buffer[256];
+	char buffer[256];
 	const char *http_request = "GET / HTTP/1.0\r\n\r\n";
 	size_t len = strlen(http_request);
 
@@ -168,5 +178,5 @@ int ra_tls_echo(int sockfd)
 	ra_tls_send(sockfd, http_request, len, buffer, sizeof(buffer));
 	printf("Server:\n%s\n", buffer);
 
-    return 0;
+	return 0;
 }

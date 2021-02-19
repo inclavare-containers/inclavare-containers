@@ -25,6 +25,19 @@ void *memmem(const void *h0, size_t k, const void *n0, size_t l);
 #include "ra-challenger_private.h"
 #include "ra-challenger.h"
 
+#define	LA_REPORT_SIZE	8192
+
+extern const uint8_t la_report_oid[];
+
+void la_get_report_from_extension(const uint8_t* exts, size_t exts_len,
+		sgx_report_t* report)
+{
+	int report_len = 0;
+	int rc = extract_x509_extension(exts, exts_len, la_report_oid,
+			ias_oid_len, report, &report_len, LA_REPORT_SIZE);
+	assert(rc == 1);
+}
+
 void get_quote_from_extension
 (
     const uint8_t* exts,

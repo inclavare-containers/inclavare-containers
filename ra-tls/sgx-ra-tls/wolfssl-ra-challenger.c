@@ -34,6 +34,7 @@
 
 extern unsigned char ias_sign_ca_cert_der[];
 extern unsigned int ias_sign_ca_cert_der_len;
+extern int la_verify_sgx_cert_extensions(uint8_t* der_crt, uint32_t der_crt_len);
 
 void get_quote_from_cert
 (
@@ -431,11 +432,14 @@ int verify_sgx_cert_extensions
 {
 #ifdef RATLS_ECDSA
     return ecdsa_verify_sgx_cert_extensions(der_crt, der_crt_len);
+#elif defined(LA_REPORT)
+    return la_verify_sgx_cert_extensions(der_crt, der_crt_len);
 #else
     if (is_epid_ratls_cert(der_crt, der_crt_len)) {
         return epid_verify_sgx_cert_extensions(der_crt, der_crt_len);
     }
 #endif
+
     assert(0);
     // Avoid compiler error: control reaches end of non-void function
     // [-Werror=return-type]

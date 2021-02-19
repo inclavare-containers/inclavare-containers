@@ -232,8 +232,8 @@ int pal_get_local_report(void *targetinfo, int targetinfo_len, void *report, int
 		return -1;
 	}
 
-	sgxStatus = enc_create_key_and_x509(eid, &ret, ctx, targetinfo, report);
-	if (sgxStatus != SGX_SUCCESS || ret != SGX_SUCCESS ) {
+	sgxStatus = enc_create_key_and_x509(eid, ctx);
+	if (sgxStatus != SGX_SUCCESS) {
 		PAL_ERROR("enc_create_key_and_x509 failure");
 		return EXIT_FAILURE;
 	}
