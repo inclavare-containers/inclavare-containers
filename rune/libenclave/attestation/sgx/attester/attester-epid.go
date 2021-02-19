@@ -3,7 +3,6 @@ package sgx_attester // import "github.com/inclavare-containers/rune/libenclave/
 import (
 	"fmt"
 	"github.com/inclavare-containers/rune/libenclave/attestation/registration"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"strings"
 )
@@ -14,7 +13,7 @@ type sgxEpidAttester struct {
 }
 
 func (epid *sgxEpidAttester) Name() string {
-	return sgx.AttestationEpid
+	return intelsgx.AttestationEpid
 }
 
 func (epid *sgxEpidAttester) New(cfg map[string]string) error {
@@ -23,8 +22,8 @@ func (epid *sgxEpidAttester) New(cfg map[string]string) error {
 		return fmt.Errorf("EPID parameter spid not specified")
 	}
 
-	if len(spid) != sgx.SpidLength*2 {
-		return fmt.Errorf("spid must be %d-character long", sgx.SpidLength*2)
+	if len(spid) != intelsgx.SpidLength*2 {
+		return fmt.Errorf("spid must be %d-character long", intelsgx.SpidLength*2)
 	}
 
 	linkable, ok := cfg["linkable"]
@@ -68,7 +67,7 @@ func (epid *sgxEpidAttester) GetQuote(report []byte) ([]byte, error) {
 }
 
 func init() {
-	if err := registration.RegisterAttester(&sgxEpidAttester{}, sgx.AttestationEpid); err != nil {
+	if err := registration.RegisterAttester(&sgxEpidAttester{}, intelsgx.AttestationEpid); err != nil {
 		fmt.Print(err)
 	}
 }

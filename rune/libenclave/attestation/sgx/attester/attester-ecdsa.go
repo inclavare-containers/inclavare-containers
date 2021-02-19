@@ -3,7 +3,6 @@ package sgx_attester // import "github.com/inclavare-containers/rune/libenclave/
 import (
 	"fmt"
 	"github.com/inclavare-containers/rune/libenclave/attestation/registration"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 )
 
@@ -11,7 +10,7 @@ type sgxEcdsaAttester struct {
 }
 
 func (ecdsa *sgxEcdsaAttester) Name() string {
-	return sgx.AttestationEcdsa
+	return intelsgx.AttestationEcdsa
 }
 
 func (ecdsa *sgxEcdsaAttester) New(cfg map[string]string) error {
@@ -31,7 +30,7 @@ func (attester *sgxEcdsaAttester) GetQuote(report []byte) ([]byte, error) {
 }
 
 func init() {
-	if err := registration.RegisterAttester(&sgxEcdsaAttester{}, sgx.AttestationEcdsa); err != nil {
+	if err := registration.RegisterAttester(&sgxEcdsaAttester{}, intelsgx.AttestationEcdsa); err != nil {
 		fmt.Print(err)
 	}
 }
