@@ -10,7 +10,7 @@
 
 /* Trusted portion (called from within the enclave) to do remote
    attestation with the SGX SDK.  */
-#ifndef RATLS_ECDSA
+#if !defined(LA_REPORT) && !defined(RATLS_ECDSA)
 void do_remote_attestation
 (
     sgx_report_data_t* report_data,

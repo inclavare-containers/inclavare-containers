@@ -1,4 +1,5 @@
 ######## Intel(R) SGX SDK Settings ########
+TOPDIR ?= ../
 SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_DEBUG ?= 1
@@ -61,7 +62,7 @@ endif
 
 #App_C_Files := App.c server-tls.c sgxsdk-ra-attester_u.c ias-ra.c
 #App_C_Files := App.c sgxsdk-ra-attester_u.c
-App_C_Fils := App.c
+App_C_Files := App.c
 App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I$(INCDIR) -I$(shell readlink -f .)
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -shared -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
@@ -101,7 +102,7 @@ endif
 .PHONY: all
 
 ifeq ($(Build_Mode), HW_RELEASE)
-all: liberpal-stub.so
+all: liberpal-stub.so liberpal-stub.a
 	@echo "Build liberpal-stub.so [$(Build_Mode)|$(SGX_ARCH)] success!"
 	@echo
 	@echo "*********************************************************************************************************************************************************"
@@ -110,7 +111,7 @@ all: liberpal-stub.so
 	@echo
 
 else
-all: liberpal-stub.so
+all: liberpal-stub.so liberpal-stub.a
 endif
 
 ######## liberpal-stub.so Objects ########
@@ -132,8 +133,10 @@ Wolfssl_Enclave_u.o: Wolfssl_Enclave_u.c
 liberpal-stub.so: Wolfssl_Enclave_u.o $(App_C_Objects)
 	@$(CC) $^ -o $@ $(App_Link_Flags)
 	@echo "LINK =>  $@"
+liberpal-stub.a: Wolfssl_Enclave_u.o $(App_C_Objects)
+	ar rcs $@ $^
 
 .PHONY: clean
 
 clean:
-	@rm -f liberpal-stub.so $(App_C_Objects) Wolfssl_Enclave_u.* 
+	@rm -f liberpal-stub.so $(App_C_Objects) *.a Wolfssl_Enclave_u.*

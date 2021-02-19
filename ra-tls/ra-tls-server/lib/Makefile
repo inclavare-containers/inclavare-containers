@@ -65,7 +65,8 @@ ifdef ECDSA
 endif
 
 Wolfssl_Include_Paths := -I$(WOLFSSL_ROOT) \
-	-I$(WOLFSSL_ROOT)/wolfcrypt
+	-I$(WOLFSSL_ROOT)/wolfcrypt \
+	-I../../curl-wolfssl/include
 
 ifeq ($(HAVE_WOLFSSL_TEST), 1)
 	Wolfssl_Include_Paths += -I$(WOLFSSL_ROOT)/wolfcrypt/test
@@ -83,7 +84,7 @@ ifndef ECDSA
 endif
 
 App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TLS_ROOT) -I$(INCDIR) $(SGX_DCAP_INC) -I$(shell readlink -f .)
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
+App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -shared -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
