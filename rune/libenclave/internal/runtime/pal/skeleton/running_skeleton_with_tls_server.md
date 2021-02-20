@@ -6,7 +6,7 @@ This guide will show you how to use EPID-based remote attestation in skeleton wi
 
 - Build `rune` according to this [guide](https://github.com/alibaba/inclavare-containers/tree/master/rune#building).
 
-- Build `EPID` or `DCAP` ra-tls according to this [guide](https://github.com/alibaba/inclavare-containers/blob/master/ra-tls/README.md#build).
+- Build `EPID RA`, `DCAP RA` or `Local Report Attestation` ra-tls according to this [guide](https://github.com/alibaba/inclavare-containers/blob/master/ra-tls/README.md#build).
 
 # Quick Start
 
@@ -99,6 +99,27 @@ Then build the skeleton docker image with the command:
 docker build . -t skeleton-enclave
 ```
 
+### Build local report attestation skeleton docker image
+
+Type the following commands to create a Dockerfile:
+
+```Shell
+cp ${path_to_inclavare_containers}/ra-tls/build/bin/Wolfssl_Enclave.signed.so ./
+cat >Dockerfile <<EOF
+FROM centos:8.1.1911
+
+WORKDIR /
+
+COPY Wolfssl_Enclave.signed.so /
+EOF
+```
+
+Then build the skeleton docker image with the command:
+
+```shell
+docker build . -t skeleton-enclave
+```
+
 ## Integrate OCI Runtime rune with Docker
 
 Please refer to [guide](https://github.com/alibaba/inclavare-containers/tree/master/rune/libenclave/internal/runtime/pal/skeleton#integrate-oci-runtime-rune-with-docker) to integrate OCI runtime rune with docker.
@@ -122,6 +143,17 @@ docker run -i --rm --runtime=rune \
 
 ```shell
 docker run -i --rm --net=host --runtime=rune \
+  -e ENCLAVE_TYPE=intelSgx \
+  -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
+  -e ENCLAVE_RUNTIME_ARGS=debug \
+  -v /run/rune:/run/rune \
+  skeleton-enclave:latest
+```
+
+### Run local report attestation TLS server by docker image
+
+```shell
+docker run -i --rm --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
   -e ENCLAVE_RUNTIME_ARGS=debug \
