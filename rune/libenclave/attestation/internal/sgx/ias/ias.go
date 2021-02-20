@@ -105,6 +105,10 @@ func NewIasAttestation(cfg map[string]string) (*IasAttestation, error) {
 }
 
 func (ias *IasAttestation) CheckQuote(q []byte) error {
+	if len(q) > intelsgx.SgxEpidMaxQuoteLength {
+		return fmt.Errorf("len(quote) must be not more than %d", intelsgx.SgxEpidMaxQuoteLength)
+	}
+
 	err := intelsgx.DumpQuote(q)
 	if err != nil {
 		return err
