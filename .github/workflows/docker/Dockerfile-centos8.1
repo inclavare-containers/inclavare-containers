@@ -6,7 +6,7 @@ LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
 RUN yum install -y libseccomp-devel iptables openssl openssl-devel wget make
 
-RUN dnf --enablerepo=PowerTools install -y binutils-devel protobuf-devel protobuf-c-devel
+RUN dnf --enablerepo=PowerTools install -y binutils-devel protobuf-devel protobuf-c-devel glibc-static
 
 WORKDIR /root
 
