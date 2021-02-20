@@ -36,3 +36,9 @@ RUN apt-get install -y apt-transport-https ca-certificates curl software-propert
 # configure docker
 RUN mkdir -p /etc/docker && \
     echo "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t},\n\t\"storage-driver\": \"vfs\"\n}" >> /etc/docker/daemon.json
+
+# configure SGX apt source
+RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
+
+# install libsgx-headers which is needed by libsgx-dcap-quote-verify*.deb
+RUN apt-get update -y && apt-get remove -y libsgx-dcap-ql-dev && apt-get install -y libsgx-headers=2.12.100.3-bionic1
