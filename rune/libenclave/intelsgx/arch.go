@@ -161,6 +161,8 @@ type Quote struct {
 const (
 	QuoteSignatureTypeUnlinkable = iota
 	QuoteSignatureTypeLinkable
+	QuoteSignatureTypeEcdsaP256
+	QuoteSignatureTypeEcdsaP384
 )
 
 const (
