@@ -15,6 +15,8 @@ URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 
 BuildRequires: libseccomp-devel
+BuildRequires: libsgx-dcap-quote-verify
+BuildRequires: libsgx-dcap-quote-verify-devel
 ExclusiveArch: x86_64
 
 %description
