@@ -65,7 +65,7 @@ jobs:
           sudo apt-get remove -y libsgx-ae-epid libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 \
             libsgx-aesm-launch-plugin libsgx-enclave-common sgx-aesm-service libsgx-urts \
             libsgx-launch libsgx-epid libsgx-quote-ex libsgx-enclave-common-dbgsym \
-            libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify || true
+            libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev || true
           sudo apt-get remove -y *sgx* || true
           sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
           sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
@@ -106,7 +106,7 @@ jobs:
           sudo apt-get install -y libsgx-launch libsgx-urts
           sudo apt-get install -y libsgx-epid libsgx-urts
           sudo apt-get install -y libsgx-quote-ex libsgx-urts
-          sudo apt-get install -y libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify
+          sudo apt-get install -y libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev
           sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh
           sudo /bin/bash /opt/intel/sgx-aesm-service/startup.sh
           chmod +x sgx_linux_x64_driver_2.6.0_b0a445b.bin sgx_linux_x64_sdk_2.11.100.2.bin
@@ -490,7 +490,7 @@ jobs:
           sudo apt-get remove -y libsgx-ae-epid libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 \
             libsgx-aesm-launch-plugin libsgx-enclave-common sgx-aesm-service libsgx-urts \
             libsgx-launch libsgx-epid libsgx-quote-ex libsgx-enclave-common-dbgsym \
-            libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify || true
+            libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev || true
           sudo apt-get remove -y *sgx* || true
           sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
           sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
