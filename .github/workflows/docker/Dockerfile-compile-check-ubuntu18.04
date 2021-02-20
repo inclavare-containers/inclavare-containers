@@ -23,4 +23,4 @@ ENV GO111MODULE  on
 # install dcap
 RUN echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
 
-RUN apt-get update -y  && apt-get install -y libsgx-launch libsgx-epid libsgx-urts libsgx-quote-ex libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-ql-dev libsgx-headers
+RUN apt-get update -y  && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev

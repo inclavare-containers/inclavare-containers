@@ -23,5 +23,4 @@ ENV GO111MODULE  on
 
 # install dcap
 RUN wget https://download.01.org/intel-sgx/sgx-linux/2.12/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
-    tar -zxvf sgx_rpm_local_repo.tgz && rm sgx_rpm_local_repo.tgz && cd sgx_rpm_local_repo && rpm -ivh *.rpm && \
-    rm -rf sgx_rpm_local_repo
+    tar -zxvf sgx_rpm_local_repo.tgz && rm sgx_rpm_local_repo.tgz && cd sgx_rpm_local_repo && rpm -ivh libsgx-headers*.rpm libsgx-dcap-quote-verify*.rpm && rm -rf sgx_rpm_local_repo
