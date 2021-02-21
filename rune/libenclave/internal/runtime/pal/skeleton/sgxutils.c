@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <sys/user.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -212,4 +213,26 @@ static bool is_sgx_device(const char *dev)
 bool is_oot_kernel_driver(void)
 {
 	return is_sgx_device("/dev/isgx");
+}
+
+uint32_t get_build_date(void)
+{
+	time_t cur_time;
+
+	if (time(&cur_time) == -1)
+		return 0;
+
+	struct tm *tm = gmtime(&cur_time);
+	if (!tm)
+		return 0;
+
+	char buf[9];
+	sprintf(buf, "%04d%02d%02d", tm->tm_year + 1900,
+		tm->tm_mon + 1, tm->tm_mday);
+
+	uint32_t build_date;
+	if (sscanf(buf, "%08x", &build_date) != 1)
+		return 0;
+
+	return build_date;
 }
