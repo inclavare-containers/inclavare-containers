@@ -727,6 +727,8 @@ int main(int argc, char **argv)
 	memcpy(ss.header.header1, header1, sizeof(ss.header.header1));
 	memcpy(ss.header.header2, header2, sizeof(ss.header.header2));
 
+	ss.header.date = get_build_date();
+
 	if (enclave_debug && is_sgx1_supported() && !is_sgx2_supported())
 		ss.header.type = 1 << 31;
 
