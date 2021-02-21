@@ -326,7 +326,7 @@ static bool measure_encl(const char *path, uint8_t *mrenclave,
 		mmap_size = (mmap_size / PAGE_SIZE + 1) * PAGE_SIZE;
 
 	if (meta_data->null_dereference_protection && meta_data->mmap_min_addr
-	    && is_oot_kernel_driver()) {
+	    && is_legacy_oot_kernel_driver()) {
 		fprintf(stderr,
 			"Cannot protect enclave against null dereference attack "
 			"when vm.mmap_min_addr is not configured of 0 in OOT driver.\n");

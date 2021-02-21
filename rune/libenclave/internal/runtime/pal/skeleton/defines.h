@@ -25,7 +25,9 @@ int get_mmap_min_addr(uint64_t *addr);
 /* *INDENT-ON* */
 uint64_t calc_enclave_offset(uint64_t mmap_min_addr,
 			     bool null_dereference_protection);
-bool is_oot_kernel_driver(void);
+bool is_legacy_oot_kernel_driver(void);
+bool is_dcap_oot_kernel_driver(void);
+bool is_in_tree_kernel_driver(void);
 
 #include "arch.h"
 #include "sgx.h"

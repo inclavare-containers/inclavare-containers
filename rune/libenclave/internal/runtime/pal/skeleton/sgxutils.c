@@ -210,9 +210,19 @@ static bool is_sgx_device(const char *dev)
 	return false;
 }
 
-bool is_oot_kernel_driver(void)
+bool is_legacy_oot_kernel_driver(void)
 {
 	return is_sgx_device("/dev/isgx");
+}
+
+bool is_dcap_oot_kernel_driver(void)
+{
+	return is_sgx_device("/dev/sgx/enclave");
+}
+
+bool is_in_tree_kernel_driver(void)
+{
+	return is_sgx_device("/dev/sgx_enclave");
 }
 
 uint32_t get_build_date(void)
