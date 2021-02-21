@@ -60,14 +60,26 @@ void *tcs_busy;
 __attribute__((constructor))
 static void detect_driver_type(void)
 {
-	if (is_oot_kernel_driver()) {
+	if (is_legacy_oot_kernel_driver()) {
 		sgx_dev_path = "/dev/isgx";
 		is_oot_driver = true;
 		return;
 	}
 
-	sgx_dev_path = "/dev/sgx/enclave";
 	is_oot_driver = false;
+
+	if (is_dcap_oot_kernel_driver()) {
+		sgx_dev_path = "/dev/sgx/enclave";
+		return;
+	}
+
+	if (is_in_tree_kernel_driver()) {
+		sgx_dev_path = "/dev/sgx_enclave";
+		return;
+	}
+
+	fprintf(stderr, "no SGX device available\n");
+	exit(1);
 }
 
 /*

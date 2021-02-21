@@ -44,8 +44,8 @@ func (pal *enclaveRuntimePal) Init(args string, logLevel string) error {
 	if !strings.Contains(args, "no-epm") {
 		no_epm = false
 		/* enclaveinfo.Layout retrieves from /proc/pid/mmaps, in file
-		* mmaps /dev/sgx/enclave mmaping address is sorted from low
-		* address to high one. So layout[0].Addr will be minimum.
+		 * mmaps sgx device mmaping address is sorted from low
+		 * address to high one. So layout[0].Addr will be minimum.
 		 */
 		pal.enclaveSubType = EnclaveSubType
 		enclaveinfo = epm.GetEnclave(pal.enclaveSubType)
