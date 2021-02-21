@@ -23,14 +23,10 @@ import (
 	"unsafe"
 )
 
-const (
-	subscriptionKeyLength = 16
-)
-
 type IasAttestation struct {
 	reportApiUrl    string
 	spid            [intelsgx.SpidLength]byte
-	subscriptionKey [subscriptionKeyLength]byte
+	subscriptionKey [intelsgx.AttestationSubscriptionKeyLength]byte
 }
 
 type IasReportStatus struct {
@@ -61,9 +57,9 @@ func NewIasAttestation(cfg map[string]string) (*IasAttestation, error) {
 		return nil, fmt.Errorf("EPID parameter subscription-key not specified")
 	}
 
-	if len(subKey) != subscriptionKeyLength*2 {
+	if len(subKey) != intelsgx.AttestationSubscriptionKeyLength*2 {
 		return nil, fmt.Errorf("Subscription key must be %d-character long",
-			subscriptionKeyLength*2)
+			intelsgx.AttestationSubscriptionKeyLength*2)
 	}
 
 	var rawSubKey []byte
