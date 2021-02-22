@@ -107,18 +107,20 @@ $(OUTPUT)/encl.bin: $(OUTPUT)/encl.elf $(OUTPUT)/sgxsign
 $(OUTPUT)/encl.elf: encl.lds encl.c encl_bootstrap.S
 	$(CC) $(ENCL_CFLAGS) -T $^ -o $@
 
-# If you want to sign a production enclave, you need add '-p' args in sgxsign. In addition, for Intel SGX1 without FLC, please replace signing_key with the product signature key applied to Intel.
 $(OUTPUT)/signing_key.pem:
 	openssl genrsa -3 -out $@ 3072
 
-ifeq ($(PRODUCT_ENCLAVE),1)
-        PRODUCT_OPT := -p
+# If you want to prohibit enclave debug function, you need add '-N' argument in sgxsign.
+# In addition, for Intel SGX1 without FLC, please replace signing_key with the product
+# signing key applied to Intel.
+ifeq ($(NO_DEBUGGER),1)
+        NO_DEBUGGER_OPT := -N
 else
-        PRODUCT_OPT :=
+        NO_DEBUGGER_OPT :=
 endif
 
 $(OUTPUT)/encl.ss: $(OUTPUT)/encl.bin $(OUTPUT)/signing_key.pem
-	$(OUTPUT)/sgxsign $(PRODUCT_OPT) signing_key.pem $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss
+	$(OUTPUT)/sgxsign $(NO_DEBUGGER_OPT) signing_key.pem $(OUTPUT)/encl.bin $(OUTPUT)/encl.ss
 
 $(OUTPUT)/sgxsign: sgxsign.c sgxutils.c
 	$(CC) -I../include -o $@ $^ -lcrypto
