@@ -26,6 +26,7 @@ struct sgx_sigstruct_payload {
 uint64_t req_xfrm, req_xfrm_mask;
 uint64_t req_attrs, req_attrs_mask;
 bool enclave_debug = true;
+bool product_enclave = true;
 
 static bool check_crypto_errors(void)
 {
@@ -618,8 +619,16 @@ static int calc_sgx_attributes(uint64_t *ret_attrs, uint64_t *ret_attrs_mask)
 		return 0;
 	}
 
-	*ret_attrs = enforced_pattern;
-	*ret_attrs_mask = enforced_pattern;
+	uint64_t attrs = enforced_pattern;
+	uint64_t attrs_mask = enforced_pattern;
+
+	if (!enclave_debug) {
+		attrs &= ~SGX_ATTR_DEBUG;
+		attrs_mask |= SGX_ATTR_DEBUG;
+	}
+
+	*ret_attrs = attrs;
+	*ret_attrs_mask = attrs_mask;
 
 	return 0;
 }
@@ -684,9 +693,10 @@ int main(int argc, char **argv)
 	int opt;
 	RSA *sign_key;
 	struct metadata meta_data;
-	char *const short_options = "ps:x:a:nm:";
+	char *const short_options = "NDs:x:a:nm:";
 	struct option long_options[] = {
-		{"product", no_argument, NULL, 'p'},
+		{"no-debugger", no_argument, NULL, 'N'},
+		{"debug-enclave", no_argument, NULL, 'D'},
 		{"mmap-size", required_argument, NULL, 's'},
 		{"xfrm", required_argument, NULL, 'x'},
 		{"attrs", required_argument, NULL, 'a'},
@@ -705,8 +715,11 @@ int main(int argc, char **argv)
 		opt = getopt_long(argc, argv, short_options, long_options,
 				  NULL);
 		switch (opt) {
-		case 'p':
+		case 'N':
 			enclave_debug = false;
+			break;
+		case 'D':
+			product_enclave = false;
 			break;
 		case 's':
 			meta_data.max_mmap_size = atoi(optarg);
@@ -748,7 +761,7 @@ int main(int argc, char **argv)
 
 	ss.header.date = get_build_date();
 
-	if (enclave_debug && is_sgx1_supported() && !is_sgx2_supported())
+	if (!product_enclave)
 		ss.header.type = 1 << 31;
 
 	if (calc_sgx_attributes(&ss.body.attributes, &ss.body.attributes_mask))
