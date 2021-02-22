@@ -282,6 +282,8 @@ static bool encl_create(int dev_fd, unsigned long bin_size,
 		return false;
 	// *INDENT-ON*
 	secs->attributes = sigstruct->body.attributes;
+	if (debugging)
+		secs->attributes |= SGX_ATTR_DEBUG;
 
 	uint64_t probed_xfrm;
 	get_sgx_xfrm_by_cpuid(&probed_xfrm);
