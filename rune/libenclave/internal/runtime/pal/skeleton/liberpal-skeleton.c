@@ -680,6 +680,9 @@ static void check_opts(const char *opt)
 
 void parse_args(const char *args)
 {
+	if (!args || args[0] == '\0')
+		return;
+
 	char *a = strdup(args);
 	if (!a)
 		return;
