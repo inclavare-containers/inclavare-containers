@@ -508,8 +508,11 @@ static bool calc_q1q2(const uint8_t *s, const uint8_t *m, uint8_t *q1,
 		goto out;
 	}
 
-	BN_bn2bin(ctx.q1, q1);
-	BN_bn2bin(ctx.q2, q2);
+	int len = BN_bn2bin(ctx.q1, q1);
+	/* convert to little endian */
+	reverse_bytes(q1, len);
+	len = BN_bn2bin(ctx.q2, q2);
+	reverse_bytes(q2, len);
 
 	free_q1q2_ctx(&ctx);
 	return true;
@@ -771,11 +774,10 @@ int main(int argc, char **argv)
 	/* convert to little endian */
 	reverse_bytes(ss.signature, SGX_MODULUS_SIZE);
 	reverse_bytes(ss.modulus, SGX_MODULUS_SIZE);
-	reverse_bytes(ss.q1, SGX_MODULUS_SIZE);
-	reverse_bytes(ss.q2, SGX_MODULUS_SIZE);
 
 	if (!save_sigstruct(&ss, argv[2]))
 		goto out;
+
 	exit(0);
 out:
 	check_crypto_errors();
