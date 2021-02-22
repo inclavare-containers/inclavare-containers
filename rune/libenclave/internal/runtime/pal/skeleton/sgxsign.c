@@ -537,6 +537,22 @@ static bool save_sigstruct(const struct sgx_sigstruct *sigstruct,
 	return true;
 }
 
+static bool save_tbs_sigstruct(const struct sgx_sigstruct *sigstruct,
+			       const char *path)
+{
+	FILE *f = fopen(path, "wb");
+
+	if (!f) {
+		fprintf(stderr, "Unable to open %s\n", path);
+		return false;
+	}
+
+	fwrite(&sigstruct->header, sizeof(sigstruct->header), 1, f);
+	fwrite(&sigstruct->body, sizeof(sigstruct->body), 1, f);
+	fclose(f);
+	return true;
+}
+
 // *INDENT-OFF*
 static int calc_sgx_attributes(uint64_t *ret_attrs, uint64_t *ret_attrs_mask)
 {
@@ -774,6 +790,9 @@ int main(int argc, char **argv)
 	/* convert to little endian */
 	reverse_bytes(ss.signature, SGX_MODULUS_SIZE);
 	reverse_bytes(ss.modulus, SGX_MODULUS_SIZE);
+
+	if (argv[3] && !save_tbs_sigstruct(&ss, argv[3]))
+		goto out;
 
 	if (!save_sigstruct(&ss, argv[2]))
 		goto out;
