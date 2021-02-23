@@ -54,7 +54,12 @@ void ocall_collect_attestation_evidence(sgx_report_t* app_report,
 {
 	ecdsa_get_quote(app_report, evidence->quote, &evidence->quote_len);
 }
-#else
+
+#elif defined(LA_REPORT)
+
+/* Nothing */
+
+#else   /* EPID */
 
 /* Untrusted code to do remote attestation with the SGX SDK. */
 void ocall_remote_attestation(sgx_report_t* report,

@@ -2,8 +2,7 @@
 
 # set -x
 
-if ( [[ ! -z "$ECDSA" ]] ); then
-cat > stub-enclave.wolfssl/Enclave.edl <<EOF
+cat > stub-enclave.wolfssl/Enclave.edl << EOF
 enclave {
     from "sgx_backtrace.edl" import *;
     from "sgx_tstd.edl" import *;
@@ -20,6 +19,13 @@ enclave {
     include "ra-attester.h"
     include "sgx_report.h"
 
+EOF
+
+
+### ECDSA
+
+if [[ -n "$ECDSA" ]]; then
+cat >> stub-enclave.wolfssl/Enclave.edl << EOF
     trusted {
     };
 
@@ -31,26 +37,27 @@ enclave {
     };
 };
 EOF
+    exit 0
 fi
 
-if ( [[ -z "$ECDSA" ]] ); then
-cat > stub-enclave.wolfssl/Enclave.edl <<EOF
-enclave {
-    from "sgx_backtrace.edl" import *;
-    from "sgx_tstd.edl" import *;
-    from "sgx_stdio.edl" import *;
-    from "sgx_fs.edl" import *;
-    from "sgx_net.edl" import *;
-    from "sgx_time.edl" import *;
-    from "sgx_tstdc.edl" import *;
-    from "sgx_env.edl" import *;
 
-    from "wolfssl.edl" import *;
+### LA
 
-    include "ra.h"
-    include "ra-attester.h"
-    include "sgx_report.h"
+if [[ -n "$LA" ]]; then
+cat >> stub-enclave.wolfssl/Enclave.edl << EOF
+    trusted {
+        /* defined in liberpal-stub.a */
+        /* public int enc_la_sgx_verify_report([user_check]sgx_report_t* report); */
+    };
+};
+EOF
+    exit 0
+fi
 
+
+### else EPID
+
+cat >> stub-enclave.wolfssl/Enclave.edl << EOF
     trusted {
     };
 
@@ -64,4 +71,3 @@ enclave {
     };
 };
 EOF
-fi

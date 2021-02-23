@@ -273,7 +273,7 @@ void create_key_and_x509_pem
 }
 #endif
 
-#ifdef WOLFSSL_SGX
+#if defined(WOLFSSL_SGX) && !defined(LA_REPORT)
 time_t XTIME(time_t* tloc) {
     time_t x = 1512498557; /* Dec 5, 2017, 10:29 PDT */
     if (tloc) *tloc = x;

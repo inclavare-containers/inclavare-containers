@@ -72,6 +72,13 @@ cd ${ROOT_DIR}/inclavared/
 make -f Makefile.wolfssl ECDSA=1
 ```
 
+* inclavared (inclavared.wolfssl) for LA_REPORT
+
+```bash
+cd ${ROOT_DIR}/inclavared/
+make -f Makefile.wolfssl LA=1
+```
+
 #### Run
 
 * Run as server
