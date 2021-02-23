@@ -4,8 +4,10 @@ SGX_DEBUG ?=
 
 ifdef ECDSA
 	BUILD_FLAGS = --features=RATLS_ECDSA
+else LA
+	BUILD_FLAGS = --features=LA_REPORT
 else
-	BUILD_FLAGS =
+	BUILD_FLAGS = --features=RATLS_EPID
 endif
 
 .PHONY: all

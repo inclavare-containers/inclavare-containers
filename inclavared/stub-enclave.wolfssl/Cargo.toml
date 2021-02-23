@@ -12,7 +12,9 @@ crate-type = ["staticlib"]
 [features]
 default = []
 
+RATLS_EPID = []
 RATLS_ECDSA = []
+LA_REPORT = []
 
 [build-dependencies]
 bindgen = "0.55.1"

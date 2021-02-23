@@ -63,6 +63,9 @@ Wolfssl_C_Extra_Flags := -DWOLFSSL_SGX -DUSE_WOLFSSL
 ifdef ECDSA
 	Wolfssl_C_Extra_Flags += -DRATLS_ECDSA
 endif
+ifdef LA
+	Wolfssl_C_Extra_Flags += -DLA_REPORT
+endif
 
 Wolfssl_Include_Paths := -I$(WOLFSSL_ROOT) \
 	-I$(WOLFSSL_ROOT)/wolfcrypt \

@@ -76,37 +76,6 @@ const IAS_REPORT_API_URL: &'static str =
 //     pub tv_usec: __suseconds_t,
 // }
 
-#[no_mangle]
-pub extern "C" fn ocall_low_res_time(__nptr: *mut c_int) {
-    if __nptr.is_null() {
-        return;
-    }
-    //FIXME
-    unsafe {
-        *__nptr = 100;
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn ocall_send(
-    sockfd: libc::c_int,
-    buf: *const libc::c_void,
-    len: libc::size_t,
-    flags: libc::c_int,
-) -> libc::ssize_t {
-    unsafe { libc::send(sockfd, buf, len, flags) }
-}
-
-#[no_mangle]
-pub extern "C" fn ocall_recv(
-    sockfd: libc::c_int,
-    buf: *mut libc::c_void,
-    len: libc::size_t,
-    flags: libc::c_int,
-) -> libc::ssize_t {
-    unsafe { libc::recv(sockfd, buf, len, flags) }
-}
-
 ////FIXME: remove XTIME
 //#[no_mangle]
 //pub extern "C"

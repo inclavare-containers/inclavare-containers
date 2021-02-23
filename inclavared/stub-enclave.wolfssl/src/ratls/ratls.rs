@@ -38,6 +38,7 @@ extern "C" {
 
 // Link to libsgx_ra_tls_wolfssl.a
 extern "C" {
+    #[cfg(feature = "RATLS_EPID")]
     pub fn create_key_and_x509(
         der_key: *mut c_uchar,
         der_key_len: *mut c_uint,
@@ -45,7 +46,15 @@ extern "C" {
         der_cert_len: *mut c_uint,
         opt: *mut ratlsffi::ra_tls_options,
     );
+    #[cfg(feature = "RATLS_ECDSA")]
     pub fn ecdsa_create_key_and_x509(
+        der_key: *mut c_uchar,
+        der_key_len: *mut c_uint,
+        der_cert: *mut c_uchar,
+        der_cert_len: *mut c_uint
+    );
+    #[cfg(feature = "LA_REPORT")]
+    pub fn la_create_key_and_x509(
         der_key: *mut c_uchar,
         der_key_len: *mut c_uint,
         der_cert: *mut c_uchar,
@@ -398,6 +407,15 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
     };
 
     unsafe {
+        #[cfg(feature = "RATLS_EPID")]
+        create_key_and_x509(
+            der_key.as_mut_ptr(),
+            &mut der_key_len as *mut _ as *mut c_uint,
+            der_cert.as_mut_ptr(),
+            &mut der_cert_len as *mut _ as *mut c_uint,
+            &mut opt as *mut ratlsffi::ra_tls_options,
+        );
+
         #[cfg(feature = "RATLS_ECDSA")]
         ecdsa_create_key_and_x509(
             der_key.as_mut_ptr(),
@@ -406,13 +424,12 @@ pub extern "C" fn ecall_create_key_and_x509(ctx: *mut ratlsffi::WOLFSSL_CTX) {
             &mut der_cert_len as *mut _ as *mut c_uint
         );
 
-        #[cfg(not(feature = "RATLS_ECDSA"))]
-        create_key_and_x509(
+        #[cfg(feature = "LA_REPORT")]
+        la_create_key_and_x509(
             der_key.as_mut_ptr(),
             &mut der_key_len as *mut _ as *mut c_uint,
             der_cert.as_mut_ptr(),
-            &mut der_cert_len as *mut _ as *mut c_uint,
-            &mut opt as *mut ratlsffi::ra_tls_options,
+            &mut der_cert_len as *mut _ as *mut c_uint
         );
 
         let mut retval = ratlsffi::wolfSSL_CTX_use_certificate_buffer(
