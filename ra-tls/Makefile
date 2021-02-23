@@ -78,14 +78,14 @@ wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --en
 # then RATLS_ECDSA will be wrote into options.h, even just make(compiling attestation based on EPID), the RATLS_ECDSA will still be in
 # options.h. So it needs be reconfigured before compiling, options.h will be re-generated according to new configuration.
 wolfssl:
-	if [ -d "./wolfssl" ]; then \
-		cd wolfssl && ./autogen.sh && CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
-	fi
 	if [ ! -d "./wolfssl" ]; then \
-		git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && \
-		cd wolfssl && git apply ../patch/wolfssl.patch && \
-		./autogen.sh && CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
+		git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && true; \
 	fi
+	cd wolfssl && \
+	git checkout . && \
+	git apply ../patch/wolfssl.patch && \
+	./autogen.sh && \
+	CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
 
 $(SGX_RA_TLS)/wolfssl-ra-challenger.o: $(SGX_RA_TLS)/wolfssl-ra-challenger.c
 	@echo $(CC) $(CFLAGS) -c $< -o $@
