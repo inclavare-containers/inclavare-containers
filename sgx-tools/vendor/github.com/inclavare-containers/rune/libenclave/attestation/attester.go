@@ -2,8 +2,8 @@ package attestation // import "github.com/inclavare-containers/rune/libenclave/a
 
 import (
 	"fmt"
-	"github.com/inclavare-containers/rune/libenclave/attestation/registration"
-	_ "github.com/inclavare-containers/rune/libenclave/attestation/sgx/attester" // for the registration of sgx attesters
+	"github.com/inclavare-containers/rune/libenclave/attestation/internal/registration"
+	_ "github.com/inclavare-containers/rune/libenclave/attestation/internal/sgx/attester" // for the registration of sgx attesters
 )
 
 type Attester interface {

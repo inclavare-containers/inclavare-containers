@@ -15,18 +15,22 @@ var (
 )
 
 const (
-	SigStructLength       = 1808
-	EinittokenLength      = 304
-	TargetinfoLength      = 512
-	ReportLength          = ReportBodyLength + 48
-	ReportBodyLength      = 384
-	QuoteLength           = QuoteHeaderLength + QuoteBodyLength + ReportBodyLength + 4
-	QuoteHeaderLength     = 4
-	QuoteBodyLength       = 44
-	NonceLength           = 16
-	SpidLength            = 16
-	SubscriptionKeyLength = 16
-	SgxMaxQuoteLength     = 2048
+	SigStructLength                  = 1808
+	EinittokenLength                 = 304
+	TargetinfoLength                 = 512
+	ReportLength                     = ReportBodyLength + 48
+	ReportBodyLength                 = 384
+	QuoteLength                      = QuoteHeaderLength + QuoteBodyLength + ReportBodyLength + 4
+	QuoteHeaderLength                = 4
+	QuoteBodyLength                  = 44
+	NonceLength                      = 16
+	SpidLength                       = 16
+	AttestationSubscriptionKeyLength = 16
+)
+
+const (
+	SgxEpidMaxQuoteLength  = 2048
+	SgxEcdsaMinQuoteLength = 1020
 )
 
 const (
@@ -157,7 +161,8 @@ type Quote struct {
 const (
 	QuoteSignatureTypeUnlinkable = iota
 	QuoteSignatureTypeLinkable
-	InvalidQuoteSignatureType
+	QuoteSignatureTypeEcdsaP256
+	QuoteSignatureTypeEcdsaP384
 )
 
 const (

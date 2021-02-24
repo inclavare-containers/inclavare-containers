@@ -3,7 +3,6 @@ package main // import "github.com/inclavare-containers/sgx-tools"
 import (
 	"fmt"
 	"github.com/inclavare-containers/rune/libenclave/attestation"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -19,7 +18,7 @@ var generateQuoteCommand = cli.Command{
 EXAMPLE:
 For example, generate the quote file according to the given local report file:
 
-	# sgx-tools gen-quote --report foo.rep --spid ${SPID}`,
+	# sgx-tools gen-quote --quote-type=${SGX_QUOTE_TYPE} --report foo.rep --spid ${SPID}`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "quote-type",
@@ -72,14 +71,14 @@ For example, generate the quote file according to the given local report file:
 				return fmt.Errorf("spid can't be empty in both epid for unlinkable and epid for linkable modes")
 			}
 
-			if len(spid) != sgx.SpidLength*2 {
-				return fmt.Errorf("Spid must be %d-character long", sgx.SpidLength*2)
+			if len(spid) != intelsgx.SpidLength*2 {
+				return fmt.Errorf("Spid must be %d-character long", intelsgx.SpidLength*2)
 			}
 
 			p = parseSgxEpidAttester(quoteType, spid)
-			attestationType = sgx.AttestationEpid
+			attestationType = intelsgx.AttestationEpid
 		} else {
-			attestationType = sgx.AttestationEcdsa
+			attestationType = intelsgx.AttestationEcdsa
 		}
 
 		attester, err := attestation.NewAttester(attestationType, p)

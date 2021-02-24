@@ -17,7 +17,7 @@ var generateQeTargetInfoCommand = cli.Command{
 EXAMPLE:
 For example, save the target information file about Quoting Enclave retrieved from aesmd:
 
-	# sgx-tools gen-qe-target-info --targetinfo foo`,
+	# sgx-tools gen-qe-target-info --quote-type=${SGX_QUOTE_TYPE} --targetinfo foo`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "quote-type",
