@@ -42,12 +42,33 @@
 #ifdef RATLS_ECDSA
 #include <sgx_quote_3.h>
 #endif
+#include <sgx_urts.h>
 
 #include "ra.h"
 #ifdef SGX_RATLS_MUTUAL
 #include "ra-attester.h"
 #endif
 #include "ra-challenger.h"
+
+/* only for lareport */
+/* TODO: This global variable is referenced in the underlying library */
+sgx_enclave_id_t g_eid = -1;
+
+static sgx_enclave_id_t load_enclave(void)
+{
+        sgx_launch_token_t t;
+        memset(t, 0, sizeof(t));
+
+        sgx_enclave_id_t id;
+        int updated = 0;
+        int ret = sgx_create_enclave("Wolfssl_Enclave.signed.so", 1, &t, &updated, &id, NULL);
+        if (ret != SGX_SUCCESS) {
+                fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
+				return -1;
+        }
+
+        return id;
+}
 
 static int cert_verify_callback(int preverify, WOLFSSL_X509_STORE_CTX * store)
 {
@@ -131,6 +152,8 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
         la_get_report_from_cert(der, derSz, &report);
         body = &report.body;
         printf("Local report verification\n");
+
+        g_eid = load_enclave();
 #else
 	uint8_t quote_buff[8192] = {0,};
 	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
