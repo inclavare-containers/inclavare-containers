@@ -13,23 +13,19 @@ import (
 	"os"
 )
 
-var getIasReportCommand = cli.Command{
-	Name:  "get-ias-report",
-	Usage: "get remote attestation report from IAS",
+var verifyQuoteCommand = cli.Command{
+	Name:  "verify-quote",
+	Usage: "verify quote with the help of IAS",
 	ArgsUsage: `[command options]
 
 EXAMPLE:
 For example, get remote attestation report from IAS according to quote file:
 
-	# sgx-tools get-ias-report --quote foo.quote --spid ${SPID} --subscription-key ${SUBSCRIPTION_KEY}`,
+	# sgx-tools verify-quote --quote foo.quote --spid ${SPID} --subscription-key ${SUBSCRIPTION_KEY}`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "quote",
 			Usage: "path to the input quote file containing QUOTE",
-		},
-		cli.StringFlag{
-			Name:  "ias-report",
-			Usage: "path to the output IAS report file containing IAS report",
 		},
 		cli.StringFlag{
 			Name:  "spid",
@@ -44,11 +40,6 @@ For example, get remote attestation report from IAS according to quote file:
 		quotePath := context.String("quote")
 		if quotePath == "" {
 			return fmt.Errorf("quote argument cannot be empty")
-		}
-
-		iasReportPath := context.String("ias-report")
-		if iasReportPath == "" {
-			iasReportPath = "ias-report.bin"
 		}
 
 		spid := context.String("spid")

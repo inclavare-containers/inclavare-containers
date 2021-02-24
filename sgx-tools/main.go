@@ -45,7 +45,7 @@ func main() {
 		generateTokenCommand,
 		generateQeTargetInfoCommand,
 		generateQuoteCommand,
-		getIasReportCommand,
+		verifyQuoteCommand,
 	}
 
 	//app.Before = func(context *cli.Context) error {
