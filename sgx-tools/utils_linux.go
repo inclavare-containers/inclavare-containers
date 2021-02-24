@@ -21,7 +21,7 @@ func IsProductEnclave(reportBody intelsgx.ReportBody) (bool, error) {
 	return false, nil
 }
 
-func readAndCheckFile(file string, size int64) ([]byte, error) {
+func readFile(file string) ([]byte, error) {
 	rf, err := os.Open(file)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -37,11 +37,7 @@ func readAndCheckFile(file string, size int64) ([]byte, error) {
 		return nil, err
 	}
 
-	if rfi.Size() != size {
-		return nil, fmt.Errorf("file %s not match", file)
-	}
-
-	buf := make([]byte, size)
+	buf := make([]byte, rfi.Size())
 	if _, err = io.ReadFull(rf, buf); err != nil {
 		return nil, fmt.Errorf("file %s read failed", file)
 	}

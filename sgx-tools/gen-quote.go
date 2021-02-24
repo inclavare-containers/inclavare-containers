@@ -52,9 +52,12 @@ For example, generate the quote file according to the given local report file:
 			quotePath = "quote.bin"
 		}
 
-		report, err := readAndCheckFile(reportPath, intelsgx.ReportLength)
+		report, err := readFile(reportPath)
 		if err != nil {
 			return err
+		}
+		if len(report) != intelsgx.ReportLength {
+			return fmt.Errorf("Report must be %d-character long", intelsgx.ReportLength)
 		}
 
 		quoteType := context.String("quote-type")
