@@ -1,5 +1,3 @@
-// +build ra
-
 package main
 
 /*
