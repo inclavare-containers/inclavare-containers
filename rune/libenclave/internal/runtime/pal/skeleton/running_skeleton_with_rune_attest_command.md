@@ -65,9 +65,9 @@ rune --debug attest --quote-type={SGX_QUOTE_TYPE} skeleton-enclave-container
 
 where:
 - @quote-type: specify the quote types of sgx, such as,
-        - `epidUnlinkable`: [epid for unlinkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
-        - `epidLinkable`: [epid for linkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
-        - `ecdsa`: **Note `rune attest` currently doesn't support the ecdsa quote type, and we will support it soon**.
+	- `epidUnlinkable`: [epid for unlinkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
+	- `epidLinkable`: [epid for linkable](https://api.portal.trustedservices.intel.com/EPID-attestation)
+	- `ecdsa`: [ECDSA](https://github.com/intel/linux-sgx#ecdsa-attestation). **Note `rune attest` currently doesn't support the ecdsa quote type, and we will support it soon**.
 
 
 ## Get IAS report

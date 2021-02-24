@@ -14,7 +14,9 @@
 - Given the report file of an Enclave, `sgx-tools gen-quote` command can generate quote file from aesm service for the `ecdsa` quote type. 
 	- As for the `epidUnlinkable` and `epidLinkable` quote types, a registered `SPID` of [IAS](https://api.portal.trustedservices.intel.com/EPID-attestation) also needs to be provided for generating the quote file.
 	- To get the report file, you can use `rune attest` command to get you local report and save it in the report file.
-- Given the quote file of an Enclave, a registered `SPID` and `Subscription Key` of [IAS](https://api.portal.trustedservices.intel.com/EPID-attestation), `sgx-tools get-ias-report` command can get remote attestation report from IAS.
+- Given the quote file of an Enclave, `sgx-tools verify-quote` command can verify quote
+	- As for the `ecdsa` quote type, `sgx-tools verify-quote` command can verify quote with the help of [PCCS](https://github.com/intel/SGXDataCenterAttestationPrimitives/tree/master/QuoteGeneration/pccs).
+	- As for the `epidUnlinkable` and `epidLinkable` quote types, a registered `SPID` and `Subscription Key` of [IAS](https://api.portal.trustedservices.intel.com/EPID-attestation) also need to be provided `sgx-tools verify-quote` command to verify quote with the help of IAS.
 
 ## Install Intel `aesmd` service
 ### Hardware requirements
@@ -28,8 +30,9 @@
 ## Dependency
 
 - golang 1.14 or above.
-- protoc-gen-go v1.3.5
-  `go get github.com/golang/protobuf/protoc-gen-go@v1.3.5`.
+- [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the rpm(centos) or deb(ubuntu) from "https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro"
+	- libsgx-dcap-quote-verify: both for centos and ubuntu
+	- libsgx-dcap-quote-verify-dev(ubuntu) or libsgx-dcap-quote-verify-devev(centos)
 
 ## Build
 
