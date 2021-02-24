@@ -1,10 +1,10 @@
-package sgx_challenger // import "github.com/inclavare-containers/rune/libenclave/attestation/sgx/challenger"
+package sgx_challenger // import "github.com/inclavare-containers/rune/libenclave/attestation/internal/sgx/challenger"
 
 import (
 	"fmt"
-	"github.com/inclavare-containers/rune/libenclave/attestation/registration"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx"
-	"github.com/inclavare-containers/rune/libenclave/attestation/sgx/ias"
+	"github.com/inclavare-containers/rune/libenclave/attestation/internal/registration"
+	"github.com/inclavare-containers/rune/libenclave/attestation/internal/sgx/ias"
+	"github.com/inclavare-containers/rune/libenclave/intelsgx"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 func (epid *sgxEpidChallenger) Name() string {
-	return sgx.AttestationEpid
+	return intelsgx.AttestationEpid
 }
 
 func (epid *sgxEpidChallenger) New(cfg map[string]string) error {
@@ -64,7 +64,7 @@ func (epid *sgxEpidChallenger) ShowReportStatus(statusCode uint32, specificStatu
 }
 
 func init() {
-	if err := registration.RegisterChallenger(&sgxEpidChallenger{}, sgx.AttestationEpid); err != nil {
+	if err := registration.RegisterChallenger(&sgxEpidChallenger{}, intelsgx.AttestationEpid); err != nil {
 		fmt.Print(err)
 	}
 }

@@ -649,7 +649,7 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 		Report:           report,
 		QuoteTypePresent: &pb.AesmServiceRequest_GetQuote_QuoteType{QuoteType: t},
 		Spid:             s,
-		BufSize:          SgxMaxQuoteLength,
+		BufSize:          SgxEpidMaxQuoteLength,
 		QeReportPresent:  &pb.AesmServiceRequest_GetQuote_QeReport{QeReport: false},
 		Timeout:          aesmdTimeOut,
 	}
@@ -671,9 +671,9 @@ func GetQuote(report []byte, spid string, linkable bool) ([]byte, error) {
 	}
 
 	quote := resp.GetQuote.GetQuote()
-	if len(quote) != SgxMaxQuoteLength {
-		return nil, fmt.Errorf("invalid length of quote: (returned %d, expected %d)",
-			len(quote), SgxMaxQuoteLength)
+	if len(quote) != SgxEpidMaxQuoteLength {
+		return nil, fmt.Errorf("invalid length of epid quote: (returned %d, expected %d)",
+			len(quote), SgxEpidMaxQuoteLength)
 	}
 
 	err = DumpQuote(quote)

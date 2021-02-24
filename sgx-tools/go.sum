@@ -6,6 +6,8 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c/go.mod h1:bzwZUQSlzshVDtnWfv7B3EH1dM0O+g6z7k9ByOx+/CU=
 github.com/alibaba/inclavare-containers/rune v0.0.0-20210211091308-fcf82973a538 h1:uXutikuQ7OZzhtJReZdndDwoh5CsbYp8s+2YndMh5Jk=
 github.com/alibaba/inclavare-containers/rune v0.0.0-20210211091308-fcf82973a538/go.mod h1:zP5mWtsaryBVjmYViLmvFQutlnNLQaXIosgz0dhlu60=
+github.com/alibaba/inclavare-containers/rune v0.0.0-20210223012914-c5e205ce10d5 h1:kXW3mCSVdC7rfuqbx71adtWz3GEP+KVP6uo1Gs2yVl4=
+github.com/alibaba/inclavare-containers/rune v0.0.0-20210223012914-c5e205ce10d5/go.mod h1:zP5mWtsaryBVjmYViLmvFQutlnNLQaXIosgz0dhlu60=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
