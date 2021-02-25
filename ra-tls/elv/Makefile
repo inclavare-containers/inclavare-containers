@@ -61,7 +61,7 @@ GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(
 
 ifdef LA
 elv: $(LIBDIR)/liberpal-stub.a libra-tls-client.a $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
-	$(GO_BUILD) -o $@ .
+	$(GO_BUILD) -tags "lareport" -o $@ .
 else
 elv: libra-tls-client.a $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
 	$(GO_BUILD) -o $@ .

@@ -11,7 +11,7 @@ endif
 
 ifdef ECDSA
 	BUILD_FLAGS = --features=RATLS_ECDSA
-else LA
+else ifdef LA
 	BUILD_FLAGS = --features=LA_REPORT
 else
 	BUILD_FLAGS = --features=RATLS_EPID
