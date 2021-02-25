@@ -64,7 +64,7 @@ static sgx_enclave_id_t load_enclave(void)
         int ret = sgx_create_enclave("Wolfssl_Enclave.signed.so", 1, &t, &updated, &id, NULL);
         if (ret != SGX_SUCCESS) {
                 fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
-				return -1;
+				exit(EXIT_FAILURE);
         }
 
         return id;
@@ -119,6 +119,10 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
 	assert(SSL_SUCCESS == ret);
 #endif
 
+#ifdef LA_REPORT
+	g_eid = load_enclave();
+#endif
+
 	wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, cert_verify_callback);
 
 	WOLFSSL *ssl = wolfSSL_new(ctx);
@@ -152,8 +156,6 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
         la_get_report_from_cert(der, derSz, &report);
         body = &report.body;
         printf("Local report verification\n");
-
-        g_eid = load_enclave();
 #else
 	uint8_t quote_buff[8192] = {0,};
 	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
