@@ -30,8 +30,7 @@ CFLAGS += $(CFLAGSERRORS) -g -ggdb -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_
 CFLAGS += -DSGX_GROUP_OUT_OF_DATE
 ifdef ECDSA
 	CFLAGS += -DRATLS_ECDSA
-endif
-ifdef LA
+else ifdef LA
 	CFLAGS += -DLA_REPORT
 endif
 
@@ -79,24 +78,17 @@ wolfssl: WOLFSSL_CONFIGURE_FLAGS := --prefix=$(shell readlink -f $(PREFIX)) --en
 # options.h. So it needs be reconfigured before compiling, options.h will be re-generated according to new configuration.
 wolfssl:
 	if [ ! -d "./wolfssl" ]; then \
-		git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && true; \
+		git clone -b v4.6.0-stable https://github.com/wolfSSL/wolfssl && \
+		cd wolfssl && \
+		git apply ../patch/wolfssl.patch; \
 	fi
-	cd wolfssl && \
-	git checkout . && \
-	git apply ../patch/wolfssl.patch && \
-	./autogen.sh && \
-	CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS) || true; \
+	cd wolfssl && ./autogen.sh && \
+	  CFLAGS="$(CFLAGS)" ./configure $(WOLFSSL_CONFIGURE_FLAGS)
 
 $(SGX_RA_TLS)/wolfssl-ra-challenger.o: $(SGX_RA_TLS)/wolfssl-ra-challenger.c
 	@echo $(CC) $(CFLAGS) -c $< -o $@
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "CC   <=  $<"
-
-#ifdef LA
-#	ra-challenger_deps = $(LIBDIR) $(LIBDIR)/libwolfssl.a $(SGX_RA_TLS)/ra.o $(SGX_RA_TLS)/wolfssl-ra-challenger.o $(SGX_RA_TLS)/wolfssl-ra.o $(SGX_RA_TLS)/ra-challenger.o $(SGX_RA_TLS)/ias_sign_ca_cert.o $(SGX_RA_TLS)/wolfssl-la-challenger.o pal/Wolfssl_Enclave_u.o pal/App.o
-#else
-#	ra-challenger_deps = $(LIBDIR) $(LIBDIR)/libwolfssl.a $(SGX_RA_TLS)/ra.o $(SGX_RA_TLS)/wolfssl-ra-challenger.o $(SGX_RA_TLS)/wolfssl-ra.o $(SGX_RA_TLS)/ra-challenger.o $(SGX_RA_TLS)/ias_sign_ca_cert.o pal/Wolfssl_Enclave_u.o pal/App.o
-#endif
 
 ifdef LA
 # sgx-ra-tls needs the header files from wolfssl.
@@ -146,9 +138,11 @@ ifdef DEBUG
 CURL_CONFFLAGS += --enable-debug
 endif
 curl-wolfssl:
-	git clone https://github.com/curl/curl.git -b curl-7_47_0 curl-wolfssl && \
+	if [ ! -d "./curl-wolfssl" ]; then \
+	  git clone https://github.com/curl/curl.git -b curl-7_47_0 curl-wolfssl && \
 	  cd curl-wolfssl && ./buildconf && \
-	  CFLAGS="-fPIC" ./configure $(CURL_CONFFLAGS) --without-ssl --with-cyassl=$(shell readlink -f $(PREFIX))
+	  CFLAGS="-fPIC" ./configure $(CURL_CONFFLAGS) --without-ssl --with-cyassl=$(shell readlink -f $(PREFIX)); \
+	fi
 
 $(LIBDIR)/libra-attester.a: wolfssl wolfssl-ra-attester.o wolfssl-ra.o ias-ra.o
 	$(AR) rcs $@ $(filter %.o, $^)
