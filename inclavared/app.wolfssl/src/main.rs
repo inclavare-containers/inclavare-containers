@@ -22,6 +22,7 @@ use std::os::unix::net::UnixStream;
 use std::ptr;
 use std::str;
 use clap::{Arg, App};
+use serde_json::json;
 
 static ENCLAVE_FILE: &'static str = "enclave.signed.so";
 const IAS_REPORT_API_URL: &'static str =
@@ -321,6 +322,13 @@ pub extern "C" fn ocall_remote_attestation(
 //     )
 // }
 
+extern "C" {
+    fn ra_tls_echo(sockfd: c_int) -> c_int;
+    fn ra_tls_send(sockfd: c_int, bufsnd: *const c_void, sz_bufsnd: c_int,
+        bufrcv: *mut c_void, sz_bufrcv: c_int,
+        mrenclave: *mut c_void, mrsigner: *mut c_void) -> c_int;
+}
+
 fn run_server(eid: sgx_enclave_id_t, sockpath: &str, xfer: Option<&str>) {
     let mut sgxstatus;
     let mut retval: c_int = 0;
@@ -432,6 +440,11 @@ fn run_server(eid: sgx_enclave_id_t, sockpath: &str, xfer: Option<&str>) {
                         continue;
                     }
 
+                    /* TODO: parse request */
+                    let req = String::from_raw_parts(buff.as_mut_ptr(), retval as usize, 256);
+                    println!("resp: {}", req);
+
+
                     let mut xfersock: Option<UnixStream> = None;
                     if let Some(xfer) = xfer {
                         xfersock = match UnixStream::connect(xfer) {
@@ -444,14 +457,29 @@ fn run_server(eid: sgx_enclave_id_t, sockpath: &str, xfer: Option<&str>) {
                     }
 
                     if let Some(xfersock) = xfersock {
+                        let mut mrenclave: [u8; 256] = [0; 256];
+                        let mut mrsigner: [u8; 256] = [0; 256];
                         retval = ra_tls_send(xfersock.as_raw_fd(),
                                         buff.as_ptr() as *const c_void, retval,
-                                        buff.as_mut_ptr() as *mut c_void, 256);
+                                        buff.as_mut_ptr() as *mut c_void, 256,
+                                        mrenclave.as_mut_ptr() as *mut c_void,
+                                        mrsigner.as_mut_ptr() as *mut c_void);
+
+                        let resp = json!({
+                            "id": "1234",
+                            "msgtype": "ENCLAVEINFO",
+                            "version": 1,
+                            "mrenclave": hex::encode(mrenclave),
+                            "mrsigner": hex::encode(mrsigner),
+                            "message": String::from_raw_parts(buff.as_mut_ptr(), retval as usize, 256)
+                        });
+                        let resp = resp.to_string();
+                        println!("resp: {}", resp);
 
                         sgxstatus = ratlsffi::ecall_wolfSSL_write(eid,
                             &mut retval, ssl,
-                            buff.as_ptr() as *const c_void,
-                            retval);
+                            resp.as_ptr() as *const c_void,
+                            resp.len() as i32);
                     } else {
                         let msg = "Hello, Inclavare Containers!\n";
                         sgxstatus = ratlsffi::ecall_wolfSSL_write(
@@ -494,11 +522,6 @@ fn run_server(eid: sgx_enclave_id_t, sockpath: &str, xfer: Option<&str>) {
 
         ratlsffi::ecall_wolfSSL_Cleanup(eid, &mut retval as *mut _);
     }
-}
-
-extern "C" {
-    fn ra_tls_echo(sockfd: c_int) -> c_int;
-    fn ra_tls_send(sockfd: c_int, bufsnd: *const c_void, sz_bufsnd: c_int, bufrcv: *mut c_void, sz_bufrcv: c_int) -> c_int;
 }
 
 fn run_client(sockpath: &str) {
