@@ -34,7 +34,7 @@ void la_get_report_from_extension(const uint8_t* exts, size_t exts_len,
 {
 	int report_len = 0;
 	int rc = extract_x509_extension(exts, exts_len, la_report_oid,
-			ias_oid_len, report, &report_len, LA_REPORT_SIZE);
+			ias_oid_len, (uint8_t*) report, &report_len, LA_REPORT_SIZE);
 	assert(rc == 1);
 }
 
