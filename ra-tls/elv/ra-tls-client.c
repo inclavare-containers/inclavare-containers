@@ -85,7 +85,10 @@ static int cert_verify_callback(int preverify, WOLFSSL_X509_STORE_CTX * store)
 extern struct ra_tls_options my_ra_tls_options;
 #endif
 
-int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, size_t sz_bufrcv)
+int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd,
+		void *bufrcv, size_t sz_bufrcv,
+		unsigned char mrenclave[SGX_HASH_SIZE],
+		unsigned char mrsigner[SGX_HASH_SIZE])
 {
 	int ret = -1;
 	wolfSSL_Debugging_ON();
@@ -166,13 +169,20 @@ int ra_tls_send(int sockfd, const void *bufsnd, size_t sz_bufsnd, void *bufrcv, 
 
 	printf("Server's SGX identity:\n");
 	printf("  . MRENCLAVE = ");
-	for (int i = 0; i < SGX_HASH_SIZE; ++i)
+	for (int i = 0; i < SGX_HASH_SIZE; ++i) {
 		printf("%02x", body->mr_enclave.m[i]);
+	}
 	printf("\n");
 	printf("  . MRSIGNER  = ");
-	for (int i = 0; i < SGX_HASH_SIZE; ++i)
+	for (int i = 0; i < SGX_HASH_SIZE; ++i) {
 		printf("%02x", body->mr_signer.m[i]);
+	}
 	printf("\n");
+
+	if (mrenclave)
+		memcpy(mrenclave, body->mr_enclave.m, SGX_HASH_SIZE);
+	if (mrsigner)
+		memcpy(mrsigner, body->mr_enclave.m, SGX_HASH_SIZE);
 
 	if (wolfSSL_write(ssl, bufsnd, sz_bufsnd) != (int)sz_bufsnd) {
 		fprintf(stderr, "ERROR: failed to write\n");
@@ -200,7 +210,7 @@ int ra_tls_echo(int sockfd)
 	size_t len = strlen(http_request);
 
 	memset(buffer, 0, sizeof(buffer));
-	ra_tls_send(sockfd, http_request, len, buffer, sizeof(buffer));
+	ra_tls_send(sockfd, http_request, len, buffer, sizeof(buffer), NULL, NULL);
 	printf("Server:\n%s\n", buffer);
 
 	return 0;

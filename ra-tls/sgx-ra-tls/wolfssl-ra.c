@@ -27,8 +27,3 @@ void sha256_rsa_pubkey
     wc_Sha256Update(&sha, buf, pub_rsa_key_der_len);
     wc_Sha256Final(&sha, hash);
 }
-
-/* This function only exists to make edger8r happy. There must be at
-   least one trusted (ECALL) function. */
-void dummy(void) {
-}
