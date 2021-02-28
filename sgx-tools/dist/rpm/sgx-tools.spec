@@ -7,7 +7,7 @@
 Name: sgx-tools
 Version: 0.6.0
 Release: %{centos_base_release}%{?dist}
-Summary: sgx-tools is a commandline tool, used to interact Intel SGx aesm service.
+Summary: sgx-tools is a commandline tool, used to interact Intel SGX aesm service.
 
 Group: Development/Tools
 License: Apache License 2.0
