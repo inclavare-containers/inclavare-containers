@@ -36,3 +36,6 @@ RUN apt-get install -y apt-transport-https ca-certificates curl software-propert
 # configure docker
 RUN mkdir -p /etc/docker && \
     echo "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t},\n\t\"storage-driver\": \"vfs\"\n}" >> /etc/docker/daemon.json
+
+# configure sgxsdk 2.11 and dcap 1.8
+RUN [ ! -e /usr/include/sgx_attributes.h ] && ln -sfn /opt/intel/sgxsdk/include/sgx_attributes.h /usr/include/sgx_attributes.h
