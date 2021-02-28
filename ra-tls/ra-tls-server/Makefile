@@ -25,7 +25,9 @@ CFLAGS += -std=gnu99 -I$(SGX_RA_TLS) -I$(SGX_SDK)/include -I$(INCDIR) $(SGX_DCAP
 CFLAGS += $(CFLAGSERRORS) -g -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_EXT # -DDEBUG -DDYNAMIC_RSA
 CFLAGS += -DSGX_GROUP_OUT_OF_DATE
 ifdef ECDSA
-  CFLAGS += -DRATLS_ECDSA
+  CFLAGS += -DRATLS_ECDSA=1
+else ifdef LA
+  CFLAGS += -DLA_REPORT=1
 endif
 
 CC ?= gcc
@@ -41,8 +43,16 @@ ifeq ($(DEBUG),1)
 endif
 COMMIT_NO := $(shell git rev-parse HEAD 2> /dev/null || true)
 COMMIT ?= $(if $(shell git status --porcelain --untracked-files=no),"$(COMMIT_NO)-dirty","$(COMMIT_NO)")
+
+BUILD_TAGS := "epid"
+ifdef LA
+  BUILD_TAGS := "local_report"
+else ifdef ECDSA
+  BUILD_TAGS := "dcap"
+endif
+
 # glibc-static is required for the static linkage
-GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) \
+GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) -tags $(BUILD_TAGS) \
   -ldflags "-X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)"
 
 ra-tls-server: lib/libra-tls-server.a

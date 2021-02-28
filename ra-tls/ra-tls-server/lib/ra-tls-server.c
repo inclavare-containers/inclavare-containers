@@ -40,8 +40,31 @@
 
 #define CIPHER_LIST "ECDHE-ECDSA-AES128-GCM-SHA256"
 
-int ra_tls_server_startup(sgx_enclave_id_t id, int connd)
+static sgx_enclave_id_t load_enclave(void)
 {
+	sgx_launch_token_t t;
+	memset(t, 0, sizeof(t));
+
+	sgx_enclave_id_t id;
+	int updated = 0;
+	int ret = sgx_create_enclave("Wolfssl_Enclave.signed.so", 1, &t, &updated, &id, NULL);
+	if (ret != SGX_SUCCESS) {
+		fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
+		return -1;
+	}
+
+	return id;
+}
+
+int ra_tls_server_startup(int connd)
+{
+	sgx_enclave_id_t id = load_enclave();
+
+	if (id < 0) {
+		fprintf(stderr, "Failed to load enclave image\n");
+		return -1;
+	}
+
 #ifdef SGX_DEBUG
 	enc_wolfSSL_Debugging_ON(id);
 #else
