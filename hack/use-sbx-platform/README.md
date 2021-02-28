@@ -23,6 +23,9 @@ In order to minimize the influence, it is recommended to run applications
 cd $PATH_TO_DCAP_SOURCE
 git am $PATH_TO_INCLAVARE/hack/use-sbx-platform/0001-QVL-allow-to-use-SBX-platform.patch 
 source /opt/intel/sgxsdk/environment
+cd $PATH_TO_DCAP_SOURCE/SampleCode/QuoteGenerationSample
+make clean && make
+SGX_AESM_ADDR=1 ./app
 cd $PATH_TO_DCAP_SOURCE/QuoteVerification/dcap_quoteverify/linux
 make clean
 USE_SBX_PLATFORM=1 make
