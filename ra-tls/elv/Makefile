@@ -31,8 +31,7 @@ App_Include_Paths := $(Wolfssl_Include_Paths) -I$(SGX_SDK)/include -I$(SGX_RA_TL
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes -Wall -Wno-unused-const-variable $(App_Include_Paths) $(Wolfssl_C_Extra_Flags)
 ifdef ECDSA
 	App_C_Flags += -DRATLS_ECDSA
-endif
-ifdef LA
+else ifdef LA
 	App_C_Flags += -DLA_REPORT
 endif
 
@@ -56,16 +55,23 @@ COMMIT ?= $(if $(shell git status --porcelain --untracked-files=no),"$(COMMIT_NO
 #GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) $(GCFLAGS) $(EXTRA_FLAGS) -tags "$(BUILDTAGS) netgo osusergo" \
         -ldflags "-w -extldflags -static -X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)"
 
+BUILD_TAGS := "epid"
+ifdef LA
+  BUILD_TAGS := "local_report"
+else ifdef ECDSA
+  BUILD_TAGS := "dcap"
+endif
+
 GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) \
-	-ldflags "-X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)"
+	-ldflags "-X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)" \
+	-tags $(BUILD_TAGS)
 
 ifdef LA
 elv: $(LIBDIR)/liberpal-stub.a libra-tls-client.a $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
-	$(GO_BUILD) -tags "lareport" -o $@ .
 else
 elv: libra-tls-client.a $(LIBDIR)/libra-challenger.a $(LIBDIR)/libwolfssl.a
-	$(GO_BUILD) -o $@ .
 endif
+	$(GO_BUILD) -o $@ .
 
 install: elv
 	cp -f elv $(BINDIR)

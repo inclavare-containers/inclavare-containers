@@ -1,15 +1,5 @@
 package main
 
-/*
-#cgo CFLAGS: -I../build/include -I/opt/intel/sgxsdk/include -I../sgx-ra-tls -I../wolfssl/
-#cgo LDFLAGS: -L../build/lib -l:libra-challenger.a -l:libwolfssl.a -lm
-#ifdef RATLS_ECDSA
-#cgo LDFLAGS:  -lsgx_dcap_quoteverify -lsgx_urts -lpthread -ldl -lsgx_dcap_ql
-#endif
-
-extern int ra_tls_echo(int sockfd);
-*/
-import "C"
 import (
 	"fmt"
 	"github.com/urfave/cli"
@@ -61,7 +51,7 @@ EXAMPLE:
 			return err
 		}
 
-		C.ra_tls_echo(C.int(sockfd.Fd()))
+		ratlsEcho(sockfd.Fd())
 
 		return nil
 	},
