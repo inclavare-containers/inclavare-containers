@@ -2,7 +2,6 @@ package dcap // import "github.com/inclavare-containers/rune/libenclave/attestat
 
 /*
 #cgo LDFLAGS: -lsgx_dcap_quoteverify
-#cgo CFLAGS: -I/opt/intel/sgxsdk/include
 
 #include <stdio.h>
 #include <stdlib.h>
