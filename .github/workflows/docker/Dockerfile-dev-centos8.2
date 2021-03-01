@@ -1,0 +1,33 @@
+FROM centos:8.2.2004
+
+LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
+
+RUN dnf clean all && rm -r /var/cache/dnf && \
+    dnf --enablerepo=PowerTools install -y wget make libseccomp-devel \
+    gcc git openssl-devel glibc-static binutils-devel protobuf-c-devel rpm-build
+
+WORKDIR /root
+
+# install go
+RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib && \
+    rm -rf go1.14.2.linux-amd64.tar.gz
+
+# configure GOPATH and GOROOT
+ENV GOROOT       /usr/lib/go
+ENV GOPATH       /root/gopath
+ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
+ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
+ENV GO111MODULE  on
+
+# install and configure docker
+RUN dnf --enablerepo=PowerTools install -y iptables && \
+    wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz && \
+    tar -zxvf docker-18.09.7.tgz && mv docker/* /usr/bin
+
+RUN mkdir -p /etc/docker && \
+    echo -e "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t}\n}" >> /etc/docker/daemon.json
+
+# install dcap
+RUN wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
+    tar -zxvf sgx_rpm_local_repo.tgz && rm sgx_rpm_local_repo.tgz && cd sgx_rpm_local_repo && rpm -ivh libsgx-headers*.rpm && rpm -ivh libsgx-dcap-quote-verify*.rpm && cd ../ && rm -rf sgx_rpm_local_repo
