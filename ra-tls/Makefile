@@ -139,10 +139,10 @@ CURL_CONFFLAGS += --enable-debug
 endif
 curl-wolfssl:
 	if [ ! -d "./curl-wolfssl" ]; then \
-	  git clone https://github.com/curl/curl.git -b curl-7_47_0 curl-wolfssl && \
-	  cd curl-wolfssl && ./buildconf && \
-	  CFLAGS="-fPIC" ./configure $(CURL_CONFFLAGS) --without-ssl --with-cyassl=$(shell readlink -f $(PREFIX)); \
+	  git clone https://github.com/curl/curl.git -b curl-7_47_0 curl-wolfssl; \
 	fi
+	cd curl-wolfssl && ./buildconf && \
+	  CFLAGS="-fPIC" ./configure $(CURL_CONFFLAGS) --without-ssl --with-cyassl=$(shell readlink -f $(PREFIX))
 
 $(LIBDIR)/libra-attester.a: wolfssl wolfssl-ra-attester.o wolfssl-ra.o ias-ra.o
 	$(AR) rcs $@ $(filter %.o, $^)
@@ -168,4 +168,4 @@ mrproper:
 	$(MAKE) clean
 	rm -rf curl-wolfssl wolfssl
 
-.PHONY: all clean mrproper wolfssl
+.PHONY: all clean mrproper wolfssl curl-wolfssl
