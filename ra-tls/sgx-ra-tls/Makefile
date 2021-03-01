@@ -8,6 +8,7 @@ SGX_DEBUG ?= 1
 
 WOLFSSL_ROOT := $(shell readlink -f $(TOPDIR)/wolfssl)
 THISDIR := $(shell pwd)
+PYTHONDIR := $(shell which python)
 
 SGX_COMMON_CFLAGS := -m64
 SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
@@ -108,7 +109,11 @@ libsgx_ra_tls_wolfssl.a: ra_tls_t.o $(Wolfssl_C_Objects)
 	@echo "LINK =>  $@"
 
 ra_tls_options.c: ra_tls_options.c.sh
+ifeq ($(strip $(PYTHONDIR)),)
+	$(error Please install python firstly!!)
+else
 	bash $^ > $@
+endif
 
 clean:
 	@rm -f $(Wolfssl_C_Objects)
