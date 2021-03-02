@@ -4,10 +4,13 @@ export TOPDIR
 
 include common.mk
 
-all: libenclave_tls.so $(BINDIR)/elv
+all: libenclave_tls.so $(BINDIR)/elv $(BINDIR)/ra-tls-server
 
 $(BINDIR)/elv: libenclave_tls.so
 	make -C $(CLIENT_DIR) && make -C $(CLIENT_DIR) install
+
+$(BINDIR)/ra-tls-server: libenclave_tls.so
+	make -C $(SERVER_DIR) && make -C $(SERVER_DIR) install
 
 libenclave_tls.so:
 	make -C $(SRCDIR) all
@@ -21,4 +24,5 @@ uninstall:
 clean:
 	make -C $(SRCDIR) clean
 	make -C $(CLIENT_DIR) clean
+	make -C $(SERVER_DIR) clean
 	rm -rf $(BINDIR)
