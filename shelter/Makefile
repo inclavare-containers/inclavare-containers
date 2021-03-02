@@ -47,15 +47,12 @@ GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(
 # FIXME: Ideally, these two libraries can be built in parallel, but
 # it doesn't work. Hence, the dependency forces a serial build.
 shelter: build-ra-tls $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
-	@echo $(GO_BUILD) -o $@ .
 	$(GO_BUILD) -o $@ .
 
 build-ra-tls:
-	@echo $(MAKE) -C $(SGX_RA_TLS)
 	$(MAKE) -C $(SGX_RA_TLS)
 	
 $(CURRENTDIR)/utils/utils.a:
-	@echo $(MAKE) -C utils
 	$(MAKE) -C utils
 	
 $(CURRENTDIR)/racommand.o: racommand.go
@@ -68,11 +65,9 @@ $(CURRENTDIR)/main.o: main.go
 	$(GO_BUILD) -o $@ .	
 
 $(CURRENTDIR)/verification/verification.a:
-	@echo $(MAKE) -C verification
 	$(MAKE) -C verification
 
 $(CURRENTDIR)/remoteattestation/remoteattestation.a: 
-	@echo $(MAKE) -C remoteattestation
 	$(MAKE) -C remoteattestation
 
 install:
