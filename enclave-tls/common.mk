@@ -4,6 +4,9 @@ INSTALL ?= install
 DEBUG ?=
 
 SRCDIR := $(TOPDIR)/src
+BINDIR := $(TOPDIR)/bin
+SAMPLES_DIR := $(TOPDIR)/samples
+CLIENT_DIR := $(SAMPLES_DIR)/enclave-tls-client
 
 ENCLAVE_TLS_PREFIX ?= /opt/enclave-tls
 ENCLAVE_TLS_LIBDIR := $(ENCLAVE_TLS_PREFIX)/lib
