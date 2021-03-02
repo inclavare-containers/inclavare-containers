@@ -44,11 +44,13 @@ COMMIT ?= $(if $(shell git status --porcelain --untracked-files=no),"$(COMMIT_NO
 GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) \
   -ldflags "$(EXTRA_LDFLAGS)"
 
-shelter: $(WOLFSSL_RA_LIBS) $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
+# FIXME: Ideally, these two libraries can be built in parallel, but
+# it doesn't work. Hence, the dependency forces a serial build.
+shelter: build-ra-tls $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
 	@echo $(GO_BUILD) -o $@ .
 	$(GO_BUILD) -o $@ .
 
-$(WOLFSSL_RA_LIBS):
+build-ra-tls:
 	@echo $(MAKE) -C $(SGX_RA_TLS)
 	$(MAKE) -C $(SGX_RA_TLS)
 	
@@ -73,6 +75,9 @@ $(CURRENTDIR)/remoteattestation/remoteattestation.a:
 	@echo $(MAKE) -C remoteattestation
 	$(MAKE) -C remoteattestation
 
+install:
+uninstall:
+
 clean:
 	rm -f *.o shelter
 	$(MAKE) -C $(SGX_RA_TLS) clean
@@ -80,4 +85,4 @@ clean:
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
 
-.PHONY: clean
+.PHONY: clean build-ra-tls install uninstall
