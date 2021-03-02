@@ -1,0 +1,65 @@
+/* *INDENT-OFF* */
+#ifndef _ENCLAVE_ERR_H
+#define _ENCLAVE_ERR_H
+/* *INDENT-ON* */
+
+#define ENCLAVE_TLS_ERR_BASE            0x00000000
+#define TLS_WRAPPER_ERR_BASE            0x10000000
+#define ENCLAVE_QUOTE_ERR_BASE          0x20000000
+
+// Defines the length of the TLS library type used in the error code (5 bits)
+#define TLS_WRAPPER_ERR_TYPE_MASK       0x7c000000U
+#define TLS_WRAPPER_ERR_TYPE_SHIFT      26
+#define TLS_WRAPPER_ERR_ERRNO_MASK      0x3ffffffU
+
+// The error code used by wolfssl
+#define WOLFSSL_WRAPPER_ERR_BASE        (0 << TLS_WRAPPER_ERR_TYPE_SHIFT)
+// The error code used by wolfssl-sgx
+#define WOLFSSL_SGX_WRAPPER_ERR_BASE    (1 << TLS_WRAPPER_ERR_TYPE_SHIFT)
+
+typedef enum {
+	ENCLAVE_TLS_ERR_NONE = ENCLAVE_TLS_ERR_BASE,
+	ENCLAVE_TLS_ERR_UNKNOWN,
+	ENCLAVE_TLS_ERR_INVALID,
+	ENCLAVE_TLS_ERR_NO_MEM,
+	ENCLAVE_TLS_ERR_NO_REGISTER,
+	ENCLAVE_TLS_ERR_LOAD_QUOTE,
+	ENCLAVE_TLS_ERR_LOAD_TLS,
+	ENCLAVE_TLS_ERR_DLOPEN,
+	ENCLAVE_TLS_ERR_INIT,
+	ENCLAVE_TLS_ERR_UNSUPPORTED_CERT_ALGO,
+} enclave_tls_err_t;
+
+typedef enum {
+	ENCLAVE_QUOTE_ERR_NONE = ENCLAVE_QUOTE_ERR_BASE,
+	ENCLAVE_QUOTE_ERR_NO_MEM,
+	ENCLAVE_QUOTE_ERR_INVALID,
+} enclave_quote_err_t;
+
+typedef enum {
+	TLS_WRAPPER_ERR_NONE = TLS_WRAPPER_ERR_BASE,
+	TLS_WRAPPER_ERR_NO_MEM,
+	/* The specified TLS library does not exist */
+	TLS_WRAPPER_ERR_NOT_FOUND,
+	TLS_WRAPPER_ERR_INVALID,
+	TLS_WRAPPER_ERR_TRANSMIT,
+	TLS_WRAPPER_ERR_RECEIVE,
+	/* Failed to create WOLFSSL_CTX */
+	WOLFSSL_WRAPPER_ERR_CTX =
+		TLS_WRAPPER_ERR_BASE + WOLFSSL_WRAPPER_ERR_BASE,
+	/* Failed to create WOLFSSL */
+	WOLFSSL_WRAPPER_ERR_SSL,
+	/* Failed to create WOLFSSL_SGX_CTX */
+	WOLFSSL_SGX_WRAPPER_ERR_CTX =
+		TLS_WRAPPER_ERR_BASE + WOLFSSL_SGX_WRAPPER_ERR_BASE,
+	/* Failed to create WOLFSSL_SGX SSL */
+	WOLFSSL_SGX_WRAPPER_ERR_SSL,
+} tls_wrapper_err_t;
+
+// Error code used to construct TLS Wrapper instance
+#define TLS_WRAPPER_ERRNO(base, err) \
+   (((base) & TLS_WRAPPER_ERR_TYPE_MASK) | ((err) & ~TLS_WRAPPER_ERR_ERRNO_MASK))
+
+/* *INDENT-OFF* */
+#endif /* _ENCLAVE_ERR_H */
+/* *INDENT-ON* */
