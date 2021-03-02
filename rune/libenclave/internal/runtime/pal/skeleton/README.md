@@ -39,17 +39,24 @@ Outline as follows:
 
 Please follow the command to build skeleton from the latested source code on your system.
 
-1. Install the dependency
+1. Install the dependencies
 
 - protobuf-c
 
-  Please refer to [this step](https://github.com/protobuf-c/protobuf-c#building) to install it on your platform. Note that `protobuf-c` must be 1.3 or higher.
+  - For CentOS 8:
+
+    ```shell
+    sudo dnf --enablerepo=PowerTools install -y protobuf-c-compiler protobuf-c-devel
+    ```
+
+  - For source code build:
+    Please refer to [this step](https://github.com/protobuf-c/protobuf-c#building) to install it on your platform. Note that `protobuf-c` must be 1.3 or higher.
 
 - Binutils
 
   `Binutils` is a collection of tools for handling binary files. Please install it with the command:
 
-    - For CentOS 8.1:
+    - For CentOS 8:
 
     ```shell
     yum install -y binutils-devel
