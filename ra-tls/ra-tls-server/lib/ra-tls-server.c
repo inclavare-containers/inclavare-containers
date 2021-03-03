@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "App.h"
 #include "ra-tls-server.h"
 
 /* the usual suspects */
@@ -47,7 +48,7 @@ static sgx_enclave_id_t load_enclave(void)
 
 	sgx_enclave_id_t id;
 	int updated = 0;
-	int ret = sgx_create_enclave("Wolfssl_Enclave.signed.so", 1, &t, &updated, &id, NULL);
+	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &id, NULL);
 	if (ret != SGX_SUCCESS) {
 		fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
 		return -1;
