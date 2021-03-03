@@ -15,27 +15,6 @@ db_timeout = 10
   max_recv_message_size = 16777216
   max_send_message_size = 16777216
 EOF
-cat << EOF > /etc/systemd/system/epm.service
-[Unit]
-Description=epm
-Documentation=https://inclavare-containers.io
-After=network.target
-
-[Service]
-ExecStart=/usr/local/bin/epm --config /etc/epm/config.toml --stderrthreshold=0
-Restart=always
-RestartSec=5
-Delegate=yes
-KillMode=process
-OOMScoreAdjust=-999
-LimitNOFILE=1048576
-LimitNPROC=infinity
-LimitCORE=infinity
-
-[Install]
-WantedBy=multi-user.target
-EOF
 
 mkdir -p /var/local/epm
-systemctl enable epm
-systemctl start epm
+/usr/local/bin/epm --config /etc/epm/config.toml --stderrthreshold=0 &
