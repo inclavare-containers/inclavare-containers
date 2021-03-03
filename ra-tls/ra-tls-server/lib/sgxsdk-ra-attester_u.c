@@ -16,7 +16,7 @@
 
 #include <ra.h>
 #include <ra-attester.h>
-#include <ias-ra.h>
+#include "ias-ra.h"
 
 #ifdef RATLS_ECDSA
 void ecdsa_get_quote(sgx_report_t* report, uint8_t* quote, uint32_t* quote_len)
