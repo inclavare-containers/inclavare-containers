@@ -2,29 +2,16 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "tls-server.h"
-#include "sgx_urts.h"
 
-#define ENCLAVE_FILENAME "Wolfssl_Enclave.signed.so"
+#include "tls-server.h"
+
 #define DEFAULT_ADDRESS "/run/rune/ra-tls.sock"
 
-extern int ra_tls_server_startup(sgx_enclave_id_t id, int sockfd);
+extern int ra_tls_server_startup(int sockfd);
 
 int ra_tls_server(void)
 {
 	printf("    - Welcome to tls server\n");
-
-	int updated = 0;
-	sgx_enclave_id_t eid;
-	sgx_launch_token_t t;
-	memset(t, 0, sizeof(t));
-
-	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid,
-				     NULL);
-	if (ret != SGX_SUCCESS) {
-		fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
-		return -1;
-	}
 
 	int sockfd;
 	if ((sockfd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -62,7 +49,7 @@ int ra_tls_server(void)
 		goto err;
 	}
 
-	if (ra_tls_server_startup(eid, connd) == -1) {
+	if (ra_tls_server_startup(connd) == -1) {
 		perror("Failed to start up the server.");
 		goto err;
 	}
