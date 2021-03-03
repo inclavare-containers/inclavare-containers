@@ -29,13 +29,10 @@ COPY hello_world.c                                          /root
 # install docker-ce
 RUN apt-get install -y apt-transport-https ca-certificates curl software-properties-common && \
     curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository 'deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable' && \
+    add-apt-repository 'deb [arch=amd64] https://mirrors.ustc.edu.cn/docker-ce/linux/ubuntu bionic stable' && \
     apt-get update && apt-get install -y docker-ce
 
 
 # configure docker
 RUN mkdir -p /etc/docker && \
     echo "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t},\n\t\"storage-driver\": \"vfs\"\n}" >> /etc/docker/daemon.json
-
-# configure sgxsdk 2.11 and dcap 1.8
-RUN [ ! -e /usr/include/sgx_attributes.h ] && ln -sfn /opt/intel/sgxsdk/include/sgx_attributes.h /usr/include/sgx_attributes.h

@@ -22,7 +22,7 @@ jobs:
     - name: Create centos container
       run: |
         docker rm -f make-rpm || true;
-        docker run -itd --name=make-rpm -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos:/root/repos rune-test:centos8.1
+        docker run -itd --name=make-rpm -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /root/repos:/root/repos rune-test:centos8.2
 
     - name: Build rpm packages
       run: docker exec make-rpm bash -c "cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
@@ -111,7 +111,7 @@ jobs:
         apt-get install -y rune"
 
     - name: Create a clean centos container
-      run: docker run -itd --name=test-rpm centos:centos8.1.1911
+      run: docker run -itd --name=test-rpm centos:8.2.2004
 
     - name: Test rpm repository
       run: |
