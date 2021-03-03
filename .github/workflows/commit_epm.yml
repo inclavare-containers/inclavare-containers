@@ -11,7 +11,7 @@ jobs:
     runs-on: [self-hosted, SGX2]
     strategy:
       matrix:
-        tag: [ubuntu18.04, centos8.1]
+        tag: [ubuntu18.04, centos8.2]
     steps:
     - uses: actions/checkout@v2
       with:
