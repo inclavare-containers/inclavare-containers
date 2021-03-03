@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -114,6 +115,9 @@ func (m *Metadata) GetAncestorCaches(cache *v1alpha1.Cache) ([]*v1alpha1.Cache, 
 		c, err := m.GetCache(p.Type, p.ID)
 		if err != nil {
 			return nil, err
+		}
+		if c == nil {
+			return nil, fmt.Errorf("parent cache is not exit. type: %s, id: %s", p.Type, p.ID)
 		}
 		caches = append(caches, c)
 		p = c.Parent
