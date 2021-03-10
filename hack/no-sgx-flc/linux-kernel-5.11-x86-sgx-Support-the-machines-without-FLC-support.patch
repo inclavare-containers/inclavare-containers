@@ -1,0 +1,239 @@
+From 15c67b31be881cc7c074b296d3a8e2621dbc526c Mon Sep 17 00:00:00 2001
+From: Jia Zhang <zhang.jia@linux.alibaba.com>
+Date: Sun, 17 Jan 2021 00:49:19 +0800
+Subject: [PATCH] x86/sgx: Support the machines without FLC support
+
+There are still lots of SGX machines without FLC support deployed
+in filed. These machines eventually needs to be migrated to be supported
+by SGX in-tree driver which is product-ready and well-maintained.
+
+This patch targets to address the gap between no-FLC machine and the
+support of SGX in-tree driver.
+
+Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
+---
+ arch/x86/include/uapi/asm/sgx.h  | 15 +++++++++++++++
+ arch/x86/kernel/cpu/feat_ctl.c   | 16 +++++++++-------
+ arch/x86/kernel/cpu/sgx/driver.c |  3 ---
+ arch/x86/kernel/cpu/sgx/ioctl.c  | 38 +++++++++++++++++++++++++++++++-------
+ arch/x86/kernel/cpu/sgx/main.c   |  4 ++++
+ arch/x86/kernel/cpu/sgx/sgx.h    |  1 +
+ 6 files changed, 60 insertions(+), 17 deletions(-)
+
+diff --git a/arch/x86/include/uapi/asm/sgx.h b/arch/x86/include/uapi/asm/sgx.h
+index 9034f30..010f0da 100644
+--- a/arch/x86/include/uapi/asm/sgx.h
++++ b/arch/x86/include/uapi/asm/sgx.h
+@@ -25,6 +25,8 @@ enum sgx_page_flags {
+ 	_IOWR(SGX_MAGIC, 0x01, struct sgx_enclave_add_pages)
+ #define SGX_IOC_ENCLAVE_INIT \
+ 	_IOW(SGX_MAGIC, 0x02, struct sgx_enclave_init)
++#define SGX_IOC_ENCLAVE_INIT_WITH_TOKEN \
++	_IOW(SGX_MAGIC, 0x02, struct sgx_enclave_init_with_token)
+ #define SGX_IOC_ENCLAVE_PROVISION \
+ 	_IOW(SGX_MAGIC, 0x03, struct sgx_enclave_provision)
+ 
+@@ -66,6 +68,19 @@ struct sgx_enclave_init {
+ };
+ 
+ /**
++ * struct sgx_enclave_init_with_token - parameter structure for the
++ *                                      %SGX_IOC_ENCLAVE_INIT_WITH_TOKEN ioctl
++ * @addr:	address in the ELRANGE
++ * @sigstruct:	address for the SIGSTRUCT data
++ * @einittoken: address for the EINITTOKEN data
++ */
++struct sgx_enclave_init_with_token {
++	__u64 addr;
++	__u64 sigstruct;
++	__u64 einittoken;
++};
++
++/**
+  * struct sgx_enclave_provision - parameter structure for the
+  *				  %SGX_IOC_ENCLAVE_PROVISION ioctl
+  * @fd:		file handle of /dev/sgx_provision
+diff --git a/arch/x86/kernel/cpu/feat_ctl.c b/arch/x86/kernel/cpu/feat_ctl.c
+index 3b1b01f..487bfbf 100644
+--- a/arch/x86/kernel/cpu/feat_ctl.c
++++ b/arch/x86/kernel/cpu/feat_ctl.c
+@@ -121,11 +121,10 @@ void init_ia32_feat_ctl(struct cpuinfo_x86 *c)
+ 	}
+ 
+ 	/*
+-	 * Enable SGX if and only if the kernel supports SGX and Launch Control
+-	 * is supported, i.e. disable SGX if the LE hash MSRs can't be written.
++	 * Enable SGX if and only if the kernel supports SGX and SGX capability
++	 * is supported.
+ 	 */
+ 	enable_sgx = cpu_has(c, X86_FEATURE_SGX) &&
+-		     cpu_has(c, X86_FEATURE_SGX_LC) &&
+ 		     IS_ENABLED(CONFIG_X86_SGX);
+ 
+ 	if (msr & FEAT_CTL_LOCKED)
+@@ -149,8 +148,12 @@ void init_ia32_feat_ctl(struct cpuinfo_x86 *c)
+ 			msr |= FEAT_CTL_VMX_ENABLED_INSIDE_SMX;
+ 	}
+ 
+-	if (enable_sgx)
+-		msr |= FEAT_CTL_SGX_ENABLED | FEAT_CTL_SGX_LC_ENABLED;
++	if (enable_sgx) {
++		msr |= FEAT_CTL_SGX_ENABLED;
++
++		if (cpu_has(c, X86_FEATURE_SGX_LC))
++			msr |= FEAT_CTL_SGX_LC_ENABLED;
++	}
+ 
+ 	wrmsrl(MSR_IA32_FEAT_CTL, msr);
+ 
+@@ -173,8 +176,7 @@ void init_ia32_feat_ctl(struct cpuinfo_x86 *c)
+ 	}
+ 
+ update_sgx:
+-	if (!(msr & FEAT_CTL_SGX_ENABLED) ||
+-	    !(msr & FEAT_CTL_SGX_LC_ENABLED) || !enable_sgx) {
++	if (!(msr & FEAT_CTL_SGX_ENABLED) || !enable_sgx) {
+ 		if (enable_sgx)
+ 			pr_err_once("SGX disabled by BIOS\n");
+ 		clear_sgx_caps();
+diff --git a/arch/x86/kernel/cpu/sgx/driver.c b/arch/x86/kernel/cpu/sgx/driver.c
+index 8ce6d83..c1552dd8 100644
+--- a/arch/x86/kernel/cpu/sgx/driver.c
++++ b/arch/x86/kernel/cpu/sgx/driver.c
+@@ -161,9 +161,6 @@ int __init sgx_drv_init(void)
+ 	u64 xfrm_mask;
+ 	int ret;
+ 
+-	if (!cpu_feature_enabled(X86_FEATURE_SGX_LC))
+-		return -ENODEV;
+-
+ 	cpuid_count(SGX_CPUID, 0, &eax, &ebx, &ecx, &edx);
+ 
+ 	if (!(eax & 1))  {
+diff --git a/arch/x86/kernel/cpu/sgx/ioctl.c b/arch/x86/kernel/cpu/sgx/ioctl.c
+index 90a5caf..021208e 100644
+--- a/arch/x86/kernel/cpu/sgx/ioctl.c
++++ b/arch/x86/kernel/cpu/sgx/ioctl.c
+@@ -110,6 +110,8 @@ static int sgx_encl_create(struct sgx_encl *encl, struct sgx_secs *secs)
+ 	encl->size = secs->size;
+ 	encl->attributes = secs->attributes;
+ 	encl->attributes_mask = SGX_ATTR_DEBUG | SGX_ATTR_MODE64BIT | SGX_ATTR_KSS;
++	if (sgx_no_flc)
++		encl->attributes_mask |= SGX_ATTR_EINITTOKENKEY;
+ 
+ 	/* Set only after completion, as encl->lock has not been taken. */
+ 	set_bit(SGX_ENCL_CREATED, &encl->flags);
+@@ -544,8 +546,10 @@ static int sgx_encl_init(struct sgx_encl *encl, struct sgx_sigstruct *sigstruct,
+ 
+ 			preempt_disable();
+ 
+-			for (k = 0; k < 4; k++)
+-				wrmsrl(MSR_IA32_SGXLEPUBKEYHASH0 + k, mrsigner[k]);
++			if (!sgx_no_flc) {
++				for (k = 0; k < 4; k++)
++					wrmsrl(MSR_IA32_SGXLEPUBKEYHASH0 + k, mrsigner[k]);
++			}
+ 
+ 			ret = __einit(sigstruct, token, addr);
+ 
+@@ -604,31 +608,50 @@ static long sgx_ioc_enclave_init(struct sgx_encl *encl, void __user *arg)
+ {
+ 	struct sgx_sigstruct *sigstruct;
+ 	struct sgx_enclave_init init_arg;
++	struct sgx_enclave_init_with_token init_arg_with_token;
+ 	struct page *initp_page;
+ 	void *token;
++	__u64 sig_addr;
+ 	int ret;
+ 
+ 	if (!test_bit(SGX_ENCL_CREATED, &encl->flags) ||
+ 	    test_bit(SGX_ENCL_INITIALIZED, &encl->flags))
+ 		return -EINVAL;
+ 
+-	if (copy_from_user(&init_arg, arg, sizeof(init_arg)))
+-		return -EFAULT;
++	if (!sgx_no_flc) {
++		if (copy_from_user(&init_arg, arg, sizeof(init_arg)))
++			return -EFAULT;
++
++		sig_addr = init_arg.sigstruct;
++	} else {
++		if (copy_from_user(&init_arg_with_token, arg, sizeof(init_arg_with_token)))
++			return -EFAULT;
++
++		sig_addr = init_arg_with_token.sigstruct;
++	}
+ 
+ 	initp_page = alloc_page(GFP_KERNEL);
+ 	if (!initp_page)
+ 		return -ENOMEM;
+ 
+ 	sigstruct = kmap(initp_page);
+-	token = (void *)((unsigned long)sigstruct + PAGE_SIZE / 2);
+-	memset(token, 0, SGX_LAUNCH_TOKEN_SIZE);
+ 
+-	if (copy_from_user(sigstruct, (void __user *)init_arg.sigstruct,
++	if (copy_from_user(sigstruct, (void __user *)sig_addr,
+ 			   sizeof(*sigstruct))) {
+ 		ret = -EFAULT;
+ 		goto out;
+ 	}
+ 
++	token = (void *)((unsigned long)sigstruct + PAGE_SIZE / 2);
++
++	if (!sgx_no_flc)
++		memset(token, 0, SGX_LAUNCH_TOKEN_SIZE);
++	else if (copy_from_user(token, (void __user *)init_arg_with_token.einittoken,
++				SGX_LAUNCH_TOKEN_SIZE)) {
++		ret = -EFAULT;
++		goto out;
++	}
++
+ 	/*
+ 	 * A legacy field used with Intel signed enclaves. These used to mean
+ 	 * regular and architectural enclaves. The CPU only accepts these values
+@@ -701,6 +724,7 @@ long sgx_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 		ret = sgx_ioc_enclave_add_pages(encl, (void __user *)arg);
+ 		break;
+ 	case SGX_IOC_ENCLAVE_INIT:
++	case SGX_IOC_ENCLAVE_INIT_WITH_TOKEN:
+ 		ret = sgx_ioc_enclave_init(encl, (void __user *)arg);
+ 		break;
+ 	case SGX_IOC_ENCLAVE_PROVISION:
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index c519fc5..7fead63 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -13,6 +13,7 @@
+ #include "encl.h"
+ #include "encls.h"
+ 
++bool sgx_no_flc = false;
+ struct sgx_epc_section sgx_epc_sections[SGX_MAX_EPC_SECTIONS];
+ static int sgx_nr_epc_sections;
+ static struct task_struct *ksgxd_tsk;
+@@ -708,6 +709,9 @@ static void __init sgx_init(void)
+ 	if (!cpu_feature_enabled(X86_FEATURE_SGX))
+ 		return;
+ 
++	if (!cpu_feature_enabled(X86_FEATURE_SGX_LC))
++		sgx_no_flc = true;
++
+ 	if (!sgx_page_cache_init())
+ 		return;
+ 
+diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
+index 5fa42d1..07018f8 100644
+--- a/arch/x86/kernel/cpu/sgx/sgx.h
++++ b/arch/x86/kernel/cpu/sgx/sgx.h
+@@ -54,6 +54,7 @@ struct sgx_epc_section {
+ 	struct list_head init_laundry_list;
+ };
+ 
++extern bool sgx_no_flc;
+ extern struct sgx_epc_section sgx_epc_sections[SGX_MAX_EPC_SECTIONS];
+ 
+ static inline unsigned long sgx_get_epc_phys_addr(struct sgx_epc_page *page)
+-- 
+1.8.3.1
+

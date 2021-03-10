@@ -1,0 +1,204 @@
+From 124ee1997e1f54388ffe5ed7a0c90ff479a9fbbd Mon Sep 17 00:00:00 2001
+From: "YiLin.Li" <YiLin.Li@linux.alibaba.com>
+Date: Wed, 11 Nov 2020 12:55:59 +0800
+Subject: [PATCH] Linux Driver: Support SGX1 machine even without FLC support
+
+There are still lots of SGX1 machines without FLC support deployed
+in filed. These machines eventually needs to be migrated to be supported
+by SGX DCAP driver which is product-ready and well-maintained.
+
+This patch targets to address the gap between SGX1 machine and the
+support of SGX DCAP driver.
+
+Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
+Signed-off-by: Yilin Li <YiLin.Li@linux.alibaba.com>
+---
+ driver/linux/driver.c           |  5 -----
+ driver/linux/include/sgx_user.h | 15 +++++++++++++++
+ driver/linux/ioctl.c            | 38 +++++++++++++++++++++++++++++++-------
+ driver/linux/main.c             | 10 ++++++++--
+ driver/linux/sgx.h              |  2 ++
+ 5 files changed, 56 insertions(+), 14 deletions(-)
+
+diff --git a/driver/linux/driver.c b/driver/linux/driver.c
+index f307fd8..1a6be15 100644
+--- a/driver/linux/driver.c
++++ b/driver/linux/driver.c
+@@ -170,11 +170,6 @@ int __init sgx_drv_init(void)
+ 	u64 xfrm_mask;
+ 	int ret;
+ 
+-	if (!boot_cpu_has(X86_FEATURE_SGX_LC)) {
+-		pr_info("The public key MSRs are not writable.\n");
+-		return -ENODEV;
+-	}
+-
+ 	cpuid_count(SGX_CPUID, 0, &eax, &ebx, &ecx, &edx);
+ 
+ 	if (!(eax & 1))  {
+diff --git a/driver/linux/include/sgx_user.h b/driver/linux/include/sgx_user.h
+index ede9d5e..d4aa7b5 100644
+--- a/driver/linux/include/sgx_user.h
++++ b/driver/linux/include/sgx_user.h
+@@ -25,6 +25,8 @@ enum sgx_page_flags {
+ 	_IOWR(SGX_MAGIC, 0x01, struct sgx_enclave_add_pages)
+ #define SGX_IOC_ENCLAVE_INIT \
+ 	_IOW(SGX_MAGIC, 0x02, struct sgx_enclave_init)
++#define SGX_IOC_ENCLAVE_INIT_WITH_TOKEN \
++	_IOW(SGX_MAGIC, 0x02, struct sgx_enclave_init_with_token)
+ #define SGX_IOC_ENCLAVE_PROVISION \
+ 	_IOW(SGX_MAGIC, 0x03, struct sgx_enclave_provision)
+ 
+@@ -66,6 +68,19 @@ struct sgx_enclave_init {
+ };
+ 
+ /**
++ * struct sgx_enclave_init_with_token - parameter structure for the
++ *                                      %SGX_IOC_ENCLAVE_INIT_WITH_TOKEN ioctl
++ * @addr:       address in the ELRANGE
++ * @sigstruct:  address for the SIGSTRUCT data
++ * @einittoken: address for the EINITTOKEN data
++ */
++struct sgx_enclave_init_with_token {
++	__u64 addr;
++	__u64 sigstruct;
++	__u64 einittoken;
++};
++
++/**
+  * struct sgx_enclave_provision - parameter structure for the
+  *				  %SGX_IOC_ENCLAVE_PROVISION ioctl
+  * @fd:		file handle of /dev/sgx_provision
+diff --git a/driver/linux/ioctl.c b/driver/linux/ioctl.c
+index e8aa47a..32704b4 100644
+--- a/driver/linux/ioctl.c
++++ b/driver/linux/ioctl.c
+@@ -114,6 +114,8 @@ static int sgx_encl_create(struct sgx_encl *encl, struct sgx_secs *secs)
+ 	encl->size = secs->size;
+ 	encl->attributes = secs->attributes;
+ 	encl->attributes_mask = SGX_ATTR_DEBUG | SGX_ATTR_MODE64BIT | SGX_ATTR_KSS;
++	if (sgx_no_flc)
++		encl->attributes_mask |= SGX_ATTR_EINITTOKENKEY;
+ 
+ 	/* Set only after completion, as encl->lock has not been taken. */
+ 	set_bit(SGX_ENCL_CREATED, &encl->flags);
+@@ -569,8 +571,10 @@ static int sgx_encl_init(struct sgx_encl *encl, struct sgx_sigstruct *sigstruct,
+ 
+ 			preempt_disable();
+ 
+-			for (k = 0; k < 4; k++)
+-				wrmsrl(MSR_IA32_SGXLEPUBKEYHASH0 + k, mrsigner[k]);
++			if (!sgx_no_flc) {
++				for (k = 0; k < 4; k++)
++					wrmsrl(MSR_IA32_SGXLEPUBKEYHASH0 + k, mrsigner[k]);
++			}
+ 
+ 			ret = __einit(sigstruct, token, addr);
+ 
+@@ -629,31 +633,50 @@ static long sgx_ioc_enclave_init(struct sgx_encl *encl, void __user *arg)
+ {
+ 	struct sgx_sigstruct *sigstruct;
+ 	struct sgx_enclave_init init_arg;
++	struct sgx_enclave_init_with_token init_arg_with_token;
+ 	struct page *initp_page;
+ 	void *token;
++	__u64 sig_addr;
+ 	int ret;
+ 
+ 	if (!test_bit(SGX_ENCL_CREATED, &encl->flags) ||
+ 	    test_bit(SGX_ENCL_INITIALIZED, &encl->flags))
+ 		return -EINVAL;
+ 
+-	if (copy_from_user(&init_arg, arg, sizeof(init_arg)))
+-		return -EFAULT;
++	if (!sgx_no_flc) {
++		if (copy_from_user(&init_arg, arg, sizeof(init_arg)))
++			return -EFAULT;
++
++		sig_addr = init_arg.sigstruct;
++	} else {
++		if (copy_from_user(&init_arg_with_token, arg, sizeof(init_arg_with_token)))
++			return -EFAULT;
++
++		sig_addr = init_arg_with_token.sigstruct;
++	}
+ 
+ 	initp_page = alloc_page(GFP_KERNEL);
+ 	if (!initp_page)
+ 		return -ENOMEM;
+ 
+ 	sigstruct = kmap(initp_page);
+-	token = (void *)((unsigned long)sigstruct + PAGE_SIZE / 2);
+-	memset(token, 0, SGX_LAUNCH_TOKEN_SIZE);
+ 
+-	if (copy_from_user(sigstruct, (void __user *)init_arg.sigstruct,
++	if (copy_from_user(sigstruct, (void __user *)sig_addr,
+ 			   sizeof(*sigstruct))) {
+ 		ret = -EFAULT;
+ 		goto out;
+ 	}
+ 
++	token = (void *)((unsigned long)sigstruct + PAGE_SIZE / 2);
++
++	if (!sgx_no_flc)
++		memset(token, 0, SGX_LAUNCH_TOKEN_SIZE);
++	else if (copy_from_user(token, (void __user *)init_arg_with_token.einittoken,
++				SGX_LAUNCH_TOKEN_SIZE)) {
++		ret = -EFAULT;
++		goto out;
++	}
++
+ 	/*
+ 	 * A legacy field used with Intel signed enclaves. These used to mean
+ 	 * regular and architectural enclaves. The CPU only accepts these values
+@@ -726,6 +749,7 @@ long sgx_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 		ret = sgx_ioc_enclave_add_pages(encl, (void __user *)arg);
+ 		break;
+ 	case SGX_IOC_ENCLAVE_INIT:
++	case SGX_IOC_ENCLAVE_INIT_WITH_TOKEN:
+ 		ret = sgx_ioc_enclave_init(encl, (void __user *)arg);
+ 		break;
+ 	case SGX_IOC_ENCLAVE_PROVISION:
+diff --git a/driver/linux/main.c b/driver/linux/main.c
+index a75969b..831f6a2 100644
+--- a/driver/linux/main.c
++++ b/driver/linux/main.c
+@@ -39,6 +39,8 @@ static LIST_HEAD(sgx_active_page_list);
+ 
+ static DEFINE_SPINLOCK(sgx_reclaimer_lock);
+ 
++bool sgx_no_flc = false;
++
+ /*
+  * Reset dirty EPC pages to uninitialized state. Laundry can be left with SECS
+  * pages whose child pages blocked EREMOVE.
+@@ -501,9 +503,13 @@ static bool detect_sgx(struct cpuinfo_x86 *c)
+         return false;
+     }
+ 
++    if (!cpu_has(c, X86_FEATURE_SGX_LC)) {
++        pr_err_once("SGX Launch Control is not supported\n");
++        sgx_no_flc = true;
++    }
++
+     if (!(fc & FEAT_CTL_SGX_LC_ENABLED)) {
+-        pr_err_once("Locked launch policy not supported\n");
+-        return false;
++        pr_info_once("Locked launch policy not supported\n");
+     }
+ 
+     return true;
+diff --git a/driver/linux/sgx.h b/driver/linux/sgx.h
+index a25137a..3092cfa 100644
+--- a/driver/linux/sgx.h
++++ b/driver/linux/sgx.h
+@@ -83,4 +83,6 @@ void sgx_mark_page_reclaimable(struct sgx_epc_page *page);
+ int sgx_unmark_page_reclaimable(struct sgx_epc_page *page);
+ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim);
+ 
++extern bool sgx_no_flc;
++
+ #endif /* _X86_SGX_H */
+-- 
+1.8.3.1
+

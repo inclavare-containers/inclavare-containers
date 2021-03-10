@@ -1,0 +1,147 @@
+From 6643fa53535030604ed2de4b5d7b6bd570e792f4 Mon Sep 17 00:00:00 2001
+From: Jia Zhang <zhang.jia@linux.alibaba.com>
+Date: Wed, 29 Jul 2020 11:20:40 +0800
+Subject: [PATCH] psw: Support SGX1 machine with SGX in-tree driver
+
+There are still lots of SGX1 machines without FLC support deployed
+in filed. These machines eventually needs to be migrated to be supported
+by SGX in-tree driver which is product-ready and well-maintained.
+
+This patch targets to address the gap between SGX1 machine and Intel SGX
+PSW.
+
+Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
+Signed-off-by: Liang Yang <liang3.yang@intel.com>
+---
+ psw/enclave_common/sgx_enclave_common.cpp |  7 +++++--
+ psw/urts/enclave_creator_hw_com.cpp       |  8 +++++++-
+ psw/urts/linux/edmm_utility.cpp           | 17 +++++++++++++++++
+ psw/urts/linux/edmm_utility.h             |  9 +++++++++
+ psw/urts/linux/urts_internal.cpp          |  2 +-
+ 5 files changed, 39 insertions(+), 4 deletions(-)
+
+diff --git a/psw/enclave_common/sgx_enclave_common.cpp b/psw/enclave_common/sgx_enclave_common.cpp
+index 5c13d10..48e6887 100644
+--- a/psw/enclave_common/sgx_enclave_common.cpp
++++ b/psw/enclave_common/sgx_enclave_common.cpp
+@@ -815,7 +815,7 @@ extern "C" bool COMM_API enclave_initialize(
+     }
+ 
+     int ret = 0;
+-    if ( s_driver_type == SGX_DRIVER_OUT_OF_TREE )
++    if ( s_driver_type == SGX_DRIVER_OUT_OF_TREE || !is_cpu_support_flc())
+     {
+         //out-of-tree driver requires a launch token to be provided
+         se_mutex_lock(&s_enclave_mutex);
+@@ -854,7 +854,10 @@ extern "C" bool COMM_API enclave_initialize(
+         initp.sigstruct = POINTER_TO_U64(enclave_css);
+         initp.einittoken = POINTER_TO_U64(&launch_token);
+ 
+-        ret = ioctl(s_hdevice, SGX_IOC_ENCLAVE_INIT, &initp);
++        if (hfile != -1)
++            ret = ioctl(hfile, SGX_IOC_ENCLAVE_INIT, &initp);
++        else
++            ret = ioctl(s_hdevice, SGX_IOC_ENCLAVE_INIT, &initp);
+     } 
+     else if (s_driver_type == SGX_DRIVER_DCAP )
+     {
+diff --git a/psw/urts/enclave_creator_hw_com.cpp b/psw/urts/enclave_creator_hw_com.cpp
+index 8b31b75..ca0ab0d 100644
+--- a/psw/urts/enclave_creator_hw_com.cpp
++++ b/psw/urts/enclave_creator_hw_com.cpp
+@@ -39,6 +39,7 @@
+ #include "se_error_internal.h"
+ #include "prd_css_util.h"
+ #include "se_memcpy.h"
++#include "edmm_utility.h"
+ #include <unistd.h>
+ 
+ #define EDMM_ENABLE_BIT 0x1ULL
+@@ -164,6 +165,10 @@ int EnclaveCreatorHW::init_enclave(sgx_enclave_id_t enclave_id, enclave_css_t *e
+     UNUSED(lc);
+ 
+     unsigned int ret = 0;
++    int driver_type;
++
++    if (!get_driver_type(&driver_type))
++        return SGX_ERROR_UNEXPECTED;
+ 
+     enclave_css_t css;
+     memcpy_s(&css, sizeof(enclave_css_t), enclave_css, sizeof(enclave_css_t));
+@@ -178,7 +183,8 @@ int EnclaveCreatorHW::init_enclave(sgx_enclave_id_t enclave_id, enclave_css_t *e
+         {
+             // LE is loaded with the interface sgx_create_le.
+             // Read the input prd css file and use it to init again.
+-            if(SGX_ERROR_INVALID_ATTRIBUTE == ret && prd_css_file != NULL) {
++            // Note that in-tree kernel driver never expose SGX_ERROR_INVALID_ATTRIBUTE.
++            if((SGX_ERROR_INVALID_ATTRIBUTE == ret || (!is_cpu_support_flc() && driver_type != SGX_DRIVER_OUT_OF_TREE)) && prd_css_file != NULL) {
+                 if((ret = read_prd_css(prd_css_file->prd_css_name, &css)) != SGX_SUCCESS)
+                 {
+                     return ret;
+diff --git a/psw/urts/linux/edmm_utility.cpp b/psw/urts/linux/edmm_utility.cpp
+index 64b755d..27be3cd 100644
+--- a/psw/urts/linux/edmm_utility.cpp
++++ b/psw/urts/linux/edmm_utility.cpp
+@@ -43,6 +43,7 @@
+ #include <stdio.h>
+ 
+ #define SGX_URTS_CMD "for f in $(find /usr/$(basename $(gcc -print-multi-os-directory)) -name 'libsgx_urts.so' 2> /dev/null); do strings $f|grep 'SGX_URTS_VERSION_2'; done"
++#define EXT_CPUID    0x07
+ #define SGX_CPUID    0x12
+ 
+ /* is_urts_support_edmm()
+@@ -301,3 +302,19 @@ extern "C" bool is_out_of_tree_driver()
+     return false;
+ }
+ 
++
++/* is_cpu_support_flc()
++ * Parameters:
++ *      None.
++ * Return Value:
++ *      true - support SGX FLC.
++ *      false - don't support SGX FLC.
++*/
++extern "C" bool is_cpu_support_flc()
++{
++    int a[4] = {0,0,0,0};
++
++    __cpuid(a, EXT_CPUID);
++
++    return !!(a[2] & (1 << 30));
++}
+diff --git a/psw/urts/linux/edmm_utility.h b/psw/urts/linux/edmm_utility.h
+index 46f1856..c26df93 100644
+--- a/psw/urts/linux/edmm_utility.h
++++ b/psw/urts/linux/edmm_utility.h
+@@ -107,6 +107,15 @@ bool is_support_edmm();
+ */
+ bool is_out_of_tree_driver();
+ 
++/* is_cpu_support_flc()
++ * Parameters:
++ *      None.
++ * Return Value:
++ *      true - support SGX FLC.
++ *      false - don't support SGX FLC.
++*/
++bool is_cpu_support_flc();
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/psw/urts/linux/urts_internal.cpp b/psw/urts/linux/urts_internal.cpp
+index 502f7b5..042d4f0 100644
+--- a/psw/urts/linux/urts_internal.cpp
++++ b/psw/urts/linux/urts_internal.cpp
+@@ -90,6 +90,6 @@ extern "C" sgx_status_t sgx_create_le(const char* file_name, const char* prd_css
+ extern "C" bool is_launch_token_required()
+ {
+     //noly out of tree driver need to get launch token
+-    return is_out_of_tree_driver();
++    return !is_cpu_support_flc() || is_out_of_tree_driver();
+ }
+ 
+-- 
+1.8.3.1
+

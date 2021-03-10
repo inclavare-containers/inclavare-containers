@@ -10,8 +10,8 @@ by SGX DCAP driver which is product-ready and well-maintained.
 This patch targets to address the gap between SGX1 machine and SGX
 DCAP driver.
 
-Signed-off-by: Yilin Li <YiLin.Li@linux.alibaba.com>
 Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
+Signed-off-by: Yilin Li <YiLin.Li@linux.alibaba.com>
 ---
  driver/linux/driver.c                   |  5 ---
  driver/linux/include/uapi/asm/sgx_oot.h | 15 ++++++++
