@@ -10,7 +10,7 @@ on:
 env:
   WORK_DIR: /root/pkgs
   HOME: /root
-  OCCLUM_VERSION: 0.20.0
+  OCCLUM_VERSION: 0.21.0
   kubernetes_version: 1.16.9
   nap_time: 60
 
@@ -98,8 +98,8 @@ jobs:
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libprotobuf-dev
           sudo apt-get install -y build-essential python
           pushd ${WORK_DIR}
-          wget https://download.01.org/intel-sgx/sgx-linux/2.11/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.6.0_b0a445b.bin -O sgx_linux_x64_driver_2.6.0_b0a445b.bin
-          wget https://download.01.org/intel-sgx/sgx-linux/2.11/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.11.100.2.bin -O sgx_linux_x64_sdk_2.11.100.2.bin
+          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.6.0_b0a445b.bin -O sgx_linux_x64_driver_2.6.0_b0a445b.bin
+          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.11.100.2.bin -O sgx_linux_x64_sdk_2.11.100.2.bin
           echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
           wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
           sudo apt-get update
