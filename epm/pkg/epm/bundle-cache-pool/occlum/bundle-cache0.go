@@ -44,7 +44,7 @@ func (d *BundleCache0Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache
 		return err
 	}
 
-	sourceDirs := []string{"build/mount/"}
+	sourceDirs := []string{"build/mount/", "initfs"}
 	for _, dir := range sourceDirs {
 		srcDir := filepath.Join(sourcePath, dir)
 		destDir := filepath.Join(savePath, dir)

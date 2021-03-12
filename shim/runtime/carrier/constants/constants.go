@@ -154,9 +154,9 @@ function generateEnclaveConfiguration() {
     echo "GenerateEnclaveConfiguration: ${occlum_config_path} is not exist"
     exit 1
   fi
-  /opt/occlum/build/bin/gen_internal_conf --user_json ${occlum_config_path} --sdk_xml ${enclave_config_path}  \
-  --fs_mac $(LD_LIBRARY_PATH="/opt/occlum/sgxsdk-tools/sdk_libs" /opt/occlum/build/bin/occlum-protect-integrity show-mac ${occlum_instance_dir}/build/mount/__ROOT/metadata) \
-  --sys_json ${occlum_instance_dir}/build/Occlum.json
+  /opt/occlum/build/bin/gen_internal_conf --user_json ${occlum_config_path} gen_user_conf --sdk_xml ${enclave_config_path}  \
+  --user_fs_mac $(LD_LIBRARY_PATH="/opt/occlum/sgxsdk-tools/sdk_libs" /opt/occlum/build/bin/occlum-protect-integrity show-mac ${occlum_instance_dir}/build/mount/__ROOT/metadata) \
+  --output_user_json ${occlum_instance_dir}/build/Occlum.json
 }
 
 function buildUnsignedEnclave(){

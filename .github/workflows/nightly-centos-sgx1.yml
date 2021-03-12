@@ -367,7 +367,7 @@ jobs:
 
     - name: Check epm bundle cache
       run: |
-        test -d /var/local/epm/bundle-cache.occlum.cache0/408fbccd943bb/bundle-cache.occlum.cache1/4c7a9ce227326174b628f474aaaebe7b/bundle-cache.occlum.cache2 \
+        test -d /var/local/epm/bundle-cache.occlum.cache0/408fbccd943bb/bundle-cache.occlum.cache1/61c26bf4a05f2e7da6ccbdd629acf615/bundle-cache.occlum.cache2 \
           || exit 1
 
     - name: Rerun hello-world pod
