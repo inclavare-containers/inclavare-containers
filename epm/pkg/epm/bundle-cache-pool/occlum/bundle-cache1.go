@@ -48,12 +48,16 @@ func (d *BundleCache1Manager) SaveCache(sourcePath string, cache *v1alpha1.Cache
 		"build/bin/",
 		"build/lib/",
 		"run/",
+		"build/initfs",
 	}
 	sourceFiles := []string{
 		"Occlum.json",
 		"build/Enclave.xml",
 		"build/Occlum.json",
 		"build/Occlum.json.protected",
+		"build/image_config.json",
+		"build/.Occlum_sys.json",
+		"build/.Occlum_sys.json.protected",
 	}
 	for _, dir := range sourceDirs {
 		srcDir := filepath.Join(sourcePath, dir)

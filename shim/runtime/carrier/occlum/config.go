@@ -138,7 +138,7 @@ func (c *OcclumConfig) ApplyEntrypoints(entrypoints []string) {
 func GetDefaultOcclumConfig() *OcclumConfig {
 	return &OcclumConfig{
 		ResourceLimits: ResourceLimits{
-			UserSpaceSize:        "256MB",
+			UserSpaceSize:        "300MB",
 			KernelSpaceHeapSize:  "32MB",
 			KernelSpaceStackSize: "1MB",
 			MaxNumOfThreads:      32},
@@ -159,14 +159,22 @@ func GetDefaultOcclumConfig() *OcclumConfig {
 		},
 		Mount: []Mount{
 			{
-				Target:  "/",
-				Type:    "sefs",
-				Source:  "./image",
-				Options: map[string]interface{}{"integrity_only": true},
-			},
-			{
-				Target: "/root",
-				Type:   "sefs",
+				Target: "/",
+				Type:   "unionfs",
+				Source: "./build/mount/__ROOT",
+				Options: map[string]interface{}{"layers": []Mount{
+					{
+						Target:  "/",
+						Type:    "sefs",
+						Source:  "./build/mount/__ROOT",
+						Options: map[string]interface{}{"MAC": ""},
+					},
+					{
+						Target: "/",
+						Type:   "sefs",
+						Source: "./run/mount/__ROOT",
+					},
+				}},
 			},
 			{
 				Target: "/host",
@@ -174,8 +182,19 @@ func GetDefaultOcclumConfig() *OcclumConfig {
 				Source: ".",
 			},
 			{
-				Target: "/tmp",
-				Type:   "ramfs",
+				Target:  "/tmp",
+				Type:    "sefs",
+				Source:  "./run/mount/tmp",
+				Options: map[string]interface{}{"temporary": true},
+			},
+			{
+				Target: "/proc",
+				Type:   "procfs",
+			},
+
+			{
+				Target: "/dev",
+				Type:   "devfs",
 			},
 		},
 	}
