@@ -6,6 +6,7 @@ LIBDIR := $(TOPDIR)/src/lib
 TLS_WRAPPERS := $(LIBDIR)/tls_wrappers
 ENCLAVE_QUOTES := $(LIBDIR)/enclave_quotes
 INCDIR := $(TOPDIR)/src/include
+COMMONDIR := $(TOPDIR)/src/common
 
 MAJ_VERSION := 1
 MIN_VERSION := 0.0
@@ -17,10 +18,7 @@ Lib_C_Files :=  $(wildcard $(LIBDIR)/core/*.c) \
 NULL_TLS_WRAPPER_C_FILES := $(wildcard $(TLS_WRAPPERS)/null/*.c)
 NULL_ENCLAVE_QUOTE_C_FILES := $(wildcard $(ENCLAVE_QUOTES)/null/*.c)
 
-CFLAGS := -I$(INCDIR) -fPIC
-ifeq ($(DEBUG),1)
-  CFLAGS += -g
-endif
+CFLAGS += -I$(INCDIR) -fPIC
 
 HOST_LDFLAGS := -fPIE -shared -Wl,-Bsymbolic,--rpath=$(ENCLAVE_TLS_LIBDIR),--enable-new-dtags
 
@@ -38,6 +36,9 @@ libtls_wrapper_null.so: libenclave_tls.so $(NULL_TLS_WRAPPER_C_Objects)
 
 libenclave_quote_null.so: libenclave_tls.so $(NULL_ENCLAVE_QUOTE_C_Objects)
 	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $(NULL_ENCLAVE_QUOTE_C_Objects) libenclave_tls.so
+
+wolfssl:
+	make -C $(COMMONDIR) && make -C $(COMMONDIR) install
 
 install:
 	$(INSTALL) -d -m 755 $(ENCLAVE_TLS_LIBDIR)
@@ -58,3 +59,7 @@ uninstall:
 clean:
 	rm -f lib*.so
 	rm -f $(Lib_C_Objects) $(NULL_TLS_WRAPPER_C_Objects) $(NULL_ENCLAVE_QUOTE_C_Objects)
+	make -C $(COMMONDIR) clean
+
+mrproper:
+	make -C $(COMMONDIR) mrproper
