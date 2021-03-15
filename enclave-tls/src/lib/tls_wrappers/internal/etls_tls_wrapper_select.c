@@ -37,6 +37,8 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 	for (i = 0; i < registerd_tls_wrapper_nums; ++i) {
 		tls_wrapper_ctx_t *tls_ctx = tls_wrappers_ctx[i];
 
+		tls_ctx->conf_flags = ctx->config.flags;
+
 		if (type == NULL) {
 			err = etls_tls_wrapper_init(ctx, tls_ctx);
 			if (err == ENCLAVE_TLS_ERR_NONE)

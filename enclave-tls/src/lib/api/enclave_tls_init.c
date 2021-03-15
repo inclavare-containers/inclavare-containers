@@ -70,7 +70,6 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 		goto err_ctx;
 	}
 
-	ctx->tls_wrapper->conf_flags = conf->flags;
 	*handle = ctx;
 
 	return ENCLAVE_TLS_ERR_NONE;
