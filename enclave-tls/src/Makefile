@@ -17,6 +17,7 @@ Lib_C_Files :=  $(wildcard $(LIBDIR)/core/*.c) \
 	$(wildcard $(LIBDIR)/api/*.c)
 NULL_TLS_WRAPPER_C_FILES := $(wildcard $(TLS_WRAPPERS)/null/*.c)
 NULL_ENCLAVE_QUOTE_C_FILES := $(wildcard $(ENCLAVE_QUOTES)/null/*.c)
+WOLFSSL_TLS_WRAPPER_C_FILES := $(wildcard $(TLS_WRAPPERS)/wolfssl/*.c)
 
 CFLAGS += -I$(INCDIR) -fPIC
 
@@ -25,8 +26,9 @@ HOST_LDFLAGS := -fPIE -shared -Wl,-Bsymbolic,--rpath=$(ENCLAVE_TLS_LIBDIR),--ena
 Lib_C_Objects := $(Lib_C_Files:.c=.o)
 NULL_TLS_WRAPPER_C_Objects := $(NULL_TLS_WRAPPER_C_FILES:.c=.o)
 NULL_ENCLAVE_QUOTE_C_Objects := $(NULL_ENCLAVE_QUOTE_C_FILES:.c=.o)
+WOLFSSL_TLS_WRAPPER_C_Objects := $(patsubst %.c, %.o, $(WOLFSSL_TLS_WRAPPER_C_FILES))
 
-all: libenclave_tls.so libtls_wrapper_null.so libenclave_quote_null.so
+all: libenclave_tls.so libtls_wrapper_null.so libenclave_quote_null.so libtls_wrapper_wolfssl.so
 
 libenclave_tls.so: $(Lib_C_Objects)
 	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $(Lib_C_Objects) -ldl
@@ -37,6 +39,12 @@ libtls_wrapper_null.so: libenclave_tls.so $(NULL_TLS_WRAPPER_C_Objects)
 libenclave_quote_null.so: libenclave_tls.so $(NULL_ENCLAVE_QUOTE_C_Objects)
 	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $(NULL_ENCLAVE_QUOTE_C_Objects) libenclave_tls.so
 
+libtls_wrapper_wolfssl.so: libenclave_tls.so wolfssl $(WOLFSSL_TLS_WRAPPER_C_Objects)
+	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $(WOLFSSL_TLS_WRAPPER_C_Objects) libenclave_tls.so -L$(LIBDIR)/.build/lib -lwolfssl
+
+$(WOLFSSL_TLS_WRAPPER_C_Objects): %.o: %.c
+	$(CC) -c $(CFLAGS) -I$(LIBDIR)/.build/include -o $@ $<
+
 wolfssl:
 	make -C $(COMMONDIR) && make -C $(COMMONDIR) install
 
@@ -46,19 +54,20 @@ install:
 	$(INSTALL) -d -m 755 $(ENCLAVE_TLS_INCDIR)
 	$(INSTALL) -m 444 include/enclave-tls/* $(ENCLAVE_TLS_INCDIR)
 	$(INSTALL) -d -m 755 $(TLS_WRAPPERS_LIBDIR)
-	$(INSTALL) -m 755 libtls_wrapper_null.so $(TLS_WRAPPERS_LIBDIR)
+	$(INSTALL) -m 755 libtls_wrapper_*.so $(TLS_WRAPPERS_LIBDIR)
 	$(INSTALL) -d -m 755 $(ENCLAVE_QUOTES_LIBDIR)
 	$(INSTALL) -m 755 libenclave_quote_null.so $(ENCLAVE_QUOTES_LIBDIR)
 	cd $(ENCLAVE_TLS_LIBDIR) && mv libenclave_tls.so libenclave_tls.so.$(MAJ_VERSION).$(MIN_VERSION) && \
 	ln -sf libenclave_tls.so.$(MAJ_VERSION).$(MIN_VERSION) libenclave_tls.so.$(MAJ_VERSION) && \
 	ln -sf libenclave_tls.so.$(MAJ_VERSION).$(MIN_VERSION) libenclave_tls.so
+	cp -df $(LIBDIR)/.build/lib/*so* $(ENCLAVE_TLS_LIBDIR)
 
 uninstall:
 	rm -rf $(ENCLAVE_TLS_PREFIX)
 
 clean:
 	rm -f lib*.so
-	rm -f $(Lib_C_Objects) $(NULL_TLS_WRAPPER_C_Objects) $(NULL_ENCLAVE_QUOTE_C_Objects)
+	rm -f $(Lib_C_Objects) $(NULL_TLS_WRAPPER_C_Objects) $(NULL_ENCLAVE_QUOTE_C_Objects) $(WOLFSSL_TLS_WRAPPER_C_Objects)
 	make -C $(COMMONDIR) clean
 
 mrproper:
