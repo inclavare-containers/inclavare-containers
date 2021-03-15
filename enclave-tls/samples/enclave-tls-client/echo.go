@@ -1,8 +1,10 @@
 package main
 
+// The LDFLAGS defined by cgo doesn't support runtpath enabled by --enable-new-dtags, so rpath is used by default
+
 /*
 #cgo CFLAGS: -I../../src/include
-#cgo LDFLAGS: -L../../src -lenclave_tls -lm
+#cgo LDFLAGS: -L../../src -Wl,-rpath,'/opt/enclave-tls/lib' -lenclave_tls -lm
 
 #include <enclave-tls/api.h>
 
