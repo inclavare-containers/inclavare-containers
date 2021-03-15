@@ -1,7 +1,7 @@
 CC ?= gcc
 GO ?= go
 INSTALL ?= install
-DEBUG ?=
+DEBUG ?= 1
 
 SRCDIR := $(TOPDIR)/src
 BINDIR := $(TOPDIR)/bin
