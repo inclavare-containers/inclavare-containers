@@ -24,8 +24,6 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	/* Check whether the specified algorithm is supported */
 	if (ctx->config.cert_algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256)
 		hash_size = SHA256_HASH_SIZE;
-	else if (ctx->config.cert_algo == ENCLAVE_TLS_CERT_ALGO_DEFAULT)
-		hash_size = 0;
 	else
 		return -ENCLAVE_TLS_ERR_UNSUPPORTED_CERT_ALGO;
 

@@ -28,8 +28,8 @@ typedef enum {
 typedef struct etls_core_context_t *enclave_tls_handle;
 
 typedef enum {
-	ENCLAVE_TLS_CERT_ALGO_DEFAULT,
 	ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
+	ENCLAVE_TLS_CERT_ALGO_DEFAULT = ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
 	ENCLAVE_TLS_CERT_ALGO_MAX
 } enclave_tls_cert_algo_t;
 
