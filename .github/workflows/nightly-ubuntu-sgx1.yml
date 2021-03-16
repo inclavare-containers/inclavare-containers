@@ -20,6 +20,7 @@ jobs:
     steps:
       - name: Prepare the execution enviorment
         run: |
+          rm -r /etc/apt/sources.list.d/kubernetes.list
           rm -fr $WORK_DIR
           mkdir -p $WORK_DIR
           pushd $WORK_DIR
@@ -509,5 +510,6 @@ jobs:
           sudo ip link delete flannel.1 || true
           sudo ip -all netns del || true
           sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
+          sudo rm -f /etc/apt/sources.list.d/kubernetes.list
           sudo rm -rf  $WORK_DIR
           sudo mkdir -p $WORK_DIR
