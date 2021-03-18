@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Prepare the execution enviorment
         run: |
-          rm -r /etc/apt/sources.list.d/kubernetes.list
+          rm -f /etc/apt/sources.list.d/kubernetes.list
           rm -fr $WORK_DIR
           mkdir -p $WORK_DIR
           pushd $WORK_DIR
@@ -28,6 +28,8 @@ jobs:
           sudo add-apt-repository ppa:git-core/ppa -y
           sudo apt-get update
           sudo apt-get install -y git
+          git config --global http.proxy socks5://localhost:5432
+          git config --global https.proxy socks5://localhost:5432
           wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz
           tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib
           echo "export GOROOT=/usr/lib/go" > /tmp/.bashrc
