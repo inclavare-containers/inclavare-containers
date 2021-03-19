@@ -10,8 +10,7 @@
 /* *INDENT-OFF* */
 enclave_tls_err_t etls_tls_wrapper_load_single(const char *path)
 {
-	ETLS_DEBUG("etls_tls_wrapper_load_single() loaded tls wrapper: '%s'\n",
-		   path);
+	ETLS_DEBUG("loading tls wrapper instance '%s'\n", path);
 
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
 

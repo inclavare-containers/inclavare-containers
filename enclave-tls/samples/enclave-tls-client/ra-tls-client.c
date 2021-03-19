@@ -13,7 +13,8 @@
 #include <enclave-tls/api.h>
 
 int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
-		char *attester_type, char *verifier_type, char *tls_type)
+		char *attester_type, char *verifier_type, char *tls_type,
+		char *crypto)
 {
 	enclave_tls_err_t ret;
 	enclave_tls_handle handle;
@@ -24,6 +25,7 @@ int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.attester_type, attester_type);
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
+	strcpy(conf.crypto_type, crypto);
 
 	ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE || !handle) {

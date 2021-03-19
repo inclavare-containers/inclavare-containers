@@ -3,15 +3,13 @@
 #include <string.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
-
 #include "internal/enclave_quote.h"
 #include "internal/core.h"
 
 /* *INDENT-OFF* */
 enclave_tls_err_t etls_enclave_quote_load_single(const char *path)
 {
-	ETLS_DEBUG("etls_enclave_quote_load_single() loaded enclave quote: '%s'\n",
-		 path);
+	ETLS_DEBUG("loading enclave quote instance '%s'\n", path);
 
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
 

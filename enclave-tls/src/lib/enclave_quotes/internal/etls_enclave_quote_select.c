@@ -38,10 +38,11 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 {
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
 
+	enclave_quote_ctx_t *quote_ctx = NULL;
 	unsigned int i = 0;
 	unsigned int err_num = 0;
 	for (i = 0; i < registerd_enclave_quote_nums; ++i) {
-		enclave_quote_ctx_t *quote_ctx = enclave_quotes_ctx[i];
+		quote_ctx = enclave_quotes_ctx[i];
 
 		if (type == NULL) {
 			err = etls_enclave_quote_init(ctx, quote_ctx, algo);
@@ -50,6 +51,7 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 		} else {
 			if (strcmp(type, quote_ctx->opts->type))
 				continue;
+
 			err = etls_enclave_quote_init(ctx, quote_ctx, algo);
 			if (err != ENCLAVE_TLS_ERR_NONE) {
 				ETLS_ERR("ERROR: failed to init enclave quote %s\n", type);
@@ -60,14 +62,16 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 	}
 
 	if (err_num == registerd_enclave_quote_nums) {
-		ETLS_ERR("ERROR: failed to init all enclave quotes\n");
+		ETLS_ERR("failed to initialize all enclave quotes\n");
 		return -ENCLAVE_TLS_ERR_INIT;
 	}
 
 	if ((i == registerd_enclave_quote_nums) && (type != NULL)) {
-		ETLS_ERR("ERROR: invalid Enclave Quote type: %s\n", type);
+		ETLS_ERR("invalid enclave quote type %s\n", type);
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
+
+	ETLS_INFO("the enclave quote '%s' selected\n", quote_ctx->opts->type);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

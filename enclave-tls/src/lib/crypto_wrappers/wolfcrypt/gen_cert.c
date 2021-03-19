@@ -1,14 +1,15 @@
-#include <enclave-tls/log.h>
-#include <enclave-tls/tls_wrapper.h>
 #include <assert.h>
-
-#include "wolfssl_private.h"
+#include <enclave-tls/log.h>
+#include <enclave-tls/crypto_wrapper.h>
+#include <enclave-tls/cert.h>
+#include "wolfcrypt_private.h"
 
 /* *INDENT-OFF* */
-tls_wrapper_err_t wolfssl_gen_cert(tls_wrapper_ctx_t *ctx,
-				   const tls_wrapper_cert_info_t *cert_info)
+crypto_wrapper_err_t __secured
+wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
+		   enclave_tls_cert_info_t *cert_info)
 {
-	ETLS_DEBUG("tls_wrapper_wolfssl gen_cert is called\n");
+	ETLS_DEBUG("ctx %p, cert_info %p\n", ctx, cert_info);
 
 	Cert crt;
 	wc_InitCert(&crt);
@@ -23,6 +24,8 @@ tls_wrapper_err_t wolfssl_gen_cert(tls_wrapper_ctx_t *ctx,
 	strncpy(crt.subject.commonName, subject->common_name,
 		sizeof(crt.subject.commonName) - 1);
 	crt.subject.commonName[sizeof(crt.subject.commonName) - 1] = '\0';
+
+	ETLS_DEBUG("evidence type %s\n", cert_info->evidence.type);
 
 	/* FIXME: add the handle of different quote types */
 	if (!strcmp(cert_info->evidence.type, "sgx-epid")) {
@@ -44,26 +47,24 @@ tls_wrapper_err_t wolfssl_gen_cert(tls_wrapper_ctx_t *ctx,
 		memcpy(crt.iasSig, epid->ias_report_signature, epid->ias_report_signature_len);
 		crt.iasSigSz = epid->ias_report_signature_len;
 	} else if (!strcmp(cert_info->evidence.type, "sgx-ecdsa")) {
-		/* Empty Implement */
+		/* TODO */
 	} else if (!strcmp(cert_info->evidence.type, "sgx-la")) {
-		/* Empty Implement */
+		/* TODO */
 	}
 
 	RNG rng;
 	wc_InitRng(&rng);
-
-	tls_wrapper_err_t err = TLS_WRAPPER_ERR_NONE;
-
-	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private;
-
-	ws_ctx->cert_len = wc_MakeSelfCert(&crt, ws_ctx->cert_buf,
-					   sizeof(ws_ctx->cert_buf),
-					   &(ws_ctx->key), &rng);
-	if (ws_ctx->cert_len <= 0) {
-		ETLS_ERR("ERROR: cert len %d is error\n", ws_ctx->cert_len);
-		err = -TLS_WRAPPER_ERR_CERT;
+	wolfcrypt_ctx_t *wc_ctx = (wolfcrypt_ctx_t *)ctx->crypto_private;
+	cert_info->cert_len = wc_MakeSelfCert(&crt, cert_info->cert_buf,
+					      sizeof(cert_info->cert_buf),
+					      &wc_ctx->secured->key, &rng);
+	if (cert_info->cert_len <= 0) {
+		ETLS_DEBUG("failed to create self-signing certificate %d\n", cert_info->cert_len);
+		return WOLFCRYPT_ERR_CODE(cert_info->cert_len);
 	}
 
-	return err;
+	ETLS_DEBUG("self-signing certificate generated\n");
+
+	return CRYPTO_WRAPPER_ERR_NONE;
 }
 /* *INDENT-ON* */

@@ -8,8 +8,7 @@
 /* *INDENT-OFF* */
 tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 {
-	ETLS_DEBUG("tls_wrapper_register() called with wrapper type: '%s'\n",
-		   opts->type);
+	ETLS_DEBUG("called with tls wrapper '%s'\n", opts->type);
 
 	tls_wrapper_opts_t *new_opts = (tls_wrapper_opts_t *) malloc(sizeof(*new_opts));
 	if (!new_opts)

@@ -33,9 +33,10 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
 
+	tls_wrapper_ctx_t *tls_ctx = NULL;
 	unsigned int i = 0;
 	for (i = 0; i < registerd_tls_wrapper_nums; ++i) {
-		tls_wrapper_ctx_t *tls_ctx = tls_wrappers_ctx[i];
+		tls_ctx = tls_wrappers_ctx[i];
 
 		tls_ctx->conf_flags = ctx->config.flags;
 
@@ -46,6 +47,7 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 		} else {
 			if (strcmp(type, tls_ctx->opts->type))
 				continue;
+
 			err = etls_tls_wrapper_init(ctx, tls_ctx);
 			if (err == ENCLAVE_TLS_ERR_NONE)
 				break;
@@ -56,6 +58,8 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 		ETLS_ERR("ERROR: failed to select tls wrapper\n");
 		return -ENCLAVE_TLS_ERR_INIT;
 	}
+
+	ETLS_INFO("the tls wrapper '%s' selected\n", tls_ctx->opts->type);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

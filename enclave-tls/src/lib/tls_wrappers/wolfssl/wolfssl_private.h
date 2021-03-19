@@ -18,13 +18,6 @@
 typedef struct {
 	WOLFSSL_CTX *ws;
 	WOLFSSL *ssl;
-	unsigned int priv_key_len;
-	uint8_t priv_key_buf[2048];
-	unsigned int pub_key_len;
-	uint8_t pub_key_buf[1024];
-	unsigned int cert_len;
-	uint8_t cert_buf[8192];
-	RsaKey key;
 } wolfssl_ctx_t;
 
 extern const int rsa_pub_3072_raw_der_len;

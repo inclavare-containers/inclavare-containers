@@ -25,8 +25,9 @@ tls_wrapper_err_t wolfssl_init(tls_wrapper_ctx_t *ctx)
 		ws_ctx->ws = wolfSSL_CTX_new(wolfTLSv1_2_server_method());
 	else
 		ws_ctx->ws = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+
 	if (!ws_ctx->ws) {
-		err = -WOLFSSL_WRAPPER_ERR_CTX;
+		err = -TLS_WRAPPER_ERR_UNKNOWN;
 		goto err_wolfssl_ctx;
 	}
 

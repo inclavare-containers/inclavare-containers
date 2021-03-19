@@ -3,19 +3,58 @@
 #define _ENCLAVE_ERR_H
 /* *INDENT-ON* */
 
-#define ENCLAVE_TLS_ERR_BASE            0x00000000
-#define TLS_WRAPPER_ERR_BASE            0x10000000
-#define ENCLAVE_QUOTE_ERR_BASE          0x20000000
+/*
+ * The error code definition.
+ *
+ * Enclave TLS specific error code is a 32-bit signed integer with the follow layout:
+ * 1  ccc sssss x...x
+ * ^  ^   ^   ^ ^   ^
+ * 31 30  27 23 22  0
+ *
+ * Bit 31: always 1, indicating a negative value.
+ * Bit 30-28: error code class
+ * Bit 27-23: error code sub-class (if any)
+ * Bit 22-00: sub-class specific error codes
+ */
 
-// Defines the length of the TLS library type used in the error code (5 bits)
-#define TLS_WRAPPER_ERR_TYPE_MASK       0x7c000000U
-#define TLS_WRAPPER_ERR_TYPE_SHIFT      26
-#define TLS_WRAPPER_ERR_ERRNO_MASK      0x3ffffffU
+#define ERR_CODE_CLASS_SHIFT            28
+#define ERR_CODE_SUBCLASS_SHIFT         23
+#define ERR_CODE_CLASS_MASK             0x70000000
+#define ERR_CODE_SUBCLASS_MASK          0x0f800000
+#define ERR_CODE_ERROR_MASK             ((1 << ERR_CODE_SUBCLASS_SHIFT) - 1)
+#define ERR_CODE_NAGATIVE               (1 << 31)
 
-// The error code used by wolfssl
-#define WOLFSSL_WRAPPER_ERR_BASE        (0 << TLS_WRAPPER_ERR_TYPE_SHIFT)
-// The error code used by wolfssl-sgx
-#define WOLFSSL_SGX_WRAPPER_ERR_BASE    (1 << TLS_WRAPPER_ERR_TYPE_SHIFT)
+/* The error code class */
+#define ENCLAVE_TLS_ERR_BASE            (0 << ERR_CODE_CLASS_SHIFT)
+#define TLS_WRAPPER_ERR_BASE            (1 << ERR_CODE_CLASS_SHIFT)
+#define ENCLAVE_QUOTE_ERR_BASE          (2 << ERR_CODE_CLASS_SHIFT)
+#define CRYPTO_WRAPPER_ERR_BASE         (3 << ERR_CODE_CLASS_SHIFT)
+
+/* The base of error code used by wolfssl */
+#define WOLFSSL_ERR_BASE                (0 << ERR_CODE_SUBCLASS_SHIFT)
+/* The base of error code used by wolfssl-sgx */
+#define WOLFSSL_SGX_ERR_BASE            (1 << ERR_CODE_SUBCLASS_SHIFT)
+
+/* The base of error code used by wolfcrypt */
+#define WOLFCRYPT_ERR_BASE              (0 << ERR_CODE_SUBCLASS_SHIFT)
+
+// Error code used to construct TLS Wrapper instance
+#define __TLS_WRAPPER_ERR_CODE(base, err) \
+	(((TLS_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
+	 ((err) & ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
+
+#define WOLFSSL_ERR_CODE(err) \
+	__TLS_WRAPPER_ERR_CODE(WOLFSSL_ERR_BASE, err)
+
+#define WOLFSSL_SGX_ERR_CODE(err) \
+	__TLS_WRAPPER_ERR_CODE(WOLFSSL_SGX_ERR_BASE, err)
+
+#define __CRYPTO_WRAPPER_ERR_CODE(base, err) \
+	(((CRYPTO_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
+	 ((err) & ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
+
+#define WOLFCRYPT_ERR_CODE(err) \
+	__CRYPTO_WRAPPER_ERR_CODE(WOLFCRYPT_ERR_BASE, err)
 
 typedef enum {
 	ENCLAVE_TLS_ERR_NONE = ENCLAVE_TLS_ERR_BASE,
@@ -28,6 +67,7 @@ typedef enum {
 	ENCLAVE_TLS_ERR_DLOPEN,
 	ENCLAVE_TLS_ERR_INIT,
 	ENCLAVE_TLS_ERR_UNSUPPORTED_CERT_ALGO,
+	ENCLAVE_TLS_ERR_LOAD_CRYPTO,
 } enclave_tls_err_t;
 
 typedef enum {
@@ -44,29 +84,23 @@ typedef enum {
 	TLS_WRAPPER_ERR_INVALID,
 	TLS_WRAPPER_ERR_TRANSMIT,
 	TLS_WRAPPER_ERR_RECEIVE,
-	TLS_WRAPPER_ERR_UNSUPPORTED_ALGO,
 	TLS_WRAPPER_ERR_UNSUPPORTED_QUOTE,
 	TLS_WRAPPER_ERR_PRIV_KEY,
-	TLS_WRAPPER_ERR_PRIV_KEY_LEN,
-	TLS_WRAPPER_ERR_RSA_KEY_LEN,
 	TLS_WRAPPER_ERR_CERT,
-	TLS_WRAPPER_ERR_PUB_KEY_LEN,
-	TLS_WRAPPER_ERR_PUB_KEY_DECODE,
-	/* Failed to create WOLFSSL_CTX */
-	WOLFSSL_WRAPPER_ERR_CTX =
-		TLS_WRAPPER_ERR_BASE + WOLFSSL_WRAPPER_ERR_BASE,
-	/* Failed to create WOLFSSL */
-	WOLFSSL_WRAPPER_ERR_SSL,
-	/* Failed to create WOLFSSL_SGX_CTX */
-	WOLFSSL_SGX_WRAPPER_ERR_CTX =
-		TLS_WRAPPER_ERR_BASE + WOLFSSL_SGX_WRAPPER_ERR_BASE,
-	/* Failed to create WOLFSSL_SGX SSL */
-	WOLFSSL_SGX_WRAPPER_ERR_SSL,
+	TLS_WRAPPER_ERR_UNKNOWN,
 } tls_wrapper_err_t;
 
-// Error code used to construct TLS Wrapper instance
-#define TLS_WRAPPER_ERRNO(base, err) \
-   (((base) & TLS_WRAPPER_ERR_TYPE_MASK) | ((err) & ~TLS_WRAPPER_ERR_ERRNO_MASK))
+typedef enum {
+	CRYPTO_WRAPPER_ERR_NONE = CRYPTO_WRAPPER_ERR_BASE,
+	CRYPTO_WRAPPER_ERR_NO_MEM,
+	CRYPTO_WRAPPER_ERR_INVALID,
+	CRYPTO_WRAPPER_ERR_CERT,
+	CRYPTO_WRAPPER_ERR_PRIV_KEY_LEN,
+	CRYPTO_WRAPPER_ERR_RSA_KEY_LEN,
+	CRYPTO_WRAPPER_ERR_PUB_KEY_LEN,
+	CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO,
+	CRYPTO_WRAPPER_ERR_PUB_KEY_DECODE,
+} crypto_wrapper_err_t;
 
 /* *INDENT-OFF* */
 #endif /* _ENCLAVE_ERR_H */

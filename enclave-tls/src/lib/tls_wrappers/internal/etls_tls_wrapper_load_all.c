@@ -15,7 +15,7 @@ int tls_wrapper_cmp(const void *a, const void *b)
 
 enclave_tls_err_t etls_tls_wrapper_load_all(void)
 {
-	ETLS_DEBUG("etls_tls_wrapper_load_all() called\n");
+	ETLS_DEBUG("called\n");
 
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
 
