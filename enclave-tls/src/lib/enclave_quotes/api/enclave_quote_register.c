@@ -2,14 +2,12 @@
 #include <string.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
-
 #include "internal/enclave_quote.h"
 
 /* *INDENT-OFF* */
 enclave_quote_err_t enclave_quote_register(const enclave_quote_opts_t *opts)
 {
-	ETLS_DEBUG("enclave_quote_register() called with quote type: '%s'\n",
-		   opts->type);
+	ETLS_DEBUG("called with enclave quote '%s'\n", opts->type);
 
 	enclave_quote_opts_t *new_opts =
 		(enclave_quote_opts_t *) malloc(sizeof(*new_opts));

@@ -8,7 +8,7 @@ package main
 
 #include <enclave-tls/api.h>
 
-extern int ra_tls_echo(int, enclave_tls_log_level_t, char*, char*, char*);
+extern int ra_tls_echo(int, enclave_tls_log_level_t, char *, char *, char *, char *);
 */
 import "C"
 import (
@@ -44,16 +44,20 @@ EXAMPLE:
 			Usage: "set the level of log output",
 		},
 		cli.StringFlag{
-			Name:  "attester-type",
-			Usage: "set the type of quote attester instance",
+			Name:  "attester",
+			Usage: "set the type of quote attester",
 		},
 		cli.StringFlag{
-			Name:  "verifier-type",
-			Usage: "set the type of quote verifier instance",
+			Name:  "verifier",
+			Usage: "set the type of quote verifier",
 		},
 		cli.StringFlag{
-			Name:  "tls-type",
-			Usage: "set the type of TLS Lib",
+			Name:  "tls",
+			Usage: "set the type of tls wrapper",
+		},
+		cli.StringFlag{
+			Name:  "crypto",
+			Usage: "set the type of crypto wrapper",
 		},
 	},
 	SkipArgReorder: true,
@@ -70,9 +74,10 @@ EXAMPLE:
 			logLevel = C.ENCLAVE_TLS_LOG_LEVEL_INFO
 		}
 
-		attesterType := cliContext.String("attester-type")
-		verifierType := cliContext.String("verifier-type")
-		tlsType := cliContext.String("tls-type")
+		attester := cliContext.String("attester")
+		verifier := cliContext.String("verifier")
+		tls := cliContext.String("tls")
+		crypto := cliContext.String("crypto")
 
 		conn, err := net.Dial("unix", addr)
 		if err != nil {
@@ -90,7 +95,7 @@ EXAMPLE:
 			return err
 		}
 
-		C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attesterType), C.CString(verifierType), C.CString(tlsType))
+		C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto))
 		return nil
 	},
 }

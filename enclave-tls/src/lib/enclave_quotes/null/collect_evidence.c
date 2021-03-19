@@ -7,7 +7,8 @@ enclave_quote_err_t null_collect_evidence(enclave_quote_ctx_t *ctx,
 					  enclave_tls_cert_algo_t algo,
 					  uint8_t *hash)
 {
-	ETLS_DEBUG("enclave_quote_null collect_evidence() is called\n");
+	ETLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n",
+		   ctx, evidence, algo, hash);
 
 	return ENCLAVE_QUOTE_ERR_NONE;
 }

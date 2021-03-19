@@ -6,7 +6,7 @@
 /* *INDENT-OFF* */
 tls_wrapper_err_t wolfssl_cleanup(tls_wrapper_ctx_t *ctx)
 {
-	ETLS_DEBUG("tls_wrapper_wolfssl cleanup() called\n");
+	ETLS_DEBUG("called\n");
 
 	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private;
 

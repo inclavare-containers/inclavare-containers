@@ -3,7 +3,6 @@
 #include <dirent.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
-
 #include "internal/enclave_quote.h"
 
 int enclave_quote_cmp(const void *a, const void *b)
@@ -14,7 +13,7 @@ int enclave_quote_cmp(const void *a, const void *b)
 
 enclave_tls_err_t etls_enclave_quote_load_all(void)
 {
-	ETLS_DEBUG("etls_enclave_quote_load_all() called\n");
+	ETLS_DEBUG("called\n");
 
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
 

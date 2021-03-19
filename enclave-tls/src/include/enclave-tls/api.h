@@ -6,11 +6,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-
 #include <enclave-tls/err.h>
 
 #define TLS_TYPE_NAME_SIZE      32
 #define QUOTE_TYPE_NAME_SIZE    32
+#define CRYPTO_TYPE_NAME_SIZE   32
 #define ENCLAVE_SGX_SPID_LENGTH 16
 #define SHA256_HASH_SIZE        32
 
@@ -19,18 +19,18 @@ typedef enum {
 	ENCLAVE_TLS_LOG_LEVEL_INFO,
 	ENCLAVE_TLS_LOG_LEVEL_WARN,
 	ENCLAVE_TLS_LOG_LEVEL_ERROR,
-	ENCLAVE_TLS_LOG_LEVEL_DEFAULT = ENCLAVE_TLS_LOG_LEVEL_ERROR,
 	ENCLAVE_TLS_LOG_LEVEL_FATAL,
 	ENCLAVE_TLS_LOG_LEVEL_NONE,
-	ENCLAVE_TLS_LOG_LEVEL_MAX
+	ENCLAVE_TLS_LOG_LEVEL_MAX,
+	ENCLAVE_TLS_LOG_LEVEL_DEFAULT = ENCLAVE_TLS_LOG_LEVEL_DEBUG
 } enclave_tls_log_level_t;
 
 typedef struct etls_core_context_t *enclave_tls_handle;
 
 typedef enum {
 	ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
+	ENCLAVE_TLS_CERT_ALGO_MAX,
 	ENCLAVE_TLS_CERT_ALGO_DEFAULT = ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
-	ENCLAVE_TLS_CERT_ALGO_MAX
 } enclave_tls_cert_algo_t;
 
 /* FIXME: add the type of ecdsa verification */
@@ -47,6 +47,7 @@ typedef struct {
 	char tls_type[TLS_TYPE_NAME_SIZE];
 	char attester_type[QUOTE_TYPE_NAME_SIZE];
 	char verifier_type[QUOTE_TYPE_NAME_SIZE];
+	char crypto_type[CRYPTO_TYPE_NAME_SIZE];
 	enclave_tls_cert_algo_t cert_algo;
 
 	/* FIXME: SGX EPID quote type specific parameters */
