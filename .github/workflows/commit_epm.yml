@@ -22,7 +22,7 @@ jobs:
 
     - name: Create container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
+        rune_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
     - name: Build install packages and run epm service

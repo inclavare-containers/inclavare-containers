@@ -26,7 +26,7 @@ jobs:
         if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
           rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.2)
         else
-          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/sgx/enclave --device /dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.2)
+          rune_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:centos8.2)
         fi;
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
