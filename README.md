@@ -92,7 +92,7 @@ sudo make install
 
 If you don't want to build and install Inclavare Containers from latest source code. We also provide RPM/DEB repository to help you install Inclavare Containers quickly. Please see the [steps about how to configure repository](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#1-add-inclavare-containers-repository) firstly. Then you can run the following command to install Inclavare Containers on your system.
 
-- On CentOS 8.1
+- On CentOS 8.2
 
 ```shell
 sudo yum install rune shim-rune epm sgx-tools

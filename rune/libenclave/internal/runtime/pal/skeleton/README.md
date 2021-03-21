@@ -24,12 +24,12 @@ Outline as follows:
 
 - Ensure that you have one of the following required operating systems:
 
-  - CentOS 8.1
+  - CentOS 8.2
   - Ubuntu 18.04-server
 
 - Please follow [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.11/docs/Intel_SGX_Installation_Guide_Linux_2.11_Open_Source.pdf) to install Intel SGX driver, Intel SGX SDK & PSW for Linux.
 
-  - For CentOS 8.1, UAE service libraries are needed but may not installed if SGX PSW installer is used. Please manually install it:
+  - For CentOS 8.2, UAE service libraries are needed but may not installed if SGX PSW installer is used. Please manually install it:
 
     ```shell
     rpm -i libsgx-uae-service-2.11.100.2-1.el8.x86_64.rpm
@@ -83,7 +83,7 @@ Type the following commands to create a Dockerfile:
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 cat >Dockerfile <<EOF
-FROM centos:8.1.1911
+FROM centos:8.2.2004
 
 RUN mkdir -p /run/rune
 WORKDIR /run/rune

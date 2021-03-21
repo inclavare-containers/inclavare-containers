@@ -6,7 +6,7 @@ This page shows how to create a single control-plane Kubernetes and install the 
 - A machine with Intel SGX hardware support.
 - Make sure you have one of the following operating systems:
    - Ubuntu 18.04 server 64bits
-   - CentOS 8.1 64bits
+   - CentOS 8.2 64bits
    
 ## Objectives
 

@@ -95,7 +95,7 @@ jobs:
         wamrc -sgx -o test.aot test.wasm"
 
         docker exec wamr bash -c "cat <<- EOF >/root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample/Dockerfile
-        FROM centos:8.1.1911
+        FROM centos:8.2.2004
         RUN mkdir -p /run/rune
         WORKDIR /run/rune
         COPY enclave.signed.so .
