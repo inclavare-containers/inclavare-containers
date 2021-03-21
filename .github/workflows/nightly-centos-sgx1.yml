@@ -44,10 +44,11 @@ jobs:
         sudo rm -fr /etc/inclavare-containers/
         sudo rm -rf ~/.kube/
         sudo rm -rf /etc/kubernetes
-        sudo rm -fr /etc/epm
         sudo rm -fr /var/lib/etcd
         sudo rm -f /etc/yum.repos.d/occlum.repo
         sudo rm -f /etc/yum.repos.d/kubernetes.repo
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/run/epm
         sudo rm -fr /var/local/epm
         sudo ip link set cni0 down || true
         sudo ip link delete cni0 || true
@@ -433,10 +434,11 @@ jobs:
         sudo rm -fr /etc/inclavare-containers/
         sudo rm -rf ~/.kube/
         sudo rm -rf /etc/kubernetes
-        sudo rm -fr /etc/epm
         sudo rm -fr /var/lib/etcd
         sudo rm -f /etc/yum.repos.d/occlum.repo
         sudo rm -f /etc/yum.repos.d/kubernetes.repo
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/run/epm
         sudo rm -fr /var/local/epm
         sudo ip link set cni0 down || true
         sudo ip link delete cni0 || true
