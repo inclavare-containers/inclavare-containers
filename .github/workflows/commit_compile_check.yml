@@ -9,7 +9,7 @@ jobs:
     container: inclavarecontainers/test:${{ matrix.tag }}
     strategy:
       matrix:
-        tag: [compile-check-ubuntu18.04, compile-check-centos8.1]
+        tag: [compile-check-ubuntu18.04, compile-check-centos8.2]
     steps:
     - uses: actions/checkout@v1
 

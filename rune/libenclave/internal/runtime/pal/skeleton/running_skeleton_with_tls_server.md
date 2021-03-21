@@ -48,7 +48,7 @@ Type the following commands to create a Dockerfile:
 cp /etc/ssl/certs/ca-certificates.crt ./
 cp ${path_to_inclavare_containers}/ra-tls/build/bin/Wolfssl_Enclave.signed.so ./
 cat >Dockerfile <<EOF
-FROM centos:8.1.1911
+FROM centos:8.2.2004
 
 WORKDIR /
 
@@ -59,7 +59,7 @@ COPY ca-certificates.crt /etc/ssl/certs/
 EOF
 ```
 
-If your host system is CentOS 8.1, please copy the `/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt` rather than `/etc/ssl/certs/ca-certificates.crt` to the skeleton docker image.
+If your host system is CentOS 8.2, please copy the `/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt` rather than `/etc/ssl/certs/ca-certificates.crt` to the skeleton docker image.
 
 Then build the skeleton docker image with the command:
 
@@ -80,7 +80,7 @@ cp /usr/lib64/libsgx_pce.signed.so ./
 cp /usr/lib64/libsgx_qe3.signed.so ./
 
 cat >Dockerfile <<EOF
-FROM centos:8.1.1911
+FROM centos:8.2.2004
 
 WORKDIR /
 
@@ -106,7 +106,7 @@ Type the following commands to create a Dockerfile:
 ```Shell
 cp ${path_to_inclavare_containers}/ra-tls/build/bin/Wolfssl_Enclave.signed.so ./
 cat >Dockerfile <<EOF
-FROM centos:8.1.1911
+FROM centos:8.2.2004
 
 WORKDIR /
 

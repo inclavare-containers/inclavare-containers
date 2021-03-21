@@ -7,7 +7,7 @@ This page shows how to develop a "Hello World" application, build a "Hello World
 - You need to have a Kubernetes cluster and the nodes' hardware in the cluster must support Intel SGX. If you do not already have a cluster, you can create one following the documentation [Create a confidential computing Kubernetes cluster with inclavare-containers](create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md).
 - Make sure you have one of the following operating systems:
 	- Ubuntu 18.04 server 64bits
-	- CentOS 8.1 64bits
+	- CentOS 8.2 64bits
 
 ## Objectives
 
@@ -37,14 +37,14 @@ You can choose one suitable occlum SDK image from the list in [this page](https:
       - command:
         - sleep
         - infinity
-        image: docker.io/occlum/occlum:0.20.0-centos8.1
+        image: docker.io/occlum/occlum:0.21.0-centos8.2
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
         name: occlum-app-builder
     EOF
     ```
-    This will create a Pod with image `docker.io/occlum/occlum:0.20.0-centos8.1` and the filed `securityContext.privileged` should be set to `true`  in order to build and push docker image in container.<br />
+    This will create a Pod with image `docker.io/occlum/occlum:0.21.0-centos8.2` and the filed `securityContext.privileged` should be set to `true`  in order to build and push docker image in container.<br />
 
 - Step 2. Wait for the pod status to `Ready`
 
