@@ -6,11 +6,12 @@ on:
     types: labeled
 
 jobs:
-  rune_epm:
+  rune_skeleton:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
-    runs-on: [self-hosted, SGX2]
+    runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
+        sgx: [[self-hosted, SGX2]]
         tag: [ubuntu18.04, centos8.2]
     steps:
     - uses: actions/checkout@v2
@@ -18,45 +19,146 @@ jobs:
         ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
     - name: Prepare work
-      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
 
-    - name: Create container
+    - name: Create inclavare development container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
-        echo "rune_test=$rune_test" >> $GITHUB_ENV
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-centos8.2 inclavare-dev:centos8.2;
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-ubuntu18.04 inclavare-dev:ubuntu18.04;
+        inclavare_dev=$(docker run -itd --privileged --rm --net host -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
+        echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
 
-    - name: Build install packages and run epm service
-      run: |
-        docker exec $rune_test bash -c "mkdir -p /var/run/epm;
-        mkdir -p /etc/epm;
-        mkdir -p /var/local/epm;
-        cp -r /root/inclavare-containers /root/inclavare-containers-test;
-        cp /root/inclavare-containers-test/epm/conf/config.toml /etc/epm/;
-        cd /root/inclavare-containers-test;
-        find ./ -name *.pb.go | xargs -I files touch files;
-        make -j${CPU_NUM} && make install -j${CPU_NUM}";
-        docker exec $rune_test bash -c "epm &"
+    - name: Build rpm packages
+      if: ${{ contains(matrix.tag, 'centos') }}
+      run: docker exec $inclavare_dev bash -c "cd /root && source /etc/profile;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
+        cp -f /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES;
+        find ./ -path '*dist/Makefile' | xargs -I files sed -i '16 d' files;
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
+        mv *.rpm /root/inclavare-containers"
+
+    - name: Build deb packages
+      if: ${{ contains(matrix.tag, 'ubuntu') }}
+      run: docker exec $inclavare_dev bash -c "cd /root;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd inclavare-containers-$RUNE_VERSION;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
+        make package -j${CPU_NUM};
+        mv *.deb /root/inclavare-containers"
 
     - name: Start docker daemon
       run: |
-        if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
-          docker exec $rune_test bash -c "service docker start"
-        else
-          docker exec $rune_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
-        fi;
+        docker exec $inclavare_dev bash -c "dockerd -b docker0 --storage-driver=vfs &"
 
     - name: Build skeleton docker image
-      run: docker exec $rune_test bash -c "cd /root/inclavare-containers-test/rune/libenclave/internal/runtime/pal/skeleton;
-        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /usr/lib;
-        docker build . -t skeleton-enclave -f /root/Dockerfile-skeleton"
+      run: |
+        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
+        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /root/inclavare-containers/${{ matrix.tag }};
+        mv /root/docker-18.09.7.tgz /root/inclavare-containers/${{ matrix.tag }};
+        mv /etc/docker/daemon.json /root/inclavare-containers/${{ matrix.tag }}"
+        
+        docker exec $inclavare_dev bash -c "cat >Dockerfile <<-EOF
+        FROM scratch
+        
+        COPY encl.bin /
+        COPY encl.ss /
+        
+        ENTRYPOINT [\"dummy\"]
+        EOF"
+       
+        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
+        docker build . -t skeleton-enclave -f /root/Dockerfile;
+        cd /root/inclavare-containers/${{ matrix.tag }};
+        docker save -o skeleton-enclave.tar skeleton-enclave"
+    
+    - name: Kill the dev container
+      run: docker stop $inclavare_dev
+
+    - name: Build ubuntu runtime testing container
+      if: ${{ contains(matrix.tag, 'ubuntu') }}
+      run: |
+        cat >$GITHUB_WORKSPACE/Dockerfile-ubuntu-systemd <<-EOF
+        FROM ubuntu:18.04
+
+        RUN apt-get update -y && apt-get install -y systemd
+        EOF
+
+        docker build -t ubuntu-systemd:18.04 . -f $GITHUB_WORKSPACE/Dockerfile-ubuntu-systemd
+        docker tag ubuntu-systemd:18.04 inclavare-test:ubuntu18.04
+   
+    - name: Build centos runtime testing container
+      if: ${{ contains(matrix.tag, 'centos') }}
+      run: |        
+        cat >$GITHUB_WORKSPACE/Dockerfile-centos-systemd <<-EOF
+        FROM centos:8.2.2004
+
+        RUN yum install -y systemd
+        EOF
+
+        docker build -t centos-systemd:8.2.2004 . -f $GITHUB_WORKSPACE/Dockerfile-centos-systemd
+        docker tag centos-systemd:8.2.2004 inclavare-test:centos8.2
+
+    - name: Create runtime testing container
+      run: |
+        inclavare_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }} /sbin/init);
+        echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
+
+    - name: Install runtime dependency
+      if: always()
+      run : docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+        mv liberpal-skeleton-v*.so /usr/lib; 
+        tar -zxvf docker-18.09.7.tgz;
+        mv docker/* /usr/bin;
+        rm -rf docker;
+        mkdir -p /etc/docker;
+        mv daemon.json /etc/docker'
+
+    - name: Install ubuntu dependency
+      if: ${{ contains(matrix.tag, 'ubuntu') }}
+      run: docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget iptables gnupg libprotobuf-c1 libbinutils;
+        echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -; 
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+        cd /root/inclavare-containers;
+        dpkg -i *.deb'
+
+    - name: Install centos dependency
+      if: ${{ contains(matrix.tag, 'centos') }}
+      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+        yum -y install yum-utils wget iptables protobuf-c;
+        wget  -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
+        tar xzf sgx_rpm_local_repo.tgz;
+        yum-config-manager --add-repo sgx_rpm_local_repo;
+        yum makecache;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+        rm -f sgx_rpm_local_repo.tgz;
+        cd /root/inclavare-containers;
+        rpm -ivh *.rpm'
+        
+    - name: Start docker daemon
+      run: |
+        docker exec $inclavare_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+
+    - name: Load docker image
+      run: |
+        docker exec $inclavare_test bash -c "cd /root/inclavare-containers//${{ matrix.tag }};
+        docker load -i skeleton-enclave.tar;
+        rm -f skeleton-enclave.tar"
 
     - name: Run skeleton v3 with epm
       if: always()
-      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
+      run: docker exec $inclavare_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL=info skeleton-enclave"
 
     - name: Run skeleton v3 bundle with epm
       run: |
-        docker exec $rune_test bash -c "mkdir rootfs;
+        docker exec $inclavare_test bash -c "mkdir rootfs;
         docker create --name skeleton-enclave skeleton-enclave;
         docker export skeleton-enclave | tar -C rootfs -xvf -;
         cp /etc/resolv.conf rootfs/etc/resolv.conf;
@@ -71,12 +173,12 @@ jobs:
 
     - name: Run skeleton v3 with no epm
       if: always()
-      run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug,no-epm -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
+      run: docker exec $inclavare_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug,no-epm -e ENCLAVE_RUNTIME_LOGLEVEL=info skeleton-enclave"
 
     - name: Run skeleton v3 bundle with no epm
       run: |
-        docker exec $rune_test bash -c "sed -i '143 c \"enclave.runtime.args\": \"debug,no-epm\",' config.json;
+        docker exec $inclavare_test bash -c "sed -i '143 c \"enclave.runtime.args\": \"debug,no-epm\",' config.json;
         rune --debug run ra"
 
-    - name: Kill the container
-      run: docker stop $rune_test
+    - name: Kill the test container
+      run: docker stop $inclavare_test
