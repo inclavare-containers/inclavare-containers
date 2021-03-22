@@ -76,7 +76,7 @@ jobs:
         rune --debug run ra"
 
     - name: Generate skeleton ra config.json
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: | 
         docker exec $rune_test bash -c "sed -i '161,163d' config.json;
         sed -i 's/\/var\/run\/rune\/liberpal-skeleton-v2.so/\/usr\/lib\/liberpal-skeleton-v3.so/g' config.json;
@@ -87,11 +87,11 @@ jobs:
         sed -i '144 a \"enclave.attestation.ra_type\":\"EPID\",' config.json"
 
     - name: Run skeleton v3 bundle
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: docker exec $rune_test bash -c "rune --debug run skeleton-enclave-container" &
 
     - name: Wait RA containers Running with rune list command
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       timeout-minutes: 2
       run: |
         docker exec $rune_test bash -c "while true; do
@@ -104,15 +104,15 @@ jobs:
         done"
 
     - name: Get local report with rune attest command
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: docker exec $rune_test bash -c "rune --debug attest --reportFile=/report.bin --quote-type=epidUnlinkable skeleton-enclave-container"
 
     - name: Get remote report with rune attest command
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: docker exec $rune_test bash -c "rune --debug attest --isRA --quote-type=epidUnlinkable --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
 
     - name: Kill RA containers with rune kill command
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       timeout-minutes: 3
       run: |
         docker exec $rune_test bash -c "
@@ -133,17 +133,17 @@ jobs:
         fi"
 
     - name: Get target info with sgx-tools
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: docker exec $rune_test bash -c "cd rootfs;
         sgx-tools -verbose gen-qe-target-info --quote-type=epidUnlinkable"
 
     - name: Get quote with sgx-tools
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: docker exec $rune_test bash -c "cd rootfs;
         sgx-tools -verbose gen-quote --report report.bin --spid=${{ secrets.SPID }} --quote-type=epidUnlinkable"
 
     - name: Verify quote with sgx-tools
-      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: docker exec $rune_test bash -c "cd rootfs;
         sgx-tools -verbose verify-quote --quote-type=epidUnlinkable --quote quote.bin --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }}"
 
