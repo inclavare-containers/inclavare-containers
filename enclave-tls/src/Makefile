@@ -24,6 +24,12 @@ libenclave_tls := $(notdir $(Enclave_Tls_Lib))
 crypto_wrappers := $(addsuffix .so,$(addprefix libcrypto_wrapper_,nullcrypto wolfcrypt))
 tls_wrappers := $(addsuffix .so,$(addprefix libtls_wrapper_,nulltls wolfssl))
 enclave_quotes := $(addsuffix .so,$(addprefix libenclave_quote_,nullquote))
+
+ifdef OCCLUM
+  Enclave_Tls_Cflags += -DOCCLUM
+  enclave_quotes += $(addsuffix .so,$(addprefix libenclave_quote_,sgx-ecdsa))
+endif
+
 ifdef SGX
   crypto_wrappers += $(addsuffix .so,$(addprefix libcrypto_wrapper_,wolfcrypt-sgx))
   tls_wrappers += $(addsuffix .so,$(addprefix libtls_wrapper_,wolfssl-sgx))

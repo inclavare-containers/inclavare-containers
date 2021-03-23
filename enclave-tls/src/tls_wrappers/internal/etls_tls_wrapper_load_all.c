@@ -5,6 +5,10 @@
 #include <enclave-tls/log.h>
 #include "internal/tls_wrapper.h"
 
+#ifdef OCCLUM
+  #define PATTERN_SUFFIX          ".so"
+#endif
+
 static int tls_wrapper_cmp(const void *a, const void *b)
 {
 	return (*(tls_wrapper_ctx_t **)b)->opts->priority -
@@ -28,7 +32,12 @@ enclave_tls_err_t etls_tls_wrapper_load_all(void)
 		    !strcmp(ptr->d_name, ".."))
 			continue;
 
-		if (ptr->d_type == DT_REG) {
+#ifdef OCCLUM
+		/* Occlum can't identify the d_type of the file, always return DT_UNKNOWN */
+		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)) == 0) {
+#else
+			if (ptr->d_type == DT_REG) {
+#endif
 			if (etls_tls_wrapper_load_single(ptr->d_name) == ENCLAVE_TLS_ERR_NONE)
 				++total_loaded;
 		}

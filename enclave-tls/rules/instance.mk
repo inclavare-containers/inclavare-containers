@@ -81,7 +81,9 @@ ifeq ($(Sgx_Enclave),1)
     #Dependencies := $(Build_Libdir)/libwolfssl_sgx.a $(Dependencies)
     Build_Instance_Dependencies := $(Build_Libdir)/libwolfssl_sgx.a
   endif
-  Build_Instance_Dependencies += $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o
+  ifndef OCCLUM
+    Build_Instance_Dependencies += $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o
+  endif
 endif
 ifeq ($(Tls_Wolfssl),1)
   Build_Instance_Dependencies += $(Build_Libdir)/libwolfssl.so
