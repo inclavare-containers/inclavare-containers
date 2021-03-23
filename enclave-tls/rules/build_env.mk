@@ -91,6 +91,10 @@ endif
 
 CFLAGS ?= -std=gnu11 -fPIC
 CXXFLAGS ?= -std=c++11 -fPIC
+ifdef OCCLUM
+  CFLAGS += -DOCCLUM
+  CXXFLAGS += -DOCCLUM
+endif
 ifeq ($(DEBUG),1)
   CFLAGS += -ggdb -O0
   CXXFLAGS += -ggdb -O0
