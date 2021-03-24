@@ -13,44 +13,64 @@ PCK certificate provided by Intel provisioning service for SBX platforms.
 
 # Solution
 
-The modified QVL applied to this patch at least allows the user to
+The modified QVL/QVE applied to this patch at least allows the user to
 verify the quote rooting to Intel Root CA certificate for SBX platforms.
 In order to minimize the influence, it is recommended to run applications
-(taken QuoteVerificationSample as example) using the modified QVL
-(libsgx_dcap_quoteverify.so.1) with the following method:
+(taken QuoteVerificationSample as example) using the modified QVL/QVE
+(libsgx_dcap_quoteverify.so.1/libsgx_qve.signed.so) with the following
+ethod:
 
 ```shell
-cd $PATH_TO_DCAP_SOURCE
-git am $PATH_TO_INCLAVARE/hack/use-sbx-platform/0001-QVL-allow-to-use-SBX-platform.patch 
+# Re-configure Intel PCCS with SBX support
+sudo sed -i 's/api.trustedservices.intel.com/sbx.api.trustedservices.intel.com/' /opt/intel/sgx-dcap-pccs/config/default.json
+sudo systemctl restart pccs
+# apply the patch
+cd $PATH_TO_SGX_SDK_SOURCE/external/dcap_source
+git am $PATH_TO_INCLAVARE/hack/use-sbx-platform/0001-QVL-QVE-allow-to-use-SBX-platform.patch
 source /opt/intel/sgxsdk/environment
-cd $PATH_TO_DCAP_SOURCE/SampleCode/QuoteGenerationSample
+# generate quote
+cd $PATH_TO_SGX_SDK_SOURCE/external/dcap_source/SampleCode/QuoteGenerationSample
 make clean && make
 SGX_AESM_ADDR=1 ./app
-cd $PATH_TO_DCAP_SOURCE/QuoteVerification/dcap_quoteverify/linux
+# rebuild QVL/QVE with SBX support
+cd ../../QuoteVerification
 make clean
 USE_SBX_PLATFORM=1 make
-cd ../../../SampleCode/QuoteVerificationSample
-make clean
-make
-LD_LIBRARY_PATH=$PATH_TO_DCAP_SOURCE/QuoteVerification/dcap_quoteverify/linux:$LD_LIBRARY_PATH ./app
+# replace with modified QVL/QVE
+sudo cp -f dcap_quoteverify/linux/libsgx_dcap_quoteverify.so.1 /usr/lib64/libsgx_dcap_quoteverify.so.1.*
+sudo ldconfig
+sudo cp -f QvE/libsgx_qve.signed.so /usr/lib64
+# replace the original
+make clean -C dcap_tvl
+USE_SBX_PLATFORM=1 make -C dcap_tvl
+sudo cp -f dcap_tvl/libsgx_dcap_tvl.a /opt/intel/sgxsdk/lib64
+# verify quote
+cd ../SampleCode/QuoteVerificationSample
+make clean && make
+./app
 ```
+
+Note: QVE (libsgx_qve.signed.so) is signed by the testing key. So don't use this modified QVE in product.
 
 # Validation
 
 You will get the following result:
 
 ```
+Info: ECDSA quote path: ../QuoteGenerationSample/quote.dat
+
+Trusted quote verification:
+	Info: get target info successfully returned.
+	Info: sgx_qv_set_enclave_load_policy successfully returned.
+	Info: sgx_qv_get_quote_supplemental_data_size successfully returned.
+	Info: App: sgx_qv_verify_quote successfully returned.
+	Info: Ecall: Verify QvE report and identity successfully returned.
+	Info: App: Verification completed successfully.
+
 ===========================================
 
 Untrusted quote verification:
-[load_qve ../sgx_dcap_quoteverify.cpp:209] Error, call sgx_create_enclave for QvE fail [load_qve], SGXError:200f.
-[sgx_qv_get_quote_supplemental_data_size ../sgx_dcap_quoteverify.cpp:527] Error, failed to load QvE.
-        Info: sgx_qv_get_quote_supplemental_data_size successfully returned.
-[load_qve ../sgx_dcap_quoteverify.cpp:209] Error, call sgx_create_enclave for QvE fail [load_qve], SGXError:200f.
-[sgx_qv_get_quote_supplemental_data_size ../sgx_dcap_quoteverify.cpp:527] Error, failed to load QvE.
-        Info: App: sgx_qv_verify_quote successfully returned.
-        Info: App: Verification completed successfully.
+	Info: sgx_qv_get_quote_supplemental_data_size successfully returned.
+	Info: App: sgx_qv_verify_quote successfully returned.
+	Info: App: Verification completed successfully.
 ```
-
-Please ignore the error messages about loading QvE failure, which is
-expected to retrieve the information of supplemental data from QvE.

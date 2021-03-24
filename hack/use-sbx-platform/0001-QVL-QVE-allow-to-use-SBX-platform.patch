@@ -1,7 +1,7 @@
-From 9ddf888865980f011ca458bf4d664a0947beaa04 Mon Sep 17 00:00:00 2001
+From cdda93a85d5cb2595284605a3162503d91fa7ee8 Mon Sep 17 00:00:00 2001
 From: Jia Zhang <zhang.jia@linux.alibaba.com>
 Date: Sat, 23 Jan 2021 21:59:10 +0800
-Subject: [PATCH] QVL: allow to use SBX platform
+Subject: [PATCH] QVL/QVE: allow to use SBX platform
 
 Both untrusted QVL and trusted QvE uses the built-in Intel Root CA
 certificate for product platforms to authenticate the root ca
@@ -11,7 +11,7 @@ This means the user cannot use QVL and QvE to verify the quote with
 the PCK certificate provided by Intel provisioning service for SBX
 platforms.
 
-The modified QVL applied to this patch at least allows the user to
+The modified QVL/QVE applied to this patch at least allows the user to
 verify the quote rooting to Intel Root CA certificate for SBX platforms.
 
 For the details about the usage of this patch, please refer to
@@ -19,10 +19,13 @@ https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platfor
 
 Signed-off-by: Jia Zhang <zhang.jia@linux.alibaba.com>
 ---
- QuoteVerification/QvE/Include/sgx_qve_def.h       | 4 ++++
- QuoteVerification/dcap_quoteverify/linux/Makefile | 5 +++++
- SampleCode/QuoteVerificationSample/Makefile       | 2 +-
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ QuoteVerification/QvE/Include/sgx_qve_def.h | 4 ++++
+ QuoteVerification/buildenv.mk               | 4 ++++
+ QuoteVerification/dcap_tvl/Makefile         | 5 +++++
+ QuoteVerification/dcap_tvl/sgx_dcap_tvl.cpp | 4 ++++
+ SampleCode/QuoteGenerationSample/Makefile   | 2 +-
+ SampleCode/QuoteVerificationSample/Makefile | 2 +-
+ 6 files changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/QuoteVerification/QvE/Include/sgx_qve_def.h b/QuoteVerification/QvE/Include/sgx_qve_def.h
 index a77eb8e..8fef95a 100644
@@ -40,29 +43,80 @@ index a77eb8e..8fef95a 100644
  
  #define UNUSED_PARAM(x) (void)(x)
  #define CHECK_MANDATORY_PARAMS(param, param_size) (param == NULL || param_size == 0)
-diff --git a/QuoteVerification/dcap_quoteverify/linux/Makefile b/QuoteVerification/dcap_quoteverify/linux/Makefile
-index 2d3b3e5..dcc390d 100644
---- a/QuoteVerification/dcap_quoteverify/linux/Makefile
-+++ b/QuoteVerification/dcap_quoteverify/linux/Makefile
-@@ -32,6 +32,8 @@
+diff --git a/QuoteVerification/buildenv.mk b/QuoteVerification/buildenv.mk
+index 2be0f90..8493a98 100644
+--- a/QuoteVerification/buildenv.mk
++++ b/QuoteVerification/buildenv.mk
+@@ -51,6 +51,7 @@ include $(CUR_DIR)/../QuoteGeneration/buildenv.mk
  
- include ../../buildenv.mk
+ MODE					?= HW
+ DEBUG					?= 0
++USE_SBX_PLATFORM			?=
+ DCAP_QG_DIR				:= $(ROOT_DIR)
+ DCAP_QV_DIR				:= $(DCAP_QG_DIR)/../QuoteVerification
+ QVL_SRC_PATH 			?= $(DCAP_QV_DIR)/QVL/Src
+@@ -60,6 +61,9 @@ PREBUILD_OPENSSL_PATH	?= $(DCAP_QV_DIR)/../prebuilt/openssl
+ SGX_COMMON_CFLAGS := $(COMMON_FLAGS) -m64 -Wjump-misses-init -Wstrict-prototypes -Wunsuffixed-float-constants
+ SGX_COMMON_CXXFLAGS := $(COMMON_FLAGS) -m64 -Wnon-virtual-dtor -std=c++14
+ 
++ifneq ($(USE_SBX_PLATFORM),)
++	SGX_COMMON_CXXFLAGS += -DUSE_SBX_PLATFORM=1
++endif
+ 
+ QVL_LIB_PATH := $(QVL_SRC_PATH)/AttestationLibrary
+ QVL_PARSER_PATH := $(QVL_SRC_PATH)/AttestationParsers
+diff --git a/QuoteVerification/dcap_tvl/Makefile b/QuoteVerification/dcap_tvl/Makefile
+index 74462e8..dc15a05 100644
+--- a/QuoteVerification/dcap_tvl/Makefile
++++ b/QuoteVerification/dcap_tvl/Makefile
+@@ -33,6 +33,8 @@
+ # include buildenv in linux trunk
+ include ../../../../buildenv.mk
  
 +USE_SBX_PLATFORM ?=
 +
- INSTALL_PATH 	?= /usr/lib/x86_64-linux-gnu
- QVE_SRC_PATH	:= $(DCAP_QV_DIR)/QvE
+ TVL_CPP_SRCS := $(wildcard *.cpp)
+ TVL_OBJS := $(TVL_CPP_SRCS:.cpp=.o)
  
-@@ -50,6 +52,9 @@ QVL_VERIFY_INC	:= -I$(QVE_SRC_PATH)/Include \
+@@ -52,6 +54,9 @@ else
+ 	BUILD_DIR := $(DCAP_DIR)/QuoteGeneration/build/linux
+ endif
  
- SGX_COMMON_CFLAGS	+= -fPIC -Wno-attributes -USGX_TRUSTED
- SGX_COMMON_CXXFLAGS += -fPIC -USGX_TRUSTED
 +ifneq ($(USE_SBX_PLATFORM),)
-+SGX_COMMON_CXXFLAGS += -DUSE_SBX_PLATFORM
++	SGX_COMMON_CXXFLAGS += -DUSE_SBX_PLATFORM=1
 +endif
  
- QVL_LIB_OBJS := $(QVL_LIB_FILES:.cpp=_untrusted.o)
- QVL_PARSER_OBJS := $(QVL_PARSER_FILES:.cpp=_untrusted.o)
+ ifneq ($(DEBUG), 1)
+     COMMON_FLAGS += -ffunction-sections -fdata-sections
+diff --git a/QuoteVerification/dcap_tvl/sgx_dcap_tvl.cpp b/QuoteVerification/dcap_tvl/sgx_dcap_tvl.cpp
+index 2a598cd..e6f5716 100644
+--- a/QuoteVerification/dcap_tvl/sgx_dcap_tvl.cpp
++++ b/QuoteVerification/dcap_tvl/sgx_dcap_tvl.cpp
+@@ -56,7 +56,11 @@ const std::string QVE_ATTRIBUTE = "01000000000000000000000000000000";
+ const std::string QVE_ATTRIBUTE_MASK = "FBFFFFFFFFFFFFFF0000000000000000";
+ 
+ //MRSIGNER of Intel signed QvE
++#ifndef USE_SBX_PLATFORM
+ const std::string QVE_MRSIGNER = "8C4F5775D796503E96137F77C68A829A0056AC8DED70140B081B094490C57BFF";
++#else
++const std::string QVE_MRSIGNER = "C87C2F0142180E15F48270A6B4CCC5B1B4E1569528C1080511591998F0714994";
++#endif
+ 
+ const sgx_prod_id_t QVE_PRODID = 2;
+ 
+diff --git a/SampleCode/QuoteGenerationSample/Makefile b/SampleCode/QuoteGenerationSample/Makefile
+index 1026fb5..3fda21a 100644
+--- a/SampleCode/QuoteGenerationSample/Makefile
++++ b/SampleCode/QuoteGenerationSample/Makefile
+@@ -69,7 +69,7 @@ endif
+ 
+ 
+ App_Cpp_Flags := $(App_C_Flags) -std=c++11
+-App_Link_Flags := $(SGX_COMMON_CFLAGS) -l$(DCAP_Library_Name) -l$(Urts_Library_Name) -l$(Uae_Library_Name) -ldl -lpthread
++App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(DCAP_Library_Name) -l$(Urts_Library_Name) -l$(Uae_Library_Name) -ldl -lpthread
+ 
+ 
+ App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
 diff --git a/SampleCode/QuoteVerificationSample/Makefile b/SampleCode/QuoteVerificationSample/Makefile
 index 752b28a..d54fd92 100644
 --- a/SampleCode/QuoteVerificationSample/Makefile
