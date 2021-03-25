@@ -1,0 +1,40 @@
+FROM registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux
+
+LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
+
+RUN yum clean all && yum install -y wget make libseccomp-devel openssl \ 
+    alinux-release-experimentals gcc git openssl-devel glibc-static \
+    binutils-devel protobuf-c-devel rpm-build yum-utils protobuf-c
+
+WORKDIR /root
+
+RUN mkdir /root/gopath
+
+# install go
+RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib && \
+    rm -rf go1.14.2.linux-amd64.tar.gz
+
+# configure GOPATH and GOROOT
+ENV GOROOT       /usr/lib/go
+ENV GOPATH       /root/gopath
+ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
+ENV GO111MODULE  on
+
+# install docker
+RUN yum install -y iptables && \
+    wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz && \
+    tar -zxvf docker-18.09.7.tgz && mv docker/* /usr/bin && rm -rf docker && rm docker-18.09.7.tgz
+
+# configure the rune runtime of docker
+RUN mkdir -p /etc/docker && \
+    echo -e "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t}\n}" >> /etc/docker/daemon.json
+
+# install SGX
+RUN [ ! -f sgx_rpm_local_repo.tar.gz ] && \
+    wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz && \
+    tar xzf sgx_rpm_local_repo.tar.gz && \
+    yum-config-manager --add-repo file:/root/sgx_rpm_local_repo && \
+    yum makecache && rm sgx_rpm_local_repo.tar.gz
+
+RUN yum install --nogpgcheck -y libsgx-uae-service libsgx-dcap-quote-verify-devel
