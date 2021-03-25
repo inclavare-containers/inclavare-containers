@@ -57,6 +57,10 @@ typedef struct tls_wrapper_opts_t {
 } tls_wrapper_opts_t;
 
 extern tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *);
+extern tls_wrapper_err_t
+tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tls_ctx,
+					 attestation_evidence_t *evidence,
+					 uint8_t *hash);
 
 #endif /* _ENCLAVE_TLS_WRAPPER_H */
 /* *INDENT-ON* */

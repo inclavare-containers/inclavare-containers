@@ -4,7 +4,7 @@ package main // import "github.com/inclavare-containers/inclavared"
 
 /*
 #cgo CFLAGS: -I../../src/include
-#cgo LDFLAGS: -L../../src -Wl,-rpath,'/opt/enclave-tls/lib' -lenclave_tls -lsgx_urts -lm
+#cgo LDFLAGS: -L../../build/lib -lenclave_tls -Wl,-rpath,/opt/enclave-tls/lib -lsgx_urts -lm
 
 #include <enclave-tls/api.h>
 

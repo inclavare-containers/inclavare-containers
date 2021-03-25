@@ -1,28 +1,49 @@
-TOPDIR := $(shell readlink -f .)
+Topdir := $(shell readlink -f .)
 
-export TOPDIR
+export Topdir
 
-include common.mk
+include $(Topdir)/rules/build_env.mk
 
-all: libenclave_tls.so $(BINDIR)/elv $(BINDIR)/ra-tls-server
+client_dir := $(Topdir)/samples/enclave-tls-client
+server_dir := $(Topdir)/samples/enclave-tls-server
+stub_dir := $(Topdir)/samples/sgx-stub-enclave
+dirs := $(Enclave_Tls_Srcdir) $(client_dir) $(server_dir) $(stub_dir)
 
-$(BINDIR)/elv: libenclave_tls.so
-	make -C $(CLIENT_DIR) && make -C $(CLIENT_DIR) install
+all: $(Build_Bindir)/enclave-tls-client $(Build_Bindir)/enclave-tls-server $(stub_dir)/sgx_stub_enclave.signed.so
+	make -C $(Enclave_Tls_Srcdir)
 
-$(BINDIR)/ra-tls-server: libenclave_tls.so
-	make -C $(SERVER_DIR) && make -C $(SERVER_DIR) install
+$(Build_Bindir)/enclave-tls-client:
+	make -C $(client_dir)
 
-libenclave_tls.so:
-	make -C $(SRCDIR) all
+$(Build_Bindir)/enclave-tls-server:
+	make -C $(server_dir)
 
-install:
-	make -C $(SRCDIR) install
+$(stub_dir)/sgx_stub_enclave.signed.so:
+	make -C $(stub_dir)
 
-uninstall:
-	rm -rf $(ENCLAVE_TLS_PREFIX)
+Cleans += $(Build_Dir)
+
+define clean_all
+  for d in $(dirs); do \
+    make -C $$d $@; \
+  done
+endef
+Clean_Cmds += clean_all
 
 clean:
-	make -C $(SRCDIR) clean
-	make -C $(CLIENT_DIR) clean
-	make -C $(SERVER_DIR) clean
-	rm -rf $(BINDIR)
+	@rm -rf $(Build_Dir)
+	for d in $(dirs); do \
+	  make -C $$d $@; \
+	done
+
+install: all
+	for d in $(dirs); do \
+	  make -C $$d $@ || exit 1; \
+	done
+
+uninstall:
+	for d in $(dirs); do \
+	  make -C $$d $@; \
+	done
+
+#include $(Topdir)/rules/build_rules.mk

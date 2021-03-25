@@ -38,6 +38,7 @@ typedef struct {
 struct enclave_quote_ctx {
 	enclave_quote_opts_t *opts;
 	void *quote_private;
+	unsigned long long eid;
 	enclave_tls_log_level_t log_level;
 	void *handle;
 	union {

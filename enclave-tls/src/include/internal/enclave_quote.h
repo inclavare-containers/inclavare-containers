@@ -6,7 +6,7 @@
 #include <enclave-tls/enclave_quote.h>
 #include "internal/core.h"
 
-#define ENCLAVE_QUOTES_PATH    "/opt/enclave-tls/lib/enclave_quotes"
+#define ENCLAVE_QUOTES_PATH    "/opt/enclave-tls/lib/enclave-quotes"
 
 extern enclave_tls_err_t etls_enclave_quote_load_all(void);
 extern enclave_tls_err_t etls_enclave_quote_load_single(const char *);
