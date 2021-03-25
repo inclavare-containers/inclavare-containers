@@ -1,13 +1,13 @@
 name: Run epm with skeleton
 
 # Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
-on:
-  pull_request_target:
-    types: labeled
+on: [push, pull_request]
+# pull_request_target:
+#  types: labeled
 
 jobs:
   rune_skeleton:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+      # if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
     runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
@@ -15,8 +15,8 @@ jobs:
         tag: [ubuntu18.04, centos8.2, alinux2]
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+      # with:
+      #  ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
     - name: Prepare work
       run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
