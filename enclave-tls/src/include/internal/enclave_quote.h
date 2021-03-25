@@ -13,12 +13,6 @@ extern enclave_tls_err_t etls_enclave_quote_load_single(const char *);
 extern enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *,
 						   const char *,
 						   enclave_tls_cert_algo_t);
-extern enclave_tls_err_t
-etls_enclave_quote_retrieve_certificate_extension(etls_core_context_t *,
-						  attestation_evidence_t *,
-						  enclave_tls_cert_algo_t algo,
-						  uint8_t *);
-
 extern enclave_quote_opts_t *enclave_quotes_opts[ENCLAVE_QUOTE_TYPE_MAX];
 extern enclave_quote_ctx_t *enclave_quotes_ctx[ENCLAVE_QUOTE_TYPE_MAX];
 extern unsigned int enclave_quote_nums;

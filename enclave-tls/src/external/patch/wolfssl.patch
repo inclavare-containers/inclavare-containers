@@ -1,18 +1,19 @@
-From 624b51ee4ba1b88aad6340fddf9b89e1c6c1a196 Mon Sep 17 00:00:00 2001
+From c8cfcd361f69c6571850562ef688c2023d799209 Mon Sep 17 00:00:00 2001
 From: Liang Yang <liang3.yang@intel.com>
 Date: Fri, 19 Feb 2021 19:46:31 +0800
-Subject: [PATCH] wolfssl-sgx patch
+Subject: [PATCH v1] wolfssl-sgx patch
 
 ---
  IDE/LINUX-SGX/sgx_t_static.mk  |   3 +-
  configure.ac                   |   2 +-
  m4/ax_vcs_checkout.m4          |   1 -
  pre-commit.sh                  |   6 +-
- wolfcrypt/src/asn.c            | 223 ++++++++++++++++++++++++++++++++-
+ wolfcrypt/src/asn.c            | 221 ++++++++++++++++++++++++++++++++-
  wolfssl/internal.h             |   2 +-
  wolfssl/wolfcrypt/asn_public.h |  18 +++
  wolfssl/wolfcrypt/settings.h   |   2 +
- 8 files changed, 248 insertions(+), 9 deletions(-)
+ wolfssl/wolfcrypt/wc_port.h    |   2 +-
+ 9 files changed, 247 insertions(+), 10 deletions(-)
 
 diff --git a/IDE/LINUX-SGX/sgx_t_static.mk b/IDE/LINUX-SGX/sgx_t_static.mk
 index 41ff666f2..1767078e2 100644
@@ -88,7 +89,7 @@ index 9c76f4b30..992ecfe2a 100755
  make -j 8 >/dev/null 2>&1
  
 diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
-index 12ada17af..b44a9369c 100644
+index 12ada17af..aac102f2c 100644
 --- a/wolfcrypt/src/asn.c
 +++ b/wolfcrypt/src/asn.c
 @@ -18,7 +18,7 @@
@@ -108,12 +109,18 @@ index 12ada17af..b44a9369c 100644
  
  #include <wolfssl/wolfcrypt/random.h>
  #include <wolfssl/wolfcrypt/hash.h>
-@@ -167,6 +168,21 @@ int tsip_tls_CertVerify(const byte *cert, word32 certSz,
+@@ -167,6 +168,7 @@ int tsip_tls_CertVerify(const byte *cert, word32 certSz,
                          word32 key_e_start, word32 key_e_len,
                          byte *tsip_encRsaKeyIdx);
  #endif
 +
-+#if defined(LA_REPORT) && defined(WOLFSSL_SGX)
+ int GetLength(const byte* input, word32* inOutIdx, int* len,
+                            word32 maxIdx)
+ {
+@@ -6458,6 +6460,18 @@ static WC_INLINE int DateLessThan(const struct tm* a, const struct tm* b)
+     return DateGreaterThan(b,a);
+ }
+ 
 +time_t XTIME(time_t* tloc) {
 +    time_t x = 1512498557; /* Dec 5, 2017, 10:29 PDT */
 +    if (tloc) *tloc = x;
@@ -125,12 +132,11 @@ index 12ada17af..b44a9369c 100644
 +    assert(0);
 +    return (time_t) 0;
 +}
-+#endif
 +
- int GetLength(const byte* input, word32* inOutIdx, int* len,
-                            word32 maxIdx)
- {
-@@ -11448,7 +11464,10 @@ int wc_PemPubKeyToDer(const char* fileName,
+ /* like atoi but only use first byte */
+ /* Make sure before and after dates are valid */
+ int wc_ValidateDate(const byte* date, byte format, int dateType)
+@@ -11448,7 +11462,10 @@ int wc_PemPubKeyToDer(const char* fileName,
  /* USER RSA ifdef portions used instead of refactor in consideration for
     possible fips build */
  /* Write a public RSA key to output */
@@ -142,7 +148,7 @@ index 12ada17af..b44a9369c 100644
                             int outLen, int with_header)
  {
  #ifdef WOLFSSL_SMALL_STACK
-@@ -11851,6 +11870,14 @@ typedef struct DerCert {
+@@ -11851,6 +11868,14 @@ typedef struct DerCert {
      byte extKeyUsage[MAX_EXTKEYUSAGE_SZ]; /* Extended Key Usage extension */
      byte certPolicies[MAX_CERTPOL_NB*MAX_CERTPOL_SZ]; /* Certificate Policies */
  #endif
@@ -157,7 +163,7 @@ index 12ada17af..b44a9369c 100644
  #ifdef WOLFSSL_CERT_REQ
      byte attrib[MAX_ATTRIB_SZ];        /* Cert req attributes encoded */
  #endif
-@@ -11873,6 +11900,14 @@ typedef struct DerCert {
+@@ -11873,6 +11898,14 @@ typedef struct DerCert {
      int  extKeyUsageSz;                /* encoded ExtendedKeyUsage extension length */
      int  certPoliciesSz;               /* encoded CertPolicies extension length*/
  #endif
@@ -172,7 +178,7 @@ index 12ada17af..b44a9369c 100644
  #ifdef WOLFSSL_ALT_NAMES
      int  altNamesSz;                   /* encoded AltNames extension length */
  #endif
-@@ -12736,7 +12771,16 @@ static int SetKeyUsage(byte* output, word32 outSz, word16 input)
+@@ -12736,7 +12769,16 @@ static int SetKeyUsage(byte* output, word32 outSz, word16 input)
                         ku, idx);
  }
  
@@ -190,7 +196,7 @@ index 12ada17af..b44a9369c 100644
      const byte* oid, word32 oidSz)
  {
      /* verify room */
-@@ -12750,6 +12794,53 @@ static int SetOjectIdValue(byte* output, word32 outSz, int* idx,
+@@ -12750,6 +12792,53 @@ static int SetOjectIdValue(byte* output, word32 outSz, int* idx,
      return 0;
  }
  
@@ -244,7 +250,7 @@ index 12ada17af..b44a9369c 100644
  /* encode Extended Key Usage (RFC 5280 4.2.1.12), return total bytes written */
  static int SetExtKeyUsage(Cert* cert, byte* output, word32 outSz, byte input)
  {
-@@ -13431,6 +13522,17 @@ static int SetValidity(byte* output, int daysValid)
+@@ -13431,6 +13520,17 @@ static int SetValidity(byte* output, int daysValid)
      localTime.tm_year += 1900;
      localTime.tm_mon +=    1;
  
@@ -262,7 +268,7 @@ index 12ada17af..b44a9369c 100644
      SetTime(&localTime, before + beforeSz);
      beforeSz += ASN_GEN_TIME_SZ;
  
-@@ -13450,6 +13552,15 @@ static int SetValidity(byte* output, int daysValid)
+@@ -13450,6 +13550,15 @@ static int SetValidity(byte* output, int daysValid)
      localTime.tm_year += 1900;
      localTime.tm_mon  +=    1;
  
@@ -278,7 +284,7 @@ index 12ada17af..b44a9369c 100644
      SetTime(&localTime, after + afterSz);
      afterSz += ASN_GEN_TIME_SZ;
  
-@@ -13751,6 +13862,65 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
+@@ -13751,6 +13860,65 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
      else
          der->certPoliciesSz = 0;
  #endif /* WOLFSSL_CERT_EXT */
@@ -344,7 +350,7 @@ index 12ada17af..b44a9369c 100644
  
      /* put extensions */
      if (der->extensionsSz > 0) {
-@@ -13828,6 +13998,53 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
+@@ -13828,6 +13996,53 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
                  return EXTENSIONS_E;
          }
  #endif /* WOLFSSL_CERT_EXT */
@@ -461,6 +467,19 @@ index 7e6fa8b06..1893b8c1f 100644
      #define HAVE_AESGCM
      #define USE_CERT_BUFFERS_2048
      #define USE_FAST_MATH
+diff --git a/wolfssl/wolfcrypt/wc_port.h b/wolfssl/wolfcrypt/wc_port.h
+index da89676bf..baf165f1b 100644
+--- a/wolfssl/wolfcrypt/wc_port.h
++++ b/wolfssl/wolfcrypt/wc_port.h
+@@ -876,7 +876,7 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
+     #ifdef TEST_BEFORE_DATE
+     #define XTIME(tl)       (946681200UL) /* Jan 1, 2000 */
+     #else
+-    #define XTIME(tl)       time((tl))
++    #define XTIME(tl)       time(tl)
+     #endif
+ #endif
+ #if !defined(XGMTIME) && !defined(TIME_OVERRIDES)
 -- 
 2.17.1
 

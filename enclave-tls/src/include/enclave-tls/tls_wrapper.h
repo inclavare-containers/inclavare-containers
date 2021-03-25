@@ -20,8 +20,14 @@
 #define ENCLAVE_QUOTE_TYPE_MAX              32
 
 typedef struct {
+	void *tls_wrapper_private;
+	void *userdata;
+	enclave_tls_conf_t config;
+} tls_wrapper_private_t;
+
+typedef struct {
 	struct tls_wrapper_opts_t *opts;
-	void *tls_private;
+	tls_wrapper_private_t  *tls_private;
 	unsigned long conf_flags;
 	enclave_tls_log_level_t log_level;
 	void *handle;

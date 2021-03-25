@@ -31,7 +31,7 @@ tls_wrapper_err_t wolfssl_init(tls_wrapper_ctx_t *ctx)
 		goto err_wolfssl_ctx;
 	}
 
-	ctx->tls_private = ws_ctx;
+	ctx->tls_private->tls_wrapper_private = ws_ctx;
 
 	return TLS_WRAPPER_ERR_NONE;
 

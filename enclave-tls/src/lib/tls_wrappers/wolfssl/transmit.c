@@ -9,7 +9,7 @@ tls_wrapper_err_t wolfssl_transmit(tls_wrapper_ctx_t *ctx, void *buf,
 {
 	ETLS_DEBUG("tls_wrapper_wolfssl transmit() called\n");
 
-	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private;
+	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private->tls_wrapper_private;
 	if (ws_ctx == NULL || ws_ctx->ssl == NULL)
 		return -TLS_WRAPPER_ERR_TRANSMIT;
 

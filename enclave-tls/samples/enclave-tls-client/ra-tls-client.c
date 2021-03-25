@@ -26,6 +26,7 @@ int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto);
+	conf.eid = 0;
 
 	ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE || !handle) {

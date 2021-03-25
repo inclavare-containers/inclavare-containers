@@ -12,6 +12,27 @@
 
 #include <enclave-tls/api.h>
 
+#include <sgx_urts.h>
+#include <sgx_quote.h>
+
+#define ENCLAVE_FILENAME "wolfssl_enclave.signed.so"
+
+static sgx_enclave_id_t load_enclave(void)
+{
+        sgx_launch_token_t t;
+        memset(t, 0, sizeof(t));
+
+        sgx_enclave_id_t id;
+        int updated = 0;
+        int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &id, NULL);
+        if (ret != SGX_SUCCESS) {
+                fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
+                return -1;
+        }
+
+        return id;
+}
+
 int ra_tls_server_startup(int connd, enclave_tls_log_level_t log_level,
 			  char *attester_type, char *verifier_type,
 			  char *tls_type, char *crypto)
@@ -27,6 +48,8 @@ int ra_tls_server_startup(int connd, enclave_tls_log_level_t log_level,
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto);
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
+
+	conf.eid = load_enclave();
 
 	ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {

@@ -1,0 +1,32 @@
+/* wolfssl_enclave.edl - Top EDL file. */
+enclave {
+	include "enclave-tls/api.h"
+	include "enclave-tls/tls_wrapper.h"
+	include "enclave-tls/cert.h"
+	include "wolfssl/ssl.h"
+
+	trusted {
+		public tls_wrapper_err_t enc_wolfssl_pre_init(void);
+		public tls_wrapper_err_t enc_wolfssl_init([user_check] tls_wrapper_ctx_t *ctx);
+		public tls_wrapper_err_t enc_wolfssl_use_privkey([user_check] tls_wrapper_ctx_t *ctx,
+							[in, size=privkey_len] void *privkey_buf, size_t privkey_len);
+		public tls_wrapper_err_t enc_wolfssl_use_cert([user_check] tls_wrapper_ctx_t *ctx,
+							[user_check] enclave_tls_cert_info_t *cert_info);
+		public tls_wrapper_err_t enc_wolfssl_negotiate([user_check] tls_wrapper_ctx_t *ctx, int fd);
+		public tls_wrapper_err_t enc_wolfssl_transmit([user_check] tls_wrapper_ctx_t *ctx, [user_check] void *buf,
+						[user_check] size_t *buf_size);
+		public tls_wrapper_err_t enc_wolfssl_receive([user_check] tls_wrapper_ctx_t *ctx, [user_check] void *buf,
+						[user_check] size_t *buf_size);
+		public tls_wrapper_err_t enc_wolfssl_cleanup([user_check] tls_wrapper_ctx_t *ctx);
+	};
+
+	untrusted {
+		/* define OCALLs here. */
+		int verify_certificate(int preverify, [user_check] WOLFSSL_X509_STORE_CTX *store);
+		void ocall_print_string([in, string] const char* str);
+		void ocall_current_time([out] double* time);
+		void ocall_low_res_time([out] int* time);
+		size_t ocall_recv(int sockfd, [out, size=len] void *buf, size_t len, int flags) propagate_errno;
+		size_t ocall_send(int sockfd, [in, size=len] const void *buf, size_t len, int flags) propagate_errno;
+	};
+};

@@ -68,7 +68,7 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 
 		t_err = ctx->tls_wrapper->opts->use_privkey(ctx->tls_wrapper,
 							    privkey_buf,
-							    &privkey_len);
+							    privkey_len);
 		if (t_err != TLS_WRAPPER_ERR_NONE)
 			return t_err;
 
