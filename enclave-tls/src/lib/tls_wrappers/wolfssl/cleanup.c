@@ -8,7 +8,7 @@ tls_wrapper_err_t wolfssl_cleanup(tls_wrapper_ctx_t *ctx)
 {
 	ETLS_DEBUG("called\n");
 
-	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private;
+	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private->tls_wrapper_private;
 
 	if (ws_ctx != NULL) {
 		if (ws_ctx->ssl != NULL)

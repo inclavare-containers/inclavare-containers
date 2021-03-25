@@ -8,6 +8,7 @@ ENCLAVE_QUOTES := $(LIBDIR)/enclave_quotes
 CRYPTO_WRAPPERS := $(LIBDIR)/crypto_wrappers
 INCDIR := $(TOPDIR)/src/include
 COMMONDIR := $(TOPDIR)/src/external
+WOLFSSL_ENCLAVE_DIR := $(TLS_WRAPPERS)/wolfssl-sgx/wolfssl-enclave
 
 MAJ_VERSION := 1
 MIN_VERSION := 0.0
@@ -22,6 +23,9 @@ NULL_ENCLAVE_QUOTE_C_FILES := $(wildcard $(ENCLAVE_QUOTES)/null/*.c)
 NULL_CRYPTO_WRAPPER_C_FILES := $(wildcard $(CRYPTO_WRAPPERS)/nullcrypto/*.c)
 WOLFSSL_TLS_WRAPPER_C_FILES := $(wildcard $(TLS_WRAPPERS)/wolfssl/*.c)
 WOLFCRYPT_WRAPPER_C_FILES := $(wildcard $(CRYPTO_WRAPPERS)/wolfcrypt/*.c)
+WOLFSSL_SGX_TLS_WRAPPER_C_FILES := $(wildcard $(TLS_WRAPPERS)/wolfssl-sgx/*.c) \
+	$(filter-out main.c, $(wildcard $(TLS_WRAPPERS)/wolfssl/*.c))
+WOLFSSL_SGX_ENCLAVE_WRAPPER_C_FILES := $(wildcard $(TLS_WRAPPERS)/wolfssl-sgx/wolfssl-enclave/*.c)
 
 CFLAGS += -I$(INCDIR) -fPIC
 
@@ -33,8 +37,12 @@ NULL_ENCLAVE_QUOTE_C_Objects := $(NULL_ENCLAVE_QUOTE_C_FILES:.c=.o)
 NULL_CRYPTO_WRAPPER_C_Objects := $(NULL_CRYPTO_WRAPPER_C_FILES:.c=.o)
 WOLFSSL_TLS_WRAPPER_C_Objects := $(patsubst %.c, %.o, $(WOLFSSL_TLS_WRAPPER_C_FILES))
 WOLFCRYPT_WRAPPER_C_Objects := $(patsubst %.c, %.o, $(WOLFCRYPT_WRAPPER_C_FILES))
+WOLFSSL_SGX_TLS_WRAPPER_C_Objects := $(patsubst %.c, %.o, $(WOLFSSL_SGX_TLS_WRAPPER_C_FILES))
+WOLFSSL_SGX_ENCLAVE_WRAPPER_C_Objects := $(patsubst %.c, %.o, $(WOLFSSL_SGX_ENCLAVE_WRAPPER_C_FILES))
 
-all: wolfssl libenclave_tls.so libtls_wrapper_null.so libenclave_quote_null.so libcrypto_wrapper_nullcrypto.so libtls_wrapper_wolfssl.so libcrypto_wrapper_wolfcrypt.so
+objs := $(WOLFSSL_ENCLAVE_DIR)/wolfssl_enclave_u.o
+tlibs:= libtls_wrapper_wolfssl_sgx.a wolfssl_enclave.signed.so
+all: wolfssl $(objs) $(tlibs) libenclave_tls.so libtls_wrapper_null.so libenclave_quote_null.so libcrypto_wrapper_nullcrypto.so libtls_wrapper_wolfssl.so libcrypto_wrapper_wolfcrypt.so libtls_wrapper_wolfssl_sgx.so
 
 libenclave_tls.so: $(Lib_C_Objects)
 	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $(Lib_C_Objects) -ldl
@@ -54,8 +62,23 @@ libtls_wrapper_wolfssl.so: libenclave_tls.so $(WOLFSSL_TLS_WRAPPER_C_Objects)
 libcrypto_wrapper_wolfcrypt.so: libenclave_tls.so $(WOLFCRYPT_WRAPPER_C_Objects)
 	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $^ -L$(LIBDIR)/.build/lib -lwolfssl
 
-$(WOLFSSL_TLS_WRAPPER_C_Objects) $(WOLFCRYPT_WRAPPER_C_Objects): %.o: %.c
+libtls_wrapper_wolfssl_sgx.so: libenclave_tls.so $(WOLFSSL_SGX_TLS_WRAPPER_C_Objects) $(objs)
+	$(CC) $(HOST_LDFLAGS),-soname=$@.$(MAJ_VERSION) -o $@ $^ -L$(BUILDDIR)/lib -lwolfssl -lsgx_urts
+
+libtls_wrapper_wolfssl_sgx.a:
+	make -C $(TLS_WRAPPERS)/wolfssl-sgx
+
+wolfssl_enclave.signed.so: libtls_wrapper_wolfssl_sgx.a
+	make -C $(WOLFSSL_ENCLAVE_DIR)
+
+$(WOLFSSL_ENCLAVE_DIR)/wolfssl_enclave_u.o:
+	make -C $(WOLFSSL_ENCLAVE_DIR) pre-install
+
+$(Lib_C_Objects): %.o: %.c
 	$(CC) -c $(CFLAGS) -I$(LIBDIR)/.build/include -o $@ $<
+
+$(WOLFSSL_TLS_WRAPPER_C_Objects) $(WOLFCRYPT_WRAPPER_C_Objects) $(WOLFSSL_SGX_TLS_WRAPPER_C_Objects): %.o: %.c
+	$(CC) -c $(CFLAGS) -I$(LIBDIR)/.build/include -I$(WOLFSSL_ENCLAVE_DIR) -I/opt/intel/sgxsdk/include -o $@ $<
 
 wolfssl:
 	make -C $(COMMONDIR) && make -C $(COMMONDIR) install
@@ -84,8 +107,11 @@ clean:
 	rm -f lib*.so
 	rm -f $(Lib_C_Objects) $(NULL_TLS_WRAPPER_C_Objects) \
 	  $(NULL_ENCLAVE_QUOTE_C_Objects) $(NULL_CRYPTO_WRAPPER_C_Objects) \
-	  $(WOLFSSL_TLS_WRAPPER_C_Objects) $(WOLFCRYPT_WRAPPER_C_Objects)
+	  $(WOLFSSL_TLS_WRAPPER_C_Objects) $(WOLFCRYPT_WRAPPER_C_Objects) \
+	  $(WOLFSSL_SGX_TLS_WRAPPER_C_Objects)
 	make -C $(COMMONDIR) clean
+	make -C $(WOLFSSL_ENCLAVE_DIR) clean
+	make -C $(TLS_WRAPPERS)/wolfssl-sgx clean
 
 mrproper:
 	make -C $(COMMONDIR) mrproper

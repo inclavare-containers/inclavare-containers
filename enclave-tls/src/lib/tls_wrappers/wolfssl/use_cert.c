@@ -8,7 +8,7 @@
 tls_wrapper_err_t wolfssl_use_cert(tls_wrapper_ctx_t *ctx,
 				   enclave_tls_cert_info_t *cert_info)
 {
-	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private;
+	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private->tls_wrapper_private;
 
 	int ret = wolfSSL_CTX_use_certificate_buffer(ws_ctx->ws,
 						     cert_info->cert_buf,

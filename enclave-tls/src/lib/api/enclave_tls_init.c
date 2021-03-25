@@ -44,7 +44,7 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 		if (choice[0] == '\0')
 			choice = NULL;
 	}
-	err = etls_crypto_wrapper_select(ctx, choice, ctx->config.cert_algo);
+	err = etls_crypto_wrapper_select(ctx, choice);
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		goto err_ctx;
 

@@ -9,7 +9,7 @@ tls_wrapper_err_t __secured
 wolfssl_use_privkey(tls_wrapper_ctx_t *ctx,
 		    void *__secured privkey_buf, size_t privkey_len)
 {
-	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private;
+	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private->tls_wrapper_private;
 
 	int ret = wolfSSL_CTX_use_PrivateKey_buffer(ws_ctx->ws,
 						    privkey_buf,

@@ -15,9 +15,14 @@ static enclave_tls_err_t etls_tls_wrapper_init(etls_core_context_t *ctx,
 	if (!ctx->tls_wrapper)
 		ctx->tls_wrapper = tls_ctx;
 	ctx->tls_wrapper->log_level = ctx->config.log_level;
+	ctx->tls_wrapper->tls_private= calloc(1, sizeof(*(ctx->tls_wrapper->tls_private)));
+	if (!ctx->tls_wrapper->tls_private)
+		return -TLS_WRAPPER_ERR_NO_MEM;
+
+	memcpy(&(ctx->tls_wrapper->tls_private->config), &(ctx->config), sizeof(enclave_tls_conf_t));
 
 	enclave_tls_err_t err = tls_ctx->opts->init(ctx->tls_wrapper);
-	if (err != TLS_WRAPPER_ERR_NONE || !(tls_ctx->tls_private)) {
+	if (err != TLS_WRAPPER_ERR_NONE) {
 		return -ENCLAVE_TLS_ERR_INIT;
 	}
 

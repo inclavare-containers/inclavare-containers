@@ -43,6 +43,7 @@ typedef struct {
 	unsigned int api_version;
 	unsigned long flags;
 	int fd;
+	unsigned long long eid;
 	enclave_tls_log_level_t log_level;
 	char tls_type[TLS_TYPE_NAME_SIZE];
 	char attester_type[QUOTE_TYPE_NAME_SIZE];
