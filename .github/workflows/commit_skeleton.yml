@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
-        tag: [ubuntu18.04, centos8.2]
+        tag: [ubuntu18.04, centos8.2, alinux2]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -26,11 +26,12 @@ jobs:
       run: |
         docker tag inclavarecontainers/dev:$RUNE_VERSION-centos8.2 inclavare-dev:centos8.2;
         docker tag inclavarecontainers/dev:$RUNE_VERSION-ubuntu18.04 inclavare-dev:ubuntu18.04;
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-alinux2 inclavare-dev:alinux2;
         inclavare_dev=$(docker run -itd --privileged --rm --net host -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
         echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
 
     - name: Build rpm packages
-      if: ${{ contains(matrix.tag, 'centos') }}
+      if: ${{ contains(matrix.tag, 'centos') || contains(matrix.tag, 'alinux') }}
       run: docker exec $inclavare_dev bash -c "cd /root && source /etc/profile;
         cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
         mkdir -p /root/inclavare-containers/${{ matrix.tag }};
@@ -85,6 +86,7 @@ jobs:
       run: |
         docker tag ubuntu:18.04 inclavare-test:ubuntu18.04;
         docker tag centos:8.2.2004 inclavare-test:centos8.2;
+        docker tag registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux inclavare-test:alinux2;
         if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
             inclavare_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }});
         else
@@ -97,7 +99,7 @@ jobs:
       run: |
         docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget iptables gnupg libbinutils;
         apt-get install -y libseccomp-dev libprotoc-dev binutils-dev autoconf libtool g++ pkg-config protobuf-compiler;
-        wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz &&    tar -zxvf v1.3.1.tar.gz && cd protobuf-c-1.3.1 && ./autogen.sh && ./configure && make && make install;
+        wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz && tar -zxvf v1.3.1.tar.gz && cd protobuf-c-1.3.1 && ./autogen.sh && ./configure && make && make install;
         echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -; 
         apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
         cd /root/inclavare-containers/${{ matrix.tag }};
@@ -119,13 +121,31 @@ jobs:
         cd /root/inclavare-containers/${{ matrix.tag }};
         rpm -ivh *.rpm'
 
+    - name: Install alinux dependency
+      if: ${{ contains(matrix.tag, 'alinux') }}
+      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+         yum -y install yum-utils wget tar gcc iptables alinux-release-experimentals libseccomp-devel make;
+         yum install -y libprotoc-devel binutils-devel autoconf libtool gcc-c++ pkg-config protobuf-compiler protobuf-devel;
+         yum install -y protobuf-c protobuf-c-devel;
+         wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz;
+         tar xzf sgx_rpm_local_repo.tar.gz;
+         yum-config-manager --add-repo file:/root/inclavare-containers/${{ matrix.tag }}/sgx_rpm_local_repo;
+         yum makecache;
+         rm -f /var/lib/rpm/__db.*;
+         rpm --rebuilddb;
+         yum clean all;
+         yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+         rm -f sgx_rpm_local_repo.tar.gz;
+         cd /root/inclavare-containers/${{ matrix.tag }};
+         rpm -ivh *.rpm'
+
     - name: Install sgx1 extra ubuntu dependency
       if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: |
         docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid"
 
-    - name: Install sgx1 extra centos dependency
-      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'centos') }}
+    - name: Install sgx1 extra centos and alinux dependency
+      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'centos') || contains(matrix.tag, 'alinux2')) }}
       run: |
         docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
 
