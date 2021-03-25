@@ -38,6 +38,9 @@
 /* The base of error code used by wolfcrypt */
 #define WOLFCRYPT_ERR_BASE              (0 << ERR_CODE_SUBCLASS_SHIFT)
 
+/* The base of error code used by sgx-ecdsa */
+#define SGX_ECDSA_ERR_BASE		(0 << ERR_CODE_SUBCLASS_SHIFT)
+
 // Error code used to construct TLS Wrapper instance
 #define __TLS_WRAPPER_ERR_CODE(base, err) \
 	(((TLS_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
@@ -56,6 +59,13 @@
 #define WOLFCRYPT_ERR_CODE(err) \
 	__CRYPTO_WRAPPER_ERR_CODE(WOLFCRYPT_ERR_BASE, err)
 
+#define __ENCLAVE_QUOTE_ERR_CODE(base, err) \
+	(((ENCLAVE_QUOTE_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
+	 ((err) & ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
+
+#define SGX_ECDSA_ERR_CODE(err) \
+	__ENCLAVE_QUOTE_ERR_CODE(SGX_ECDSA_ERR_BASE, err)	
+
 typedef enum {
 	ENCLAVE_TLS_ERR_NONE = ENCLAVE_TLS_ERR_BASE,
 	ENCLAVE_TLS_ERR_UNKNOWN,
@@ -72,6 +82,7 @@ typedef enum {
 
 typedef enum {
 	ENCLAVE_QUOTE_ERR_NONE = ENCLAVE_QUOTE_ERR_BASE,
+	ENCLAVE_QUOTE_ERR_UNKNOWN,
 	ENCLAVE_QUOTE_ERR_NO_MEM,
 	ENCLAVE_QUOTE_ERR_INVALID,
 } enclave_quote_err_t;

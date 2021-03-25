@@ -4,18 +4,16 @@
 #include <string.h>
 #include <errno.h>
 #include <stdbool.h>
-
+#include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <unistd.h>
-
-#include <enclave-tls/api.h>
-
 #include <sgx_urts.h>
 #include <sgx_quote.h>
+#include <enclave-tls/api.h>
 
-#define ENCLAVE_FILENAME "wolfssl_enclave.signed.so"
+//#define ENCLAVE_FILENAME "wolfssl_enclave.signed.so"
+#define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
 static sgx_enclave_id_t load_enclave(void)
 {
@@ -76,7 +74,7 @@ int ra_tls_server_startup(int connd, enclave_tls_log_level_t log_level,
 
 	/* Write our reply into buff */
 	memset(buff, 0, sizeof(buff));
-	memcpy(buff, "I hear ya fa shizzle!\n", sizeof(buff));
+	strcpy(buff, "I hear ya fa shizzle!\n");
 	len = strnlen(buff, sizeof(buff));
 
 	/* Reply back to the client */

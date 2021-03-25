@@ -6,7 +6,7 @@
 #include <enclave-tls/crypto_wrapper.h>
 #include "internal/core.h"
 
-#define CRYPTO_WRAPPERS_PATH     "/opt/enclave-tls/lib/crypto_wrappers/"
+#define CRYPTO_WRAPPERS_PATH     "/opt/enclave-tls/lib/crypto-wrappers/"
 
 extern enclave_tls_err_t etls_crypto_wrapper_load_all(void);
 extern enclave_tls_err_t etls_crypto_wrapper_load_single(const char *);

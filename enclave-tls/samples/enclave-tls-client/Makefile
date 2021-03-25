@@ -1,35 +1,46 @@
-TOPDIR ?= ../..
+Topdir ?= $(shell readlink -f ../..)
 
-include $(TOPDIR)/common.mk
+include $(Topdir)/rules/build_env.mk
 
-DEBUG ?=
+Targets := $(Build_Bindir)/enclave-tls-client
 
-CFLAGS += -std=gnu99 -fPIC
-CFLAGS += -g -O0
-
-all: elv
-
-ifneq ($(GO111MODULE),off)
-  MOD_VENDOR := "-mod=vendor"
+ifneq ($(GO111MODULE), off)
+  mod_vendor := "-mod=vendor"
 endif
-ifeq ($(DEBUG),1)
-  GCFLAGS=-gcflags "-N -l"
-endif
-COMMIT_NO := $(shell git rev-parse HEAD 2> /dev/null || true)
-COMMIT ?= $(if $(shell git status --porcelain --untracked-files=no),"$(COMMIT_NO)-dirty","$(COMMIT_NO)")
 
+cflags ?= $(CFLAGS)
+ifeq ($(Debug), 1)
+  gcflags = -gcflags "-N -l"
+endif
+
+commit_no := $(shell git rev-parse HEAD 2> /dev/null || true)
+commit ?= $(if $(shell git status --porcelain --untracked-files=no),"$(commit_no)-dirty","$(commit_no)")
+
+EXTRA_GO_FLAGS ?=
+EXTRA_GO_LDFLAGS ?=
 # glibc-static is required for the static linkage
-GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(EXTRA_FLAGS) \
-  -ldflags "-X main.gitCommit=$(COMMIT) -X main.version=$(VERSION) $(EXTRA_LDFLAGS)"
+go_build := \
+  CGO_ENABLED=1 $(GO) build $(mod_vendor) -buildmode=pie $(gcflags) $(EXTRA_GO_FLAGS) \
+  -ldflags "-X main.gitCommit=$(commit) -X main.version=$(VERSION) $(EXTRA_GO_LDFLAGS)"
 
-elv: ra-tls-client.c
-	$(GO_BUILD) -o $@ .
+Dependencies += $(Build_Libdir)/libenclave_tls.so
 
-install: elv
-	$(INSTALL) -d -m 755 $(BINDIR)
-	$(INSTALL) -m 755 elv $(BINDIR)
+$(Targets): ra-tls-client.c $(Build_Libdir)/libenclave_tls.so
+	dest=$(dir $@); \
+	$(INSTALL) -d -m 0755 $$dest
+	$(go_build) -o $@ .
+
+$(Build_Libdir)/libenclave_tls.so:
+	make -C $(Enclave_Tls_Srcdir) $@
 
 clean:
-	rm -f *.o elv
+	@rm -f *.o $(target)
 
-.PHONY: clean install
+install: all
+	$(INSTALL) -d -m 0755 $(Enclave_Tls_Bindir)
+	$(INSTALL) -m 0755 $(Targets) $(Enclave_Tls_Bindir)
+
+uninstall:
+	@rm -f $(Enclave_Tls_Bindir)/$(notdir $(target))
+
+include $(Topdir)/rules/build_rules.mk
