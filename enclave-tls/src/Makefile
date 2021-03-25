@@ -7,7 +7,7 @@ TLS_WRAPPERS := $(LIBDIR)/tls_wrappers
 ENCLAVE_QUOTES := $(LIBDIR)/enclave_quotes
 CRYPTO_WRAPPERS := $(LIBDIR)/crypto_wrappers
 INCDIR := $(TOPDIR)/src/include
-COMMONDIR := $(TOPDIR)/src/common
+COMMONDIR := $(TOPDIR)/src/external
 
 MAJ_VERSION := 1
 MIN_VERSION := 0.0
