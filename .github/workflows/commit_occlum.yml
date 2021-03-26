@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
-        tag: [ubuntu18.04, centos8.2]
+        tag: [ubuntu18.04, centos8.2, alinux2]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -32,7 +32,7 @@ jobs:
 
     - name: Build and install packages
       run: docker exec $rune_test bash -c "cp -r /root/inclavare-containers /root/inclavare-containers-test; 
-        cd inclavare-containers-test/rune; 
+        cd /root/inclavare-containers-test/rune;
         find ../ -name *.pb.go | xargs -I files touch files;
         make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
@@ -45,18 +45,18 @@ jobs:
         fi;
 
     - name: Build Occlum docker image
-      run: docker exec $rune_test bash -c "occlum-gcc -o hello_world hello_world.c;
+      run: docker exec $rune_test bash -c "cd /root; occlum-gcc -o hello_world hello_world.c;
         occlum new occlum_instance && cd occlum_instance;
         cp ../hello_world image/bin/ && occlum build;
         occlum package occlum_instance.tar.gz;
-        service docker start;
         docker build . -t occlum-app -f /root/Dockerfile-occlum"
 
     - name: Run Occlum image
+      if: ${{ !(contains(matrix.tag, 'alinux') && contains(matrix.sgx, 'SGX1')) }}
       run: docker exec $rune_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so -e ENCLAVE_RUNTIME_ARGS=occlum_instance -e ENCLAVE_RUNTIME_LOGLEVEL="info" occlum-app"
 
     - name: Run Occlum bundle
-      if: always()
+      if: ${{ !(contains(matrix.tag, 'alinux') && contains(matrix.sgx, 'SGX1')) }}
       run: |
         docker exec $rune_test bash -c "mkdir rootfs;
         docker create --name occlum-app occlum-app;
