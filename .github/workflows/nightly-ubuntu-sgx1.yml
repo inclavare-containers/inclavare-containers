@@ -11,6 +11,8 @@ env:
   WORK_DIR: /root/pkgs
   HOME: /root
   OCCLUM_VERSION: 0.21.0
+  SGX_VERSION: 2.13.100.4-bionic1
+  DCAP_VERSION: 1.10.100.4-bionic1
   kubernetes_version: 1.16.9
   nap_time: 60
 
@@ -107,10 +109,11 @@ jobs:
           echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
           wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get install -y libsgx-launch libsgx-urts
-          sudo apt-get install -y libsgx-epid libsgx-urts
-          sudo apt-get install -y libsgx-quote-ex libsgx-urts
-          sudo apt-get install -y libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev
+          sudo apt-get install -y libsgx-launch=${{ env.SGX_VERSION }} libsgx-urts=${{ env.SGX_VERSION }}
+          sudo apt-get install -y libsgx-epid=${{ env.SGX_VERSION }} libsgx-urts=${{ env.SGX_VERSION }}
+          sudo apt-get install -y libsgx-quote-ex=${{ env.SGX_VERSION }} libsgx-urts=${{ env.SGX_VERSION }}
+          sudo apt-get install -y libsgx-ae-qve=${{ env.DCAP_VERSION }} libsgx-dcap-ql=${{ env.DCAP_VERSION }} libsgx-dcap-quote-verify=${{ env.DCAP_VERSION }}\
+            libsgx-dcap-quote-verify-dev=${{ env.DCAP_VERSION }}
           sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh
           sudo /bin/bash /opt/intel/sgx-aesm-service/startup.sh
           chmod +x sgx_linux_x64_driver_2.11.0_0373e2e.bin sgx_linux_x64_sdk_2.13.100.4.bin
