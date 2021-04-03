@@ -29,24 +29,9 @@ ifneq ($(__Build_Env_Imported),1)
   $(error "Please import build_env.mk first!")
 endif
 
-# Decide whether to compile the complete untrusted application plus enclave image
-# or just the trusted static library.
-ifeq ($(App_Name),)
-  ifeq ($(Enclave_Tls_Instance_Name),)
-    $(error "Invalid settings for building SGX stuffs!")
-  else
-    App_Name := $(subst -,_,$(Enclave_Tls_Instance_Name))
-  endif
-
-  no_app := 1
+ifneq ($(__Sgx_Env_Imported),1)
+  $(error "Please import sgx_env.mk first!")
 endif
-
-enclave_name := $(App_Name)_enclave
-enclave_config_file := $(enclave_name).xml
-enclave_linker_script := $(enclave_name).lds
-enclave_signing_key := $(enclave_name).pem
-#enclave_static_lib := $(enclave_name).a
-app_edl := $(App_Name).edl
 
 ifeq ($(no_app),1)
   enclave_static_lib := lib$(subst -,_,$(Enclave_Tls_Instance_Type))_$(Enclave_Static_Lib_Name).a

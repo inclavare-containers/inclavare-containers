@@ -53,8 +53,6 @@ $(instance_objs): %.o: %.c
 $(Build_Libdir)/libenclave_tls.so:
 	make -C $(Enclave_Tls_Srcdir) $(Build_Libdir)/libenclave_tls.so
 
-Cleans += $(Targets) $(instance_objs)
-
 instance_lib := \
   lib$(subst -,_,$(Enclave_Tls_Instance_Type))_$(subst -,_,$(Enclave_Tls_Instance_Name)).so
 dest := $(Enclave_Tls_Libdir)/$(Enclave_Tls_Instance_Type)s/$(instance_lib)
@@ -68,19 +66,33 @@ uninstall:
 
 mrproper:
 
-Targets := $(Build_Libdir)/$(Enclave_Tls_Instance_Type)s/$(instance_lib)
-
 # All instances always depend on libenclave_tls.so
-Dependencies += $(Build_Libdir)/libenclave_tls.so
+#Dependencies += $(Build_Libdir)/libenclave_tls.so
 ifeq ($(Sgx_Enclave),1)
   #Dependencies := $(App_Name)_u.o $(Dependencies)
-  Dependencies := $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o $(Dependencies)
+  #Dependencies := $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o $(Dependencies)
   ifeq ($(Tls_Wolfssl),1)
     # Provide wolfssl header files for $(App_Name)_u.[ch]
-    Dependencies := $(Build_Libdir)/libwolfssl_sgx.a $(Dependencies)
+    #Dependencies := $(Build_Libdir)/libwolfssl_sgx.a $(Dependencies)
+    Build_Instance_Dependencies := $(Build_Libdir)/libwolfssl_sgx.a
   endif
+  Build_Instance_Dependencies += $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o
 endif
+ifeq ($(Tls_Wolfssl),1)
+  Build_Instance_Dependencies += $(Build_Libdir)/libwolfssl.so
+endif
+# All instances always depend on libenclave_tls.so
+Build_Instance_Dependencies += $(Build_Libdir)/libenclave_tls.so
 
-$(Targets): $(Dependencies) $(instance_objs)
+# TODO: abstract the build command into a variable
+target := $(Build_Libdir)/$(Enclave_Tls_Instance_Type)s/$(instance_lib)
+#$(target): $(Dependencies) $(instance_objs)
+$(target): $(Build_Instance_Dependencies) $(instance_objs)
 	$(INSTALL) -d -m 0755 $(dir $@)
 	$(LD) $(Enclave_Tls_Ldflags) -soname=$(notdir $@).$(Major_Version) -o $@ $^ $(Enclave_Tls_Extra_Ldflags)
+
+Build_Instance: $(target)
+
+Targets += Build_Instance
+Extra_Phonies += Build_Instance
+Cleans += $(target) $(instance_objs)

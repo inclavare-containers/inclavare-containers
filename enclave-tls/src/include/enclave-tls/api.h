@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
 #ifndef _ENCLAVE_API_H_
 #define _ENCLAVE_API_H_
-/* *INDENT-ON* */
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -30,7 +28,7 @@ typedef struct etls_core_context_t *enclave_tls_handle;
 typedef enum {
 	ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
 	ENCLAVE_TLS_CERT_ALGO_MAX,
-	ENCLAVE_TLS_CERT_ALGO_DEFAULT = ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
+	ENCLAVE_TLS_CERT_ALGO_DEFAULT = ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256
 } enclave_tls_cert_algo_t;
 
 /* FIXME: add the type of ecdsa verification */
@@ -42,14 +40,13 @@ typedef enum {
 typedef struct {
 	unsigned int api_version;
 	unsigned long flags;
-	int fd;
-	unsigned long long eid;
 	enclave_tls_log_level_t log_level;
 	char tls_type[TLS_TYPE_NAME_SIZE];
 	char attester_type[QUOTE_TYPE_NAME_SIZE];
 	char verifier_type[QUOTE_TYPE_NAME_SIZE];
 	char crypto_type[CRYPTO_TYPE_NAME_SIZE];
 	enclave_tls_cert_algo_t cert_algo;
+	unsigned long long enclave_id;
 
 	/* FIXME: SGX EPID quote type specific parameters */
 	struct {
@@ -67,6 +64,7 @@ typedef struct {
 } enclave_tls_conf_t;
 
 #define ENCLAVE_TLS_API_VERSION_1                   1
+#define ENCLAVE_TLS_API_VERSION_MAX                 ENCLAVE_TLS_API_VERSION_1
 #define ENCLAVE_TLS_API_VERSION_DEFAULT             ENCLAVE_TLS_API_VERSION_1
 
 #define ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT    0
@@ -78,7 +76,6 @@ typedef struct {
 
 #define ENCLAVE_TLS_CONF_FLAGS_SERVER               (1UL << ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT)
 
-/* *INDENT-OFF* */
 enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 				   enclave_tls_handle *handle);
 enclave_tls_err_t enclave_tls_negotiate(enclave_tls_handle handle, int fd);
@@ -89,4 +86,3 @@ enclave_tls_err_t enclave_tls_transmit(enclave_tls_handle handle, void *buf,
 enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle);
 
 #endif
-/* *INDENT-ON* */

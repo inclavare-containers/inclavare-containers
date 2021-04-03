@@ -15,7 +15,7 @@ extern crypto_wrapper_err_t nullcrypto_gen_cert(crypto_wrapper_ctx_t *,
 extern crypto_wrapper_err_t nullcrypto_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t nullcrypto_opts = {
-	.version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
+	.api_version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
 	.type = "nullcrypto",
 	.priority = 0,
 	.pre_init = nullcrypto_pre_init,
@@ -26,7 +26,6 @@ static crypto_wrapper_opts_t nullcrypto_opts = {
 	.cleanup = nullcrypto_cleanup,
 };
 
-/* *INDENT-OFF* */
 void __attribute__((constructor))
 libcrypto_wrapper_nullcrypto_init(void)
 {
@@ -34,6 +33,5 @@ libcrypto_wrapper_nullcrypto_init(void)
 
 	crypto_wrapper_err_t err = crypto_wrapper_register(&nullcrypto_opts);
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
-		ETLS_FATAL("failed to register the crypto wrapper 'nullcrypto'\n");
+		ETLS_ERR("failed to register the crypto wrapper 'nullcrypto' %#x\n", err);
 }
-/* *INDENT-ON* */

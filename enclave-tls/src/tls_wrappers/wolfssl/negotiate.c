@@ -1,6 +1,3 @@
-#define _GNU_SOURCE
-#include <string.h>
-#include <assert.h>
 #include <enclave-tls/log.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/tls_wrapper.h>
@@ -17,18 +14,18 @@ tls_wrapper_err_t wolfssl_internal_negotiate(wolfssl_ctx_t *ws_ctx,
 	if (verify)
 		wolfSSL_CTX_set_verify(ws_ctx->ws, SSL_VERIFY_PEER, verify);
 
-	ws_ctx->ssl = wolfSSL_new(ws_ctx->ws);
-	if (!ws_ctx->ssl)
-		return -TLS_WRAPPER_ERR_UNKNOWN;
+	WOLFSSL *ssl = wolfSSL_new(ws_ctx->ws);
+	if (!ssl)
+		return -TLS_WRAPPER_ERR_NO_MEM;
 
 	/* Attach wolfSSL to the socket */
-	wolfSSL_set_fd(ws_ctx->ssl, fd);
+	wolfSSL_set_fd(ssl, fd);
 
 	int err;
 	if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
-		err = wolfSSL_negotiate(ws_ctx->ssl);
+		err = wolfSSL_negotiate(ssl);
 	else
-		err = wolfSSL_connect(ws_ctx->ssl);
+		err = wolfSSL_connect(ssl);
 
 	if (err != SSL_SUCCESS) {
 		if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
@@ -36,8 +33,12 @@ tls_wrapper_err_t wolfssl_internal_negotiate(wolfssl_ctx_t *ws_ctx,
 		else
 			ETLS_DEBUG("failed to connect %#x\n", err);
 
+		print_wolfssl_err(ssl);
+
 		return WOLFSSL_ERR_CODE(err);
 	}
+
+	ws_ctx->ssl = ssl;
 
 	return TLS_WRAPPER_ERR_NONE;
 }
@@ -57,20 +58,20 @@ tls_wrapper_err_t wolfssl_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 {
 	ETLS_DEBUG("ctx %p, fd %d\n", ctx, fd);
 
-	int (*verify)(int, WOLFSSL_X509_STORE_CTX *) = NULL;
+	if (!ctx)
+		return -TLS_WRAPPER_ERR_INVALID;
 
+	int (*verify)(int, WOLFSSL_X509_STORE_CTX *) = NULL;
 	unsigned long conf_flags = ctx->conf_flags;
 
 	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)) {
-	#ifdef SGX_ENCLAVE
+#ifdef SGX_ENCLAVE
 		verify = ssl_ctx_set_verify_callback;
-	#else
+#else
 		verify = verify_certificate;
-	#endif
+#endif
 	}
 
-	wolfssl_ctx_t *ws_ctx = (wolfssl_ctx_t *)ctx->tls_private->tls_wrapper_private;
-
-	return wolfssl_internal_negotiate(ws_ctx, conf_flags, fd, verify);
+	return wolfssl_internal_negotiate((wolfssl_ctx_t *)ctx->tls_private,
+					  conf_flags, fd, verify);
 }
-/* *INDENT-ON* */

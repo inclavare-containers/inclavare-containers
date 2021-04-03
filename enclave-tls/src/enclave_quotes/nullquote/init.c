@@ -3,7 +3,6 @@
 
 static unsigned int dummy_private;
 
-/* *INDENT-OFF* */
 enclave_quote_err_t nullquote_init(enclave_quote_ctx_t *ctx,
 				   enclave_tls_cert_algo_t algo)
 {
@@ -13,4 +12,3 @@ enclave_quote_err_t nullquote_init(enclave_quote_ctx_t *ctx,
 
 	return ENCLAVE_QUOTE_ERR_NONE;
 }
-/* *INDENT-ON* */

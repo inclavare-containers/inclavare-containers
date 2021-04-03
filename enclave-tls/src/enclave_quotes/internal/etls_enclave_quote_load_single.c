@@ -1,88 +1,75 @@
 #include <stdlib.h>
-#include <dlfcn.h>
 #include <string.h>
+#include <dlfcn.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
-#include "internal/enclave_quote.h"
 #include "internal/core.h"
+#include "internal/enclave_quote.h"
 
-/* *INDENT-OFF* */
-enclave_tls_err_t etls_enclave_quote_load_single(const char *path)
+#define PATTERN_PREFIX          "libenclave_quote_"
+#define PATTERN_SUFFIX          ".so"
+
+enclave_tls_err_t etls_enclave_quote_load_single(const char *name)
 {
-	ETLS_DEBUG("loading enclave quote instance '%s'\n", path);
+	ETLS_DEBUG("loading the enclave quote instance '%s' ...\n", name);
 
-	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
-
-	/* Checkt whether the format of path is libenclave_quote_<type>.so */
-	if ((memcmp(path, "libenclave_quote_", strlen("libenclave_quote_")) !=
-	     0) || (memcmp(path + strlen(path) - 3, ".so", 3) != 0)) {
-		ETLS_DEBUG("The format of '%s' NOT match libenclave_quote_<type>.so\n",
-			 path);
+	/* Check whether the filename pattern matches up libenclave_quote_<type>.so */
+	if (strlen(name) <= strlen(PATTERN_PREFIX) + strlen(PATTERN_SUFFIX) ||
+	    strncmp(name, PATTERN_PREFIX, strlen(PATTERN_PREFIX)) ||
+	    strncmp(name + strlen(name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX))) {
+		ETLS_ERR("The filename pattern of '%s' NOT match " PATTERN_PREFIX "<type>" PATTERN_SUFFIX "\n",
+			 name);
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	char *realpath = (char *) malloc(strlen(ENCLAVE_QUOTES_PATH) + strlen("/") + strlen(path));
-	if (!realpath) {
-		return -ENCLAVE_TLS_ERR_NO_MEM;
-	}
-	sprintf(realpath, "%s%s%s", ENCLAVE_QUOTES_PATH, "/", path);
+	char realpath[strlen(ENCLAVE_QUOTES_DIR) + strlen(name) + 1];
+	sprintf(realpath, "%s%s", ENCLAVE_QUOTES_DIR, name);
+
 	void *handle = dlopen(realpath, RTLD_LAZY);
-	if (NULL == handle) {
-		ETLS_ERR("dlopen - %s\n", dlerror());
-		free(realpath);
+	if (!handle) {
+		ETLS_ERR("failed on dlopen(): %s\n", dlerror());
 		return -ENCLAVE_TLS_ERR_DLOPEN;
 	}
 
-	/* Get the type of quote instance */
-	size_t type_len = strlen(path) - 20;
-	char *type = malloc(type_len + 1);
-	if (!type) {
-		free(realpath);
-		return -ENCLAVE_TLS_ERR_NO_MEM;
-	}
-	memcpy(type, path + 17, type_len);
+	size_t type_len = strlen(name) - strlen(PATTERN_PREFIX) - strlen(PATTERN_SUFFIX);
+	char type[type_len + 1];
+	strncpy(type, name + strlen(PATTERN_PREFIX), type_len);
 	type[type_len] = '\0';
 
 	unsigned int i = 0;
-	enclave_quote_opts_t *quote_opts;
+	enclave_quote_opts_t *opts = NULL;
 	for (i = 0; i < registerd_enclave_quote_nums; ++i) {
-		quote_opts = enclave_quotes_opts[i];
+		opts = enclave_quotes_opts[i];
 
-		if (strcmp(type, quote_opts->type))
-			continue;
-
-		enclave_quote_err_t err = quote_opts->pre_init();
-		if (err != ENCLAVE_QUOTE_ERR_NONE) {
-			ETLS_ERR("ERROR: quote_opts->pre_init()\n", path);
-			goto err;
-		}
-		break;
+		if (!strcmp(type, opts->type))
+			break;
 	}
 
 	if (i == registerd_enclave_quote_nums) {
-		ETLS_ERR("The constructor of %s does NOT call tls_wrapper_register\n", path);
-		err = -ENCLAVE_TLS_ERR_NO_REGISTER;
-		goto err;
+		ETLS_ERR("the enclave quote '%s' is not registered yet\n", type);
+		return -ENCLAVE_TLS_ERR_NOT_REGISTERED;
+	}
+
+	if (opts->pre_init) {
+		enclave_tls_err_t err = opts->pre_init();
+
+		if (err != ENCLAVE_QUOTE_ERR_NONE) {
+			ETLS_ERR("failed on pre_init() of enclave quote '%s' %#x\n", type, err);
+			return err;
+		}
 	}
 
 	enclave_quote_ctx_t *quote_ctx = calloc(1, sizeof(*quote_ctx));
-	if (!quote_ctx) {
-		err = -ENCLAVE_TLS_ERR_NO_MEM;
-		goto err;
-	}
-	quote_ctx->opts = quote_opts;
+	if (!quote_ctx)
+		return -ENCLAVE_TLS_ERR_NO_MEM;
+
+	quote_ctx->opts = opts;
 	quote_ctx->log_level = global_core_context.config.log_level;
 	quote_ctx->handle = handle;
+
 	enclave_quotes_ctx[enclave_quote_nums++] = quote_ctx;
 
-	free(realpath);
-	free(type);
+	ETLS_DEBUG("the enclave quote '%s' loaded\n", type);
 
 	return ENCLAVE_TLS_ERR_NONE;
-
-err:
-	free(realpath);
-	free(type);
-	return err;
 }
-/* *INDENT-ON* */

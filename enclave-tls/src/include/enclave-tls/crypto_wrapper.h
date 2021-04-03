@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
-#ifndef _ENCLAVE_CRYPTO_WRAPPER_H
-#define _ENCLAVE_CRYPTO_WRAPPER_H
-/* *INDENT-ON* */
+#ifndef _ENCLAVE_TLS_CRYPTO_WRAPPER_H
+#define _ENCLAVE_TLS_CRYPTO_WRAPPER_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -10,31 +8,23 @@
 #include <enclave-tls/api.h>
 #include <enclave-tls/cert.h>
 
-#define CRYPTO_WRAPPER_TYPE_MAX                32
-#define CRYPTO_WRAPPER_API_VERSION_1           1
-#define CRYPTO_WRAPPER_API_VERSION_DEFAULT     CRYPTO_WRAPPER_API_VERSION_1
+#define CRYPTO_WRAPPER_TYPE_MAX               32
 
-#define CRYPTO_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE  1
+#define CRYPTO_WRAPPER_API_VERSION_1          1
+#define CRYPTO_WRAPPER_API_VERSION_MAX        CRYPTO_WRAPPER_API_VERSION_1
+#define CRYPTO_WRAPPER_API_VERSION_DEFAULT    CRYPTO_WRAPPER_API_VERSION_1
 
-#define CRYPTO_TYPE_NAME_SIZE                  32
-#define ENCLAVE_QUOTE_TYPE_MAX                 32
+#define CRYPTO_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE 1
+
+typedef struct crypto_wrapper_ctx             crypto_wrapper_ctx_t;
 
 typedef struct {
-	struct crypto_wrapper_opts_t *opts;
-	void *crypto_private;
-	unsigned long conf_flags;
-	enclave_tls_log_level_t log_level;
-	enclave_tls_cert_algo_t cert_algo;
-	void *handle;
-} crypto_wrapper_ctx_t;
-
-/* *INDENT-OFF* */
-typedef struct crypto_wrapper_opts_t {
-	uint8_t version;
+	uint8_t api_version;
 	unsigned long flags;
 	const char type[CRYPTO_TYPE_NAME_SIZE];
 	uint8_t priority;
 
+	/* Optional */
 	crypto_wrapper_err_t (*pre_init)(void);
 	crypto_wrapper_err_t (*init)(crypto_wrapper_ctx_t *ctx);
 	crypto_wrapper_err_t (*gen_privkey)(crypto_wrapper_ctx_t *ctx,
@@ -49,7 +39,16 @@ typedef struct crypto_wrapper_opts_t {
 	crypto_wrapper_err_t (*cleanup)(crypto_wrapper_ctx_t *ctx);
 } crypto_wrapper_opts_t;
 
+struct crypto_wrapper_ctx {
+	crypto_wrapper_opts_t *opts;
+	void *crypto_private;
+	unsigned long long enclave_id;
+	unsigned long conf_flags;
+	enclave_tls_log_level_t log_level;
+	enclave_tls_cert_algo_t cert_algo;
+	void *handle;
+};
+
 extern crypto_wrapper_err_t crypto_wrapper_register(const crypto_wrapper_opts_t *);
 
 #endif /* _ENCLAVE_CRYPTO_WRAPPER_H */
-/* *INDENT-ON* */

@@ -4,8 +4,8 @@
 
 extern tls_wrapper_err_t wolfssl_pre_init(void);
 extern tls_wrapper_err_t wolfssl_init(tls_wrapper_ctx_t *);
-extern tls_wrapper_err_t __secured wolfssl_use_privkey(tls_wrapper_ctx_t *ctx,
-						       void *__secured privkey_buf,
+extern tls_wrapper_err_t wolfssl_use_privkey(tls_wrapper_ctx_t *ctx,
+						       void *privkey_buf,
 						       size_t privkey_len);
 extern tls_wrapper_err_t wolfssl_use_cert(tls_wrapper_ctx_t *ctx,
 					  enclave_tls_cert_info_t *cert_info);
@@ -15,7 +15,7 @@ extern tls_wrapper_err_t wolfssl_receive(tls_wrapper_ctx_t *, void *, size_t *);
 extern tls_wrapper_err_t wolfssl_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t wolfssl_opts = {
-	.version = TLS_WRAPPER_API_VERSION_DEFAULT,
+	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
 	.type = "wolfssl",
 	.priority = 20,
 	.pre_init = wolfssl_pre_init,
@@ -28,7 +28,6 @@ static tls_wrapper_opts_t wolfssl_opts = {
 	.cleanup = wolfssl_cleanup,
 };
 
-/* *INDENT-OFF* */
 void __attribute__((constructor))
 libtls_wrapper_wolfssl_init(void)
 {
@@ -36,6 +35,5 @@ libtls_wrapper_wolfssl_init(void)
 
 	tls_wrapper_err_t err = tls_wrapper_register(&wolfssl_opts);
 	if (err != TLS_WRAPPER_ERR_NONE)
-		ETLS_FATAL("failed to register the tls wrapper instance 'wolfssl'\n");
+		ETLS_ERR("failed to register the tls wrapper 'wolfssl' %#x\n", err);
 }
-/* *INDENT-ON* */

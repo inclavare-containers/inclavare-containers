@@ -3,7 +3,6 @@
 
 static unsigned int dummy_private;
 
-/* *INDENT-OFF* */
 crypto_wrapper_err_t nullcrypto_init(crypto_wrapper_ctx_t *ctx)
 {
 	ETLS_DEBUG("ctx %p\n", ctx);
@@ -12,4 +11,3 @@ crypto_wrapper_err_t nullcrypto_init(crypto_wrapper_ctx_t *ctx)
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
-/* *INDENT-ON* */

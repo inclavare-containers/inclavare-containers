@@ -13,11 +13,10 @@ endif
 
 all: $(Targets)
 
-Dependencies := $(Dependencies_Prefix) $(Dependencies)
-#$(Targets): $(Dependencies)
-
 clean:
+	@for d in $(Clean_Dirs); do \
+	  make -C $$d $@; \
+	done
 	@rm -rf $(Cleans)
-	$(foreach c,$(Clean_Cmds),$(call $c))
 
 FORCE:

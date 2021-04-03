@@ -3,8 +3,8 @@
 
 extern tls_wrapper_err_t wolfssl_sgx_pre_init(void);
 extern tls_wrapper_err_t wolfssl_sgx_init(tls_wrapper_ctx_t *);
-extern tls_wrapper_err_t __secured wolfssl_sgx_use_privkey(tls_wrapper_ctx_t *ctx,
-							   void *__secured privkey_buf,
+extern tls_wrapper_err_t wolfssl_sgx_use_privkey(tls_wrapper_ctx_t *ctx,
+							   void *privkey_buf,
 							   size_t privkey_len);
 extern tls_wrapper_err_t wolfssl_sgx_use_cert(tls_wrapper_ctx_t *ctx,
 					      enclave_tls_cert_info_t *cert_info);
@@ -14,7 +14,7 @@ extern tls_wrapper_err_t wolfssl_sgx_receive(tls_wrapper_ctx_t *, void *, size_t
 extern tls_wrapper_err_t wolfssl_sgx_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t wolfssl_sgx_opts = {
-	.version = TLS_WRAPPER_API_VERSION_DEFAULT,
+	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
 	.type = "wolfssl_sgx",
 	.priority = 50,
 	.pre_init = wolfssl_sgx_pre_init,
@@ -27,7 +27,6 @@ static tls_wrapper_opts_t wolfssl_sgx_opts = {
 	.cleanup = wolfssl_sgx_cleanup,
 };
 
-/* *INDENT-OFF* */
 void __attribute__((constructor))
 libtls_wrapper_wolfssl_sgx_init(void)
 {
@@ -35,6 +34,5 @@ libtls_wrapper_wolfssl_sgx_init(void)
 
 	tls_wrapper_err_t err = tls_wrapper_register(&wolfssl_sgx_opts);
 	if (err != TLS_WRAPPER_ERR_NONE)
-		ETLS_FATAL("failed to register the tls wrapper instance 'wolfssl-sgx'\n");
+		ETLS_ERR("failed to register the tls wrapper 'wolfssl_sgx' %#x\n", err);
 }
-/* *INDENT-ON* */

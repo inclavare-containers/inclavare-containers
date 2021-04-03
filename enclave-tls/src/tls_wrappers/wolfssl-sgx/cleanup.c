@@ -7,9 +7,7 @@ tls_wrapper_err_t wolfssl_sgx_cleanup(tls_wrapper_ctx_t *ctx)
 	ETLS_DEBUG("called\n");
 
 	tls_wrapper_err_t err;
-	sgx_enclave_id_t eid = ctx->tls_private->config.eid;
-
-	ecall_cleanup(eid, &err, ctx);
+	ecall_cleanup((sgx_enclave_id_t)ctx->enclave_id, &err, ctx);
 
 	return err;
 }

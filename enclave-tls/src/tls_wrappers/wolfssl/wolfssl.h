@@ -1,9 +1,6 @@
-/* *INDENT-OFF* */
 #ifndef _WOLFSSL_PRIVATE_H
 #define _WOLFSSL_PRIVATE_H
-/* *INDENT-ON* */
 
-/* wolfSSL */
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
 #include <wolfssl/wolfcrypt/rsa.h>
@@ -20,7 +17,6 @@ typedef struct {
 	WOLFSSL *ssl;
 } wolfssl_ctx_t;
 
-extern const int rsa_pub_3072_raw_der_len;
 extern const uint8_t ias_response_body_oid[];
 extern const uint8_t ias_root_cert_oid[];
 extern const uint8_t ias_leaf_cert_oid[];
@@ -34,6 +30,13 @@ extern const uint8_t tcb_sign_chain_oid[];
 
 extern const size_t ias_oid_len;
 
-/* *INDENT-OFF* */
-#endif /* _WOLFSSL_H */
-/* *INDENT-ON* */
+static inline void print_wolfssl_err(WOLFSSL *ssl)
+{
+	char buf[128];
+	int err = wolfSSL_get_error(ssl, 0);
+	wolfSSL_ERR_error_string(err, buf);
+
+	ETLS_DEBUG("%s (err = %d)\n", buf, err);
+}
+
+#endif

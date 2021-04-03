@@ -16,7 +16,7 @@ extern crypto_wrapper_err_t wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 extern crypto_wrapper_err_t wolfcrypt_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t wolfcrypt_opts = {
-	.version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
+	.api_version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
 	.type = "wolfcrypt",
 	.priority = 20,
 	.pre_init = wolfcrypt_pre_init,
@@ -27,7 +27,6 @@ static crypto_wrapper_opts_t wolfcrypt_opts = {
 	.cleanup = wolfcrypt_cleanup,
 };
 
-/* *INDENT-OFF* */
 void __attribute__((constructor))
 libcrypto_wrapper_wolfcrypt_init(void)
 {
@@ -35,6 +34,5 @@ libcrypto_wrapper_wolfcrypt_init(void)
 
 	crypto_wrapper_err_t err = crypto_wrapper_register(&wolfcrypt_opts);
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
-		ETLS_FATAL("failed to register crypto wrapper instance wolfcrypt %#x\n", err);
+		ETLS_ERR("failed to register the crypto wrapper 'wolfcrypt' %#x\n", err);
 }
-/* *INDENT-ON* */

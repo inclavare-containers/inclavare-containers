@@ -1,57 +1,49 @@
 #include <string.h>
-#include <dirent.h>
-#include <string.h>
 #include <stdlib.h>
+#include <dirent.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
-
 #include "internal/tls_wrapper.h"
 
-int tls_wrapper_cmp(const void *a, const void *b)
+static int tls_wrapper_cmp(const void *a, const void *b)
 {
-	return (*(tls_wrapper_ctx_t **) b)->opts->priority -
-		(*(tls_wrapper_ctx_t **) a)->opts->priority;
+	return (*(tls_wrapper_ctx_t **)b)->opts->priority -
+		(*(tls_wrapper_ctx_t **)a)->opts->priority;
 }
 
 enclave_tls_err_t etls_tls_wrapper_load_all(void)
 {
 	ETLS_DEBUG("called\n");
 
-	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
-
-	DIR *dir;
-	struct dirent *ptr;
-
-	if ((dir = opendir(TLS_WRAPPERS_PATH)) == NULL) {
-		ETLS_ERR("Open '%s' error", TLS_WRAPPERS_PATH);
+	DIR *dir = opendir(TLS_WRAPPERS_DIR);
+	if (!dir) {
+		ETLS_ERR("failed to open %s", TLS_WRAPPERS_DIR);
 		return -ENCLAVE_TLS_ERR_UNKNOWN;
 	}
 
-	int total_num = 0;
-	int err_num = 0;
+	unsigned int total_loaded = 0;
+	struct dirent *ptr;
 	while ((ptr = readdir(dir)) != NULL) {
-		if (strcmp(ptr->d_name, ".") == 0 ||
-		    strcmp(ptr->d_name, "..") == 0)
+		if (!strcmp(ptr->d_name, ".") ||
+		    !strcmp(ptr->d_name, ".."))
 			continue;
-		else if (ptr->d_type == 8) {
-			total_num++;
-			err = etls_tls_wrapper_load_single(ptr->d_name);
-			if (err != ENCLAVE_TLS_ERR_NONE)
-				err_num++;
-		}
-	}
 
-	if (total_num == err_num) {
-		ETLS_ERR("ERROR: NO valid TLS Wrapper instance in %s\n",
-			 TLS_WRAPPERS_PATH);
-		closedir(dir);
-		return -ENCLAVE_TLS_ERR_LOAD_TLS;
+		if (ptr->d_type == DT_REG) {
+			if (etls_tls_wrapper_load_single(ptr->d_name) == ENCLAVE_TLS_ERR_NONE)
+				++total_loaded;
+		}
 	}
 
 	closedir(dir);
 
-	/* Sort all enclave_quote_ctx_t instances in the enclave_quotes_ctx, and the higher priority
-	 * instance should be sorted in front of the enclave_quotes_ctx array.
+	if (!total_loaded) {
+		ETLS_ERR("unavailable tls wrapper instance under %s\n",
+			 TLS_WRAPPERS_DIR);
+		return -ENCLAVE_TLS_ERR_LOAD_TLS_WRAPPERS;
+	}
+
+	/* Sort all tls_wrappers_ctx_t instances in the tls_wrappers_ctx, and the higher priority
+	 * instance should be sorted in front of the tls_wrappers_ctx array.
 	 */
 	qsort(tls_wrappers_ctx, tls_wrappers_nums, sizeof(tls_wrapper_ctx_t *),
 	      tls_wrapper_cmp);

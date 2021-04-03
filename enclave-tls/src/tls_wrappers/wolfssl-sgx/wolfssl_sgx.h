@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
 #ifndef _WOLFSSL_SGX_H
 #define _WOLFSSL_SGX_H
-/* *INDENT-ON* */
 
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
@@ -12,6 +10,4 @@ typedef struct {
 	WOLFSSL *ssl;
 } wolfssl_sgx_ctx_t;
 
-/* *INDENT-OFF* */
-#endif /* _WOLFSSL_SGX_H */
-/* *INDENT-ON* */
+#endif

@@ -96,6 +96,7 @@ EXAMPLE:
 		}
 
 		C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto))
+
 		return nil
 	},
 }

@@ -17,7 +17,7 @@ extern enclave_quote_err_t nullquote_verify_evidence(enclave_quote_ctx_t *,
 extern enclave_quote_err_t nullquote_cleanup(enclave_quote_ctx_t *);
 
 static enclave_quote_opts_t nullquote_opts = {
-	.version = ENCLAVE_QUOTE_API_VERSION_DEFAULT,
+	.api_version = ENCLAVE_QUOTE_API_VERSION_DEFAULT,
 	.flags = ENCLAVE_QUOTE_FLAGS_DEFAULT,
 	.type = "nullquote",
 	.priority = 0,
@@ -29,7 +29,6 @@ static enclave_quote_opts_t nullquote_opts = {
 	.cleanup = nullquote_cleanup,
 };
 
-/* *INDENT-OFF* */
 void __attribute__((constructor))
 libenclave_quote_nullquote_init(void)
 {
@@ -37,6 +36,5 @@ libenclave_quote_nullquote_init(void)
 
 	enclave_quote_err_t err = enclave_quote_register(&nullquote_opts);
 	if (err != ENCLAVE_QUOTE_ERR_NONE)
-		ETLS_FATAL("failed to register the enclave quote 'nullquote'\n");
+		ETLS_ERR("failed to register the enclave quote 'nullquote' %#x\n", err);
 }
-/* *INDENT-ON* */

@@ -5,54 +5,48 @@
 #include <enclave-tls/log.h>
 #include "internal/enclave_quote.h"
 
-int enclave_quote_cmp(const void *a, const void *b)
+static int enclave_quote_cmp(const void *a, const void *b)
 {
-	return (*(enclave_quote_ctx_t **) b)->opts->priority -
-		(*(enclave_quote_ctx_t **) a)->opts->priority;
+	return (*(enclave_quote_ctx_t **)b)->opts->priority -
+		(*(enclave_quote_ctx_t **)a)->opts->priority;
 }
 
 enclave_tls_err_t etls_enclave_quote_load_all(void)
 {
 	ETLS_DEBUG("called\n");
 
-	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
-
-	DIR *dir;
-	struct dirent *ptr;
-
-	if ((dir = opendir(ENCLAVE_QUOTES_PATH)) == NULL) {
-		ETLS_ERR("Open '%s' error", ENCLAVE_QUOTES_PATH);
+	DIR *dir = opendir(ENCLAVE_QUOTES_DIR);
+	if (!dir) {
+		ETLS_ERR("failed to open %s", ENCLAVE_QUOTES_DIR);
 		return -ENCLAVE_TLS_ERR_UNKNOWN;
 	}
 
-	int total_num = 0;
-	int err_num = 0;
+	unsigned int total_loaded = 0;
+	struct dirent *ptr;
 	while ((ptr = readdir(dir)) != NULL) {
-		if (strcmp(ptr->d_name, ".") == 0 ||
-		    strcmp(ptr->d_name, "..") == 0)
+		if (!strcmp(ptr->d_name, ".") ||
+		    !strcmp(ptr->d_name, ".."))
 			continue;
-		else if (ptr->d_type == 8) {
-			total_num++;
-			err = etls_enclave_quote_load_single(ptr->d_name);
-			if (err != ENCLAVE_TLS_ERR_NONE)
-				err_num++;
-		}
-	}
 
-	if (total_num == err_num) {
-		ETLS_ERR("ERROR: NO valid Enclave Quote instance in %s\n",
-			 ENCLAVE_QUOTES_PATH);
-		closedir(dir);
-		return -ENCLAVE_TLS_ERR_LOAD_QUOTE;
+		if (ptr->d_type == DT_REG) {
+			if (etls_enclave_quote_load_single(ptr->d_name) == ENCLAVE_TLS_ERR_NONE)
+				++total_loaded;
+		}
 	}
 
 	closedir(dir);
 
+	if (!total_loaded) {
+		ETLS_ERR("unavailable enclave quote instance under %s\n",
+			 ENCLAVE_QUOTES_DIR);
+		return -ENCLAVE_TLS_ERR_LOAD_ENCLAVE_QUOTES;
+	}
+
 	/* Sort all enclave_quote_ctx_t instances in the enclave_quotes_ctx, and the higher priority
 	 * instance should be sorted in front of the enclave_quotes_ctx array.
 	 */
-	qsort(enclave_quotes_ctx, enclave_quote_nums,
-	      sizeof(enclave_quote_ctx_t *), enclave_quote_cmp);
+	qsort(enclave_quotes_ctx, enclave_quote_nums, sizeof(enclave_quote_ctx_t *),
+	      enclave_quote_cmp);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

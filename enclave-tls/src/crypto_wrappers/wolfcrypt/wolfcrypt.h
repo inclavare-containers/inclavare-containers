@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
 #ifndef _WOLFCRYPT_H
 #define _WOLFCRYPT_H
-/* *INDENT-ON* */
 
 #include <enclave-tls/compilation.h>
 #include <wolfssl/options.h>
@@ -18,14 +16,6 @@ typedef struct {
 	RsaKey key;
 	unsigned int privkey_len;
 	uint8_t privkey_buf[2048];
-} wolfcrypt_secured_t;
-
-typedef struct {
-	wolfcrypt_secured_t __secured *secured;
 } wolfcrypt_ctx_t;
 
-extern const int rsa_pub_3072_raw_der_len;
-
-/* *INDENT-OFF* */
-#endif /* _WOLFCRYPT_H */
-/* *INDENT-ON* */
+#endif

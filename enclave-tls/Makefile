@@ -22,19 +22,7 @@ $(stub_dir)/sgx_stub_enclave.signed.so:
 	make -C $(stub_dir)
 
 Cleans += $(Build_Dir)
-
-define clean_all
-  for d in $(dirs); do \
-    make -C $$d $@; \
-  done
-endef
-Clean_Cmds += clean_all
-
-clean:
-	@rm -rf $(Build_Dir)
-	for d in $(dirs); do \
-	  make -C $$d $@; \
-	done
+Clean_Dirs += $(dirs)
 
 install: all
 	for d in $(dirs); do \
@@ -46,4 +34,4 @@ uninstall:
 	  make -C $$d $@; \
 	done
 
-#include $(Topdir)/rules/build_rules.mk
+include $(Topdir)/rules/build_rules.mk

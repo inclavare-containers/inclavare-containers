@@ -7,9 +7,7 @@ tls_wrapper_err_t wolfssl_sgx_receive(tls_wrapper_ctx_t *ctx, void *buf, size_t 
 	ETLS_DEBUG("called\n");
 
 	tls_wrapper_err_t err;
-	sgx_enclave_id_t eid = ctx->tls_private->config.eid;
-
-	ecall_receive(eid, &err, ctx, buf, buf_size);
+	ecall_receive((sgx_enclave_id_t)ctx->enclave_id, &err, ctx, buf, buf_size);
 
 	return err;
 }

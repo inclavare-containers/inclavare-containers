@@ -17,12 +17,12 @@ var version = ""
 // and will be populated by the Makefile
 var gitCommit = ""
 
-const usage = `inclavared command line tool
+const usage = `Sample client program based on enclave-tls
 `
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "elv"
+	app.Name = "enclave-tls-client"
 	app.Usage = usage
 
 	var ver []string

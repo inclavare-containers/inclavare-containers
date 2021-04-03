@@ -4,33 +4,55 @@
 #include <enclave-tls/crypto_wrapper.h>
 #include "wolfcrypt.h"
 
-crypto_wrapper_err_t __secured
+crypto_wrapper_err_t
 wolfcrypt_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
 		      uint8_t *privkey_buf, unsigned int *privkey_len)
 {
-	wolfcrypt_ctx_t *wc_ctx = (wolfcrypt_ctx_t *)ctx->crypto_private;
-	wolfcrypt_secured_t *secured = wc_ctx->secured;
+	ETLS_DEBUG("ctx %p, algo %d, privkey_buf %p, privkey_len %p\n",
+		   ctx, algo, privkey_buf, privkey_len);
 
-	wc_InitRsaKey(&secured->key, 0);
+	if (!ctx || !privkey_len)
+		return -CRYPTO_WRAPPER_ERR_INVALID;
+
+	unsigned int buf_len = *privkey_len;
+
+	ETLS_DEBUG("requesting %d-byte private key buffer ...\n", buf_len);
+
+	uint8_t *buf = privkey_buf;
+	if (buf_len && !buf)
+		return -CRYPTO_WRAPPER_ERR_INVALID;
+
+	if (algo != ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
+		ETLS_DEBUG("unsupported algorithm %d\n", algo);
+		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
+	}
+
+	wolfcrypt_ctx_t *wc_ctx = (wolfcrypt_ctx_t *)ctx->crypto_private;
+	wc_InitRsaKey(&wc_ctx->key, 0);
 
 	RNG rng;
 	wc_InitRng(&rng);
-	int ret = wc_MakeRsaKey(&secured->key, 3072, 65537, &rng);
+	int ret = wc_MakeRsaKey(&wc_ctx->key, 3072, 65537, &rng);
 	if (ret) {
 		ETLS_DEBUG("failed to generate RSA-3072 private key %d\n", ret);
-		return ret;
+		return WOLFCRYPT_ERR_CODE(ret);
 	}
 
 	uint8_t der[4096];
-	int der_sz = wc_RsaKeyToDer(&secured->key, der, sizeof(der));
+	if (!buf_len) {
+		buf = der;
+		buf_len = sizeof(der);
+	}
+	int der_sz = wc_RsaKeyToDer(&wc_ctx->key, buf, buf_len);
 	if (der_sz < 0) {
 		ETLS_DEBUG("failed to convert RSA-3072 private key to DER format %d\n", der_sz);
-		return der_sz;
+		return WOLFCRYPT_ERR_CODE(der_sz);
 	}
 
-	assert(der_sz <= sizeof(der));
+	assert(der_sz <= buf_len);
 	*privkey_len = der_sz;
-	memcpy(privkey_buf, der, der_sz);
+
+	ETLS_DEBUG("RSA-3072 private key (%d-byte) in DER format generated\n", der_sz);
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }

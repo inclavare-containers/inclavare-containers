@@ -1,4 +1,4 @@
-module github.com/inclavare-containers/elv
+module github.com/inclavare-containers/enclave-tls
 
 go 1.14
 

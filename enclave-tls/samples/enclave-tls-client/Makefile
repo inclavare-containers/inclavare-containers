@@ -25,7 +25,7 @@ go_build := \
 
 Dependencies += $(Build_Libdir)/libenclave_tls.so
 
-$(Targets): ra-tls-client.c $(Build_Libdir)/libenclave_tls.so
+$(Targets): client.c $(Build_Libdir)/libenclave_tls.so
 	dest=$(dir $@); \
 	$(INSTALL) -d -m 0755 $$dest
 	$(go_build) -o $@ .
@@ -33,8 +33,7 @@ $(Targets): ra-tls-client.c $(Build_Libdir)/libenclave_tls.so
 $(Build_Libdir)/libenclave_tls.so:
 	make -C $(Enclave_Tls_Srcdir) $@
 
-clean:
-	@rm -f *.o $(target)
+Cleans += $(wildcard *.o) $(target)
 
 install: all
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Bindir)

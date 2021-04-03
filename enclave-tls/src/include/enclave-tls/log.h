@@ -1,7 +1,6 @@
-/* *INDENT-OFF* */
 #ifndef _ENCLAVE_LOG_H_
 #define _ENCLAVE_LOG_H_
-/* *INDENT-ON* */
+
 #ifndef SGX_ENCLAVE
   #include <time.h>
 #endif
@@ -43,7 +42,7 @@ extern enclave_tls_log_level_t global_log_level;
 #ifdef SGX_ENCLAVE
 #define __PR__(level, io, fmt, ...)     \
         do {    \
-        	printf("[" #level "] %s--%d lines "fmt, __func__, __LINE__, ##__VA_ARGS__); \
+		printf("[" #level "] %s()@L%d: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define __PR__(level, io, fmt, ...)     \
@@ -57,12 +56,10 @@ extern enclave_tls_log_level_t global_log_level;
 				localtime_r(&__t__, &__loc__);  \
 				char __buf__[64]; \
 				strftime(__buf__, sizeof(__buf__), "%a %b %e %T %Z %Y", &__loc__);      \
-				fprintf(io, "%s: [" #level "] %s(): " fmt, __buf__, __func__, ##__VA_ARGS__);   \
+				fprintf(io, "%s: [" #level "] %s()@L%d: " fmt, __buf__, __FUNCTION__, __LINE__, ##__VA_ARGS__);   \
 			}	\
 		} \
 	} while (0)
 #endif
 
-/* *INDENT-OFF* */
 #endif
-/* *INDENT-ON* */

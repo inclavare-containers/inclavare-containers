@@ -5,22 +5,24 @@
 #include "internal/enclave_quote.h"
 #include "internal/crypto_wrapper.h"
 
+/* The global configurations present by /opt/enclave-tls/config.toml */
 etls_core_context_t global_core_context;
-enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
+/* The global log level used by log.h */
+enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
 
-/* *INDENT-OFF* */
-void __attribute__((constructor))
-libenclave_tls_init(void)
+void __attribute__((constructor)) libenclave_tls_init(void)
 {
 	ETLS_DEBUG("called\n");
 
-	/* Initialize global variables. It is intend to leave tls_type,
-	 * attester_type, verifier_type and crypto_type empty to use the
+	/* Initialize global configurations. It is intend to leave tls_type,
+	 * attester_type, verifier_type and crypto_type empty to take the
 	 * best guess.
 	 */
 	global_core_context.config.api_version = ENCLAVE_TLS_API_VERSION_DEFAULT;
 	global_core_context.config.log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
 	global_core_context.config.cert_algo = ENCLAVE_TLS_CERT_ALGO_DEFAULT;
+
+	/* TODO: load and parse the global configuration file */
 
 	/* Load all crypto wrapper instances */
 	enclave_tls_err_t err = etls_crypto_wrapper_load_all();
@@ -37,4 +39,3 @@ libenclave_tls_init(void)
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		ETLS_FATAL("failed to load any tls wrapper %#x\n", err);
 }
-/* *INDENT-ON* */

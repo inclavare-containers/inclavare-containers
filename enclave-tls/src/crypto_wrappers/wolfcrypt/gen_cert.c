@@ -4,12 +4,14 @@
 #include <enclave-tls/cert.h>
 #include "wolfcrypt.h"
 
-/* *INDENT-OFF* */
-crypto_wrapper_err_t __secured
+crypto_wrapper_err_t
 wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 		   enclave_tls_cert_info_t *cert_info)
 {
 	ETLS_DEBUG("ctx %p, cert_info %p\n", ctx, cert_info);
+
+	if (!ctx || !cert_info)
+		return -CRYPTO_WRAPPER_ERR_INVALID;
 
 	Cert crt;
 	wc_InitCert(&crt);
@@ -25,10 +27,10 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 		sizeof(crt.subject.commonName) - 1);
 	crt.subject.commonName[sizeof(crt.subject.commonName) - 1] = '\0';
 
-	ETLS_DEBUG("evidence type %s\n", cert_info->evidence.type);
+	ETLS_DEBUG("evidence type '%s' requested\n", cert_info->evidence.type);
 
-	/* FIXME: add the handle of different quote types */
-	if (!strcmp(cert_info->evidence.type, "sgx-epid")) {
+	/* FIXME: this is not the best place to dispatch quote type */
+	if (!strcmp(cert_info->evidence.type, "sgx_epid")) {
 		attestation_verification_report_t *epid = &cert_info->evidence.epid;
 
 		assert(sizeof(crt.iasAttestationReport) >= epid->ias_report_len);
@@ -51,7 +53,7 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 
 		memcpy(crt.quote, ecdsa->quote, ecdsa->quote_len);
 		crt.quoteSz = ecdsa->quote_len;
-	} else if (!strcmp(cert_info->evidence.type, "sgx-la")) {
+	} else if (!strcmp(cert_info->evidence.type, "sgx_la")) {
 		/* TODO */
 	}
 
@@ -60,7 +62,7 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 	wolfcrypt_ctx_t *wc_ctx = (wolfcrypt_ctx_t *)ctx->crypto_private;
 	cert_info->cert_len = wc_MakeSelfCert(&crt, cert_info->cert_buf,
 					      sizeof(cert_info->cert_buf),
-					      &wc_ctx->secured->key, &rng);
+					      &wc_ctx->key, &rng);
 	if (cert_info->cert_len <= 0) {
 		ETLS_DEBUG("failed to create self-signing certificate %d\n", cert_info->cert_len);
 		return WOLFCRYPT_ERR_CODE(cert_info->cert_len);
@@ -70,4 +72,3 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
-/* *INDENT-ON* */

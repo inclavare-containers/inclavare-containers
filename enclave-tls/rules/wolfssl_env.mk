@@ -55,9 +55,9 @@ Wolfssl_Extra_Ldflags ?=
 Wolfssl_Ldflags := $(LDFLAGS) $(Wolfssl_Extra_Ldflags)
 Wolfssl_Sgx_Ldflags := $(Enclave_Ldflags) $(Wolfssl_Ldflags)
 
-Dependencies += $(Build_Libdir)/libwolfssl.so
-ifeq ($(Sgx_Enclave),1)
-  Dependencies += $(Build_Libdir)/libwolfssl_sgx.a
-endif
+#Dependencies += $(Build_Libdir)/libwolfssl.so
+#ifeq ($(Sgx_Enclave),1)
+#  Dependencies += $(Build_Libdir)/libwolfssl_sgx.a
+#endif
 
 Tls_Wolfssl := 1

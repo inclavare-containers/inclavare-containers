@@ -1,4 +1,4 @@
 enclave {
 	from "../../src/tls_wrappers/wolfssl-sgx/wolfssl_sgx.edl" import *;
-	from "../../src/enclave_quotes/ecdsa/sgx_ecdsa.edl" import *;
+	from "../../src/enclave_quotes/sgx-ecdsa/sgx_ecdsa.edl" import *;
 };

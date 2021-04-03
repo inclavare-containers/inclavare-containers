@@ -6,7 +6,7 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "wolfssl.h"
 
-const int rsa_pub_3072_raw_der_len = 398;      /* rsa_pub_3072_pcks_der_len - pcks_nr_1_header_len */
+static const int rsa_pub_3072_raw_der_len = 398;      /* rsa_pub_3072_pcks_der_len - pcks_nr_1_header_len */
 
 #ifdef SGX_ENCLAVE
 void *memmem(void *start, unsigned int s_len, void *find, unsigned int f_len)
@@ -89,7 +89,7 @@ int extract_x509_extension(const uint8_t *ext, int ext_len,
 static int extract_cert_extensions(const uint8_t *ext, int ext_len,
 				   attestation_evidence_t *evidence)
 {
-	if (!strcmp(evidence->type, "sgx-epid")) {
+	if (!strcmp(evidence->type, "sgx_epid")) {
 		int rc = extract_x509_extension(ext, ext_len,
 						ias_response_body_oid,
 						ias_oid_len,
@@ -129,7 +129,7 @@ static int extract_cert_extensions(const uint8_t *ext, int ext_len,
 					      quote_oid, ias_oid_len,
 					      evidence->ecdsa.quote, &evidence->ecdsa.quote_len,
 					      sizeof(evidence->ecdsa.quote));
-	} else if (!strcmp(evidence->type, "sgx-la")) {
+	} else if (!strcmp(evidence->type, "sgx_la")) {
 		/* TODO */
 	}
 

@@ -7,7 +7,6 @@
 #include "internal/tls_wrapper.h"
 #include "internal/enclave_quote.h"
 
-/* *INDENT-OFF* */
 enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 				   enclave_tls_handle *handle)
 {
@@ -16,13 +15,20 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 
 	ETLS_DEBUG("conf %p, handle %p\n", conf, handle);
 
-	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
-
 	etls_core_context_t *ctx = calloc(1, sizeof(*ctx));
 	if (!ctx)
 		return -ENCLAVE_TLS_ERR_NO_MEM;
 
 	ctx->config = *conf;
+
+	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_INVALID;
+
+	if (ctx->config.api_version > ENCLAVE_TLS_API_VERSION_MAX) {
+		ETLS_ERR("unsupported enclave-tls api version %d > %d\n",
+			 ctx->config.api_version, ENCLAVE_TLS_API_VERSION_MAX);
+		goto err_ctx;
+	}
+
 	if (ctx->config.log_level < 0 || ctx->config.log_level >= ENCLAVE_TLS_LOG_LEVEL_MAX) {
 		ctx->config.log_level = global_core_context.config.log_level;
 		ETLS_WARN("log level reset to global value %d\n", global_core_context.config.log_level);
@@ -35,8 +41,6 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 	}
 
 	global_log_level = ctx->config.log_level;
-
-	global_core_context.config.api_version = ctx->config.api_version;
 
 	/* Select the target crypto wrapper to be used */
 	char *choice = ctx->config.crypto_type;
@@ -73,7 +77,7 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 
 	*handle = ctx;
 
-	ETLS_DEBUG("handle %p returned\n", ctx);
+	ETLS_DEBUG("the handle %p returned\n", ctx);
 
 	return ENCLAVE_TLS_ERR_NONE;
 
@@ -81,4 +85,3 @@ err_ctx:
 	free(ctx);
 	return err;
 }
-/* *INDENT-ON* */

@@ -1,4 +1,4 @@
-package main // import "github.com/inclavare-containers/inclavared"
+package main
 
 import (
 	"fmt"
@@ -17,12 +17,12 @@ var version = ""
 // and will be populated by the Makefile
 var gitCommit = ""
 
-const usage = `Enclave Daemon
+const usage = `Sample server program based on enclave-tls
 `
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "inclavared"
+	app.Name = "enclave-tls-server"
 	app.Usage = usage
 
 	var ver []string

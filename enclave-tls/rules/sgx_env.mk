@@ -30,6 +30,25 @@ ifneq ($(__Build_Env_Imported),1)
   $(error "Please import build_env.mk first!")
 endif
 
+# Decide whether to compile the complete untrusted application plus enclave image
+# or just the trusted static library.
+ifeq ($(App_Name),)
+  ifeq ($(Enclave_Tls_Instance_Name),)
+    $(error "Invalid settings for building SGX stuffs!")
+  else
+    App_Name := $(subst -,_,$(Enclave_Tls_Instance_Name))
+  endif
+
+  no_app := 1
+endif
+
+enclave_name = $(App_Name)_enclave
+enclave_config_file = $(enclave_name).xml
+enclave_linker_script = $(enclave_name).lds
+enclave_signing_key = $(enclave_name).pem
+#enclave_static_lib = $(enclave_name).a
+app_edl = $(App_Name).edl
+
 SGX_DEBUG ?= $(DEBUG)
 SGX_PRERELEASE ?=
 
@@ -172,7 +191,8 @@ Enclave_Ldflags := \
   -Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
   -Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
   -Wl,--defsym,__ImageBase=0 -Wl,--gc-sections   \
-  -Wl,--version-script=$(enclave_name)_enclave.lds
+  -Wl,--version-script=$(enclave_linker_script)
   #$(MITIGATION_LDFLAGS)
 
 Sgx_Enclave := 1
+__Sgx_Env_Imported := 1
