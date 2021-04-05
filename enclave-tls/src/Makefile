@@ -8,7 +8,7 @@ ifneq ($(__Build_Env_Imported),1)
 endif
 
 libenclave_tls := $(notdir $(Enclave_Tls_Lib))
-crypto_wrappers := $(addsuffix .so,$(addprefix libcrypto_wrapper_,nullcrypto wolfcrypt))
+crypto_wrappers := $(addsuffix .so,$(addprefix libcrypto_wrapper_,nullcrypto wolfcrypt wolfcrypt-sgx))
 tls_wrappers := $(addsuffix .so,$(addprefix libtls_wrapper_,nulltls wolfssl wolfssl-sgx))
 enclave_quotes := $(addsuffix .so,$(addprefix libenclave_quote_,nullquote sgx-ecdsa))
 all: $(addprefix $(Build_Libdir)/,$(libenclave_tls) $(crypto_wrappers) $(tls_wrappers) $(enclave_quotes))

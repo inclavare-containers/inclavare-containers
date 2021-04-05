@@ -12,47 +12,47 @@
 #include "../wolfssl/cleanup.c"
 #include "../wolfssl/oid.c"
 
-tls_wrapper_err_t ecall_pre_init(void)
+tls_wrapper_err_t ecall_wolfssl_pre_init(void)
 {
 	return wolfssl_pre_init();
 }
 
-tls_wrapper_err_t ecall_init(tls_wrapper_ctx_t *ctx)
+tls_wrapper_err_t ecall_wolfssl_init(tls_wrapper_ctx_t *ctx)
 {
 	return wolfssl_init(ctx);
 }
 
-tls_wrapper_err_t ecall_use_privkey(tls_wrapper_ctx_t *ctx,
-				    void *privkey_buf,
-				    size_t privkey_len)
+tls_wrapper_err_t ecall_wolfssl_use_privkey(tls_wrapper_ctx_t *ctx,
+					    void *privkey_buf,
+					    size_t privkey_len)
 {
 	return wolfssl_use_privkey(ctx, privkey_buf, privkey_len);
 }
 
-tls_wrapper_err_t ecall_use_cert(tls_wrapper_ctx_t * ctx,
-				 enclave_tls_cert_info_t *cert_info)
+tls_wrapper_err_t ecall_wolfssl_use_cert(tls_wrapper_ctx_t *ctx,
+					 enclave_tls_cert_info_t *cert_info)
 {
 	return wolfssl_use_cert(ctx, cert_info);
 }
 
-tls_wrapper_err_t ecall_negotiate(tls_wrapper_ctx_t * ctx, int fd)
+tls_wrapper_err_t ecall_wolfssl_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 {
 	return wolfssl_negotiate(ctx, fd);
 }
 
-tls_wrapper_err_t ecall_transmit(tls_wrapper_ctx_t *ctx, void *buf,
+tls_wrapper_err_t ecall_wolfssl_transmit(tls_wrapper_ctx_t *ctx, void *buf,
 				 size_t *buf_size)
 {
 	return wolfssl_transmit(ctx, buf, buf_size);
 }
 
-tls_wrapper_err_t ecall_receive(tls_wrapper_ctx_t *ctx, void *buf,
+tls_wrapper_err_t ecall_wolfssl_receive(tls_wrapper_ctx_t *ctx, void *buf,
 				size_t *buf_size)
 {
 	return wolfssl_receive(ctx, buf, buf_size);
 }
 
-tls_wrapper_err_t ecall_cleanup(tls_wrapper_ctx_t *ctx)
+tls_wrapper_err_t ecall_wolfssl_cleanup(tls_wrapper_ctx_t *ctx)
 {
 	return wolfssl_cleanup(ctx);
 }

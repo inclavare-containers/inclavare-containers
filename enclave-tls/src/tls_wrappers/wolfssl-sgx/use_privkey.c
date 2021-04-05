@@ -9,7 +9,7 @@ tls_wrapper_err_t wolfssl_sgx_use_privkey(tls_wrapper_ctx_t *ctx,
 	ETLS_DEBUG("called\n");
 
 	tls_wrapper_err_t err;
-	ecall_use_privkey((sgx_enclave_id_t)ctx->enclave_id, &err, ctx, privkey_buf, privkey_len);
+	ecall_wolfssl_use_privkey((sgx_enclave_id_t)ctx->enclave_id, &err, ctx, privkey_buf, privkey_len);
 
 	return err;
 }
