@@ -2,7 +2,6 @@
 #include <enclave-tls/crypto_wrapper.h>
 #include "wolfcrypt.h"
 
-/* *INDENT-OFF* */
 crypto_wrapper_err_t wolfcrypt_cleanup(crypto_wrapper_ctx_t *ctx)
 {
 	ETLS_DEBUG("ctx %p\n", ctx);
@@ -13,4 +12,3 @@ crypto_wrapper_err_t wolfcrypt_cleanup(crypto_wrapper_ctx_t *ctx)
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
-/* *INDENT-ON* */

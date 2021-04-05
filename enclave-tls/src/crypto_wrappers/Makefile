@@ -1,4 +1,4 @@
-dirs := nullcrypto wolfcrypt
+dirs := nullcrypto wolfcrypt wolfcrypt-sgx
 all clean install uninstall:
 	for d in $(dirs); do \
 	  make -C $$d $@; \

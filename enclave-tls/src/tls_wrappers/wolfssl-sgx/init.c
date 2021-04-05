@@ -12,7 +12,7 @@ tls_wrapper_err_t wolfssl_sgx_init(tls_wrapper_ctx_t *ctx)
 	ETLS_DEBUG("calling init() with enclave id %ld ...\n", ctx->enclave_id);
 
 	tls_wrapper_err_t err;
-	ecall_init((sgx_enclave_id_t)ctx->enclave_id, &err, ctx);
+	ecall_wolfssl_init((sgx_enclave_id_t)ctx->enclave_id, &err, ctx);
 
 	return err;
 }
