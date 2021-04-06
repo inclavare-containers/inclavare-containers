@@ -1,0 +1,11 @@
+enclave {
+	from "../../src/crypto_wrappers/wolfcrypt-sgx/wolfcrypt_sgx.edl" import *;
+	from "../../src/tls_wrappers/wolfssl-sgx/wolfssl_sgx.edl" import *;
+	from "../../src/enclave_quotes/sgx-ecdsa/sgx_ecdsa.edl" import *;
+
+	untrusted {
+		void ocall_print_string([in, string] const char *str);
+		void ocall_current_time([out] double *time);
+		void ocall_low_res_time([out] int *time);
+	};
+};

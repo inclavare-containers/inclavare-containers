@@ -25,9 +25,6 @@ enclave {
 
 	untrusted {
 		int ocall_verify_certificate([in, out, size=der_crt_len]uint8_t* der_crt, uint32_t der_crt_len);
-		void ocall_print_string([in, string] const char* str);
-		void ocall_current_time([out] double* time);
-		void ocall_low_res_time([out] int* time);
 		size_t ocall_recv(int sockfd, [out, size=len] void *buf, size_t len,
 				  int flags) propagate_errno;
 		size_t ocall_send(int sockfd, [in, size=len] const void *buf, size_t len,

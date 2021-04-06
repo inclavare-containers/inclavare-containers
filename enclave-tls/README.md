@@ -14,10 +14,16 @@ git clone https://github.com/alibaba/inclavare-containers -b enclave-tls
 
 ```shell
 cd inclavare-containers/enclave-tls
-make && make install
+make
+make install
 ```
 
-{enclave-tls-server,enclave-tls-client} will be installed to /opt/enclave-tls/bin/{enclave-tls-server,enclave-tls-client} on your system.
+`{enclave-tls-server,enclave-tls-client}` will be installed to `/opt/enclave-tls/bin/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
+
+If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, wolfcrypt\_sgx), please type the following command.
+```
+make SGX=1
+```
 
 # RUN
 
@@ -25,11 +31,11 @@ Right now, Enclave TLS supports the following instance types:
 
 | Priority | Tls Wrapper instances | Encalve Quote instances | Crypto Wrapper Instance |
 | -------- | --------------------- | ----------------------- | ----------------------- |
-| low      | Nulltls               | Null                    | Null                    |
-| Medium   | Wolfssl               | Sgx-ecdsa               | Wolfcrypt               |
-| High     | Wolfs-sgx             |                         |                         |
+| low      | nulltls               | nullquote               | nullcrypto              |
+| Medium   | wolfssl               | sgx\_ecdsa              | wolfcrypt               |
+| High     | wolfssl\_sgx          |                         | wolfcrypt\_sgx          |
 
-By default,  Enclave TLS will select the highest priority instance to work.
+By default,  Enclave TLS will select the **highest priority** instance to use.
 
 ## Run enclave tls server
 ```

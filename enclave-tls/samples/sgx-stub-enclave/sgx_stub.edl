@@ -1,5 +1,3 @@
 enclave {
-	from "../../src/crypto_wrappers/wolfcrypt-sgx/wolfcrypt_sgx.edl" import *;
-	from "../../src/tls_wrappers/wolfssl-sgx/wolfssl_sgx.edl" import *;
-	from "../../src/enclave_quotes/sgx-ecdsa/sgx_ecdsa.edl" import *;
+	from "../../src/sgx/enclave_tls.edl" import *;
 };

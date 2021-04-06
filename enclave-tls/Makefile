@@ -22,7 +22,7 @@ $(stub_dir)/sgx_stub_enclave.signed.so:
 	make -C $(stub_dir)
 
 Cleans += $(Build_Dir)
-Clean_Dirs += $(dirs)
+Clean_Dirs += $(dirs) $(Enclave_Tls_Srcdir)/sgx
 
 install: all
 	for d in $(dirs); do \
