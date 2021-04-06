@@ -27,11 +27,16 @@ else ifeq ($(Enclave_Tls_Instance_Type), tls-wrapper)
   instance_files := $(addsuffix .c,negotiate receive transmit use_cert use_privkey)
 else ifeq ($(Enclave_Tls_Instance_Type), enclave-quote)
   instance_files := $(addsuffix .c,collect_evidence verify_evidence)
+else ifeq ($(Enclave_Tls_Instance_Type), enclave-tls)
+  instance_files :=
 else
   $(error "Unsupported instance type '$(Enclave_Tls_Instance_Type)'")
 endif
+
+ifneq ($(Enclave_Tls_Instance_Type), enclave-tls)
 instance_files += $(Enclave_Tls_Instance_Extra_Files) $(base_files)
 instance_objs := $(instance_files:.c=.o)
+endif
 
 instance_cflags := \
   $(CFLAGS) -I$(Enclave_Tls_Incdir)

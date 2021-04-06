@@ -7,16 +7,30 @@ ifneq ($(__Build_Env_Imported),1)
   include $(Topdir)/rules/build_env.mk
 endif
 
-libenclave_tls := $(notdir $(Enclave_Tls_Lib))
-crypto_wrappers := $(addsuffix .so,$(addprefix libcrypto_wrapper_,nullcrypto wolfcrypt wolfcrypt-sgx))
-tls_wrappers := $(addsuffix .so,$(addprefix libtls_wrapper_,nulltls wolfssl wolfssl-sgx))
-enclave_quotes := $(addsuffix .so,$(addprefix libenclave_quote_,nullquote sgx-ecdsa))
-all: $(addprefix $(Build_Libdir)/,$(libenclave_tls) $(crypto_wrappers) $(tls_wrappers) $(enclave_quotes))
-#Targets: 
+ifdef SGX
+  include $(Topdir)/rules/wolfssl_env.mk
+  Enclave_Tls_Cflags += \
+    $(Wolfssl_Cflags) -DSGX_ENCLAVE \
+    -I$(Topdir)/samples/sgx-stub-enclave \
+    -I/opt/intel/sgxsdk/include \
+    -I$(Topdir)/build/include
+  Enclave_Tls_Extra_Ldflags := \
+    -L/opt/intel/sgxsgk/lib64 -lsgx_uae_service -lsgx_urts \
+    -lsgx_dcap_ql -lsgx_dcap_quoteverify \
+    -L$(Topdir)/build/lib -lwolfssl
+endif
 
-#objs := $(WOLFSSL_ENCLAVE_DIR)/wolfssl_enclave_u.o
-#tlibs := libtls_wrapper_wolfssl_sgx.a wolfssl_enclave.signed.so
-#all += $(objs) $(tlibs)
+libenclave_tls := $(notdir $(Enclave_Tls_Lib))
+crypto_wrappers := $(addsuffix .so,$(addprefix libcrypto_wrapper_,nullcrypto wolfcrypt))
+tls_wrappers := $(addsuffix .so,$(addprefix libtls_wrapper_,nulltls wolfssl))
+enclave_quotes := $(addsuffix .so,$(addprefix libenclave_quote_,nullquote))
+ifdef SGX
+  crypto_wrappers += $(addsuffix .so,$(addprefix libcrypto_wrapper_,wolfcrypt-sgx))
+  tls_wrappers += $(addsuffix .so,$(addprefix libtls_wrapper_,wolfssl-sgx))
+  enclave_quotes += $(addsuffix .so,$(addprefix libenclave_quote_,sgx-ecdsa))
+endif
+
+all: $(addprefix $(Build_Libdir)/,$(libenclave_tls) $(crypto_wrappers) $(tls_wrappers) $(enclave_quotes))
 
 this_dir := $(shell pwd)
 libenclave_tls_files := \
@@ -26,10 +40,25 @@ libenclave_tls_files := \
     $(this_dir)/tls_wrappers/internal/*.c $(this_dir)/tls_wrappers/api/*.c \
     $(this_dir)/enclave_quotes/internal/*.c $(this_dir)/enclave_quotes/api/*.c \
   )
+
+ocall_files := \
+  $(this_dir)/sgx/ocalls.c \
+  $(this_dir)/tls_wrappers/wolfssl-sgx/ocalls.c \
+  $(this_dir)/enclave_quotes/sgx-ecdsa/ocalls.c
+ocall_objs := $(patsubst %c, %o, $(ocall_files))   
+ifdef SGX
+  libenclave_tls_files += $(ocall_files)
+  Build_Dependencies += $(Build_Libdir)/libwolfssl.so 
+  include $(Topdir)/rules/wolfssl_env.mk
+endif
+
+$(Build_Libdir)/libwolfssl.so $(Build_Libdir)/libwolfssl_sgx.a:
+	make -C $(Wolfssl_Root) $@ install
+
 libenclave_tls_objs := $(libenclave_tls_files:.c=.o)
-$(Build_Libdir)/$(libenclave_tls): $(libenclave_tls_objs)
+$(Build_Libdir)/$(libenclave_tls): $(Build_Dependencies) $(libenclave_tls_objs)
 	@$(INSTALL) -d -m 0755 $(dir $@)
-	$(LD) $(Enclave_Tls_Ldflags) -soname=$(notdir $@).$(Major_Version) -o $@ $^ -ldl
+	$(LD) $(Enclave_Tls_Ldflags) -soname=$(notdir $@).$(Major_Version) -o $@ $(libenclave_tls_objs) -ldl $(Enclave_Tls_Extra_Ldflags)
 
 $(libenclave_tls_objs): %.o: %.c
 	$(CC) -c $(Enclave_Tls_Cflags) -o $@ $<
@@ -68,7 +97,7 @@ install: all
 uninstall:
 	@rm -rf $(Enclave_Tls_Root)
 
-Cleans += $(Build_Libdir) $(libenclave_tls_objs)
+Cleans += $(Build_Libdir) $(libenclave_tls_objs) $(ocall_objs) 
 Clean_Dirs += crypto_wrappers tls_wrappers enclave_quotes external/wolfssl
 
 mrproper:

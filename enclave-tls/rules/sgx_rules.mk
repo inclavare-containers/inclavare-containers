@@ -34,7 +34,9 @@ ifneq ($(__Sgx_Env_Imported),1)
 endif
 
 ifeq ($(no_app),1)
-  enclave_static_lib := lib$(subst -,_,$(Enclave_Tls_Instance_Type))_$(Enclave_Static_Lib_Name).a
+  ifneq ($(Enclave_Static_Lib_Name),)
+    enclave_static_lib := lib$(subst -,_,$(Enclave_Tls_Instance_Type))_$(Enclave_Static_Lib_Name).a
+  endif
 endif
 
 ifneq ($(no_app),1)
@@ -158,7 +160,8 @@ Cleans += \
   $(App_Name) $(unsigned_enclave) $(signed_enclave) \
   $(app_cxx_objs) $(app_c_objs) \
   $(enclave_cxx_objs) $(enclave_c_objs) \
-  $(App_Name)_[ut].*
+  $(App_Name)_[ut].* \
+  $(Enclave_Static_Lib)
 
 ifneq ($(no_app),1)
   #Targets += $(App_Name) $(signed_enclave)
