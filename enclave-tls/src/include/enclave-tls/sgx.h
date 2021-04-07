@@ -4,4 +4,5 @@
 #define fprintf(stream, fmt, ...) \
 	printf(fmt, ##__VA_ARGS__)
 
+extern void printf(const char *fmt, ...);
 #endif

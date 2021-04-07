@@ -9,7 +9,7 @@ endif
 include $(Topdir)/rules/wolfssl_env.mk
 
 App_Name := sgx_stub
-Enclave_Extra_Cxxflags += $(Wolfssl_Cflags) -DSGX_ENCLAVE
+Enclave_Extra_Cxxflags += $(Wolfssl_Cflags)
 Enclave_Extra_Ldflags := -L$(Build_Libdir) -l:libwolfssl_sgx.a
 include $(Topdir)/rules/sgx_env.mk
 

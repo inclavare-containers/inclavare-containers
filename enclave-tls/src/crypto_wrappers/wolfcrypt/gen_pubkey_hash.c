@@ -19,8 +19,8 @@ gen_rsa3072_pubkey(wolfcrypt_ctx_t *wc_ctx, uint8_t *pub_key_buf, unsigned int *
 		return pub_rsa_key_der_len;
 	}
 
-	*pub_key_len = pub_rsa_key_der_len;
-	memcpy(pub_key_buf, buf, pub_rsa_key_der_len);
+	*pub_key_len = (unsigned int)pub_rsa_key_der_len;
+	memcpy(pub_key_buf, buf, (size_t)pub_rsa_key_der_len);
 
 	return 0;
 }

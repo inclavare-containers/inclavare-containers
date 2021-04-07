@@ -1,13 +1,13 @@
 #ifndef _ENCLAVE_LOG_H_
 #define _ENCLAVE_LOG_H_
 
-#ifndef SGX_ENCLAVE
+#ifndef WOLFSSL_SGX
   #include <time.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <enclave-tls/api.h>
-#ifdef SGX_ENCLAVE
+#ifdef WOLFSSL_SGX
   #include <enclave-tls/sgx.h>
 #endif
 
@@ -39,7 +39,7 @@ extern enclave_tls_log_level_t global_log_level;
 		__PR__(DEBUG, stdout, fmt, ##__VA_ARGS__);      \
 	} while (0)
 
-#ifdef SGX_ENCLAVE
+#ifdef WOLFSSL_SGX
 #define __PR__(level, io, fmt, ...)     \
         do {    \
 		printf("[" #level "] %s()@L%d: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
