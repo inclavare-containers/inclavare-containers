@@ -8,7 +8,7 @@ tls_wrapper_err_t nulltls_receive(tls_wrapper_ctx_t *ctx, void *buf, size_t *buf
 
 	ssize_t rc = read(ctx->fd, buf, *buf_size);
 	if (rc < 0) {
-		ETLS_ERR("failed to receive data %d\n", rc);
+		ETLS_ERR("failed to receive data %zu\n", rc);
 		return -TLS_WRAPPER_ERR_RECEIVE;
 	}
 

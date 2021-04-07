@@ -67,13 +67,11 @@ enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
 		/* Call DCAP quote verify library for quote verification here you can choose 
 		 * untrusted' quote verification by specifying parameter '&qve_report_info' as NULL
 		 */
-		dcap_ret = sgx_qv_verify_quote(pquote, quote_size,
-					       NULL,
-					       current_time,
+		dcap_ret = sgx_qv_verify_quote(evidence->ecdsa.quote, quote_size,
+					       NULL, current_time,
 					       &collateral_expiration_status,
 					       &quote_verification_result,
-					       NULL,
-					       supplemental_data_size,
+					       NULL, supplemental_data_size,
 					       p_supplemental_data);
 		if (dcap_ret == SGX_QL_SUCCESS)
 			ETLS_DEBUG("sgx_qv_verify_quote successfully returned\n");

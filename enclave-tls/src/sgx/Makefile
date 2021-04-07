@@ -23,7 +23,7 @@ Enclave_C_Files := \
   ecalls.c ../enclave_quotes/sgx-ecdsa/ecalls.c \
   ../tls_wrappers/wolfssl-sgx/ecalls.c \
   ../crypto_wrappers/wolfcrypt-sgx/ecalls.c
-Enclave_Cflags += -DSGX_ENCLAVE
+Enclave_Cflags += -DWOLFSSL_SGX_WRAPPER
 include $(Topdir)/rules/sgx_rules.mk
 
 ifneq ($(__Build_Rules_Imported),1)

@@ -3,7 +3,7 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "wolfssl.h"
 
-#ifndef SGX_ENCLAVE
+#ifndef WOLFSSL_SGX_WRAPPER
 extern int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store);
 #endif
 
@@ -43,7 +43,7 @@ tls_wrapper_err_t wolfssl_internal_negotiate(wolfssl_ctx_t *ws_ctx,
 	return TLS_WRAPPER_ERR_NONE;
 }
 
-#ifdef SGX_ENCLAVE
+#ifdef WOLFSSL_SGX_WRAPPER
 static int ssl_ctx_set_verify_callback(int mode, WOLFSSL_X509_STORE_CTX *store)
 {
 
@@ -65,7 +65,7 @@ tls_wrapper_err_t wolfssl_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 	unsigned long conf_flags = ctx->conf_flags;
 
 	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)) {
-#ifdef SGX_ENCLAVE
+#ifdef WOLFSSL_SGX_WRAPPER
 		verify = ssl_ctx_set_verify_callback;
 #else
 		verify = verify_certificate;

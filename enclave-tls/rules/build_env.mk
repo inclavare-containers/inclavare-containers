@@ -13,7 +13,6 @@
 # - Enclave_Tls_Root: the location of enclave-tls source code tree
 # - WOLFSSL_ROOT (REQUIRED): specify the location of wolfssl source code tree
 # - Enclave_Tls_Root (OPTIONAL): specify the location of enclave-tls source code tree
-# - SGX_ENCLAVE (OPTIONAL): indicate whether building with SGX enclave support
 # - WOLFSSL_EXTRA_CFLAGS (OPTIONAL): the extra CFLAGS used to build wolfssl
 # - WOLFSSL_EXTRA_CFLAGS (OPTIONAL): the extra paths for header files used by application
 # - ENCLAVE_C_FILES (REQUIRED): the C source files for enclave

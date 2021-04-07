@@ -112,7 +112,7 @@ else
   sgx_common_flags += -O2
 endif
 sgx_common_flags += \
-  -DSGX_ENCLAVE -I$(SGX_SDK)/include \
+  -I$(SGX_SDK)/include \
   -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
   -Waddress -Wsequence-point -Wformat-security \
   -Wmissing-include-dirs -Wfloat-equal -Wundef -Wshadow \

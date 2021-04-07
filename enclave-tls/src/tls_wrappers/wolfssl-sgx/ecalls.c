@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "sgx_stub_t.h"
 #include "../wolfssl/pre_init.c"
 #include "../wolfssl/init.c"
@@ -58,6 +59,8 @@ size_t recv(int sockfd, void *buf, size_t len, int flags)
 {
 	size_t ret;
 	int sgxStatus = ocall_recv(&ret, sockfd, buf, len, flags);
+	assert(sgxStatus == SGX_SUCCESS);
+
 	return ret;
 }
 
@@ -65,5 +68,7 @@ size_t send(int sockfd, const void *buf, size_t len, int flags)
 {
 	size_t ret;
 	int sgxStatus = ocall_send(&ret, sockfd, buf, len, flags);
+	assert(sgxStatus == SGX_SUCCESS);
+
 	return ret;
 }

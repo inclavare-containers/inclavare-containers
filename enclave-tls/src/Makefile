@@ -10,7 +10,7 @@ endif
 ifdef SGX
   include $(Topdir)/rules/wolfssl_env.mk
   Enclave_Tls_Cflags += \
-    $(Wolfssl_Cflags) -DSGX_ENCLAVE \
+    $(Wolfssl_Cflags) -DWOLFSSL_SGX_WRAPPER \
     -I$(Topdir)/samples/sgx-stub-enclave \
     -I/opt/intel/sgxsdk/include \
     -I$(Topdir)/build/include

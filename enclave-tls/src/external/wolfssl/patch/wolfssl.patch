@@ -168,12 +168,12 @@ index 12ada17af..aac102f2c 100644
      int  certPoliciesSz;               /* encoded CertPolicies extension length*/
  #endif
 +#ifdef WOLFSSL_SGX_ATTESTATION
-+    int iasSigCACertSz;
-+    int iasSigCertSz;
-+    int iasSigSz;
-+    int iasAttestationReportSz;
-+    int quoteSz;
-+    int lareportSz;
++    unsigned int iasSigCACertSz;
++    unsigned int iasSigCertSz;
++    unsigned int iasSigSz;
++    unsigned int iasAttestationReportSz;
++    unsigned int quoteSz;
++    unsigned int lareportSz;
 +#endif
  #ifdef WOLFSSL_ALT_NAMES
      int  altNamesSz;                   /* encoded AltNames extension length */
@@ -426,18 +426,18 @@ index 480b64f64..e67661416 100644
      word16  certPoliciesNb;              /* Number of Cert Policy */
  #endif
 +#ifdef WOLFSSL_SGX_ATTESTATION
-+    byte    iasSigCACert[2048];
-+    int     iasSigCACertSz;
-+    byte    iasSigCert[2048];
-+    int     iasSigCertSz;
-+    byte    iasSig[2048];
-+    int     iasSigSz;
-+    byte    iasAttestationReport[2048];
-+    int     iasAttestationReportSz;
-+    byte    quote[8192];
-+    int     quoteSz;
-+    byte    lareport[8192];
-+    int     lareportSz;
++    byte		iasSigCACert[2048];
++    unsigned int	iasSigCACertSz;
++    byte    	  	iasSigCert[2048];
++    unsigned int 	iasSigCertSz;
++    byte    		iasSig[2048];
++    unsigned int	iasSigSz;
++    byte    		iasAttestationReport[2048];
++    unsigned int	iasAttestationReportSz;
++    byte    		quote[8192];
++    unsigned int	quoteSz;
++    byte    		lareport[8192];
++    unsigned int	lareportSz;
 +#endif
  #if defined(WOLFSSL_CERT_EXT) || defined(OPENSSL_EXTRA)
      byte     issRaw[sizeof(CertName)];   /* raw issuer info */

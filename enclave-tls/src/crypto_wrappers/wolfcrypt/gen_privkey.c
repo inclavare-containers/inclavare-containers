@@ -44,13 +44,12 @@ wolfcrypt_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
 		buf_len = sizeof(der);
 	}
 	int der_sz = wc_RsaKeyToDer(&wc_ctx->key, buf, buf_len);
-	if (der_sz < 0) {
+	if (der_sz < 0 || (unsigned int)der_sz > buf_len) {
 		ETLS_DEBUG("failed to convert RSA-3072 private key to DER format %d\n", der_sz);
 		return WOLFCRYPT_ERR_CODE(der_sz);
 	}
 
-	assert(der_sz <= buf_len);
-	*privkey_len = der_sz;
+	*privkey_len = (unsigned int)der_sz;
 
 	ETLS_DEBUG("RSA-3072 private key (%d-byte) in DER format generated\n", der_sz);
 

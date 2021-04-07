@@ -60,13 +60,15 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 	RNG rng;
 	wc_InitRng(&rng);
 	wolfcrypt_ctx_t *wc_ctx = (wolfcrypt_ctx_t *)ctx->crypto_private;
-	cert_info->cert_len = wc_MakeSelfCert(&crt, cert_info->cert_buf,
-					      sizeof(cert_info->cert_buf),
-					      &wc_ctx->key, &rng);
-	if (cert_info->cert_len <= 0) {
+	int cert_len = wc_MakeSelfCert(&crt, cert_info->cert_buf,
+				       sizeof(cert_info->cert_buf),
+				       &wc_ctx->key, &rng);
+	if (cert_len <= 0) {
 		ETLS_DEBUG("failed to create self-signing certificate %d\n", cert_info->cert_len);
-		return WOLFCRYPT_ERR_CODE(cert_info->cert_len);
+		return WOLFCRYPT_ERR_CODE(cert_len);
 	}
+
+	cert_info->cert_len = (unsigned int)cert_len;
 
 	ETLS_DEBUG("self-signing certificate generated\n");
 

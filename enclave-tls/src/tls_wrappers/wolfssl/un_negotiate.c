@@ -8,7 +8,7 @@
 
 static const int rsa_pub_3072_raw_der_len = 398;      /* rsa_pub_3072_pcks_der_len - pcks_nr_1_header_len */
 
-#ifdef SGX_ENCLAVE
+#ifdef WOLFSSL_SGX_WRAPPER
 void *memmem(void *start, unsigned int s_len, void *find, unsigned int f_len)
 {
 	char *p, *q;
@@ -35,7 +35,7 @@ int find_oid(const unsigned char *ext, size_t ext_len,
 	     const unsigned char *oid, size_t oid_len,
 	     unsigned char **val, size_t *len)
 {
-	uint8_t *p = memmem(ext, ext_len, oid, oid_len);
+	uint8_t *p = memmem((void *)ext, ext_len, (void *)oid, oid_len);
 
 	if (!p)
 		return -1;
@@ -179,7 +179,7 @@ static crypto_wrapper_err_t calc_pubkey_hash(DecodedCert *crt,
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
 
-#ifdef SGX_ENCLAVE
+#ifdef WOLFSSL_SGX_WRAPPER
 int verify_certificate(uint8_t *der_cert, uint32_t der_cert_len)
 {
 	tls_wrapper_ctx_t *tls_ctx;
@@ -219,6 +219,8 @@ int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store)
 	attestation_evidence_t evidence;
 	uint8_t* ext_data;
     	size_t ext_data_len;
+
+	strncpy(evidence.type, "nullquote", sizeof(evidence.type));
 	if (find_oid(der_cert, der_cert_len, quote_oid, ias_oid_len, &ext_data, &ext_data_len) == 1)
 		strncpy(evidence.type, "sgx_ecdsa", sizeof(evidence.type));
 

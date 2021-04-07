@@ -34,7 +34,7 @@ static inline void print_wolfssl_err(WOLFSSL *ssl)
 {
 	char buf[128];
 	int err = wolfSSL_get_error(ssl, 0);
-	wolfSSL_ERR_error_string(err, buf);
+	wolfSSL_ERR_error_string((unsigned long)err, buf);
 
 	ETLS_DEBUG("%s (err = %d)\n", buf, err);
 }
