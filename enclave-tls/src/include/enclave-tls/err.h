@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
 #ifndef _ENCLAVE_ERR_H
 #define _ENCLAVE_ERR_H
-/* *INDENT-ON* */
 
 /*
  * The error code definition.
@@ -113,6 +111,4 @@ typedef enum {
 	CRYPTO_WRAPPER_ERR_PUB_KEY_DECODE,
 } crypto_wrapper_err_t;
 
-/* *INDENT-OFF* */
 #endif /* _ENCLAVE_ERR_H */
-/* *INDENT-ON* */

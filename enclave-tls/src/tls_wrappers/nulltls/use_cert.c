@@ -1,7 +1,6 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/tls_wrapper.h>
 
-/* *INDENT-OFF* */
 tls_wrapper_err_t nulltls_use_cert(tls_wrapper_ctx_t *ctx,
 				   enclave_tls_cert_info_t *cert_info)
 {
@@ -9,4 +8,3 @@ tls_wrapper_err_t nulltls_use_cert(tls_wrapper_ctx_t *ctx,
 
 	return TLS_WRAPPER_ERR_NONE;
 }
-/* *INDENT-ON* */

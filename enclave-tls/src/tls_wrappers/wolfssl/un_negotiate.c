@@ -64,7 +64,6 @@ int find_oid(const unsigned char *ext, size_t ext_len,
 /**
  * @return Returns -1 if OID was not found. Otherwise, returns 1;
  */
-/* *INDENT-OFF* */
 int extract_x509_extension(const uint8_t *ext, int ext_len,
 			   const uint8_t *oid, size_t oid_len, uint8_t *data,
 			   uint32_t *data_len, uint32_t data_max_len)

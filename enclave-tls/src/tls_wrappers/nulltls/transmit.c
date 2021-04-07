@@ -2,7 +2,6 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/tls_wrapper.h>
 
-/* *INDENT-OFF* */
 tls_wrapper_err_t nulltls_transmit(tls_wrapper_ctx_t *ctx, void *buf, size_t *buf_size)
 {
 	ETLS_DEBUG("ctx %p, buf %p, buf_size %p\n", ctx, buf, buf_size);
@@ -16,4 +15,3 @@ tls_wrapper_err_t nulltls_transmit(tls_wrapper_ctx_t *ctx, void *buf, size_t *bu
 
 	return TLS_WRAPPER_ERR_NONE;
 }
-/* *INDENT-ON* */

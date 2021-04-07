@@ -3,7 +3,6 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/tls_wrapper.h>
 
-/* *INDENT-OFF* */
 tls_wrapper_err_t nulltls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 {
 	ETLS_DEBUG("ctx %p, fd %d\n", ctx, fd);
@@ -27,4 +26,3 @@ tls_wrapper_err_t nulltls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 	}
 	return TLS_WRAPPER_ERR_NONE;
 }
-/* *INDENT-ON* */
