@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
 #ifndef _ENCLAVE_CERT_H
 #define _ENCLAVE_CERT_H
-/* *INDENT-ON* */
 
 typedef struct {
 	const char *organization;
@@ -40,6 +38,4 @@ typedef struct {
 	attestation_evidence_t evidence;
 } enclave_tls_cert_info_t;
 
-/* *INDENT-OFF* */
 #endif
-/* *INDENT-ON* */

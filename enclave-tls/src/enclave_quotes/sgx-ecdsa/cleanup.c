@@ -2,7 +2,6 @@
 #include <enclave-tls/enclave_quote.h>
 #include "sgx_ecdsa.h"
 
-/* *INDENT-OFF* */
 enclave_quote_err_t sgx_ecdsa_cleanup(enclave_quote_ctx_t *ctx)
 {
 	ETLS_DEBUG("called\n");
@@ -13,4 +12,3 @@ enclave_quote_err_t sgx_ecdsa_cleanup(enclave_quote_ctx_t *ctx)
 
 	return ENCLAVE_QUOTE_ERR_NONE;
 }
-/* *INDENT-ON* */

@@ -1,7 +1,6 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/enclave_quote.h>
 
-/* *INDENT-OFF* */
 enclave_quote_err_t nullquote_collect_evidence(enclave_quote_ctx_t *ctx,
 					       attestation_evidence_t *evidence,
 					       enclave_tls_cert_algo_t algo,
@@ -12,4 +11,3 @@ enclave_quote_err_t nullquote_collect_evidence(enclave_quote_ctx_t *ctx,
 
 	return ENCLAVE_QUOTE_ERR_NONE;
 }
-/* *INDENT-ON* */

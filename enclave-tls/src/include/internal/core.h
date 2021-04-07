@@ -1,7 +1,5 @@
-/* *INDENT-OFF* */
 #ifndef _INTERNAL_CORE_H
 #define _INTERNAL_CORE_H
-/* *INDENT-ON* */
 
 #include <enclave-tls/enclave_quote.h>
 #include <enclave-tls/tls_wrapper.h>
@@ -30,6 +28,4 @@ extern enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *);
 // Whether the crypto lib is initialized
 #define ENCLAVE_TLS_CTX_FLAGS_CRYPTO_INITIALIZED    (1 << 18)
 
-/* *INDENT-OFF* */
 #endif
-/* *INDENT-ON* */
