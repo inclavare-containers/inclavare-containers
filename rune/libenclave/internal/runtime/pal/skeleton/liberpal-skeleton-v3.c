@@ -22,6 +22,8 @@ int pal_init(pal_attr_v3_t *attr)
 	if (tls_server) {
 		initialized = true;
 
+		parse_args(attr->attr_v1.args);
+
 		return 0;
 	}
 

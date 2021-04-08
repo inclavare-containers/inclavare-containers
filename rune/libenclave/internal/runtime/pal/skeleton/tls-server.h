@@ -6,6 +6,11 @@
 #include <stdbool.h>
 
 extern bool tls_server;
+extern bool debugging;
+extern char *attester_type;
+extern char *verifier_type;
+extern char *tls_type;
+extern char *crypto;
 
 #ifdef TLS_SERVER
 extern int ra_tls_server(void);

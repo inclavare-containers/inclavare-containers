@@ -50,6 +50,10 @@ struct kvm *kvm_vm;
 static const char *kvm_kernel;
 static const char *kvm_rootfs;
 static const char *kvm_init;
+char *attester_type = "";
+char *verifier_type = "";
+char *tls_type = "";
+char *crypto = "";
 /*
  * For SGX in-tree driver, dev_fd cannot be closed until an enclave instance
  * intends to exit.
@@ -667,15 +671,22 @@ static void check_opts(const char *opt)
 		no_sgx_flc = true;
 	else if (!strcmp(opt, "debug"))
 		debugging = true;
-	else if (!strcmp(opt, "backend-kvm")) {
+	else if (!strcmp(opt, "backend-kvm"))
 		backend_kvm = true;
-	} else if (!strncmp(opt, "kvm-kernel=", 11)) {
+	else if (!strncmp(opt, "kvm-kernel=", 11))
 		kvm_kernel = strdup(opt + 11);
-	} else if (!strncmp(opt, "kvm-rootfs=", 11)) {
+	else if (!strncmp(opt, "kvm-rootfs=", 11))
 		kvm_rootfs = strdup(opt + 11);
-	} else if (!strncmp(opt, "kvm-init=", 9)) {
+	else if (!strncmp(opt, "kvm-init=", 9))
 		kvm_init = strdup(opt + 9);
-	}
+	else if (!strncmp(opt, "attester=", 9))
+		attester_type = strdup(opt + 9);
+	else if (!strncmp(opt, "verifier=", 9))
+		verifier_type = strdup(opt + 9);
+	else if (!strncmp(opt, "tls=", 4))
+		tls_type = strdup(opt + 4);
+	else if (!strncmp(opt, "crypto=", 7))
+		crypto = strdup(opt + 7);
 }
 
 void parse_args(const char *args)
