@@ -20,7 +20,7 @@ make install
 
 `{enclave-tls-server,enclave-tls-client}` will be installed to `/opt/enclave-tls/bin/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
 
-If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, wolfcrypt\_sgx), please type the following command.
+If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_la, wolfcrypt\_sgx), please type the following command.
 ```
 make SGX=1
 ```
@@ -33,7 +33,7 @@ Right now, Enclave TLS supports the following instance types:
 | -------- | --------------------- | ----------------------- | ----------------------- |
 | low      | nulltls               | nullquote               | nullcrypto              |
 | Medium   | wolfssl               | sgx\_ecdsa              | wolfcrypt               |
-| High     | wolfssl\_sgx          |                         | wolfcrypt\_sgx          |
+| High     | wolfssl\_sgx          | sgx\_la                 | wolfcrypt\_sgx          |
 
 By default,  Enclave TLS will select the **highest priority** instance to use.
 
@@ -71,5 +71,6 @@ For example:
 ./enclave-tls-server run  --tls wolfssl
 ./enclave-tls-server run  --tls wolfssl_sgx
 ./enclave-tls-server run  --attester sgx_ecdsa
+./enclave-tls-server run  --attester sgx_la
 ./enclave-tls-server run  --crypto wolfcrypt
 ```
