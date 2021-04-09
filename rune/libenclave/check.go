@@ -184,6 +184,21 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 			},
 			&configs.Device{
 				Type:  'c',
+				Path:  "/dev/sgx_provision",
+				Major: 10,
+			},
+			&configs.Device{
+				Type:  'c',
+				Path:  "/dev/sgx/provision",
+				Major: 10,
+			},
+			&configs.Device{
+				Type:  'l',
+				Path:  "/dev/sgx/provision",
+				Major: 10,
+			},
+			&configs.Device{
+				Type:  'c',
 				Path:  "/dev/isgx",
 				Major: 10,
 			},
@@ -226,7 +241,7 @@ func containEnclaveDevice(devices []*configs.Device, s string) bool {
 func genEnclavePathTemplate(etype string) []string {
 	switch etype {
 	case enclaveConfigs.EnclaveTypeIntelSgx:
-		return []string{"/dev/sgx_enclave", "/dev/sgx/enclave", "/dev/isgx", "/dev/gsgx"}
+		return []string{"/dev/sgx_enclave", "/dev/sgx/enclave", "/dev/sgx_provision", "/dev/sgx/provision", "/dev/isgx", "/dev/gsgx"}
 	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
 		return []string{"/dev/nitro_enclaves"}
 	case enclaveConfigs.EnclaveTypeJailHouse:
