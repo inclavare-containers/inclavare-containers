@@ -84,12 +84,31 @@ func CreateEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
 
 // Determine whether the device is a Intel SGX enclave or AWS Nitro Enclaves device
 func enclaveMiscDev(device *configs.Device) (*configs.Device, error) {
-	dev, err := devices.DeviceFromPath(device.Path, "rwm")
+	var path string
+	var err error
+	if device.Type == 'l' {
+		path, err = os.Readlink(device.Path)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		path = device.Path
+	}
+
+	dev, err := devices.DeviceFromPath(path, "rwm")
 	if err != nil {
 		return nil, err
 	}
 
 	if dev.Type == 'c' && dev.Major == 10 {
+		// The SGX device used by the DCAP OOT driver and in-tree driver（>=v1.41) is /dev/sgx_enclave.
+		// However, Intel SGX SDK does not support this path. Instead, it provides a udev rule creating
+		// the symbolic link /dev/sgx/enclave pointing to /dev/sgx_enclave. To support this behavior,
+		// rune identifies whether the enclave device is a symbolic link pointing to the actual sgx device,
+		// and then mount the sgx device using the path of symbolic link.
+		if device.Type == 'l' {
+			dev.Path = device.Path
+		}
 		return dev, nil
 	}
 
@@ -155,6 +174,11 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 			},
 			&configs.Device{
 				Type:  'c',
+				Path:  "/dev/sgx/enclave",
+				Major: 10,
+			},
+			&configs.Device{
+				Type:  'l',
 				Path:  "/dev/sgx/enclave",
 				Major: 10,
 			},
