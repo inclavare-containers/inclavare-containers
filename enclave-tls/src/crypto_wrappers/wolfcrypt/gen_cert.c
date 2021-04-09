@@ -54,7 +54,10 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 		memcpy(crt.quote, ecdsa->quote, ecdsa->quote_len);
 		crt.quoteSz = ecdsa->quote_len;
 	} else if (!strcmp(cert_info->evidence.type, "sgx_la")) {
-		/* TODO */
+		la_attestation_evidence_t *la = &cert_info->evidence.la;
+
+		memcpy(crt.lareport, la->report, la->report_len);
+		crt.lareportSz = la->report_len;
 	}
 
 	RNG rng;

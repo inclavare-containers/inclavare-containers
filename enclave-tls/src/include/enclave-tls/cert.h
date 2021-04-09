@@ -24,10 +24,16 @@ typedef struct {
 } ecdsa_attestation_evidence_t;
 
 typedef struct {
+	uint8_t report[8192];
+	uint32_t report_len;
+} la_attestation_evidence_t;
+
+typedef struct {
 	char type[QUOTE_TYPE_NAME_SIZE];
 	union {
 		attestation_verification_report_t epid;
 		ecdsa_attestation_evidence_t ecdsa;
+		la_attestation_evidence_t la;
 	};
 } attestation_evidence_t;
 

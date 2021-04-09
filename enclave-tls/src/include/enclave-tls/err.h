@@ -39,6 +39,9 @@
 /* The base of error code used by sgx-ecdsa */
 #define SGX_ECDSA_ERR_BASE		(0 << ERR_CODE_SUBCLASS_SHIFT)
 
+/* The base of error code used by sgx-la */
+#define SGX_LA_ERR_BASE                 (0 << ERR_CODE_SUBCLASS_SHIFT)
+
 // Error code used to construct TLS Wrapper instance
 #define __TLS_WRAPPER_ERR_CODE(base, err) \
 	(((TLS_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
@@ -63,6 +66,9 @@
 
 #define SGX_ECDSA_ERR_CODE(err) \
 	__ENCLAVE_QUOTE_ERR_CODE(SGX_ECDSA_ERR_BASE, err)	
+
+#define SGX_LA_ERR_CODE(err) \
+	__ENCLAVE_QUOTE_ERR_CODE(SGX_LA_ERR_BASE, err)
 
 typedef enum {
 	ENCLAVE_TLS_ERR_NONE = ENCLAVE_TLS_ERR_BASE,
