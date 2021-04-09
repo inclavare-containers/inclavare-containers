@@ -252,21 +252,7 @@ func genEnclavePathTemplate(etype string) []string {
 }
 
 func CreateEnclaveDeviceConfig(devices *[]*configs.Device, etype string) {
-	var mode os.FileMode
-
-	switch etype {
-	case enclaveConfigs.EnclaveTypeIntelSgx:
-		mode = 0666
-	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
-		mode = 0660
-	case enclaveConfigs.EnclaveTypeJailHouse:
-		mode = 0666
-	default:
-		return
-	}
-
 	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
-		dev.FileMode = mode
 		dev.Uid = 0
 		dev.Gid = 0
 		*devices = append(*devices, dev)
