@@ -27,7 +27,7 @@ enclave_quotes := $(addsuffix .so,$(addprefix libenclave_quote_,nullquote))
 ifdef SGX
   crypto_wrappers += $(addsuffix .so,$(addprefix libcrypto_wrapper_,wolfcrypt-sgx))
   tls_wrappers += $(addsuffix .so,$(addprefix libtls_wrapper_,wolfssl-sgx))
-  enclave_quotes += $(addsuffix .so,$(addprefix libenclave_quote_,sgx-ecdsa))
+  enclave_quotes += $(addsuffix .so,$(addprefix libenclave_quote_,sgx-ecdsa sgx-la))
 endif
 
 all: $(addprefix $(Build_Libdir)/,$(libenclave_tls) $(crypto_wrappers) $(tls_wrappers) $(enclave_quotes))

@@ -4,6 +4,8 @@ enclave {
 	include "wolfssl/options.h"
 	include "wolfssl/ssl.h"
 
+	include "sgx_report.h"
+
 	trusted {
 		public tls_wrapper_err_t ecall_wolfssl_pre_init(void);
 		public tls_wrapper_err_t ecall_wolfssl_init([user_check] tls_wrapper_ctx_t *ctx);
@@ -21,10 +23,14 @@ enclave {
 							       [user_check] void *buf,
 							       [user_check] size_t *buf_size);
 		public tls_wrapper_err_t ecall_wolfssl_cleanup([user_check] tls_wrapper_ctx_t *ctx);
+
+		/* This ecall function need be invoked by ocall_verify_certificate */
+		public sgx_status_t ecall_sgx_la_verify_report([in] sgx_report_t *report);
 	};
 
 	untrusted {
-		int ocall_verify_certificate([in, out, size=der_crt_len]uint8_t* der_crt, uint32_t der_crt_len);
+		int ocall_verify_certificate([in, out, size=der_crt_len] uint8_t *der_crt, uint32_t der_crt_len)
+			allow (ecall_sgx_la_verify_report);
 		size_t ocall_recv(int sockfd, [out, size=len] void *buf, size_t len,
 				  int flags) propagate_errno;
 		size_t ocall_send(int sockfd, [in, size=len] const void *buf, size_t len,
