@@ -31,7 +31,6 @@
 
 - golang 1.14 or above.
 - [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the rpm(centos) or deb(ubuntu) from "https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro"
-	- libsgx-dcap-quote-verify: both for centos and ubuntu
 	- libsgx-dcap-quote-verify-dev(ubuntu) or libsgx-dcap-quote-verify-devel(centos)
 
 ## Build
