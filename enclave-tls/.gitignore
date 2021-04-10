@@ -1,0 +1,9 @@
+*.swp
+*.o
+*.a
+*.so*
+*_[ut].[ch]
+.vscode/
+src/external/wolfssl/wolfssl
+src/lib/.build/
+build/
