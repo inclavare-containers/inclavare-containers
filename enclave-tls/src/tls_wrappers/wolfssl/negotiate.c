@@ -40,6 +40,11 @@ tls_wrapper_err_t wolfssl_internal_negotiate(wolfssl_ctx_t *ws_ctx,
 
 	ws_ctx->ssl = ssl;
 
+	if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
+		ETLS_DEBUG("success to negotiate\n");
+	else
+		ETLS_DEBUG("success to connect\n");
+
 	return TLS_WRAPPER_ERR_NONE;
 }
 
