@@ -37,9 +37,13 @@ cd ../../QuoteVerification
 make clean
 USE_SBX_PLATFORM=1 make
 # replace with modified QVL/QVE
-sudo cp -f dcap_quoteverify/linux/libsgx_dcap_quoteverify.so.1 /usr/lib64/libsgx_dcap_quoteverify.so.1.*
+[ -d /usr/lib/x86_64-linux-gnu ] &&
+  sudo cp -f dcap_quoteverify/linux/libsgx_dcap_quoteverify.so.1 /usr/lib/x86_64-linux-gnu/libsgx_dcap_quoteverify.so.1.* ||
+  sudo cp -f dcap_quoteverify/linux/libsgx_dcap_quoteverify.so.1 /usr/lib64/libsgx_dcap_quoteverify.so.1.*
 sudo ldconfig
-sudo cp -f QvE/libsgx_qve.signed.so /usr/lib64
+[ -d /usr/lib/x86_64-linux-gnu ] &&
+  sudo cp -f QvE/libsgx_qve.signed.so /usr/lib/x86_64-linux-gnu ||
+  sudo cp -f QvE/libsgx_qve.signed.so /usr/lib64
 # replace the original
 make clean -C dcap_tvl
 USE_SBX_PLATFORM=1 make -C dcap_tvl
