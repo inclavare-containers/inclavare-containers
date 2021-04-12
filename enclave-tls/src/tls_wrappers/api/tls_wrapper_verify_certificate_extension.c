@@ -26,7 +26,7 @@ tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tl
 			quote_ctx->opts->verify_evidence(quote_ctx, evidence,
 							 hash);
 		if (err != ENCLAVE_QUOTE_ERR_NONE) {
-			ETLS_ERR("ERROR: failed to verify_evidence()\n");
+			ETLS_ERR("failed to verify evidence %#x\n", err);
 			return err;
 		}
 	}

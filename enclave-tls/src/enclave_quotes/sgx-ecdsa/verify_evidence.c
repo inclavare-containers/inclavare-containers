@@ -76,7 +76,7 @@ enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
 		if (dcap_ret == SGX_QL_SUCCESS)
 			ETLS_DEBUG("sgx_qv_verify_quote successfully returned\n");
 		else {
-			ETLS_ERR("sgx_qv_verify_quote():  0x%04x\n", dcap_ret);
+			ETLS_ERR("failed to call sgx_qv_verify_quote %#04x\n", dcap_ret);
 			return SGX_ECDSA_ERR_CODE((int)dcap_ret);
 		}
 
