@@ -3,6 +3,7 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
@@ -87,7 +88,7 @@ func enclaveMiscDev(device *configs.Device) (*configs.Device, error) {
 	var path string
 	var err error
 	if device.Type == 'l' {
-		path, err = os.Readlink(device.Path)
+		path, err = filepath.EvalSymlinks(device.Path)
 		if err != nil {
 			return nil, err
 		}
