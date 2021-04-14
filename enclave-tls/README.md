@@ -7,7 +7,7 @@ Please follow the command to build Enclave TLS from the latested source code on 
 ```shell
 mkdir -p "$WORKSPACE"
 cd "$WORKSPACE"
-git clone https://github.com/alibaba/inclavare-containers -b enclave-tls
+git clone https://github.com/alibaba/inclavare-containers
 ```
 
 2. Build and install Enclave TLS
@@ -21,7 +21,8 @@ make install
 `{enclave-tls-server,enclave-tls-client}` will be installed to `/opt/enclave-tls/bin/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
 
 If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_la, wolfcrypt\_sgx), please type the following command.
-```
+
+```shell
 make SGX=1
 ```
 
@@ -40,37 +41,41 @@ By default,  Enclave TLS will select the **highest priority** instance to use.
 ## Run enclave tls server
 ```
 cd /opt/enclave-tls/bin
-./enclave-tls-server run
+./enclave-tls-server
 ```
 
 ## Run enclave tls client
 ```
 cd /opt/enclave-tls/bin
-./enclave-tls-client echo
+./enclave-tls-client
 ```
 
 ## Specify the instance type
 
 The options of enclave-tls-server are as followed:  
-Please type `./enclave-tls-client echo --help` to see the options of enclave-tls-client
 
-```
+```shell
 OPTIONS:
-   --addr value       the server address
-   --log-level value  set the level of log output
-   --attester value   set he type of quote attester
-   --verifier value   set the type of quote verifier
-   --tls value        set the type of tls wrapper
-   --crypto value     set the type of crypto wrapper
+   --attester/-a value   set he type of quote attester
+   --verifier/-v value   set the type of quote verifier
+   --tls/-t value        set the type of tls wrapper
+   --crypto/-c value     set the type of crypto wrapper
 ```
 
 You can set command line parameters to specify different configurations.
 
 For example:
-```
-./enclave-tls-server run  --tls wolfssl
-./enclave-tls-server run  --tls wolfssl_sgx
-./enclave-tls-server run  --attester sgx_ecdsa
-./enclave-tls-server run  --attester sgx_la
+
+```shell
+./enclave-tls-server --tls wolfssl
+./enclave-tls-server --tls wolfssl_sgx
+./enclave-tls-server --attester sgx_ecdsa
+./enclave-tls-server --attester sgx_la
 ./enclave-tls-server run  --crypto wolfcrypt
 ```
+
+# Deployment
+
+## Occlum LibOS
+
+Please refer to [this guide](docs/run_enclave_tls_with_occlum.md) to run Enclave Tls with [Occlum](https://github.com/occlum/occlum) and [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune).
