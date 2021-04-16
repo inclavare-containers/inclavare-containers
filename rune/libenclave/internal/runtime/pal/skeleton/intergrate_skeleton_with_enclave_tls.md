@@ -119,18 +119,16 @@ docker run -i --rm --net=host --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
   -e ENCLAVE_RUNTIME_ARGS="debug attester=sgx_ecdsa tls=wolfssl_sgx crypto=wolfcrypt_sgx" \
-  -v /run/enclave-tls:/run/enclave-tls \
   skeleton-enclave:latest
 ```
 
 ### Run local report attestation TLS server by docker image
 
 ```shell
-docker run -i --rm --runtime=rune \
+docker run -i --rm --net=host --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
   -e ENCLAVE_RUNTIME_ARGS="debug attester=sgx_la tls=wolfssl_sgx crypto=wolfcrypt_sgx" \
-  -v /run/enclave-tls:/run/enclave-tls \
   skeleton-enclave:latest
 ```
 
@@ -148,21 +146,11 @@ Assuming you have an OCI bundle according to [previous steps](https://github.com
         "enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
         "enclave.runtime.args": "debug attester=sgx_ecdsa tls=wolfssl_sgx crypto=wolfcrypt_sgx"
 }
-
-{
-        "destination": "/run/enclave-tls",
-        "type": "bind",
-        "source": "/run/enclave-tls",
-        "options": [
-                "rbind",
-                "rprivate"
-        ]
-}
 ```
 
 If you do NOT set runtime parameters in `enclave.runtime.args`, TLS server will run the highest priority `enclave quote/tls wrapper/crypto` instance. Please refer to this [guide](https://github.com/alibaba/inclavare-containers/blob/master/enclave-tls/README.md#run) for more information.
 
-If you want to run `ECDSA` OCI bundle, you also need to delete the network namespace configuration in config.json to ensure you run skeleton in host network mode. After doing this, your namespaces are as following without the network type namespace:
+Remember that you also need to delete the network namespace configuration in config.json to ensure you run skeleton in host network mode. After doing this, your namespaces are as following without the network type namespace:
 
 ```shell
                 "namespaces": [
@@ -208,7 +196,7 @@ cp /etc/resolv.conf rootfs/etc/
 ```shell
 cd /opt/enclave-tls/bin
 # run sgx_ecdsa remote attestation
-./enclave-tls-client echo --attester sgx_ecdsa --tls wolfssl_sgx --crypto wolfcrypt_sgx
+./enclave-tls-client -a sgx_ecdsa -t wolfssl_sgx -c wolfcrypt_sgx
 # run sgx_la remote attestation
-./enclave-tls-client echo --attester sgx_la --tls wolfssl_sgx --crypto wolfcrypt_sgx
+./enclave-tls-client -a sgx_la -t wolfssl_sgx -c wolfcrypt_sgx
 ```
