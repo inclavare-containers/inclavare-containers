@@ -14,6 +14,9 @@
 #include "tls-server.h"
 
 #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
+#define ENCLAVE_TLS_HELLO "Hello and welcome to enclave-tls!"
+
+extern sgx_status_t ecall_generate_evidence(sgx_enclave_id_t eid, sgx_status_t *retval, uint8_t *hash, sgx_report_t *report);
 
 static sgx_enclave_id_t load_enclave(void)
 {
@@ -78,16 +81,29 @@ int ra_tls_server_startup(int connd)
 
 	printf("Client: %s\n", buff);
 
-	/* Write our reply into buff */
+	/* Obtain the mrenclave and mrsigner of enclave */
+	uint8_t hash[SHA256_HASH_SIZE];
+	sgx_report_t app_report;
+	sgx_status_t generate_evidence_ret;
+	sgx_status_t status = ecall_generate_evidence(conf.enclave_id, &generate_evidence_ret, hash, &app_report);
+	if (status != SGX_SUCCESS || generate_evidence_ret != SGX_SUCCESS) {
+		printf("ecall_generate_evidence() %#x\n", generate_evidence_ret);
+		goto err;
+	}
+
+	/* Write our reply into buff, reply contains mrencalve, mesigner and hello message */
 	memset(buff, 0, sizeof(buff));
-	strcpy(buff, "Hello and welcome to enclave-tls!\n");
-	len = strnlen(buff, sizeof(buff));
+	memcpy(buff, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
+	memcpy(buff + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
+	memcpy(buff + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
+
+	len = 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO);
 
 	/* Reply back to the client */
 	ret = enclave_tls_transmit(handle, buff, &len);
-	if (ret != ENCLAVE_TLS_ERR_NONE || len != strnlen(buff, sizeof(buff))) {
+	if (ret != ENCLAVE_TLS_ERR_NONE || len != 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO)) {
 		fprintf(stderr, "ERROR: failed to transmit. %ld, %ld\n", len,
-			strnlen(buff, sizeof(buff)));
+			2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO));
 		goto err;
 	}
 

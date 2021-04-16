@@ -81,7 +81,23 @@ int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 		fprintf(stderr, "ERROR: failed to receive.\n");
 		goto err;
 	}
-	printf("Server:\n%s\n", buff);
+
+	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
+	if (len >= 2 * sizeof(sgx_measurement_t)) {
+		printf("Server's SGX identity:\n");
+		printf("  . MRENCLAVE = ");
+		for (int i = 0; i < 32; ++i)
+			printf("%02x", (uint8_t)buff[i]);
+		printf("\n");
+		printf("  . MRSIGNER  = ");
+		for (int i = 32; i < 64; ++i)
+			printf("%02x", (uint8_t)buff[i]);
+		printf("\n");
+
+		printf("Server:\n%s\n", buff + 2 * sizeof(sgx_measurement_t));
+	} else
+		/* Server not running in SGX Enlcave will only send hello message to client */
+		printf("Server:\n%s\n", buff);
 
 	ret = enclave_tls_cleanup(handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
