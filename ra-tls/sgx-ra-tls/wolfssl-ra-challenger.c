@@ -357,7 +357,7 @@ int ecdsa_verify_sgx_cert_extensions
         case SGX_QL_QV_RESULT_SW_HARDENING_NEEDED:
         case SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED:
             printf("Warning: App: Verification completed with Non-terminal result: %x\n", quote_verification_result);
-            ret = 1;
+            ret = 0;
             break;
         case SGX_QL_QV_RESULT_INVALID_SIGNATURE:
         case SGX_QL_QV_RESULT_REVOKED:
