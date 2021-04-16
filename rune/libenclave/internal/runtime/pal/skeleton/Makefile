@@ -4,6 +4,8 @@ endif
 
 OUTPUT ?= ./
 SGX_SDK ?= /opt/intel/sgxsdk
+Enclave_Tls_Src := ../../../../../../enclave-tls
+SGX_Stub_Enclave := $(Enclave_Tls_Src)/samples/sgx-stub-enclave
 Enclave_Tls_Root ?= /opt/enclave-tls
 Enclave_Tls_Libdir := $(Enclave_Tls_Root)/lib
 Enclave_Tls_Incdir := $(Enclave_Tls_Root)/include
@@ -43,7 +45,10 @@ libvmm:
 ../kvmtool/libvmm.a: libvmm
 
 ifdef TLS_SERVER
-TLS_SERVER_OBJS := $(OUTPUT)/tls-server.o
+TLS_SERVER_OBJS := $(OUTPUT)/tls-server.o $(SGX_Stub_Enclave)/sgx_stub_u.o
+
+$(SGX_Stub_Enclave)/sgx_stub_u.o:
+	make -C $(SGX_Stub_Enclave)
 endif
 
 $(OUTPUT)/liberpal-skeleton-v1.so: $(OUTPUT)/sgx_call.o $(OUTPUT)/liberpal-skeleton-v1.o \
@@ -134,7 +139,7 @@ EXTRA_CLEAN := \
 
 DIRS_TO_CLEAN := ../kvmtool
 ifdef TLS_SERVER
-DIRS_TO_CLEAN += $(RA_TLS)
+DIRS_TO_CLEAN += $(SGX_Stub_Enclave)
 endif
 
 clean:
