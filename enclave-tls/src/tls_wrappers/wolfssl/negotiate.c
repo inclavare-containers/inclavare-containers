@@ -51,11 +51,13 @@ tls_wrapper_err_t wolfssl_internal_negotiate(wolfssl_ctx_t *ws_ctx,
 #ifdef WOLFSSL_SGX_WRAPPER
 static int ssl_ctx_set_verify_callback(int mode, WOLFSSL_X509_STORE_CTX *store)
 {
+	(void)mode;
+	int result;
+	int sgxStatus = ocall_verify_certificate(&result, store->certs->buffer, store->certs->length);
+	if (sgxStatus != SGX_SUCCESS)
+		return 0;
 
-    (void)mode;
-    int result;
-    int ret = ocall_verify_certificate(&result, store->certs->buffer, store->certs->length);
-    return !ret;
+	return result;
 }
 #endif
 

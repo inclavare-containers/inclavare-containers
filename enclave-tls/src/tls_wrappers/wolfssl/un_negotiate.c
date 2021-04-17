@@ -244,5 +244,5 @@ int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store)
 
 	FreeDecodedCert(&crt);
 
-	return !ret;
+	return 1;
 }
