@@ -4,12 +4,17 @@
 #include <string.h>
 #include <getopt.h>
 #include <sys/socket.h>
+#include <errno.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <enclave-tls/api.h>
 
-#ifndef OCCLUM
+#ifdef OCCLUM
+#include <sgx_report.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#else
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 
@@ -32,6 +37,48 @@ static sgx_enclave_id_t load_enclave(void)
 	printf("Success to load enclave id %ld\n", eid);
 
 	return eid;
+}
+#endif
+
+#ifdef OCCLUM
+typedef struct {
+	const sgx_target_info_t    *target_info;
+	const sgx_report_data_t    *report_data;
+	sgx_report_t               *report;
+} sgxioc_create_report_arg_t;
+
+#define SGXIOC_SELF_TARGET	_IOR('s', 3, sgx_target_info_t)
+#define SGXIOC_CREATE_REPORT	_IOWR('s', 4, sgxioc_create_report_arg_t)
+#define ENCLAVE_TLS_HELLO	"Hello and welcome to enclave-tls!"
+
+int sgx_create_report(sgx_report_t *report)
+{
+	int sgx_fd;
+	if ((sgx_fd = open("/dev/sgx", O_RDONLY)) < 0) {
+		fprintf(stderr, "open sgx device error\n");
+		return -1;
+	}
+
+	sgx_target_info_t target_info;
+	if (ioctl(sgx_fd, SGXIOC_SELF_TARGET, &target_info) < 0) {
+		close(sgx_fd);
+		fprintf(stderr, "failed to ioctl get quote and returned errno %s\n", strerror(errno));
+		return -1;
+	}
+
+	sgxioc_create_report_arg_t arg;
+	arg.target_info = &target_info;
+	arg.report_data = NULL;
+	arg.report = report;
+	if (ioctl(sgx_fd, SGXIOC_CREATE_REPORT, &arg) < 0) {
+		close(sgx_fd);
+		fprintf(stderr, "failed to ioctl get report and return error %s\n", strerror(errno));
+		return -1;
+	}
+
+	close(sgx_fd);
+
+	return 0;
 }
 #endif
 
@@ -80,6 +127,22 @@ int enclave_tls_server_startup(int fd, enclave_tls_log_level_t log_level,
 	buf[len] = '\0';
 
 	printf("Client: %s\n", buf);
+
+#ifdef OCCLUM
+	sgx_report_t app_report;
+	if(sgx_create_report(&app_report) < 0) {
+		fprintf(stderr, "failed to generate local report\n");
+		goto err;
+	}
+
+	/* Write mrencalve, mesigner and hello into buff */
+	memset(buf, 0, sizeof(buf));
+	memcpy(buf, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
+	memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
+	memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
+
+	len = 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO);
+#endif
 
 	/* Reply back to the client */
 	ret = enclave_tls_transmit(handle, buf, &len);

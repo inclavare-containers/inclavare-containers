@@ -10,7 +10,9 @@
 
 #define DEFAULT_PORT 1234
 
-#ifndef OCCLUM
+#ifdef OCCLUM
+#include <sgx_report.h>
+#else
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 
