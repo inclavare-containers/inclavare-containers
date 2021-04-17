@@ -1,11 +1,17 @@
+# samples/enclave-tls-client/Makefile
+#
+# [IN,OPTIONAL] Topdir: specify the location of enclave-tls source code tree
+
 Topdir ?= $(shell readlink -f ../..)
 
 include $(Topdir)/rules/build_env.mk
 
 Targets := $(Build_Bindir)/enclave-tls-client
 
-C_FLAGS += -pie -fPIE -I../../src/include
-CLIENT_LDFLAGS := -L../../build/lib -lenclave_tls -Wl,--rpath=/opt/enclave-tls/lib/,--enable-new-dtags
+C_FLAGS += -pie -fPIE -I$(Topdir)/src/include
+CLIENT_LDFLAGS := \
+  -L$(Topdir)/build/lib -lenclave_tls \
+  -Wl,--rpath=/opt/enclave-tls/lib,--enable-new-dtags
 
 ifndef OCCLUM
   CLIENT_LDFLAGS += -lsgx_urts -lm
@@ -33,4 +39,3 @@ uninstall:
 	@rm -f $(Enclave_Tls_Bindir)/$(notdir $(target))
 
 include $(Topdir)/rules/build_rules.mk
-

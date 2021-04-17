@@ -1,11 +1,17 @@
+# samples/enclave-tls-server/Makefile
+#
+# [IN,OPTIONAL] Topdir: specify the location of enclave-tls source code tree
+
 Topdir ?= $(shell readlink -f ../..)
 
 include $(Topdir)/rules/build_env.mk
 
 Targets := $(Build_Bindir)/enclave-tls-server
 
-C_FLAGS := -pie -fPIE -I../../src/include
-SERVER_LDFLAGS := -L../../build/lib -lenclave_tls -Wl,--rpath=/opt/enclave-tls/lib/,--enable-new-dtags
+C_FLAGS += -pie -fPIE -I$(Topdir)/src/include
+SERVER_LDFLAGS := \
+  -L$(Topdir)/build/lib -lenclave_tls \
+  -Wl,--rpath=/opt/enclave-tls/lib,--enable-new-dtags
 
 ifndef OCCLUM
   SERVER_LDFLAGS += -lsgx_urts -lm

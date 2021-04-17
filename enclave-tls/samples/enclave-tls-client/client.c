@@ -36,12 +36,10 @@ static sgx_enclave_id_t load_enclave(void)
 }
 #endif
 
-int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
-		char *attester_type, char *verifier_type, char *tls_type,
-		char *crypto_type)
+int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
+		     char *attester_type, char *verifier_type,
+		     char *tls_type, char *crypto_type)
 {
-	enclave_tls_err_t ret;
-	enclave_tls_handle handle;
 	enclave_tls_conf_t conf;
 
 	memset(&conf, 0, sizeof(conf));
@@ -54,71 +52,69 @@ int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 	conf.enclave_id = load_enclave();
 #endif
 
-	ret = enclave_tls_init(&conf, &handle);
+	enclave_tls_handle handle;
+	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE || !handle) {
-		fprintf(stderr, "ERROR: failed to initialization.\n");
+		fprintf(stderr, "failed to initialize enclave tls %#x\n", ret);
+		return -1;
 	}
 
-	ret = enclave_tls_negotiate(handle, sockfd);
+	ret = enclave_tls_negotiate(handle, fd);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "ERROR: failed to negotiate.\n");
+		fprintf(stderr, "failed to negotiate %#x\n", ret);
 		goto err;
 	}
 
-	const char *http_request = "GET / HTTP/1.0\r\n\r\n";
-	size_t len = strlen(http_request);
-	ret = enclave_tls_transmit(handle, (void *) http_request, &len);
-	if (ret != ENCLAVE_TLS_ERR_NONE || len != strlen(http_request)) {
-		fprintf(stderr, "ERROR: failed to transmit.\n");
+	const char *msg = "Hello and welcome to Enclave TLS!\n";
+	size_t len = strlen(msg);
+	ret = enclave_tls_transmit(handle, (void *)msg, &len);
+	if (ret != ENCLAVE_TLS_ERR_NONE || len != strlen(msg)) {
+		fprintf(stderr, "failed to transmit %#x\n", ret);
 		goto err;
 	}
 
-	char buff[256];
-	memset(buff, 0, sizeof(buff));
-	len = sizeof(buff) - 1;
-	ret = enclave_tls_receive(handle, buff, &len);
+	char buf[256];
+	len = sizeof(buf);
+	ret = enclave_tls_receive(handle, buf, &len);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "ERROR: failed to receive.\n");
+		fprintf(stderr, "failed to receive %#x\n", ret);
 		goto err;
 	}
+
+	if (len >= sizeof(buf))
+		len = sizeof(buf) - 1;
+	buf[len] = '\0';
 
 	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
 	if (len >= 2 * sizeof(sgx_measurement_t)) {
 		printf("Server's SGX identity:\n");
 		printf("  . MRENCLAVE = ");
 		for (int i = 0; i < 32; ++i)
-			printf("%02x", (uint8_t)buff[i]);
+			printf("%02x", (uint8_t)buf[i]);
 		printf("\n");
 		printf("  . MRSIGNER  = ");
 		for (int i = 32; i < 64; ++i)
-			printf("%02x", (uint8_t)buff[i]);
+			printf("%02x", (uint8_t)buf[i]);
 		printf("\n");
 
-		printf("Server:\n%s\n", buff + 2 * sizeof(sgx_measurement_t));
-	} else
+		printf("Server:\n%s\n", buf + 2 * sizeof(sgx_measurement_t));
+	} else {
 		/* Server not running in SGX Enlcave will only send hello message to client */
-		printf("Server:\n%s\n", buff);
-
-	ret = enclave_tls_cleanup(handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "ERROR: failed to cleanup.\n");
+		printf("Server: %s\n", buf);
 	}
-	return 0;
 
 err:
-	enclave_tls_cleanup(handle);
-	return -1;
+	ret = enclave_tls_cleanup(handle);
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
+		fprintf(stderr, "failed to cleanup %#x\n", ret);
+		return -1;
+	}
+
+	return ret;
 }
 
 int main(int argc, char **argv)
 {
-	char *attester_type = "";
-	char *verifier_type = "";
-	char *tls_type = "";
-	char *crypto = "";
-	const char *program;
-	int opt;
-
 	char *const short_options = "a:v:t:c:";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
@@ -128,7 +124,11 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 
-	program = argv[0];
+	char *attester_type = "";
+	char *verifier_type = "";
+	char *tls_type = "";
+	char *crypto_type = "";
+	int opt;
 
 	do {
 		opt = getopt_long(argc, argv, short_options, long_options,
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 			tls_type = optarg;
 			break;
 		case 'c':
-			crypto = optarg;
+			crypto_type = optarg;
 			break;
 		case -1:
 			break;
@@ -153,42 +153,36 @@ int main(int argc, char **argv)
 		}
 	} while (opt != -1);
 
-	int sockfd;
-	struct sockaddr_in servAddr;
-	char buff[256];
-	size_t len;
-
 	/* Create a socket that uses an internet IPv4 address,
 	 * Sets the socket to be stream based (TCP),
-	 * 0 means choose the default protocol. */
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		fprintf(stderr, "ERROR: failed to create the socket\n");
+	 * 0 means choose the default protocol.
+	 */
+
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		perror("failed to call socket()\n");
 		return -1;
 	}
 
-	/* Initialize the server address struct with zeros */
-	memset(&servAddr, 0, sizeof(servAddr));
-
-	/* Fill in the server address */
-	servAddr.sin_family = AF_INET;	/* using IPv4      */
-	servAddr.sin_port = htons(DEFAULT_PORT);	/* on DEFAULT_PORT */
-
-	const char *srvaddr = "127.0.0.1";
+	struct sockaddr_in s_addr;
+	memset(&s_addr, 0, sizeof(s_addr));
+	s_addr.sin_family = AF_INET;
+	s_addr.sin_port = htons(DEFAULT_PORT);
 
 	/* Get the server IPv4 address from the command line call */
-	if (inet_pton(AF_INET, srvaddr, &servAddr.sin_addr) != 1) {
-		fprintf(stderr, "ERROR: invalid address\n");
+	const char *srvaddr = "127.0.0.1";
+	if (inet_pton(AF_INET, srvaddr, &s_addr.sin_addr) != 1) {
+		fprintf(stderr, "invalid server address\n");
 		return -1;
 	}
 
 	/* Connect to the server */
-	if (connect(sockfd, (struct sockaddr *) &servAddr, sizeof(servAddr)) == -1) {
-		fprintf(stderr, "ERROR: failed to connect\n");
+	if (connect(sockfd, (struct sockaddr *) &s_addr, sizeof(s_addr)) == -1) {
+		perror("failed to call connect()\n");
 		return -1;
 	}
 
-	ra_tls_echo(sockfd, ENCLAVE_TLS_LOG_LEVEL_DEBUG, attester_type,
-		    verifier_type, tls_type, crypto);
-
-	return 0;
+	return enclave_tls_echo(sockfd, ENCLAVE_TLS_LOG_LEVEL_DEBUG,
+				attester_type, verifier_type, tls_type,
+				crypto_type);
 }
