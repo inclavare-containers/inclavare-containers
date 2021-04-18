@@ -137,4 +137,4 @@ sudo rune run ${Occlum_application_container_name}
 
 # Credits
 
-Some codes in rune have been borrowed from [runc](https://github.com/opencontainers/runc) project.
+Some codes in rune are borrowed from [runc](https://github.com/opencontainers/runc) project. In addition, runc packages including {apparmor, cgroups, configs, devices, intelrdt, keys, logs, nsenter, seccomp, specconv, stacktrace, system, user, utils} have been in the vendor directory of rune.
