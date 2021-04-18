@@ -90,7 +90,7 @@ int sgx_create_report(sgx_report_t *report)
 
 int enclave_tls_server_startup(int fd, enclave_tls_log_level_t log_level,
 			       char *attester_type, char *verifier_type,
-			       char *tls_type, char *crypto_type)
+			       char *tls_type, char *crypto_type, bool mutual)
 {
 	enclave_tls_conf_t conf;
 
@@ -104,6 +104,8 @@ int enclave_tls_server_startup(int fd, enclave_tls_log_level_t log_level,
 	conf.enclave_id = load_enclave();
 #endif
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
+	if (mutual)
+		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
@@ -169,12 +171,13 @@ err:
 
 int main(int argc, char **argv)
 {
-	char *const short_options = "a:v:t:c:";
+	char *const short_options = "a:v:t:c:m";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
 		{"verifier", required_argument, NULL, 'v'},
 		{"tls", required_argument, NULL, 't'},
 		{"crypto", required_argument, NULL, 'c'},
+		{"mutual", no_argument, NULL, 'm'},
 		{0, 0, 0, 0}
 	};
 
@@ -182,6 +185,7 @@ int main(int argc, char **argv)
 	char *verifier_type = "";
 	char *tls_type = "";
 	char *crypto_type = "";
+	bool mutual = false;
 	int opt;
 
 	do {
@@ -199,6 +203,9 @@ int main(int argc, char **argv)
 			break;
 		case 'c':
 			crypto_type = optarg;
+			break;
+		case 'm':
+			mutual = true;
 			break;
 		case -1:
 			break;
@@ -252,5 +259,5 @@ int main(int argc, char **argv)
 
 	return enclave_tls_server_startup(connd, ENCLAVE_TLS_LOG_LEVEL_DEBUG,
 					  attester_type, verifier_type,
-					  tls_type, crypto_type);
+					  tls_type, crypto_type, mutual);
 }
