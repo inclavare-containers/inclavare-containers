@@ -171,13 +171,14 @@ err:
 
 int main(int argc, char **argv)
 {
-	char *const short_options = "a:v:t:c:m";
+	char *const short_options = "a:v:t:c:ml:";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
 		{"verifier", required_argument, NULL, 'v'},
 		{"tls", required_argument, NULL, 't'},
 		{"crypto", required_argument, NULL, 'c'},
 		{"mutual", no_argument, NULL, 'm'},
+		{"log-level", required_argument, NULL, 'l'},
 		{0, 0, 0, 0}
 	};
 
@@ -186,6 +187,7 @@ int main(int argc, char **argv)
 	char *tls_type = "";
 	char *crypto_type = "";
 	bool mutual = false;
+	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
 	int opt;
 
 	do {
@@ -206,6 +208,20 @@ int main(int argc, char **argv)
 			break;
 		case 'm':
 			mutual = true;
+			break;
+		case 'l':
+			if (!strcasecmp(optarg, "debug"))
+				log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
+			else if (!strcasecmp(optarg, "info"))
+				log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
+			else if (!strcasecmp(optarg, "warn"))
+				log_level = ENCLAVE_TLS_LOG_LEVEL_WARN;
+			else if (!strcasecmp(optarg, "error"))
+				log_level = ENCLAVE_TLS_LOG_LEVEL_ERROR;
+			else if (!strcasecmp(optarg, "fatal"))
+				log_level = ENCLAVE_TLS_LOG_LEVEL_FATAL;
+			else if (!strcasecmp(optarg, "off"))
+				log_level = ENCLAVE_TLS_LOG_LEVEL_NONE;
 			break;
 		case -1:
 			break;
@@ -257,7 +273,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	return enclave_tls_server_startup(connd, ENCLAVE_TLS_LOG_LEVEL_DEBUG,
+	return enclave_tls_server_startup(connd, log_level,
 					  attester_type, verifier_type,
 					  tls_type, crypto_type, mutual);
 }

@@ -47,7 +47,8 @@ extern enclave_tls_log_level_t global_log_level;
 #ifdef WOLFSSL_SGX
 #define __PR__(level, io, fmt, ...)     \
         do {    \
-		printf("[" #level "] %s()@L%d: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level) \
+			printf("[" #level "] %s()@L%d: " fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
 	} while (0)
 #else
 #define __PR__(level, io, fmt, ...)     \
