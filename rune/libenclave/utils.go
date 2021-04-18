@@ -1,3 +1,5 @@
+// The codebase is inherited from runc with the modifications.
+
 package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (

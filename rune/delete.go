@@ -1,3 +1,5 @@
+// The codebase is inherited from runc with the modifications.
+
 // +build !solaris
 
 package main
