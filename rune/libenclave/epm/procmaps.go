@@ -11,8 +11,10 @@ import (
  * info correctly by this kind of pathname.
  */
 const (
-	EnclavePath     = "/dev/sgx/enclave"
-	EnclavePathPool = "/sgx/enclave"
+	EnclavePath        = "/dev/sgx/enclave"
+	EnclaveNewPath     = "/dev/sgx_enclave"
+	EnclavePathPool    = "/sgx/enclave"
+	EnclaveNewPathPool = "/sgx_enclave"
 )
 
 func GetEnclProcMaps(pid int) ([]*procfs.ProcMap, error) {
@@ -35,7 +37,7 @@ func GetEnclProcMaps(pid int) ([]*procfs.ProcMap, error) {
 
 	for idx := range maps {
 		pathname := maps[idx].Pathname
-		if pathname == EnclavePath || pathname == EnclavePathPool {
+		if pathname == EnclavePath || pathname == EnclavePathPool || pathname == EnclaveNewPath || pathname == EnclaveNewPathPool {
 			enclprocmaps = append(enclprocmaps, maps[idx])
 		}
 	}
@@ -60,7 +62,7 @@ func GetEnclaveFd(pid int) (int, error) {
 	}
 
 	for fd, n := range names {
-		if n == EnclavePath || n == EnclavePathPool {
+		if n == EnclavePath || n == EnclavePathPool || pathname == EnclaveNewPath || pathname == EnclaveNewPathPool {
 			return int(fd), err
 		}
 	}
