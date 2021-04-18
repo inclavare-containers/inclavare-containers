@@ -13,7 +13,7 @@
 /* The global configurations present by /opt/enclave-tls/config.toml */
 etls_core_context_t global_core_context;
 /* The global log level used by log.h */
-enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
+enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
 
 void __attribute__((constructor)) libenclave_tls_init(void)
 {
