@@ -1,3 +1,8 @@
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef QUOTE_GENERATION_H_
 #define QUOTE_GENERATION_H_
 

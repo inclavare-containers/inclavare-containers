@@ -1,3 +1,8 @@
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef _INTERNAL_CRYPTO_WRAPPER_H
 #define _INTERNAL_CRYPTO_WRAPPER_H
 

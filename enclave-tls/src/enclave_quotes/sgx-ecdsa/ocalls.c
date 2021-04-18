@@ -1,3 +1,8 @@
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <sgx_dcap_quoteverify.h>
 #include <sgx_dcap_ql_wrapper.h>
 #include <enclave-tls/log.h>
