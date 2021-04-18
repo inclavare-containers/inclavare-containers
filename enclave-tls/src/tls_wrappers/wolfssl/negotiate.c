@@ -16,8 +16,13 @@ tls_wrapper_err_t wolfssl_internal_negotiate(wolfssl_ctx_t *ws_ctx,
 					     unsigned long conf_flags, int fd,
 					     int (*verify)(int, WOLFSSL_X509_STORE_CTX *))
 {
+	int flags = WOLFSSL_VERIFY_PEER;
+
+	if ((conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL) && (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER))
+             flags |= WOLFSSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+
 	if (verify)
-		wolfSSL_CTX_set_verify(ws_ctx->ws, SSL_VERIFY_PEER, verify);
+		wolfSSL_CTX_set_verify(ws_ctx->ws, flags, verify);
 
 	WOLFSSL *ssl = wolfSSL_new(ws_ctx->ws);
 	if (!ssl)
@@ -76,7 +81,7 @@ tls_wrapper_err_t wolfssl_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 	int (*verify)(int, WOLFSSL_X509_STORE_CTX *) = NULL;
 	unsigned long conf_flags = ctx->conf_flags;
 
-	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)) {
+	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER) || (conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)) {
 #ifdef WOLFSSL_SGX_WRAPPER
 		verify = ssl_ctx_set_verify_callback;
 #else

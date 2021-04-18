@@ -60,6 +60,7 @@ OPTIONS:
    --verifier/-v value   set the type of quote verifier
    --tls/-t value        set the type of tls wrapper
    --crypto/-c value     set the type of crypto wrapper
+   --mutual/-m           set to enable mutual attestation
 ```
 
 You can set command line parameters to specify different configurations.
@@ -72,6 +73,15 @@ For example:
 ./enclave-tls-server --attester sgx_ecdsa
 ./enclave-tls-server --attester sgx_la
 ./enclave-tls-server run  --crypto wolfcrypt
+```
+
+## Mutual attestation
+
+You can use `-m` option to enable mutual attestation.
+
+```shell
+./enclave-tls-server -m
+./enclave-tls-client -m
 ```
 
 # Deployment
