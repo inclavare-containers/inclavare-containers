@@ -124,6 +124,8 @@ err:
 
 int main(int argc, char **argv)
 {
+	printf("    - Welcome to Enclave-TLS sample client program\n");
+
 	char *const short_options = "a:v:t:c:ml:";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
