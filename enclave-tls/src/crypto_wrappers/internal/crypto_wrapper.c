@@ -1,3 +1,8 @@
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "internal/crypto_wrapper.h"
 
 crypto_wrapper_opts_t *crypto_wrappers_opts[CRYPTO_WRAPPER_TYPE_MAX];

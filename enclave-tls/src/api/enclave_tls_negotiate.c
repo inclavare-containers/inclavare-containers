@@ -1,3 +1,8 @@
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <enclave-tls/api.h>
 #include <enclave-tls/log.h>
 #include "internal/core.h"

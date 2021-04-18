@@ -1,3 +1,8 @@
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef _ENCLAVE_API_H_
 #define _ENCLAVE_API_H_
 
