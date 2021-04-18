@@ -36,7 +36,7 @@ var psCommand = cli.Command{
 			return err
 		}
 		if rootlessCg {
-			logrus.Warn("runc ps may fail if you don't have the full access to cgroups")
+			logrus.Warn("rune ps may fail if you don't have the full access to cgroups")
 		}
 
 		container, err := getContainer(context)

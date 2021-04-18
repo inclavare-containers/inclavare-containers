@@ -48,7 +48,7 @@ type containerState struct {
 
 var listCommand = cli.Command{
 	Name:  "list",
-	Usage: "lists containers started by runc with the given root",
+	Usage: "lists containers started by rune with the given root",
 	ArgsUsage: `
 
 Where the given root is specified via the global option "--root"
@@ -56,11 +56,11 @@ Where the given root is specified via the global option "--root"
 
 EXAMPLE 1:
 To list containers created via the default "--root":
-       # runc list
+       # rune list
 
 EXAMPLE 2:
 To list containers created using a non-default value for "--root":
-       # runc --root value list`,
+       # rune --root value list`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "format, f",

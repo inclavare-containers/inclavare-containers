@@ -421,11 +421,11 @@ func (c *linuxEnclaveContainer) newParentProcess(p *EnclaveProcess) (parentProce
 		return c.newSetnsProcess(p, cmd, messageSockPair, logFilePair)
 	}
 
-	// We only set up fifoFd if we're not doing a `runc exec`. The historic
+	// We only set up fifoFd if we're not doing a `rune exec`. The historic
 	// reason for this is that previously we would pass a dirfd that allowed
-	// for container rootfs escape (and not doing it in `runc exec` avoided
+	// for container rootfs escape (and not doing it in `rune exec` avoided
 	// that problem), but we no longer do that. However, there's no need to do
-	// this for `runc exec` so we just keep it this way to be safe.
+	// this for `rune exec` so we just keep it this way to be safe.
 	if err := c.includeExecFifo(cmd); err != nil {
 		return nil, newSystemErrorWithCause(err, "including execfifo in cmd.Exec setup")
 	}
@@ -789,7 +789,7 @@ func (c *linuxEnclaveContainer) checkCriuVersion(minVersion int) error {
 			c.criuVersion += int(*criuVersionRPC.Sublevel)
 		}
 		if criuVersionRPC.Gitid != nil {
-			// runc's convention is that a CRIU git release is
+			// rune's convention is that a CRIU git release is
 			// always the same as increasing the minor by 1
 			c.criuVersion -= (c.criuVersion % 100)
 			c.criuVersion += 100
@@ -800,7 +800,7 @@ func (c *linuxEnclaveContainer) checkCriuVersion(minVersion int) error {
 	// This is CRIU without the version RPC and therefore
 	// older than 3.0. Parsing the output is required.
 
-	// This can be remove once runc does not work with criu older than 3.0
+	// This can be remove once rune does not work with criu older than 3.0
 
 	c.criuVersion, err = parseCriuVersion(c.criuPath)
 	if err != nil {
@@ -884,7 +884,7 @@ func (c *linuxEnclaveContainer) handleCriuConfigurationFile(rpcOpts *criurpc.Cri
 			rpcOpts.ConfigFile = proto.String(configFile)
 		}
 		// If 'org.criu.config' exists and is set to an empty
-		// string, a runc specific CRIU configuration file will
+		// string, a rune specific CRIU configuration file will
 		// be not set at all.
 	} else {
 		// If the mentioned annotation has not been found, specify
@@ -970,7 +970,7 @@ func (c *linuxEnclaveContainer) Checkpoint(criuOpts *libcontainer.CriuOpts) erro
 	if nsPath != "" {
 		// For this to work we need at least criu 3.11.0 => 31100.
 		// As there was already a successful version check we will
-		// not error out if it fails. runc will just behave as it used
+		// not error out if it fails. rune will just behave as it used
 		// to do and ignore external network namespaces.
 		err := c.checkCriuVersion(31100)
 		if err == nil {
@@ -1201,9 +1201,9 @@ func isPathInPrefixList(path string, prefix []string) bool {
 }
 
 // prepareCriuRestoreMounts tries to set up the rootfs of the
-// container to be restored in the same way runc does it for
+// container to be restored in the same way rune does it for
 // initial container creation. Even for a read-only rootfs container
-// runc modifies the rootfs to add mountpoints which do not exist.
+// rune modifies the rootfs to add mountpoints which do not exist.
 // This function also creates missing mountpoints as long as they
 // are not on top of a tmpfs, as CRIU will restore tmpfs content anyway.
 func (c *linuxEnclaveContainer) prepareCriuRestoreMounts(mounts []*configs.Mount) error {
@@ -1316,7 +1316,7 @@ func (c *linuxEnclaveContainer) Restore(process *libcontainer.Process, criuOpts 
 	if nsPath != "" {
 		// For this to work we need at least criu 3.11.0 => 31100.
 		// As there was already a successful version check we will
-		// not error out if it fails. runc will just behave as it used
+		// not error out if it fails. rune will just behave as it used
 		// to do and ignore external network namespaces.
 		err := c.checkCriuVersion(31100)
 		if err == nil {
@@ -1341,7 +1341,7 @@ func (c *linuxEnclaveContainer) Restore(process *libcontainer.Process, criuOpts 
 		}
 	}
 
-	// This will modify the rootfs of the container in the same way runc
+	// This will modify the rootfs of the container in the same way rune
 	// modifies the container during initial creation.
 	if err := c.prepareCriuRestoreMounts(c.config.Mounts); err != nil {
 		return err
@@ -1488,7 +1488,7 @@ func (c *linuxEnclaveContainer) criuSwrk(process *libcontainer.Process, req *cri
 	if err := cmd.Start(); err != nil {
 		return err
 	}
-	// we close criuServer so that even if CRIU crashes or unexpectedly exits, runc will not hang.
+	// we close criuServer so that even if CRIU crashes or unexpectedly exits, rune will not hang.
 	criuServer.Close()
 	// cmd.Process will be replaced by a restored init.
 	criuProcess := cmd.Process
@@ -1621,7 +1621,7 @@ func (c *linuxEnclaveContainer) criuSwrk(process *libcontainer.Process, req *cri
 
 	// In pre-dump mode CRIU is in a loop and waits for
 	// the final DUMP command.
-	// The current runc pre-dump approach, however, is
+	// The current rune pre-dump approach, however, is
 	// start criu in PRE_DUMP once for a single pre-dump
 	// and not the whole series of pre-dump, pre-dump, ...m, dump
 	// If we got the message CriuReqType_PRE_DUMP it means

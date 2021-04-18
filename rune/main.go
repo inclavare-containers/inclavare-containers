@@ -28,11 +28,11 @@ const (
 	specConfig = "config.json"
 	usage      = `Open Container Initiative runtime
 
-runc is a command line client for running applications packaged according to
+rune is a command line client for running applications packaged according to
 the Open Container Initiative (OCI) format and is a compliant implementation of the
 Open Container Initiative specification.
 
-runc integrates well with existing process supervisors to provide a production
+rune integrates well with existing process supervisors to provide a production
 container runtime environment for applications. It can be used with your
 existing process monitoring tools and the container will be spawned as a
 direct child of the process supervisor.
@@ -43,7 +43,7 @@ The root filesystem contains the contents of the container.
 
 To start a new instance of a container:
 
-    # runc run [ -b bundle ] <container-id>
+    # rune run [ -b bundle ] <container-id>
 
 Where "<container-id>" is your name for the instance of the container that you
 are starting. The name you provide for the container instance must be unique on
@@ -102,7 +102,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:  "systemd-cgroup",
-			Usage: "enable systemd cgroup support, expects cgroupsPath to be of form \"slice:prefix:name\" for e.g. \"system.slice:runc:434234\"",
+			Usage: "enable systemd cgroup support, expects cgroupsPath to be of form \"slice:prefix:name\" for e.g. \"system.slice:rune:434234\"",
 		},
 		cli.StringFlag{
 			Name:  "rootless",
