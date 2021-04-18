@@ -14,6 +14,8 @@
 #include "../wolfcrypt/gen_cert.c"
 #include "../wolfcrypt/cleanup.c"
 
+enclave_tls_log_level_t global_log_level;
+
 crypto_wrapper_err_t ecall_wolfcrypt_pre_init(void)
 {
 	return wolfcrypt_pre_init();
@@ -21,6 +23,9 @@ crypto_wrapper_err_t ecall_wolfcrypt_pre_init(void)
 
 crypto_wrapper_err_t ecall_wolfcrypt_init(crypto_wrapper_ctx_t *ctx)
 {
+	/* global_log_level controls the log output level of the trusted part */
+	global_log_level = ctx->log_level;
+
 	return wolfcrypt_init(ctx);
 }
 

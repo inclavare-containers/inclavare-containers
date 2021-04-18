@@ -61,6 +61,7 @@ OPTIONS:
    --tls/-t value        set the type of tls wrapper
    --crypto/-c value     set the type of crypto wrapper
    --mutual/-m           set to enable mutual attestation
+   --log-level/-l        set the log level
 ```
 
 You can set command line parameters to specify different configurations.
@@ -73,6 +74,14 @@ For example:
 ./enclave-tls-server --attester sgx_ecdsa
 ./enclave-tls-server --attester sgx_la
 ./enclave-tls-server run  --crypto wolfcrypt
+```
+
+Enclave TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
+
+For example:
+
+```
+./enclave-tls-server -l debug
 ```
 
 ## Mutual attestation
