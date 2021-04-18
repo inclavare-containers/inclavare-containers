@@ -13,7 +13,7 @@ enclave_tls_err_t enclave_tls_negotiate(enclave_tls_handle handle, int fd)
 	    !ctx->tls_wrapper->opts->negotiate || fd < 0)
 		return -ENCLAVE_TLS_ERR_INVALID;
 
-	/* Check whether needing to generate TLS certificate */
+	/* Check whether requiring to generate TLS certificate */
 	if ((ctx->config.flags & ENCLAVE_TLS_CONF_FLAGS_SERVER) ||
 	    (ctx->config.flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)) {
 		enclave_tls_err_t err = etls_core_generate_certificate(ctx);

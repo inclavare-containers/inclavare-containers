@@ -51,7 +51,7 @@ ocall_files := \
   $(this_dir)/sgx/ocalls.c \
   $(this_dir)/tls_wrappers/wolfssl-sgx/ocalls.c \
   $(this_dir)/enclave_quotes/sgx-ecdsa/ocalls.c
-ocall_objs := $(patsubst %c, %o, $(ocall_files))   
+ocall_objs := $(patsubst %c,%o,$(ocall_files))
 ifdef SGX
   libenclave_tls_files += $(ocall_files)
   Build_Dependencies += $(Build_Libdir)/libwolfssl.so 

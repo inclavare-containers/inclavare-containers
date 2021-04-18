@@ -9,7 +9,7 @@ nullcrypto_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
 	ETLS_DEBUG("ctx %p, algo %d, privkey_buf %p, privkey_len %p\n",
 		   ctx, algo, privkey_buf, privkey_len);
 
-	/* Indicate non private key generated */
+	/* Indicate no private key generated */
 	*privkey_len = 0;
 
 	return CRYPTO_WRAPPER_ERR_NONE;

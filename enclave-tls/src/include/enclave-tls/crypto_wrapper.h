@@ -42,6 +42,13 @@ typedef struct {
 struct crypto_wrapper_ctx {
 	crypto_wrapper_opts_t *opts;
 	void *crypto_private;
+	/* This field is only used by SGX build. However, we don't want to
+	 * make this field conditional because crypto_wrapper_ctx is part
+	 * of core libenclave_tls.so which should be a single instance and
+	 * commonly available rather than multiple instances for different
+	 * build, e.g, common platforms, libos, sgx and so on. This explains
+	 * why not use sgx_enclave_id_t to define this field.
+	 */
 	unsigned long long enclave_id;
 	unsigned long conf_flags;
 	enclave_tls_log_level_t log_level;

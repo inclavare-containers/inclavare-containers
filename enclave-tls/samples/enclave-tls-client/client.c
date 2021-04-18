@@ -28,7 +28,7 @@ static sgx_enclave_id_t load_enclave(void)
 	int updated = 0;
 	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
-		fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
+		fprintf(stderr, "Failed to load enclave %d\n", ret);
 		return -1;
 	}
 

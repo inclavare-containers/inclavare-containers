@@ -6,14 +6,15 @@
 enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf,
 				      size_t *buf_size)
 {
-	ETLS_DEBUG("--- Entering enclave_tls_receive ---\n");
+	etls_core_context_t *ctx = (etls_core_context_t *)handle;
 
-	if (!(handle) || !(handle->tls_wrapper) || (!handle->tls_wrapper->opts)
-	    || (!handle->tls_wrapper->opts->receive) || !buf || !buf_size) {
+	ETLS_DEBUG("handle %p, buf %p, buf_size %Zd\n", ctx, buf, buf_size);
+
+	if (!handle || !handle->tls_wrapper || !handle->tls_wrapper->opts ||
+	    !handle->tls_wrapper->opts->receive || !buf || !buf_size)
 		return -ENCLAVE_TLS_ERR_INVALID;
-	}
 
-	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_UNKNOWN;
+	enclave_tls_err_t err;
 	err = handle->tls_wrapper->opts->receive(handle->tls_wrapper, buf,
 						 buf_size);
 	if (err != TLS_WRAPPER_ERR_NONE)

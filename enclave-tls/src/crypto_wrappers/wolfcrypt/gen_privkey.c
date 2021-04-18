@@ -16,7 +16,7 @@ wolfcrypt_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
 
 	unsigned int buf_len = *privkey_len;
 
-	ETLS_DEBUG("requesting %d-byte private key buffer ...\n", buf_len);
+	ETLS_DEBUG("%d-byte private key buffer requested ...\n", buf_len);
 
 	uint8_t *buf = privkey_buf;
 	if (buf_len && !buf)

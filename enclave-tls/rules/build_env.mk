@@ -27,8 +27,6 @@
 # - $(APP).edl: the EDL file for the definitions of ECALLs and OCALLs
 #
 
-DEBUG ?= 1
-
 ifeq ($(__Build_Env_Imported),1)
   $(error "Please don't import build_env.mk again!")
 endif
@@ -37,7 +35,7 @@ Enclave_Tls_Root ?= /opt/enclave-tls
 Enclave_Tls_Libdir := $(Enclave_Tls_Root)/lib
 Enclave_Tls_Lib := $(Enclave_Tls_Libdir)/libenclave_tls.so
 
-# Decide where the caller comes from
+# Determine the caller is from in-tree or out-of-tree
 ifeq ($(Topdir),)
   # out-of-tree
   is_valid_lib := $(shell [ -L $(Enclave_Tls_Lib) ] && echo 1)
@@ -63,16 +61,12 @@ Major_Version := $(shell echo $(version) | cut -d '.' -f1)
 Minor_Version := $(shell echo $(version) | cut -d '.' -f2)
 Patch_Version := $(shell echo $(version) | cut -d '.' -f3)
 
-# Indicate build_env.mk is already explicitly imported by the caller
-__Build_Env_Imported := 1
-
 Debug ?=
 
 CC ?= gcc
 CXX ?= g++
 LD ?= ld
 AR ?= ar
-GO ?= go
 INSTALL ?= install
 
 Build_Dir ?= $(Topdir)/build
@@ -100,7 +94,7 @@ ifeq ($(DEBUG),1)
   CXXFLAGS += -ggdb -O0
 else
   CFLAGS += -O2
-  CXXFLAGS += -ggdb -O0
+  CXXFLAGS += -O2
 endif
 Enclave_Tls_Cflags := $(CFLAGS) -I$(Enclave_Tls_Incdir)
 
@@ -110,7 +104,10 @@ Enclave_Tls_Ldflags := \
 
 Extra_Phonies ?=
 
-export Debug CC CXX GO INSTALL \
+# Indicate build_env.mk is already explicitly imported by the caller
+__Build_Env_Imported := 1
+
+export Debug CC CXX INSTALL \
   Major_Version Minor_Version Patch_Version \
   Build_Dir Build_Bindir Build_Libdir Build_Incdir \
   Enclave_Tls_Root Enclave_Tls_Srcdir Enclave_Tls_Bindir Enclave_Tls_Libdir \
