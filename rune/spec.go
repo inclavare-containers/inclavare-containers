@@ -43,9 +43,9 @@ command in a new hello-world container named container1:
     docker export $(docker create hello-world) > hello-world.tar
     mkdir rootfs
     tar -C rootfs -xf hello-world.tar
-    runc spec
+    rune spec
     sed -i 's;"sh";"/hello";' ` + specConfig + `
-    runc run container1
+    rune run container1
 
 In the run command above, "container1" is the name for the instance of the
 container that you are starting. The name you provide for the container instance
@@ -56,9 +56,9 @@ sub-command "oci-runtime-tool generate" has lots of options that can be used to 
 customizations as you want, see runtime-tools (https://github.com/opencontainers/runtime-tools)
 to get more information.
 
-When starting a container through runc, runc needs root privilege. If not
-already running as root, you can use sudo to give runc root privilege. For
-example: "sudo runc start container1" will give runc root privilege to start the
+When starting a container through rune, rune needs root privilege. If not
+already running as root, you can use sudo to give rune root privilege. For
+example: "sudo rune start container1" will give rune root privilege to start the
 container on your host.
 
 Alternatively, you can start a rootless container, which has the ability to run
@@ -66,7 +66,7 @@ without root privileges. For this to work, the specification file needs to be
 adjusted accordingly. You can pass the parameter --rootless to this command to
 generate a proper rootless spec file.
 
-Note that --rootless is not needed when you execute runc as the root in a user namespace
+Note that --rootless is not needed when you execute rune as the root in a user namespace
 created by an unprivileged user.
 `,
 	Flags: []cli.Flag{

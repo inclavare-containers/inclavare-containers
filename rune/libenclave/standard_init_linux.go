@@ -70,7 +70,7 @@ func (l *linuxStandardInit) Init() error {
 			// the only significant protection of keyrings).
 			//
 			// TODO(cyphar): Log this so people know what's going on, once we
-			//               have proper logging in 'runc init'.
+			//               have proper logging in 'rune init'.
 			if errors.Cause(err) != unix.ENOSYS {
 				return errors.Wrap(err, "join session keyring")
 			}

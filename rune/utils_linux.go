@@ -63,7 +63,7 @@ func loadFactory(context *cli.Context, enclaveConfig *enclaveConfigs.EnclaveConf
 		intelRdtManager = nil
 	}
 
-	// We resolve the paths for {newuidmap,newgidmap} from the context of runc,
+	// We resolve the paths for {newuidmap,newgidmap} from the context of rune,
 	// to avoid doing a path lookup in the nsexec context. TODO: The binary
 	// names are not currently configurable.
 	newuidmap, err := exec.LookPath("newuidmap")
@@ -177,7 +177,7 @@ func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, det
 				t.consoleC <- nil
 			}()
 		} else {
-			// the caller of runc will handle receiving the console master
+			// the caller of rune will handle receiving the console master
 			conn, err := net.Dial("unix", sockpath)
 			if err != nil {
 				return nil, err
@@ -196,8 +196,8 @@ func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, det
 		}
 		return t, nil
 	}
-	// when runc will detach the caller provides the stdio to runc via runc's 0,1,2
-	// and the container's process inherits runc's stdio.
+	// when rune will detach the caller provides the stdio to rune via rune's 0,1,2
+	// and the container's process inherits rune's stdio.
 	if detach {
 		if err := inheritStdio(process); err != nil {
 			return nil, err
@@ -399,10 +399,10 @@ func (r *runner) checkTerminal(config *specs.Process) error {
 	detach := r.detach || (r.action == CT_ACT_CREATE)
 	// Check command-line for sanity.
 	if detach && config.Terminal && r.consoleSocket == "" {
-		return fmt.Errorf("cannot allocate tty if runc will detach without setting console socket")
+		return fmt.Errorf("cannot allocate tty if rune will detach without setting console socket")
 	}
 	if (!detach || !config.Terminal) && r.consoleSocket != "" {
-		return fmt.Errorf("cannot use console socket if runc will not detach or allocate tty")
+		return fmt.Errorf("cannot use console socket if rune will not detach or allocate tty")
 	}
 	return nil
 }

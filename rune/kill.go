@@ -25,7 +25,7 @@ EXAMPLE:
 For example, if the container id is "ubuntu01" the following will send a "KILL"
 signal to the init process of the "ubuntu01" container:
 
-       # runc kill ubuntu01 KILL`,
+       # rune kill ubuntu01 KILL`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "all, a",

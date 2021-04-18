@@ -21,7 +21,7 @@ var restoreCommand = cli.Command{
 Where "<container-id>" is the name for the instance of the container to be
 restored.`,
 	Description: `Restores the saved state of the container instance that was previously saved
-using the runc checkpoint command.`,
+using the rune checkpoint command.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "console-socket",
@@ -100,7 +100,7 @@ using the runc checkpoint command.`,
 		}
 		// XXX: Currently this is untested with rootless containers.
 		if os.Geteuid() != 0 || system.RunningInUserNS() {
-			logrus.Warn("runc checkpoint is untested with rootless containers")
+			logrus.Warn("rune checkpoint is untested with rootless containers")
 		}
 
 		spec, err := setupSpec(context)

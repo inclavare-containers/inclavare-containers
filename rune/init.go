@@ -47,7 +47,7 @@ func init() {
 
 var initCommand = cli.Command{
 	Name:  "init",
-	Usage: `initialize the namespaces and launch the process (do not call it outside of runc)`,
+	Usage: `initialize the namespaces and launch the process (do not call it outside of rune)`,
 	Action: func(context *cli.Context) error {
 		factory, _ := libenclave.New("", nil, false)
 		if err := factory.StartInitialization(); err != nil {
