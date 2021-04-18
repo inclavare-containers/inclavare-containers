@@ -42,9 +42,9 @@ static sgx_enclave_id_t load_enclave(void)
 
 #ifdef OCCLUM
 typedef struct {
-	const sgx_target_info_t    *target_info;
-	const sgx_report_data_t    *report_data;
-	sgx_report_t               *report;
+	const sgx_target_info_t *target_info;
+	const sgx_report_data_t *report_data;
+	sgx_report_t            *report;
 } sgxioc_create_report_arg_t;
 
 #define SGXIOC_SELF_TARGET	_IOR('s', 3, sgx_target_info_t)
@@ -53,8 +53,9 @@ typedef struct {
 
 int sgx_create_report(sgx_report_t *report)
 {
-	int sgx_fd;
-	if ((sgx_fd = open("/dev/sgx", O_RDONLY)) < 0) {
+	int sgx_fd = open("/dev/sgx", O_RDONLY);
+
+	if (sgx_fd < 0) {
 		fprintf(stderr, "open sgx device error\n");
 		return -1;
 	}
