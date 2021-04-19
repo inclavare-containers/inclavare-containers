@@ -91,7 +91,7 @@ int sgx_create_report(sgx_report_t *report)
 }
 #endif
 
-int enclave_tls_server_startup(int fd, enclave_tls_log_level_t log_level,
+int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 			       char *attester_type, char *verifier_type,
 			       char *tls_type, char *crypto_type, bool mutual)
 {
@@ -117,49 +117,64 @@ int enclave_tls_server_startup(int fd, enclave_tls_log_level_t log_level,
 		return -1;
 	}
 
-	ret = enclave_tls_negotiate(handle, fd);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to negotiate %#x\n", ret);
-		goto err;
-	}
+	/* Accept client connections */
+	struct sockaddr_in c_addr;
+	socklen_t size = sizeof(c_addr);
+	while (1) {
+		printf("Waiting for a connection ...\n");
 
-	printf("Client connected successfully\n");
+		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
+		if (connd < 0) {
+			perror("Failed to call accept()");
+			return -1;
+		}
 
-	char buf[256];
-	size_t len = sizeof(buf);
-	ret = enclave_tls_receive(handle, buf, &len);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to receive %#x\n", ret);
-		goto err;
-	}
+		ret = enclave_tls_negotiate(handle, connd);
+		if (ret != ENCLAVE_TLS_ERR_NONE) {
+			fprintf(stderr, "failed to negotiate %#x\n", ret);
+			goto err;
+		}
 
-	if (len >= sizeof(buf))
-		len = sizeof(buf) - 1;
-	buf[len] = '\0';
+		printf("Client connected successfully\n");
 
-	printf("Client: %s\n", buf);
+		char buf[256];
+		size_t len = sizeof(buf);
+		ret = enclave_tls_receive(handle, buf, &len);
+		if (ret != ENCLAVE_TLS_ERR_NONE) {
+			fprintf(stderr, "failed to receive %#x\n", ret);
+			goto err;
+		}
+
+		if (len >= sizeof(buf))
+			len = sizeof(buf) - 1;
+		buf[len] = '\0';
+
+		printf("Client: %s\n", buf);
 
 #ifdef OCCLUM
-	sgx_report_t app_report;
-	if(sgx_create_report(&app_report) < 0) {
-		fprintf(stderr, "failed to generate local report\n");
-		goto err;
-	}
+		sgx_report_t app_report;
+		if (sgx_create_report(&app_report) < 0) {
+			fprintf(stderr, "failed to generate local report\n");
+			goto err;
+		}
 
-	/* Write mrencalve, mesigner and hello into buff */
-	memset(buf, 0, sizeof(buf));
-	memcpy(buf, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
-	memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
-	memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
+		/* Write mrencalve, mesigner and hello into buff */
+		memset(buf, 0, sizeof(buf));
+		memcpy(buf, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
+		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
+		memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
 
-	len = 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO);
+		len = 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO);
 #endif
 
-	/* Reply back to the client */
-	ret = enclave_tls_transmit(handle, buf, &len);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to transmit %#x\n", ret);
-		goto err;
+		/* Reply back to the client */
+		ret = enclave_tls_transmit(handle, buf, &len);
+		if (ret != ENCLAVE_TLS_ERR_NONE) {
+			fprintf(stderr, "failed to transmit %#x\n", ret);
+			goto err;
+		}
+
+		close(connd);
 	}
 
 err:
@@ -277,18 +292,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	printf("Waiting for a connection ...\n");
-
-	/* Accept client connections */
-	struct sockaddr_in c_addr;
-	socklen_t size = sizeof(c_addr);
-	int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
-	if (connd < 0) {
-		perror("Failed to call accept()");
-		return -1;
-	}
-
-	return enclave_tls_server_startup(connd, log_level,
+	return enclave_tls_server_startup(sockfd, log_level,
 					  attester_type, verifier_type,
 					  tls_type, crypto_type, mutual);
 }
