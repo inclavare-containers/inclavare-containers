@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include <enclave-tls/api.h>
 
+#define DEFAULT_PORT         1234
+#define DEFAULT_IP           "127.0.0.1"
+
 #ifdef OCCLUM
 #include <sgx_report.h>
 #include <fcntl.h>
@@ -173,7 +176,7 @@ int main(int argc, char **argv)
 {
 	printf("    - Welcome to Enclave-TLS sample server program\n");
 
-	char *const short_options = "a:v:t:c:ml:";
+	char *const short_options = "a:v:t:c:ml:i:p:";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
 		{"verifier", required_argument, NULL, 'v'},
@@ -181,6 +184,8 @@ int main(int argc, char **argv)
 		{"crypto", required_argument, NULL, 'c'},
 		{"mutual", no_argument, NULL, 'm'},
 		{"log-level", required_argument, NULL, 'l'},
+		{"ip", required_argument, NULL, 'i'},
+		{"port", required_argument, NULL, 'p'},
 		{0, 0, 0, 0}
 	};
 
@@ -190,6 +195,8 @@ int main(int argc, char **argv)
 	char *crypto_type = "";
 	bool mutual = false;
 	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
+	char *ip = DEFAULT_IP;
+	int port = DEFAULT_PORT;
 	int opt;
 
 	do {
@@ -225,6 +232,12 @@ int main(int argc, char **argv)
 			else if (!strcasecmp(optarg, "off"))
 				log_level = ENCLAVE_TLS_LOG_LEVEL_NONE;
 			break;
+		case 'i':
+			ip = optarg;
+			break;
+		case 'p':
+			port = atoi(optarg);
+			break;
 		case -1:
 			break;
 		default:
@@ -249,8 +262,8 @@ int main(int argc, char **argv)
 	struct sockaddr_in s_addr;
 	memset(&s_addr, 0, sizeof(s_addr));
 	s_addr.sin_family = AF_INET;
-	s_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	s_addr.sin_port = htons(1234);
+	s_addr.sin_addr.s_addr = inet_addr(ip);
+	s_addr.sin_port = htons(port);
 
 	/* Bind the server socket */
 	if (bind(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {

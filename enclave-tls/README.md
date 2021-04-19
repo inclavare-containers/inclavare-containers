@@ -62,6 +62,8 @@ OPTIONS:
    --crypto/-c value     set the type of crypto wrapper
    --mutual/-m           set to enable mutual attestation
    --log-level/-l        set the log level
+   --ip/-i               set the listening ip address
+   --port/-p             set the listening tcp port
 ```
 
 You can set command line parameters to specify different configurations.
@@ -82,6 +84,12 @@ For example:
 
 ```
 ./enclave-tls-server -l debug
+```
+
+Enclave TLS server binds `127.0.0.1:1234` by default. You can use `-i` and `-p` options to set custom configuration.
+
+```shell
+./enclave-tls-server -i [ip_addr] -p [port]
 ```
 
 ## Mutual attestation
