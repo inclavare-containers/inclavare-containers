@@ -1,0 +1,17 @@
+shelter (0.6.1) unstable; urgency=low
+
+  * Update to version 0.6.1.
+
+ -- Hu Zhiming <zhiming.hu@intel.com>  Thu, 15 Apr 2021 09:30:00 +0000
+
+shelter (0.6.0-1) unstable; urgency=low
+
+  * Update to version 0.6.0.
+
+ -- Hu Zhiming <zhiming.hu@intel.com>  Sun, 07 Feb 2021 05:40:00 +0000
+
+shelter (0.5.2-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Hu Zhiming <zhiming.hu@intel.com>  Wed, Dec 30 2020 13:48:35 +0000

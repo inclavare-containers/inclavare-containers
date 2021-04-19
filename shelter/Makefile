@@ -5,9 +5,11 @@ SGX_RA_TLS_LIB := $(TOPDIR)/ra-tls/build/lib
 SGX_RA_TLS_INC := $(TOPDIR)/ra-tls/build/include
 SGX_SDK := /opt/intel/sgxsdk
 SGX_DCAP_INC ?=
+DESTDIR ?=
 INCDIR ?=
 DEBUG ?= 0
 EXTRA_FLAGS ?=
+APP := shelter
 WOLFSSL_RA_LIBS := $(SGX_RA_TLS_LIB)/libwolfssl.a
 WOLFSSL_RA_LIBS += $(SGX_RA_TLS_LIB)/libra-challenger.a
 export SGX_RA_TLS_LIB SGX_RA_TLS_INC
@@ -70,9 +72,16 @@ $(CURRENTDIR)/verification/verification.a:
 $(CURRENTDIR)/remoteattestation/remoteattestation.a: 
 	$(MAKE) -C remoteattestation
 
-install:
-uninstall:
+PREFIX := $(DESTDIR)/usr/local
+BINDIR := $(PREFIX)/bin
+install:$(APP)
+	@install -D -m0755 $(APP) "$(BINDIR)"
 
+uninstall:
+	@rm -f $(BINDIR)/$(APP)
+
+package:
+	$(MAKE) -C dist package
 clean:
 	rm -f *.o shelter
 	$(MAKE) -C $(SGX_RA_TLS) clean
@@ -80,4 +89,4 @@ clean:
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
 
-.PHONY: clean build-ra-tls install uninstall
+.PHONY: clean build-ra-tls install uninstall package
