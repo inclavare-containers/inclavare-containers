@@ -62,7 +62,7 @@ func GetEnclaveFd(pid int) (int, error) {
 	}
 
 	for fd, n := range names {
-		if n == EnclavePath || n == EnclavePathPool || pathname == EnclaveNewPath || pathname == EnclaveNewPathPool {
+		if n == EnclavePath || n == EnclavePathPool || n == EnclaveNewPath || n == EnclaveNewPathPool {
 			return int(fd), err
 		}
 	}
