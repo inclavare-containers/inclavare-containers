@@ -5,8 +5,8 @@ import (
 	"github.com/inclavare-containers/shelter/utils"
 	"github.com/inclavare-containers/shelter/verification"
 	"github.com/urfave/cli"
-	"unsafe"
 	"path/filepath"
+	"unsafe"
 )
 
 const (
@@ -25,8 +25,8 @@ const (
 )
 
 var (
-        GlobalUrl string = ""
-        GlobalBranch string = ""
+	GlobalUrl    string = ""
+	GlobalBranch string = ""
 )
 
 var mrverifyCommand = cli.Command{
@@ -50,7 +50,6 @@ EXAMPLE:
 	SkipArgReorder: true,
 
 	Action: func(cliContext *cli.Context) error {
-
 		var mrEnclave [32]byte
 		var maxMapSize uint64
 

@@ -1,33 +1,41 @@
 package remoteattestation
 
 /*
-#cgo CFLAGS:  -I/opt/intel/sgxsdk/include
-#cgo CFLAGS:  -I../../ra-tls/build/include
-#cgo LDFLAGS: -L../../ra-tls/build/lib
-#cgo LDFLAGS: -l:libra-challenger.a -l:libwolfssl.a -lm
-#ifdef RATLS_ECDSA
-#cgo LDFLAGS:  -lsgx_dcap_quoteverify -lsgx_urts -lpthread -ldl -lsgx_dcap_ql
-#endif
-
-extern int ra_tls_echo(int sockfd, unsigned char* mrenclave, unsigned char* mrsigner);
+#cgo CFLAGS: -I/opt/enclave-tls/include
+#cgo LDFLAGS: -L/opt/enclave-tls/lib -lenclave_tls -Wl,-rpath,/opt/enclave-tls/lib -lm -lsgx_urts
+#include <enclave-tls/api.h>
+extern int ra_tls_echo(int, enclave_tls_log_level_t, char *, char *, char *, char *, bool);
 */
 import "C"
 import (
+	"bytes"
 	"fmt"
 	"net"
-	"unsafe"
+	"strings"
 )
 
 const (
-	defaultsockAddress = "/run/rune/ra-tls.sock"
-	defaulttcpAddress  = "0.0.0.0:3443"
+	defaultSockAddress = "/run/enclave-tls/tls.sock"
+	defaultIpAddress   = "127.0.0.1"
+	defaultPort        = "1234"
 )
 
 //for local tcp connection
-func RemoteTlsSetupTCP(address string, mrenclave unsafe.Pointer, mrsigner unsafe.Pointer) error {
-	addr := address
-	if addr == "" {
-		addr = defaulttcpAddress
+func EnclaveTlsSetupTcpSock(ipaddress string, port string, logLevelInit string, attester string, verifier string, tls string, crypto string, mutual bool) error {
+	mediumstring := ":"
+	var bt bytes.Buffer
+	bt.WriteString(ipaddress)
+	bt.WriteString(mediumstring)
+	bt.WriteString(port)
+	addr := bt.String()
+	bt.Reset()
+	if addr == mediumstring {
+		bt.WriteString(defaultIpAddress)
+		bt.WriteString(mediumstring)
+		bt.WriteString(defaultPort)
+		addr = bt.String()
+		bt.Reset()
+		fmt.Printf("tcp sock address is %s\n", addr)
 	}
 
 	conn, err := net.Dial("tcp", addr)
@@ -46,15 +54,30 @@ func RemoteTlsSetupTCP(address string, mrenclave unsafe.Pointer, mrsigner unsafe
 	if err != nil {
 		return err
 	}
-	C.ra_tls_echo(C.int(sockfd.Fd()), (*C.uchar)(mrenclave), (*C.uchar)(mrsigner))
+	logLevel := C.ENCLAVE_TLS_LOG_LEVEL_DEFAULT
+	if strings.EqualFold(logLevelInit, "debug") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_DEBUG
+	} else if strings.EqualFold(logLevelInit, "info") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_INFO
+	} else if strings.EqualFold(logLevelInit, "warn") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_WARN
+	} else if strings.EqualFold(logLevelInit, "error") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_ERROR
+	} else if strings.EqualFold(logLevelInit, "fatal") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_FATAL
+	} else if strings.EqualFold(logLevelInit, "off") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_NONE
+	}
+	C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto), C.bool(mutual))
 	return nil
+
 }
 
 //for local unix socket connection
-func RemoteTlsSetupSock(address string, mrenclave unsafe.Pointer, mrsigner unsafe.Pointer) error {
+func EnclaveTlsSetupUnixSock(address string, logLevelInit string, attester string, verifier string, tls string, crypto string, mutual bool) error {
 	addr := address
 	if addr == "" {
-		addr = defaultsockAddress
+		addr = defaultSockAddress
 	}
 
 	conn, err := net.Dial("unix", addr)
@@ -72,6 +95,20 @@ func RemoteTlsSetupSock(address string, mrenclave unsafe.Pointer, mrsigner unsaf
 	if err != nil {
 		return err
 	}
-	C.ra_tls_echo(C.int(sockfd.Fd()), (*C.uchar)(mrenclave), (*C.uchar)(mrsigner))
+	logLevel := C.ENCLAVE_TLS_LOG_LEVEL_DEFAULT
+	if strings.EqualFold(logLevelInit, "debug") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_DEBUG
+	} else if strings.EqualFold(logLevelInit, "info") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_INFO
+	} else if strings.EqualFold(logLevelInit, "warn") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_WARN
+	} else if strings.EqualFold(logLevelInit, "error") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_ERROR
+	} else if strings.EqualFold(logLevelInit, "fatal") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_FATAL
+	} else if strings.EqualFold(logLevelInit, "off") {
+		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_NONE
+	}
+	C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto), C.bool(mutual))
 	return nil
 }

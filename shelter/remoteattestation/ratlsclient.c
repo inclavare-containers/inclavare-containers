@@ -1,155 +1,93 @@
-/* client-tls.c
- *
- * Copyright (C) 2006-2015 wolfSSL Inc.
- *
- * This file is part of wolfSSL. (formerly known as CyaSSL)
- *
- * wolfSSL is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * wolfSSL is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
-/* the usual suspects */
-#ifdef SGX_RATLS_MUTUAL
 #include <assert.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-/* socket includes */
+#include <stdbool.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
-
-/* wolfSSL */
-#include <wolfssl/options.h>
-#include <wolfssl/ssl.h>
-
-#define DEFAULT_PORT 11111
-#define QUOTE_BUFF_SIZE 8192
-
+#include <sgx_urts.h>
 #include <sgx_quote.h>
+#include <enclave-tls/api.h>
 
-#include "ra.h"
-#ifdef SGX_RATLS_MUTUAL
-#include "ra-attester.h"
-#endif
-#include "ra-challenger.h"
+#define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
-static int cert_verify_callback(int preverify, WOLFSSL_X509_STORE_CTX * store)
+static sgx_enclave_id_t load_enclave(void)
 {
-	(void)preverify;
-	int ret = verify_sgx_cert_extensions(store->certs->buffer,
-					     store->certs->length);
+	sgx_launch_token_t t;
 
-	fprintf(stderr, "Verifying SGX certificate extensions ... %s\n",
-		ret == 0 ? "Success" : "Failure");
-	return !ret;
+	memset(t, 0, sizeof(t));
+
+	sgx_enclave_id_t eid;
+	int updated = 0;
+	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
+	if (ret != SGX_SUCCESS) {
+		fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
+		return -1;
+	}
+
+	printf("Success to load enclave id %ld\n", eid);
+
+	return eid;
 }
 
-#ifdef SGX_RATLS_MUTUAL
-extern struct ra_tls_options my_ra_tls_options;
-#endif
-
-int ra_tls_echo(int sockfd, unsigned char* mrenclave, unsigned char* mrsigner)
+int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
+		char *attester_type, char *verifier_type, char *tls_type,
+		char *crypto, bool mutual)
 {
-	wolfSSL_Debugging_ON();
+	enclave_tls_conf_t conf;
 
-	wolfSSL_Init();
+	memset(&conf, 0, sizeof(conf));
+	conf.log_level = log_level;
+	strcpy(conf.attester_type, attester_type);
+	strcpy(conf.verifier_type, verifier_type);
+	strcpy(conf.tls_type, tls_type);
+	strcpy(conf.crypto_type, crypto);
+	conf.enclave_id = load_enclave();
 
-	WOLFSSL_CTX *ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
-	if (!ctx) {
-		fprintf(stderr, "ERROR: failed to create WOLFSSL_CTX\n");
+	if (mutual)
+		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
+
+	enclave_tls_handle handle;
+	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
+	if (ret != ENCLAVE_TLS_ERR_NONE || !handle) {
+		fprintf(stderr, "ERROR: failed to initialization.\n");
+		return -1;
+	}
+
+	ret = enclave_tls_negotiate(handle, sockfd);
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
+		fprintf(stderr, "ERROR: failed to negotiate.\n");
 		goto err;
 	}
 
-#ifdef SGX_RATLS_MUTUAL
-	uint8_t key[2048];
-	uint8_t crt[8192];
-	int key_len = sizeof(key);
-	int crt_len = sizeof(crt);
-
-	create_key_and_x509(key, &key_len, crt, &crt_len, &my_ra_tls_options);
-	int ret = wolfSSL_CTX_use_PrivateKey_buffer(ctx, key, key_len,
-						    SSL_FILETYPE_ASN1);
-	assert(SSL_SUCCESS == ret);
-
-	ret = wolfSSL_CTX_use_certificate_buffer(ctx, crt, crt_len,
-						 SSL_FILETYPE_ASN1);
-	assert(SSL_SUCCESS == ret);
-#endif
-
-	wolfSSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, cert_verify_callback);
-
-	WOLFSSL *ssl = wolfSSL_new(ctx);
-	if (!ssl) {
-		fprintf(stderr, "ERROR: failed to create WOLFSSL object\n");
-		goto err_ctx;
-	}
-	fprintf(stdout, "wolfSSL_CTX_set_verify success.\n");
-
-	/* Attach wolfSSL to the socket */
-	wolfSSL_set_fd(ssl, sockfd);
-
-	if (wolfSSL_connect(ssl) != SSL_SUCCESS) {
-		fprintf(stderr, "ERROR: failed to connect to wolfSSL\n");
-		goto err_ssl;
-	}
-
-	WOLFSSL_X509 *srvcrt = wolfSSL_get_peer_certificate(ssl);
-
-	int derSz;
-	const unsigned char *der = wolfSSL_X509_get_der(srvcrt, &derSz);
-	sgx_report_body_t *body = NULL;
-	uint8_t quote_buff[QUOTE_BUFF_SIZE] = {0,};
-	get_quote_from_cert(der, derSz, (sgx_quote_t*)quote_buff);
-	sgx_quote_t* quote = (sgx_quote_t*)quote_buff;
-	body = &quote->report_body;
-	printf("Server's SGX identity:\n");
-	printf("  . MRENCLAVE = ");
-	for (int i = 0; i < SGX_HASH_SIZE; ++i){
-		printf("%02x", body->mr_enclave.m[i]);
-		mrenclave[i] = body->mr_enclave.m[i];
-	}
-	printf("\n");
-	printf("  . MRSIGNER  = ");
-	for (int i = 0; i < SGX_HASH_SIZE; ++i){
-		printf("%02x", body->mr_signer.m[i]);
-		mrsigner[i] = body->mr_signer.m[i];
-	}
-	printf("\n");
-
-	const char *http_request = "GET / HTTP/1.0\r\n\r\n";
+	const char *http_request = "GET / HTTP/1.1\r\n\r\n";
 	size_t len = strlen(http_request);
-	if (wolfSSL_write(ssl, http_request, len) != (int)len) {
-		fprintf(stderr, "ERROR: failed to write\n");
-		goto err_ssl;
+	ret = enclave_tls_transmit(handle, (void *)http_request, &len);
+	if (ret != ENCLAVE_TLS_ERR_NONE || len != strlen(http_request)) {
+		fprintf(stderr, "ERROR: failed to transmit.\n");
+		goto err;
 	}
+
 	char buff[256];
 	memset(buff, 0, sizeof(buff));
-	if (wolfSSL_read(ssl, buff, sizeof(buff) - 1) == -1) {
-		fprintf(stderr, "ERROR: failed to read\n");
-		goto err_ssl;
+	len = sizeof(buff) - 1;
+	ret = enclave_tls_receive(handle, buff, &len);
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
+		fprintf(stderr, "ERROR: failed to receive.\n");
+		goto err;
 	}
+
 	printf("Server:\n%s\n", buff);
-err_ssl:
-	wolfSSL_free(ssl);
-err_ctx:
-	wolfSSL_CTX_free(ctx);
-err:
-	wolfSSL_Cleanup();
+
+	ret = enclave_tls_cleanup(handle);
+	if (ret != ENCLAVE_TLS_ERR_NONE)
+		fprintf(stderr, "ERROR: failed to cleanup.\n");
 
 	return 0;
+err:
+	enclave_tls_cleanup(handle);
+	return -1;
 }
