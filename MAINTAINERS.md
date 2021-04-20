@@ -8,3 +8,5 @@ This file lists the maintainers of the Inclavare Containers project. The respons
 | ---- | --------- | ----------- |
 | [Jia Zhang](mailto:zhang.jia@linux.alibaba.com) | [jiazhang0](https://github.com/jiazhang0) | Alibaba |
 | [Bushuang Gao](mailto:stormgbs@gmail.com) | [stormgbs](https://github.com/stormgbs) | Alibaba |
+| [Liang Yang](mailto:liang3.yang@intel.com) | [YangLiang3](https://github.com/YangLiang3) | Intel |
+| [Zhiming Hu](mailto:zhiming.hu@intel.com) | [zhiminghufighting](https://github.com/zhiminghufighting) | Intel |
