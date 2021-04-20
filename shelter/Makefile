@@ -5,6 +5,7 @@ SGX_DCAP_INC ?=
 INCDIR ?=
 DEBUG ?= 0
 EXTRA_FLAGS ?=
+APP := shelter
 
 #ifdef DEBUG 	
 #	@echo $CURRENTDIR
@@ -38,9 +39,12 @@ GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(
 
 # FIXME: Ideally, these two libraries can be built in parallel, but
 # it doesn't work. Hence, the dependency forces a serial build.
-shelter: $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
+shelter: enclave-tls $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
 	$(GO_BUILD) -o $@ .
-	
+
+enclave-tls:
+	$(MAKE) -C $(TOPDIR)/enclave-tls install
+
 $(CURRENTDIR)/utils/utils.a:
 	$(MAKE) -C utils
 	
@@ -59,8 +63,16 @@ $(CURRENTDIR)/verification/verification.a:
 $(CURRENTDIR)/remoteattestation/remoteattestation.a: 
 	$(MAKE) -C remoteattestation
 
-install:
+PREFIX := $(DESTDIR)/usr/local
+BINDIR := $(PREFIX)/bin
+install:$(APP)
+	@install -D -m0755 $(APP) "$(BINDIR)"
+
 uninstall:
+	@rm -f $(BINDIR)/$(APP)
+
+package:
+	$(MAKE) -C dist package
 
 clean:
 	rm -f *.o shelter
@@ -68,4 +80,4 @@ clean:
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
 
-.PHONY: clean install uninstall
+.PHONY: clean install uninstall package
