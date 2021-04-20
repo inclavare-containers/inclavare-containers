@@ -2,9 +2,13 @@ FROM registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux
 
 LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 
-RUN yum clean all && yum install -y wget make libseccomp-devel openssl \ 
-    alinux-release-experimentals gcc git openssl-devel glibc-static \
-    binutils-devel protobuf-c-devel rpm-build yum-utils protobuf-c
+RUN yum clean all && yum install -y alinux-release-experimentals
+
+RUN yum install -y wget make libseccomp-devel openssl git \
+    openssl-devel binutils-devel protobuf-c-devel rpm-build yum-utils protobuf-c \
+    devtoolset-10-toolchain autoconf libtool
+
+RUN echo "source /opt/rh/devtoolset-10/enable" > /root/.bashrc
 
 WORKDIR /root
 
@@ -31,10 +35,15 @@ RUN mkdir -p /etc/docker && \
     echo -e "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t}\n}" >> /etc/docker/daemon.json
 
 # install SGX
+RUN [ ! -f sgx_linux_x64_sdk_2.13.100.4.bin ] && \
+    wget https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_linux_x64_sdk_2.13.100.4.bin && \
+    chmod +x sgx_linux_x64_sdk_2.13.100.4.bin && echo -e 'no\n/opt/intel\n' | ./sgx_linux_x64_sdk_2.13.100.4.bin && \
+    rm -rf sgx_linux_x64_sdk_2.13.100.4.bin
+
 RUN [ ! -f sgx_rpm_local_repo.tar.gz ] && \
     wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz && \
     tar xzf sgx_rpm_local_repo.tar.gz && \
     yum-config-manager --add-repo file:/root/sgx_rpm_local_repo && \
     yum makecache && rm sgx_rpm_local_repo.tar.gz
 
-RUN yum install --nogpgcheck -y libsgx-uae-service libsgx-dcap-quote-verify-devel
+RUN yum install --nogpgcheck -y libsgx-uae-service libsgx-dcap-quote-verify-devel libsgx-dcap-ql-devel libsgx-uae-service
