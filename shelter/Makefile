@@ -1,26 +1,18 @@
 CURRENTDIR := $(shell readlink -f .)
 TOPDIR := $(shell readlink -f ..)
-SGX_RA_TLS := $(TOPDIR)/ra-tls
-SGX_RA_TLS_LIB := $(TOPDIR)/ra-tls/build/lib
-SGX_RA_TLS_INC := $(TOPDIR)/ra-tls/build/include
 SGX_SDK := /opt/intel/sgxsdk
 SGX_DCAP_INC ?=
 INCDIR ?=
 DEBUG ?= 0
 EXTRA_FLAGS ?=
-WOLFSSL_RA_LIBS := $(SGX_RA_TLS_LIB)/libwolfssl.a
-WOLFSSL_RA_LIBS += $(SGX_RA_TLS_LIB)/libra-challenger.a
-export SGX_RA_TLS_LIB SGX_RA_TLS_INC
 
 #ifdef DEBUG 	
 #	@echo $CURRENTDIR
 #	@echo $TOPDIR
-#	@echo $SGX_RA_TLS_LIB
-#	@echo $SGX_RA_TLS_INC
 #	@echo $SGX_SDK
 #endif
 	
-CFLAGS += -std=gnu99 -I$(SGX_RA_TLS_INC) -I$(SGX_SDK)/include -I$(INCDIR) $(SGX_DCAP_INC) -fPIC
+CFLAGS += -std=gnu99 -I$(SGX_SDK)/include -I$(INCDIR) $(SGX_DCAP_INC) -fPIC
 #CFLAGSERRORS := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow -Werror
 CFLAGS += $(CFLAGSERRORS) -g -O0 
 
@@ -46,11 +38,8 @@ GO_BUILD := CGO_ENABLED=1 $(GO) build $(MOD_VENDOR) -buildmode=pie $(GCFLAGS) $(
 
 # FIXME: Ideally, these two libraries can be built in parallel, but
 # it doesn't work. Hence, the dependency forces a serial build.
-shelter: build-ra-tls $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
+shelter: $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/utils/utils.a $(CURRENTDIR)/remoteattestation/remoteattestation.a $(CURRENTDIR)/racommand.o $(CURRENTDIR)/mrenclaveverifycomand.o $(CURRENTDIR)/main.o
 	$(GO_BUILD) -o $@ .
-
-build-ra-tls:
-	$(MAKE) -C $(SGX_RA_TLS)
 	
 $(CURRENTDIR)/utils/utils.a:
 	$(MAKE) -C utils
@@ -75,9 +64,8 @@ uninstall:
 
 clean:
 	rm -f *.o shelter
-	$(MAKE) -C $(SGX_RA_TLS) clean
 	$(MAKE) -C verification clean
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
 
-.PHONY: clean build-ra-tls install uninstall
+.PHONY: clean install uninstall

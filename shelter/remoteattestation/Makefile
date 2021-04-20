@@ -4,6 +4,7 @@ DEBUG ?=
 EXTRA_FLAGS ?=
 
 SGX_SDK ?= /opt/intel/sgxsdk
+ENCLAVE_TLS ?= /opt/enclave-tls
 
 ifdef ECDSA
   SGX_DCAP_URI := https://github.com/intel/SGXDataCenterAttestationPrimitives
@@ -13,7 +14,7 @@ ifdef ECDSA
 endif
 
 
-CFLAGS += -std=gnu99 -I$(SGX_RA_TLS_INC) -I$(SGX_SDK)/include  -fPIC
+CFLAGS += -std=gnu99 -I$(SGX_SDK)/include -I$(ENCLAVE_TLS)/include -fPIC
 #CFLAGSERRORS := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow -Werror
 CFLAGS += -g -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_EXT # -DDEBUG -DDYNAMIC_RSA
 CFLAGS += -DSGX_GROUP_OUT_OF_DATE
