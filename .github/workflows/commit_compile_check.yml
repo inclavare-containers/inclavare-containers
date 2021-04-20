@@ -16,6 +16,11 @@ jobs:
     - name: Get cpu number
       run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
+    - name: Compile "enclave-tls"
+      shell: bash
+      run: cd $GITHUB_WORKSPACE/enclave-tls;
+        source /root/.bashrc && make && make clean && make SGX=1 && make clean && make OCCLUM=1;
+
     - name: Compile "rune shim-rune sgx-tools epm pal"
       run: cd $GITHUB_WORKSPACE;
         find ./ -name *.pb.go | xargs -I files touch files;
