@@ -8,7 +8,7 @@ include $(Topdir)/rules/build_env.mk
 
 Targets := $(Build_Bindir)/enclave-tls-client
 
-C_FLAGS += -pie -fPIE -I$(Topdir)/src/include
+C_FLAGS += -pie -fPIE -I$(Topdir)/src/include -std=c99
 CLIENT_LDFLAGS := \
   -L$(Topdir)/build/lib -lenclave_tls \
   -Wl,--rpath=/opt/enclave-tls/lib,--enable-new-dtags
