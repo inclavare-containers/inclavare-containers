@@ -8,23 +8,37 @@
 #include "sgx_error.h"
 #include "sgx_la.h"
 #include "sgx_stub_u.h"
+#include "sgx_quote_3.h"
+#include "sgx_dcap_ql_wrapper.h"
 
+/* Refer to explanation in sgx_la_collect_evidence */
 enclave_quote_err_t sgx_la_verify_evidence(enclave_quote_ctx_t *ctx,
 					   attestation_evidence_t *evidence,
 					   uint8_t *hash)
 {
+	uint32_t quote_size = 0;
+	unsigned char quote[8192];
+	sgx_target_info_t qe_target_info;
+	quote3_error_t qe3_ret = SGX_QL_SUCCESS;
+
 	ETLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
 
-	sgx_status_t retval;
+	qe3_ret = sgx_qe_get_target_info(&qe_target_info);
+	if (SGX_QL_SUCCESS != qe3_ret) {
+		ETLS_ERR("failed to get QE's target info %04x\n", qe3_ret);
+		return SGX_LA_ERR_CODE((int)qe3_ret);
+	}
 
-	sgx_la_ctx_t *la_ctx = (sgx_la_ctx_t *) ctx->quote_private;
+	qe3_ret = sgx_qe_get_quote_size(&quote_size);
+	if (SGX_QL_SUCCESS != qe3_ret) {
+		ETLS_ERR("failed to get quote size %04x\n", qe3_ret);
+		return SGX_LA_ERR_CODE((int)qe3_ret);
+	}
 
-	sgx_status_t status = ecall_sgx_la_verify_report(la_ctx->eid, &retval,
-							 (sgx_report_t *)
-							 evidence->la.report);
-	if (status != SGX_SUCCESS || retval != SGX_SUCCESS) {
-		ETLS_ERR("sgx_la_verify_evidence() %#x\n", retval);
-		return SGX_LA_ERR_CODE((int) retval);
+	qe3_ret = sgx_qe_get_quote((sgx_report_t *)evidence->la.report, quote_size, quote);
+	if (SGX_QL_SUCCESS != qe3_ret) {
+		ETLS_ERR("failed to get quote %04x\n", qe3_ret);
+		return SGX_LA_ERR_CODE((int)qe3_ret);
 	}
 
 	return ENCLAVE_QUOTE_ERR_NONE;

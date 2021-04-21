@@ -1,10 +1,5 @@
 enclave {
-    include "enclave-tls/err.h"
-    include "enclave-tls/tls_wrapper.h"
-    include "sgx_report.h"
-
-    trusted {
-	public sgx_status_t ecall_sgx_la_collect_evidence([user_check] attestation_evidence_t *evidence,
-                [user_check] uint8_t *hash);
-    };
+	trusted {
+		 public void dummy(void);
+	};
 };
