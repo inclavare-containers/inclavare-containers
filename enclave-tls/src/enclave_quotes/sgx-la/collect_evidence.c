@@ -10,6 +10,15 @@
 #include "sgx_stub_u.h"
 #include "sgx_la.h"
 
+/* The local attestation requires to exchange the target info between ISV
+ * enclaves as the prerequisite. This is out of scope in enclave-tls because it
+ * requires to establish a out of band channel to do that. Instead, introduce
+ * QE as the intermediator. One ISV enclave as attester can request the local
+ * reports signed by QE and the opposite end of ISV enclave as verifier can
+ * check the validation of local report through calling sgx_qe_get_quote()
+ * which verifies the signed local report. Once getting quote successfully,
+ * it presents ISV enclave's local report has been fully verified.
+ */
 enclave_quote_err_t sgx_la_collect_evidence(enclave_quote_ctx_t *ctx,
 					    attestation_evidence_t *evidence,
 					    enclave_tls_cert_algo_t algo,
@@ -20,15 +29,19 @@ enclave_quote_err_t sgx_la_collect_evidence(enclave_quote_ctx_t *ctx,
 
 	sgx_la_ctx_t *la_ctx = (sgx_la_ctx_t *) ctx->quote_private;
 
-	sgx_status_t retval;
-
+	sgx_report_t isv_report;
+	sgx_status_t generate_evidence_ret;
 	sgx_status_t status =
-		ecall_sgx_la_collect_evidence(la_ctx->eid, &retval, evidence,
-					      hash);
-	if (status != SGX_SUCCESS || retval != SGX_SUCCESS) {
-		ETLS_ERR("sgx_la_collect_evidence() %#x\n", retval);
-		return SGX_LA_ERR_CODE((int) retval);
+		ecall_generate_evidence(la_ctx->eid, &generate_evidence_ret,
+					hash, &isv_report);
+	if (status != SGX_SUCCESS || generate_evidence_ret != SGX_SUCCESS) {
+		ETLS_ERR("failed to generate evidence %#x\n",
+			 generate_evidence_ret);
+		return SGX_LA_ERR_CODE((int)generate_evidence_ret);
 	}
+
+	memcpy(evidence->la.report, &isv_report, sizeof(isv_report));
+	evidence->la.report_len = sizeof(isv_report);
 
 	strcpy(evidence->type, "sgx_la");
 
