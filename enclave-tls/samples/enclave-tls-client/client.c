@@ -113,14 +113,13 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 		printf("Server: %s\n", buf);
 	}
 
+	return 0;
+
 err:
 	ret = enclave_tls_cleanup(handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
+	if (ret != ENCLAVE_TLS_ERR_NONE)
 		fprintf(stderr, "failed to cleanup %#x\n", ret);
-		return -1;
-	}
-
-	return ret;
+	return -1;
 }
 
 int main(int argc, char **argv)
