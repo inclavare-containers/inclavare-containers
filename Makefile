@@ -1,8 +1,8 @@
 .PHONY: all install clean uninstall package
 
 export INCLAVARE_CONTAINERS_VERSION := $(shell cat ./VERSION)
-stable_components := rune shim epm sgx-tools
-unstable_components := shelter
+stable_components := rune shim epm sgx-tools shelter
+unstable_components :=
 components := $(stable_components) $(unstable_components)
 
 all:

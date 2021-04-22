@@ -1,0 +1,12 @@
+Source: shelter
+Section: devel
+Priority: extra
+Maintainer: zhiming hu <zhiming.hu@intel.com>
+Build-Depends: debhelper (>=9), openssl-dev
+Standards-Version: 3.9.8
+Homepage: https://github.com/alibaba/inclavare-containers
+
+Package: shelter
+Architecture: amd64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: shelter is designed as a remote attestation tool for customer to verify if their workloads are loaded in a specified intel authorized sgx enclaved.
