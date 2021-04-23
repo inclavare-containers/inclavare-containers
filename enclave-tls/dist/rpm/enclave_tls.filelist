@@ -1,0 +1,9 @@
+/opt/enclave-tls/bin/enclave-tls-server
+/opt/enclave-tls/bin/enclave-tls-client
+/opt/enclave-tls/bin/sgx_stub_enclave.signed.so
+/opt/enclave-tls/include/*
+/opt/enclave-tls/lib/libenclave_tls.so*
+/opt/enclave-tls/lib/libwolfssl*
+/opt/enclave-tls/lib/tls-wrappers/libtls_wrapper*.so*
+/opt/enclave-tls/lib/crypto-wrappers/libcrypto_wrapper*.so*
+/opt/enclave-tls/lib/enclave-quotes/libenclave_quote*.so*
