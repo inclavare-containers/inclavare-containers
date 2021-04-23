@@ -7,7 +7,7 @@
 - autoconf
 - libtool
 - gcc
-- gcc-c++
+- g++ (ubuntu 18.04) or gcc-c++ (centos 8.2)
 - SGX driver, Intel SGX SDK & PSW: Please refer to this [guide](https://download.01.org/intel-sgx/latest/linux-latest/docs/Intel_SGX_Installation_Guide_Linux_2.13_Open_Source.pdf) to install.
 - [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the packages from this [page](https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro).
   - centos 8.2: `libsgx-dcap-quote-verify-devel`, `libsgx-dcap-ql-devel`
