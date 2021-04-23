@@ -34,4 +34,7 @@ uninstall:
 	  make -C $$d $@; \
 	done
 
+package:
+	$(MAKE) -C dist package
+
 include $(Topdir)/rules/build_rules.mk
