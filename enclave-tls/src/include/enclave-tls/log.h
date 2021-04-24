@@ -16,6 +16,19 @@
   #include <enclave-tls/sgx.h>
 #endif
 
+#ifdef OCCLUM
+#define FPRINTF(io, fmt, ...)    \
+        do {    \
+                fprintf(io, fmt, ##__VA_ARGS__);    \
+                fflush(io);    \
+        } while (0)
+#else
+#define FPRINTF(io, fmt, ...)    \
+        do {    \
+                fprintf(io, fmt, ##__VA_ARGS__);    \
+        } while (0)
+#endif
+
 extern enclave_tls_log_level_t global_log_level;
 
 #define ETLS_FATAL(fmt, ...)   \
@@ -55,14 +68,14 @@ extern enclave_tls_log_level_t global_log_level;
 	do {    \
 		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level) {   \
 			if (ENCLAVE_TLS_LOG_LEVEL_##level != ENCLAVE_TLS_LOG_LEVEL_DEBUG) {	\
-				fprintf(io, "[" #level "] " fmt, ##__VA_ARGS__);	\
+				FPRINTF(io, "[" #level "] " fmt, ##__VA_ARGS__);	\
 			} else {	\
 				time_t __t__ = time(NULL);      \
 				struct tm __loc__;      \
 				localtime_r(&__t__, &__loc__);  \
 				char __buf__[64]; \
 				strftime(__buf__, sizeof(__buf__), "%a %b %e %T %Z %Y", &__loc__);      \
-				fprintf(io, "%s: [" #level "] %s()@L%d: " fmt, __buf__, __FUNCTION__, __LINE__, ##__VA_ARGS__);   \
+				FPRINTF(io, "%s: [" #level "] %s()@L%d: " fmt, __buf__, __FUNCTION__, __LINE__, ##__VA_ARGS__);   \
 			}	\
 		} \
 	} while (0)
