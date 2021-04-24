@@ -116,6 +116,10 @@ You can use `-m` option to enable mutual attestation.
 ./enclave-tls-client -m
 ```
 
+## Enable bootstrap debugging
+
+In the early bootstrap of enclave-tls, the debug message is mute by default. In order to enable it, please explicitly set the environment variable `ENCLAVE_TLS_GLOBAL_LOG_LEVEL=<log_level>`, where \<log_level\> is same as the values of the option `-l`.
+
 # Deployment
 
 ## Occlum LibOS
