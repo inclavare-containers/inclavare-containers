@@ -81,7 +81,7 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 	sgx_status_t status = ecall_generate_evidence(ecdsa_ctx->eid, &generate_evidence_ret,
 						      hash, &app_report);
 	if (status != SGX_SUCCESS || generate_evidence_ret != SGX_SUCCESS) {
-		ETLS_ERR("ecall_generate_evidence() %#x\n", generate_evidence_ret);
+		ETLS_ERR("failed to generate evidence %#x, %#x\n", status, generate_evidence_ret);
 		return SGX_ECDSA_ERR_CODE((int)generate_evidence_ret);
 	}
 
