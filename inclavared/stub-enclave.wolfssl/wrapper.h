@@ -1,5 +1,0 @@
-#include "../../ra-tls/wolfssl/wolfssl/ssl.h"
-#include "../../ra-tls/wolfssl/wolfssl/wolfcrypt/asn.h"
-#include "../../ra-tls/wolfssl/wolfssl/wolfio.h"
-#include "../../ra-tls/sgx-ra-tls/ra.h"
-#include "../../ra-tls/sgx-ra-tls/ra-attester.h"

@@ -1,23 +1,14 @@
 [package]
-name = "stub"
-version = "0.1.0"
-authors = ["stormgbs <stormgbs@gmail.com>"]
-edition = "2018"
-build = "build.rs"
+name = "inclavaredenclave"
+version = "1.0.0"
+authors = ["Tianjia Zhang <tianjia.zhang@linux.alibaba.com>"]
 
 [lib]
-name = "stubenclave"
+name = "inclavaredenclave"
 crate-type = ["staticlib"]
 
 [features]
 default = []
-
-RATLS_EPID = []
-RATLS_ECDSA = []
-LA_REPORT = []
-
-[build-dependencies]
-bindgen = "0.55.1"
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
