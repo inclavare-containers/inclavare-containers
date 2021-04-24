@@ -1,230 +1,217 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License..
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-#![allow(dead_code)]
-#![allow(unused_assignments)]
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 extern crate sgx_types;
 extern crate sgx_urts;
-use sgx_types::*;
+
+use std::thread;
+use std::os::unix::io::{RawFd, AsRawFd};
+use std::os::unix::net::{UnixStream, UnixListener};
+use std::net::{SocketAddr, TcpStream, TcpListener};
+use std::ops::{Deref, DerefMut};
+use std::ptr::NonNull;
+use std::sync::Arc;
+use libc::{c_void};
+use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
+use clap::{Arg, App};
+use serde_json::json;
+use sgx_types::{
+    SgxResult, sgx_attributes_t, sgx_launch_token_t, sgx_misc_attribute_t
+};
 use sgx_urts::SgxEnclave;
 
-use std::os::unix::io::{IntoRawFd, AsRawFd};
-use std::env;
-use std::net::{TcpListener, TcpStream, SocketAddr};
-use std::str;
+#[macro_use]
+extern crate log;
 
-const BUFFER_SIZE: usize = 1024;
+include!("ffi.rs");
+include!("enclave-tls.rs");
 
-static ENCLAVE_FILE: &'static str = "enclave.signed.so";
-static ENCLAVE_TOKEN: &'static str = "enclave.token";
 
-extern {
-    fn run_server(eid: sgx_enclave_id_t, retval: *mut sgx_status_t,
-        socket_fd: c_int) -> sgx_status_t;
-    fn run_client(eid: sgx_enclave_id_t, retval: *mut sgx_status_t,
-        socket_fd: c_int) -> sgx_status_t;
+fn sgx_enclave_create(file: &str) -> SgxResult<SgxEnclave> {
+    let debug = 1;
+    let mut token: sgx_launch_token_t = [0; 1024];
+    let mut updated: i32 = 0;
+    let mut attr = sgx_misc_attribute_t {
+        secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
+        misc_select: 0,
+    };
+    SgxEnclave::create(file, debug, &mut token, &mut updated, &mut attr)
 }
 
-#[no_mangle]
-pub extern "C"
-fn ocall_sgx_init_quote(ret_ti: *mut sgx_target_info_t,
-                        ret_gid : *mut sgx_epid_group_id_t) -> sgx_status_t {
-    println!("Entering ocall_sgx_init_quote");
-    unsafe {sgx_init_quote(ret_ti, ret_gid)}
+fn enclave_info_fetch(sockfd: RawFd, buf: &mut [u8]) -> usize {
+    /* TODO: use one enclave */
+    let enclave = match sgx_enclave_create("sgx_stub_enclave.signed.so") {
+        Ok(r) => r,
+        Err(e) => {
+            error!("sgx_enclave_create() failed, {}", e.as_str());
+            return 0;
+        }
+    };
+
+    let tls = EnclaveTls::new(false, enclave.geteid(),
+                "wolfssl_sgx", "sgx_ecdsa", "sgx_ecdsa").unwrap();
+
+    /* connect */
+    tls.negotiate(sockfd).unwrap();
+
+    let n = tls.transmit(b"hello from inclavared").unwrap();
+    assert!(n > 0);
+
+    let n = tls.receive(buf).unwrap();
+
+    enclave.destroy();
+
+    n
 }
 
+fn client_fetch(sockaddr: &str, buf: &mut [u8]) -> usize {
+    let addr = sockaddr.parse::<SocketAddr>();
+    if addr.is_err() {
+        /* unix socket */
+        let stream = UnixStream::connect(sockaddr).unwrap();
+        enclave_info_fetch(stream.as_raw_fd(), buf)
+    } else {
+        let stream = TcpStream::connect(sockaddr).unwrap();
+        enclave_info_fetch(stream.as_raw_fd(), buf)
+    }
+}
 
-pub fn lookup_ipv4(host: &str, port: u16) -> SocketAddr {
-    use std::net::ToSocketAddrs;
+fn handle_client(sockfd: RawFd, upstream: &Option<String>) {
+    let enclave = match sgx_enclave_create("sgx_stub_enclave.signed.so") {
+        Ok(r) => r,
+        Err(e) => {
+            error!("sgx_enclave_create() failed, {}", e.as_str());
+            return;
+        }
+    };
 
-    let addrs = (host, port).to_socket_addrs().unwrap();
-    for addr in addrs {
-        if let SocketAddr::V4(_) = addr {
-            return addr;
+    let tls = EnclaveTls::new(true, enclave.geteid(),
+                "wolfssl_sgx", "sgx_ecdsa", "sgx_ecdsa").unwrap();
+
+    /* accept */
+    tls.negotiate(sockfd).unwrap();
+
+    /* get client request */
+    let mut buffer = [0u8; 512];
+    let n = tls.receive(&mut buffer).unwrap();
+    info!("req: {}", String::from_utf8((&buffer[..n]).to_vec()).unwrap());
+
+    if let Some(upstream) = upstream {
+        /* fetch enclave information from upstream */
+        let n = client_fetch(&upstream, &mut buffer);
+        assert!(n > 0);
+        let mrenclave = &buffer[0..32];
+        let mrsigner = &buffer[32..64];
+        let message = String::from_utf8((&buffer[64..]).to_vec()).unwrap();
+        info!("message from upstream: {}", message);
+
+        let resp = json!({
+            "id": "123456",
+            "msgtype": "ENCLAVEINFO",
+            "version": 1,
+            "mrenclave": hex::encode(mrenclave),
+            "mrsigner": hex::encode(mrsigner),
+            "message": message
+        });
+        let resp = resp.to_string();
+        info!("resp: {}", resp);
+
+        /* response reply */
+        tls.transmit(resp.as_bytes()).unwrap();
+    } else {
+        let n = tls.transmit(b"reply from inclavared!\n").unwrap();
+        assert!(n > 0);
+    }
+
+    enclave.destroy();
+}
+
+fn run_server(sockaddr: &str, upstream: Option<String>) {
+    let upstream = Arc::new(upstream);
+    let addr = sockaddr.parse::<SocketAddr>();
+    /* TODO: Abstract together */
+    if addr.is_err() {
+        /* unix socket */
+        let _ = std::fs::remove_file(sockaddr);
+        let listener = UnixListener::bind(sockaddr).unwrap();
+        loop {
+            let (socket, addr) = listener.accept().unwrap();
+            info!("thread for {:?}", addr);
+            let upstream = upstream.clone();
+            thread::spawn(move || {
+                handle_client(socket.as_raw_fd(), &upstream);
+            });
+        }
+    } else {
+        /* tcp */
+        let listener = TcpListener::bind(sockaddr).unwrap();
+        loop {
+            let (socket, addr) = listener.accept().unwrap();
+            info!("thread for {:?}", addr);
+            let upstream = upstream.clone();
+            thread::spawn(move || {
+                handle_client(socket.as_raw_fd(), &upstream);
+            });
         }
     }
-
-    unreachable!("Cannot lookup address");
-}
-
-
-#[no_mangle]
-pub extern "C"
-fn ocall_get_ias_socket(ret_fd : *mut c_int) -> sgx_status_t {
-    let port = 443;
-    let hostname = "api.trustedservices.intel.com";
-    let addr = lookup_ipv4(hostname, port);
-    let sock = TcpStream::connect(&addr).expect("[-] Connect tls server failed!");
-
-    unsafe {*ret_fd = sock.into_raw_fd();}
-
-    sgx_status_t::SGX_SUCCESS
-}
-
-#[no_mangle]
-pub extern "C"
-fn ocall_get_quote (p_sigrl            : *const u8,
-                    sigrl_len          : u32,
-                    p_report           : *const sgx_report_t,
-                    quote_type         : sgx_quote_sign_type_t,
-                    p_spid             : *const sgx_spid_t,
-                    p_nonce            : *const sgx_quote_nonce_t,
-                    p_qe_report        : *mut sgx_report_t,
-                    p_quote            : *mut u8,
-                    _maxlen             : u32,
-                    p_quote_len        : *mut u32) -> sgx_status_t {
-    println!("Entering ocall_get_quote");
-
-    let mut real_quote_len : u32 = 0;
-
-    let ret = unsafe {
-        sgx_calc_quote_size(p_sigrl, sigrl_len, &mut real_quote_len as *mut u32)
-    };
-
-    if ret != sgx_status_t::SGX_SUCCESS {
-        println!("sgx_calc_quote_size returned {}", ret);
-        return ret;
-    }
-
-    println!("quote size = {}", real_quote_len);
-    unsafe { *p_quote_len = real_quote_len; }
-
-    let ret = unsafe {
-        sgx_get_quote(p_report,
-                      quote_type,
-                      p_spid,
-                      p_nonce,
-                      p_sigrl,
-                      sigrl_len,
-                      p_qe_report,
-                      p_quote as *mut sgx_quote_t,
-                      real_quote_len)
-    };
-
-    if ret != sgx_status_t::SGX_SUCCESS {
-        println!("sgx_calc_quote_size returned {}", ret);
-        return ret;
-    }
-
-    println!("sgx_calc_quote_size returned {}", ret);
-    ret
-}
-
-#[no_mangle]
-pub extern "C"
-fn ocall_get_update_info (platform_blob: * const sgx_platform_info_t,
-                          enclave_trusted: i32,
-                          update_info: * mut sgx_update_info_bit_t) -> sgx_status_t {
-    unsafe{
-        sgx_report_attestation_status(platform_blob, enclave_trusted, update_info)
-    }
-}
-
-fn init_enclave() -> SgxResult<SgxEnclave> {
-    let mut launch_token: sgx_launch_token_t = [0; 1024];
-    let mut launch_token_updated: i32 = 0;
-    // call sgx_create_enclave to initialize an enclave instance
-    // Debug Support: set 2nd parameter to 1
-    let debug = 1;
-    let mut misc_attr = sgx_misc_attribute_t {secs_attr: sgx_attributes_t { flags:0, xfrm:0}, misc_select:0};
-    SgxEnclave::create(ENCLAVE_FILE,
-                       debug,
-                       &mut launch_token,
-                       &mut launch_token_updated,
-                       &mut misc_attr)
-}
-
-enum Mode {
-    Client,
-    Server,
 }
 
 fn main() {
-    let mut mode:Mode = Mode::Server;
-    let mut args: Vec<_> = env::args().collect();
-    args.remove(0);
-    while !args.is_empty() {
-        match args.remove(0).as_ref() {
-            "--client" => mode = Mode::Client,
-            "--server" => mode = Mode::Server,
-            _ => {
-                panic!("Only --client/server/unlink is accepted");
-            }
+    env_logger::builder().filter(None, log::LevelFilter::Trace).init();
+    info!("enter");
+
+    let matches = App::new("inclavared")
+                    .version("0.1")
+                    .author("Inclavare-Containers Team")
+                    .arg(Arg::with_name("listen")
+                        .short("l")
+                        .long("listen")
+                        .value_name("sockaddr")
+                        .help("Work in listen mode")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("xfer")
+                        .short("x")
+                        .long("xfer")
+                        .value_name("sockaddr")
+                        .help("Xfer data from client to server")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("connect")
+                        .short("c")
+                        .long("connect")
+                        .value_name("sockaddr")
+                        .help("Work in client mode")
+                        .takes_value(true)
+                    )
+                    .get_matches();
+
+    if matches.is_present("listen") {
+        let sockaddr = matches.value_of("listen").unwrap();
+
+        if matches.is_present("xfer") {
+            let upstream = String::from(matches.value_of("xfer").unwrap());
+            run_server(sockaddr, Some(upstream));
+        } else {
+            run_server(sockaddr, None);
         }
+    } else {
+        let sockaddr = matches.value_of("connect").unwrap();
+
+        let mut buffer = [0u8; 512];
+        let n = client_fetch(sockaddr, &mut buffer);
+        assert!(n > 0);
+        info!("length from upstream: {}", n);
+
+        let message = String::from_utf8((&buffer[64..]).to_vec()).unwrap();
+        info!("message from upstream: {}", message);
     }
 
-    let enclave = match init_enclave() {
-        Ok(r) => {
-            println!("[+] Init Enclave Successful {}!", r.geteid());
-            r
-        },
-        Err(x) => {
-            println!("[-] Init Enclave Failed {}!", x.as_str());
-            return;
-        },
-    };
-
-    match mode {
-        Mode::Server => {
-            println!("Running as server...");
-            let listener = TcpListener::bind("0.0.0.0:3443").unwrap();
-            loop {
-                match listener.accept() {
-                    Ok((socket, addr)) => {
-                        println!("new client from {:?} {}", addr, socket.as_raw_fd());
-                        let mut retval = sgx_status_t::SGX_SUCCESS;
-                        let result = unsafe {
-                            run_server(enclave.geteid(), &mut retval, socket.as_raw_fd())
-                        };
-                        match result {
-                            sgx_status_t::SGX_SUCCESS => {
-                                println!("ECALL success!");
-                            },
-                            _ => {
-                                println!("[-] ECALL Enclave Failed {}!", result.as_str());
-                                return;
-                            }
-                        }
-                    }
-                    Err(e) => println!("couldn't get client: {:?}", e),
-                }
-            } //loop
-        }
-        Mode::Client => {
-            println!("Running as client...");
-            let socket = TcpStream::connect("localhost:3443").unwrap();
-            let mut retval = sgx_status_t::SGX_SUCCESS;
-            let result = unsafe {
-                run_client(enclave.geteid(), &mut retval, socket.as_raw_fd())
-            };
-            match result {
-                sgx_status_t::SGX_SUCCESS => {
-                    println!("ECALL success!");
-                },
-                _ => {
-                    println!("[-] ECALL Enclave Failed {}!", result.as_str());
-                    return;
-                }
-            }
-        }
-    }
-
-    println!("[+] Done!");
-
-    enclave.destroy();
+    info!("leave");
 }
