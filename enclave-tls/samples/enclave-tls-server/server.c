@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>
-#include <sys/socket.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #include <enclave-tls/api.h>
 
 #define DEFAULT_PORT         1234
@@ -22,7 +21,7 @@
 #include <sgx_report.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#else
+#elif defined(SGX)
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 
@@ -103,7 +102,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
-#ifndef OCCLUM
+#ifdef SGX
 	conf.enclave_id = load_enclave();
 #endif
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
@@ -151,7 +150,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 
 		printf("Client: %s\n", buf);
 
-#ifdef OCCLUM
+#if defined(OCCLUM) || defined(SGX)
 		sgx_report_t app_report;
 		if (sgx_create_report(&app_report) < 0) {
 			fprintf(stderr, "failed to generate local report\n");
