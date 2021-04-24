@@ -59,10 +59,10 @@ Right now, Enclave TLS running on Occlum Libos supports the following instance t
 ```shell
 cd /opt/enclave-tls/bin/
 
-# 1. Init Occlum Workspace
-rm -rf occlum_workspace
-mkdir occlum_workspace
-cd occlum_workspace
+# 1. Init Occlum server Workspace
+rm -rf occlum_workspace_server
+mkdir occlum_workspace_server
+cd occlum_workspace_server
 occlum init
 
 # 2. Copy files into Occlum Workspace and Build
@@ -71,22 +71,14 @@ cp /lib/x86_64-linux-gnu/libdl.so.2 image/opt/occlum/glibc/lib
 mkdir -p image/opt/enclave-tls
 cp -rf /opt/enclave-tls/lib image/opt/enclave-tls
 
-# The following libs are required by libenclave_quote_sgx_ecdsa.so
-cp /usr/lib/x86_64-linux-gnu/libsgx_dcap_quoteverify.so.1 image/opt/occlum/glibc/lib
-
 occlum build
-
-# 3. Run the enclave-tls-server
-occlum run /bin/enclave-tls-server
-
-# 4. Run the enclave-tls-client
-./enclave-tls-client
+occlum run /bin/enclave-tls-server -m -l debug
 ```
 
 Type the following commands to generate a minimal, self-contained package (.tar.gz) for the Occlum instance.
 
 ```shell
-cd occlum_workspace
+cd occlum_workspace_server
 occlum package occlum_instance.tar.gz
 ```
 
@@ -99,6 +91,7 @@ Type the following commands to create a `Dockerfile`:
 ```shell
 cp /usr/lib/x86_64-linux-gnu/libsgx_pce.signed.so ./
 cp /usr/lib/x86_64-linux-gnu/libsgx_qe3.signed.so ./
+cp /usr/lib/x86_64-linux-gnu/libsgx_qve.signed.so ./
 
 cat >Dockerfile <<EOF
 FROM ubuntu:18.04
@@ -110,6 +103,7 @@ ADD occlum_instance.tar.gz /run/rune
 
 COPY libsgx_pce.signed.so /usr/lib/x86_64-linux-gnu
 COPY libsgx_qe3.signed.so /usr/lib/x86_64-linux-gnu
+COPY libsgx_qve.signed.so /usr/lib/x86_64-linux-gnu/
 
 ENTRYPOINT ["/bin/enclave-tls-server"]
 EOF
@@ -131,13 +125,42 @@ Please refer to [guide](https://github.com/alibaba/inclavare-containers/tree/mas
 docker run -it --rm --runtime=rune --net host \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/opt/occlum/build/lib/libocclum-pal.so \
-  -e ENCLAVE_RUNTIME_ARGS=occlum_workspace \
-  occlum-app
+  -e ENCLAVE_RUNTIME_ARGS=occlum_workspace_server \
+  occlum-app -m
 ```
+
+Note that `-m` option means build mutual remote attestation with client. You can remove `-m` to build one-way attestation.
 
 ## Run client
 
+There are two way to run client.
+
+### Run client based on Occlum
+
 ```shell
+cd /opt/enclave-tls/bin
+
+# 1. Init Occlum client Workspace
+rm -rf occlum_workspace_client
+mkdir occlum_workspace_client
+cd occlum_workspace_client
+occlum init
+
+# 2. Copy files into Occlum Workspace and Build
+cp ../enclave-tls-client image/bin
+cp /lib/x86_64-linux-gnu/libdl.so.2 image/opt/occlum/glibc/lib
+mkdir -p image/opt/enclave-tls
+cp -rf /opt/enclave-tls/lib image/opt/enclave-tls
+
+occlum build
+occlum run /bin/enclave-tls-client -l debug -m
+```
+
+## Run client based on sgxsdk
+
+```shell
+cd "$WORKSPACE"/inclavare-containers/enclave-tls
+make clean && make uninstall && make SGX=1 && make install
 cd /opt/enclave-tls/bin/
-./enclave-tls-client
+./enclave-tls-client -a sgx_ecdsa -m -l debug
 ```

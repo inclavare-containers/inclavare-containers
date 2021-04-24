@@ -9,10 +9,6 @@ ifneq ($(__Build_Env_Imported),1)
 endif
 CFLAGS += -I$(Topdir)/samples/sgx-stub-enclave
 
-ifdef OCCLUM
-  Enclave_Tls_Ldflags += -L/opt/intel/sgxsgk/lib64 -lsgx_dcap_quoteverify
-endif
-
 Enclave_Tls_Instance_Name := sgx-ecdsa
 Enclave_Tls_Instance_Type := enclave-quote
 include $(Topdir)/rules/sgx_env.mk
