@@ -13,10 +13,11 @@ CLIENT_LDFLAGS := \
   -L$(Topdir)/build/lib -lenclave_tls \
   -Wl,--rpath=/opt/enclave-tls/lib,--enable-new-dtags
 
-ifndef OCCLUM
-  CLIENT_LDFLAGS += -lsgx_urts -lm
-else
+ifdef OCCLUM
   C_FLAGS += -DOCCLUM
+else ifdef SGX
+  C_FLAGS += -DSGX
+  CLIENT_LDFLAGS += -L/opt/intel/sgxsdk/lib64 -lsgx_urts -lm
 endif
 
 Dependencies += $(Build_Libdir)/libenclave_tls.so

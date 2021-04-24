@@ -18,7 +18,7 @@
 
 #ifdef OCCLUM
 #include <sgx_report.h>
-#else
+#elif defined(SGX)
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 
@@ -56,7 +56,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
-#ifndef OCCLUM
+#ifdef SGX
 	conf.enclave_id = load_enclave();
 #endif
 	if (mutual)
@@ -64,7 +64,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE || !handle) {
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		fprintf(stderr, "failed to initialize enclave tls %#x\n", ret);
 		return -1;
 	}
@@ -95,6 +95,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 		len = sizeof(buf) - 1;
 	buf[len] = '\0';
 
+#if defined(OCCLUM) || defined(SGX)
 	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
 	if (len >= 2 * sizeof(sgx_measurement_t)) {
 		printf("Server's SGX identity:\n");
@@ -108,9 +109,17 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 		printf("\n");
 
 		printf("Server:\n%s\n", buf + 2 * sizeof(sgx_measurement_t));
-	} else {
+	} else
+#endif
+	{
 		/* Server not running in SGX Enlcave will only send hello message to client */
 		printf("Server: %s\n", buf);
+	}
+
+	/* Sanity check whether the response is expected */
+	if (strcmp(msg, buf)) {
+		fprintf(stderr, "Invalid response retrieved from enclave-tls server\n");
+		goto err;
 	}
 
 	ret = enclave_tls_cleanup(handle);
@@ -120,9 +129,8 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	return ret;
 
 err:
-	ret = enclave_tls_cleanup(handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE)
-		fprintf(stderr, "failed to cleanup %#x\n", ret);
+	/* Ignore the error code of cleanup in order to return the prepositional error */
+	enclave_tls_cleanup(handle);
 	return -1;
 }
 
