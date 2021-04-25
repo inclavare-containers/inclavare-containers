@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <enclave-tls/api.h>
+#include <enclave-tls/log.h>
 
 #define DEFAULT_PORT     1234
 #define DEFAULT_IP       "127.0.0.1"
@@ -35,11 +36,11 @@ static sgx_enclave_id_t load_enclave(void)
 	int updated = 0;
 	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
-		fprintf(stderr, "Failed to load enclave %d\n", ret);
+		ETLS_ERR("Failed to load enclave %d\n", ret);
 		return -1;
 	}
 
-	printf("Success to load enclave id %ld\n", eid);
+	ETLS_DEBUG("Success to load enclave id %ld\n", eid);
 
 	return eid;
 }
@@ -66,13 +67,13 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to initialize enclave tls %#x\n", ret);
+		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
 		return -1;
 	}
 
 	ret = enclave_tls_negotiate(handle, fd);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to negotiate %#x\n", ret);
+		ETLS_ERR("Failed to negotiate %#x\n", ret);
 		goto err;
 	}
 
@@ -80,7 +81,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	size_t len = strlen(msg);
 	ret = enclave_tls_transmit(handle, (void *)msg, &len);
 	if (ret != ENCLAVE_TLS_ERR_NONE || len != strlen(msg)) {
-		fprintf(stderr, "failed to transmit %#x\n", ret);
+		ETLS_ERR("Failed to transmit %#x\n", ret);
 		goto err;
 	}
 
@@ -88,7 +89,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	len = sizeof(buf);
 	ret = enclave_tls_receive(handle, buf, &len);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to receive %#x\n", ret);
+		ETLS_ERR("Failed to receive %#x\n", ret);
 		goto err;
 	}
 
@@ -99,33 +100,33 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 #if defined(OCCLUM) || defined(SGX)
 	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
 	if (len >= 2 * sizeof(sgx_measurement_t)) {
-		printf("Server's SGX identity:\n");
-		printf("  . MRENCLAVE = ");
+		ETLS_INFO("Server's SGX identity:\n");
+		ETLS_INFO("  . MRENCLAVE = ");
 		for (int i = 0; i < 32; ++i)
 			printf("%02x", (uint8_t)buf[i]);
 		printf("\n");
-		printf("  . MRSIGNER  = ");
+		ETLS_INFO("  . MRSIGNER  = ");
 		for (int i = 32; i < 64; ++i)
 			printf("%02x", (uint8_t)buf[i]);
 		printf("\n");
 
-		printf("Server:\n%s\n", buf + 2 * sizeof(sgx_measurement_t));
+		ETLS_INFO("Server:\n%s\n", buf + 2 * sizeof(sgx_measurement_t));
 	} else
 #endif
 	{
 		/* Server not running in SGX Enlcave will only send hello message to client */
-		printf("Server: %s\n", buf);
+		ETLS_INFO("Server: %s\n", buf);
 	}
 
 	/* Sanity check whether the response is expected */
 	if (strcmp(msg, buf)) {
-		fprintf(stderr, "Invalid response retrieved from enclave-tls server\n");
+		ETLS_ERR("Invalid response retrieved from enclave-tls server\n");
 		goto err;
 	}
 
 	ret = enclave_tls_cleanup(handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE)
-		fprintf(stderr, "failed to cleanup %#x\n", ret);
+		ETLS_ERR("Failed to cleanup %#x\n", ret);
 
 	return ret;
 
@@ -226,7 +227,7 @@ int main(int argc, char **argv)
 
 	/* Get the server IPv4 address from the command line call */
 	if (inet_pton(AF_INET, srv_ip, &s_addr.sin_addr) != 1) {
-		fprintf(stderr, "invalid server address\n");
+		ETLS_ERR("invalid server address\n");
 		return -1;
 	}
 

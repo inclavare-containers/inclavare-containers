@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <enclave-tls/api.h>
+#include <enclave-tls/log.h>
 
 #define DEFAULT_PORT         1234
 #define DEFAULT_IP           "127.0.0.1"
@@ -38,11 +39,11 @@ static sgx_enclave_id_t load_enclave(void)
 	int updated = 0;
 	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
-		fprintf(stderr, "Failed to load enclave %d\n", ret);
+		ETLS_ERR("Failed to load enclave %d\n", ret);
 		return -1;
 	}
 
-	printf("Success to load enclave id %ld\n", eid);
+	ETLS_DEBUG("Success to load enclave id %ld\n", eid);
 
 	return eid;
 }
@@ -59,19 +60,19 @@ typedef struct {
 #define SGXIOC_CREATE_REPORT	_IOWR('s', 4, sgxioc_create_report_arg_t)
 #define ENCLAVE_TLS_HELLO	"Hello and welcome to enclave-tls!"
 
-int sgx_create_report(sgx_report_t *report)
+static int sgx_create_report(sgx_report_t *report)
 {
 	int sgx_fd = open("/dev/sgx", O_RDONLY);
 
 	if (sgx_fd < 0) {
-		fprintf(stderr, "open sgx device error\n");
+		ETLS_ERR("Failed to open sgx device\n");
 		return -1;
 	}
 
 	sgx_target_info_t target_info;
 	if (ioctl(sgx_fd, SGXIOC_SELF_TARGET, &target_info) < 0) {
 		close(sgx_fd);
-		fprintf(stderr, "failed to ioctl get quote and returned errno %s\n", strerror(errno));
+		ETLS_ERR("Failed to ioctl get quote and returned errno %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -81,7 +82,7 @@ int sgx_create_report(sgx_report_t *report)
 	arg.report = report;
 	if (ioctl(sgx_fd, SGXIOC_CREATE_REPORT, &arg) < 0) {
 		close(sgx_fd);
-		fprintf(stderr, "failed to ioctl get report and return error %s\n", strerror(errno));
+		ETLS_ERR("Failed to ioctl get report and return error %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -113,7 +114,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to initialize enclave tls %#x\n", ret);
+		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
 		return -1;
 	}
 
@@ -121,7 +122,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	struct sockaddr_in c_addr;
 	socklen_t size = sizeof(c_addr);
 	while (1) {
-		printf("Waiting for a connection ...\n");
+		ETLS_INFO("Waiting for a connection ...\n");
 
 		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
 		if (connd < 0) {
@@ -131,17 +132,17 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 
 		ret = enclave_tls_negotiate(handle, connd);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
-			fprintf(stderr, "failed to negotiate %#x\n", ret);
+			ETLS_ERR("Failed to negotiate %#x\n", ret);
 			goto err;
 		}
 
-		printf("Client connected successfully\n");
+		ETLS_DEBUG("Client connected successfully\n");
 
 		char buf[256];
 		size_t len = sizeof(buf);
 		ret = enclave_tls_receive(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
-			fprintf(stderr, "failed to receive %#x\n", ret);
+			ETLS_ERR("Failed to receive %#x\n", ret);
 			goto err;
 		}
 
@@ -149,12 +150,12 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 			len = sizeof(buf) - 1;
 		buf[len] = '\0';
 
-		printf("Client: %s\n", buf);
+		ETLS_INFO("Client: %s\n", buf);
 
 #ifdef OCCLUM
 		sgx_report_t app_report;
 		if (sgx_create_report(&app_report) < 0) {
-			fprintf(stderr, "failed to generate local report\n");
+			ETLS_ERR("Failed to generate local report\n");
 			goto err;
 		}
 
@@ -170,7 +171,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 		/* Reply back to the client */
 		ret = enclave_tls_transmit(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
-			fprintf(stderr, "failed to transmit %#x\n", ret);
+			ETLS_ERR("Failed to transmit %#x\n", ret);
 			goto err;
 		}
 
