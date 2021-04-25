@@ -8,16 +8,12 @@ include $(Topdir)/rules/build_env.mk
 
 Targets := $(Build_Bindir)/enclave-tls-server
 
-C_FLAGS += -pie -fPIE -I$(Topdir)/src/include
-SERVER_LDFLAGS := \
-  -L$(Topdir)/build/lib -lenclave_tls \
+cflags := $(CFLAGS) -pie -fPIE -I$(Topdir)/src/include
+ldflags := \
+  $(LDFLAGS) -L$(Topdir)/build/lib -lenclave_tls \
   -Wl,--rpath=/opt/enclave-tls/lib,--enable-new-dtags
-
-ifdef OCCLUM
-  C_FLAGS += -DOCCLUM
-else ifdef SGX
-  C_FLAGS += -DSGX
-  SERVER_LDFLAGS += -L/opt/intel/sgxsdk/lib64 -lsgx_urts -lm
+ifdef SGX
+  ldflags += -L/opt/intel/sgxsdk/lib64 -lsgx_urts -lm
 endif
 
 Dependencies += $(Build_Libdir)/libenclave_tls.so
@@ -25,7 +21,7 @@ Dependencies += $(Build_Libdir)/libenclave_tls.so
 $(Targets): server.c $(Build_Libdir)/libenclave_tls.so
 	dest=$(dir $@); \
 	$(INSTALL) -d -m 0755 $$dest
-	$(CC) $(C_FLAGS) server.c -o $@ $(SERVER_LDFLAGS)
+	$(CC) $(cflags) server.c -o $@ $(ldflags)
 
 $(Build_Libdir)/libenclave_tls.so:
 	make -C $(Enclave_Tls_Srcdir) $@
