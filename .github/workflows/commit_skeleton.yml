@@ -40,6 +40,7 @@ jobs:
         mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
         cp -f /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES;
         find ./ -path '*dist/Makefile' | xargs -I files sed -i '16 d' files;
+        sed -i 's/shelter//g' Makefile;
         make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
         mv *.rpm /root/inclavare-containers/${{ matrix.tag }}"
 
@@ -52,12 +53,13 @@ jobs:
         cd inclavare-containers-$RUNE_VERSION;
         find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
         find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
+        sed -i 's/shelter//g' Makefile;
         make package -j${CPU_NUM};
         mv *.deb /root/inclavare-containers/${{ matrix.tag }}"
 
     - name: Start docker daemon
       run: |
-        docker exec $inclavare_dev bash -c "dockerd -b docker0 --storage-driver=vfs &"
+        docker exec -d $inclavare_dev bash -c "dockerd -b docker0 --storage-driver=vfs &"
 
     - name: Build skeleton docker image
       run: |
@@ -124,7 +126,8 @@ jobs:
     - name: Install alinux dependency
       if: ${{ contains(matrix.tag, 'alinux') }}
       run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-         yum -y install yum-utils wget tar gcc iptables alinux-release-experimentals libseccomp-devel make;
+         yum install -y alinux-release-experimentals;
+         yum install -y yum-utils wget tar gcc iptables libseccomp-devel make;
          yum install -y libprotoc-devel binutils-devel autoconf libtool gcc-c++ pkg-config protobuf-compiler protobuf-devel;
          yum install -y protobuf-c protobuf-c-devel;
          wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz;
@@ -162,7 +165,7 @@ jobs:
 
     - name: Start docker daemon
       run: |
-        docker exec $inclavare_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+        docker exec -d $inclavare_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
 
     - name: Load docker image
       run: |

@@ -41,7 +41,7 @@ jobs:
         if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
           docker exec $rune_test bash -c "service docker start"
         else
-          docker exec $rune_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+          docker exec -d $rune_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
         fi;
 
     - name: Build Occlum docker image
