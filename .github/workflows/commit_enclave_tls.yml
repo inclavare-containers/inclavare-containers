@@ -92,9 +92,11 @@ jobs:
         mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 
     - name: Run enclave tls server for mutual sgx_la
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a sgx_la -m' &
 
     - name: Run enclave tls client for mutual sgx_la
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a sgx_la -m'
         docker restart $inclavare_test;
 
@@ -107,6 +109,13 @@ jobs:
     - name: Run enclave tls client for mutual sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a sgx_ecdsa -p 1236 -m'
+        docker restart $inclavare_test;
+
+    - name: Run enclave tls server for mutual nullquote
+      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a nullquote -m' &
+
+    - name: Run enclave tls client for mutual nullquote
+      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a nullquote -m'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
