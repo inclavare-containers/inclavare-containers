@@ -88,6 +88,9 @@ CXXFLAGS ?= -std=c++11 -fPIC
 ifdef OCCLUM
   CFLAGS += -DOCCLUM
   CXXFLAGS += -DOCCLUM
+else ifdef SGX
+  CFLAGS += -DSGX
+  CXXFLAGS += -DSGX
 endif
 ifeq ($(DEBUG),1)
   CFLAGS += -ggdb -O0
