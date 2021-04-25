@@ -153,10 +153,10 @@ jobs:
       if: always()
       run : docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
         mv liberpal-skeleton-v*.so /usr/lib;
-        wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz;
-        tar -zxvf docker-18.09.7.tgz;
+        wget https://download.docker.com/linux/static/stable/x86_64/docker-19.03.8.tgz;
+        tar -zxvf docker-19.03.8.tgz;
         mv docker/* /usr/bin;
-        rm -rf docker;
+        rm -rf docker docker-19.03.8.tgz;
         mkdir -p /etc/docker;
         mv daemon.json /etc/docker'
 
