@@ -208,7 +208,7 @@ int main(int argc, char **argv)
 	char *tls_type = "";
 	char *crypto_type = "";
 	bool mutual = false;
-	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
+	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
 	char *ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
 	int opt;
