@@ -48,8 +48,8 @@ Right now, Enclave TLS supports the following instance types:
 | Priority | Tls Wrapper instances | Encalve Quote instances | Crypto Wrapper Instance |
 | -------- | --------------------- | ----------------------- | ----------------------- |
 | low      | nulltls               | nullquote               | nullcrypto              |
-| Medium   | wolfssl               | sgx\_ecdsa              | wolfcrypt               |
-| High     | wolfssl\_sgx          | sgx\_la                 | wolfcrypt\_sgx          |
+| Medium   | wolfssl               | sgx\_la                 | wolfcrypt               |
+| High     | wolfssl\_sgx          | sgx\_ecdsa              | wolfcrypt\_sgx          |
 
 By default,  Enclave TLS will select the **highest priority** instance to use.
 
