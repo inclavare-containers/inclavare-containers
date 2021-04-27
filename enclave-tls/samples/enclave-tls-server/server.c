@@ -58,7 +58,7 @@ typedef struct {
 
 #define SGXIOC_SELF_TARGET	_IOR('s', 3, sgx_target_info_t)
 #define SGXIOC_CREATE_REPORT	_IOWR('s', 4, sgxioc_create_report_arg_t)
-#define ENCLAVE_TLS_HELLO	"Hello and welcome to enclave-tls!"
+#define ENCLAVE_TLS_HELLO	"Hello and welcome to Enclave TLS!\n"
 
 static int sgx_create_report(sgx_report_t *report)
 {

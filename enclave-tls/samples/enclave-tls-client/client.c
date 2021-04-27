@@ -110,7 +110,10 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 			printf("%02x", (uint8_t)buf[i]);
 		printf("\n");
 
-		ETLS_INFO("Server:\n%s\n", buf + 2 * sizeof(sgx_measurement_t));
+		memcpy(buf, buf + 2 * sizeof(sgx_measurement_t), len - 2 * sizeof(sgx_measurement_t));
+		buf[len - 2 * sizeof(sgx_measurement_t)] = '\0';
+
+		ETLS_INFO("Server:\n%s\n", buf);
 	} else
 #endif
 	{
