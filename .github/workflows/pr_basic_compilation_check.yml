@@ -1,7 +1,7 @@
 name: Compile check
 
 # Controls when the action will run. Triggers the workflow on push or pull request
-on: [push, pull_request]
+on: pull_request
 
 jobs:
   Compile:
