@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+BUILD_ROOT := $(CURDIR)/debian/enclave-tls
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+
+override_dh_auto_build:
+	make -C enclave-tls SGX=1
+
+override_dh_auto_install:
+	Enclave_Tls_Root=$(BUILD_ROOT)/opt/enclave-tls make -C enclave-tls install

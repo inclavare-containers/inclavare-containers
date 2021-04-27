@@ -14,14 +14,19 @@ rpm: release-tarball
 	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba rpm/enclave_tls.spec
 	@cp $(RPMBUILD_DIR)/RPMS/x86_64/*.rpm $(PROJECT_DIR)
 	@rm -rf $(RPMBUILD_DIR)
-	@echo "the rpms of enclave tls located in $(PROJECT_DIR)"	
+	@echo "the rpms of enclave tls located in $(PROJECT_DIR)"
+
+deb:
+	@cd deb && ./build.sh
+	@echo "the debs of enclave tls located in $(PROJECT_DIR)"
 
 package:
-# FIXME: add make deb command to generate ubuntu packages
-ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
+ifeq (/etc/debian_version, $(wildcard /etc/debian_version))
+	make deb
+else ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
 	make rpm
 else
 	@echo "error! don't support generating packages on this system"
 endif
 
-.PHONY: release-tarball rpm package
+.PHONY: release-tarball rpm deb package
