@@ -43,4 +43,4 @@ RUN [ ! -f sgx_rpm_local_repo.tgz ] && \
     yum-config-manager --add-repo sgx_rpm_local_repo && \
     yum makecache && rm sgx_rpm_local_repo.tgz
 
-RUN yum install --nogpgcheck -y libsgx-uae-service libsgx-dcap-quote-verify-devel libsgx-dcap-ql-devel libsgx-uae-service
+RUN yum install --nogpgcheck -y libsgx-dcap-quote-verify-devel libsgx-dcap-ql-devel libsgx-uae-service
