@@ -34,6 +34,17 @@ enclave-tls is a protocol to establish secure and trusted channel by integrating
 %setup -q -n %{PROJECT}-%{version}
 
 %build
+# If the SGX SDK is not prepared well in build environment, stop the build
+if [ -z "$SGX_SDK" ]; then
+        echo 'Error: Please install SGX SDK firstly'
+        exit 1
+fi
+
+if [ "$SGX_SDK" != "/opt/intel/sgxsdk" ]; then
+        echo 'Error: The SGX_SDK environment variable value is not correct'
+        exit 1
+fi
+
 pushd %{name}
 make SGX=1
 popd
