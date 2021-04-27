@@ -1,10 +1,14 @@
-FROM registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux
+FROM registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux:latest
 
 LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
-RUN yum install -y which wget git make autoconf libtool \
-    libseccomp-devel binutils-devel alinux-release-experimentals protobuf \
-    protobuf-devel protobuf-c-devel openssl openssl-devel yum-utils \
+# Install alinux-release-experimentals prior to others to work around
+# the issue "Error: Package: glibc-2.17-323.1.al7.i686 (updates)"
+RUN yum install -y alinux-release-experimentals
+
+RUN yum install -y \
+    which wget git make autoconf libtool openssl yum-utils \
+    libseccomp-devel binutils-devel protobuf-devel protobuf-c-devel openssl-devel \
     devtoolset-10-toolchain
 
 RUN echo "source /opt/rh/devtoolset-10/enable" > /root/.bashrc
@@ -14,7 +18,7 @@ WORKDIR /root
 # install go
 RUN wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
     tar -zxvf go1.14.2.linux-amd64.tar.gz -C /usr/lib && \
-    rm -rf go1.14.2.linux-amd64.tar.gz
+    rm -f go1.14.2.linux-amd64.tar.gz
 
 # configure GOPATH and GOROOT
 ENV GOROOT       /usr/lib/go
@@ -24,13 +28,11 @@ ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
 ENV GO111MODULE  on
 
 # install SGX
-RUN [ ! -f sgx_linux_x64_sdk_2.13.100.4.bin ] && \
-    wget https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_linux_x64_sdk_2.13.100.4.bin && \
+RUN wget https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_linux_x64_sdk_2.13.100.4.bin && \
     chmod +x sgx_linux_x64_sdk_2.13.100.4.bin && echo -e 'no\n/opt/intel\n' | ./sgx_linux_x64_sdk_2.13.100.4.bin && \
     rm -rf sgx_linux_x64_sdk_2.13.100.4.bin
 
-RUN [ ! -f sgx_rpm_local_repo.tar.gz ] && \
-    wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz && \
+RUN wget https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz && \
     tar xzf sgx_rpm_local_repo.tar.gz && \
     yum-config-manager --add-repo file:/root/sgx_rpm_local_repo && \
     yum makecache && rm -rf sgx_rpm_local_repo.tar.gz
