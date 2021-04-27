@@ -34,7 +34,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile-compile-check-centos8.2
+          file: ./docker/Dockerfile-compilation-testing-centos8.2
           platforms: linux/amd64
           push: true
           tags: inclavarecontainers/test:compile-check-centos8.2
@@ -69,7 +69,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile-compile-check-ubuntu18.04
+          file: ./docker/Dockerfile-compilation-testing-ubuntu18.04
           platforms: linux/amd64
           push: true
           tags: inclavarecontainers/test:compile-check-ubuntu18.04
@@ -104,7 +104,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./docker/Dockerfile-compile-check-alinux2
+          file: ./docker/Dockerfile-compilation-testing-alinux2
           platforms: linux/amd64
           push: true
           tags: inclavarecontainers/test:compile-check-alinux2
