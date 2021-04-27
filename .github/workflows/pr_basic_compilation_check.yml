@@ -4,11 +4,13 @@ on: pull_request
 
 jobs:
   basic_complication_check:
-    runs-on: ubuntu-18.04
-    container: inclavarecontainers/test:${{ matrix.tag }}
+    # Run all steps in the compilation testing containers
     strategy:
       matrix:
-        tag: [compilation-check-ubuntu18.04, compilation-check-centos8.2, compilation-check-alinux2]
+        tag: [ubuntu18.04, centos8.2, alinux2]
+    container: runetest/compilation-testing:${{ matrix.tag }}
+    # Use GitHub-hosted runner Ubuntu 18.04
+    runs-on: ubuntu-18.04
     defaults:
       run:
         shell: bash
