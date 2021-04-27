@@ -1,29 +1,34 @@
-name: Compile check
+name: Basic Compilation Check
 
-# Controls when the action will run. Triggers the workflow on push or pull request
 on: pull_request
 
 jobs:
-  Compile:
+  basic_complication_check:
     runs-on: ubuntu-18.04
     container: inclavarecontainers/test:${{ matrix.tag }}
     strategy:
       matrix:
-        tag: [compile-check-ubuntu18.04, compile-check-centos8.2, compile-check-alinux2]
+        tag: [compilation-check-ubuntu18.04, compilation-check-centos8.2, compilation-check-alinux2]
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ github.workspace }}
     steps:
     - uses: actions/checkout@v1
 
-    - name: Get cpu number
-      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+    - name: Preparations
+      # Touch all .pb.go to prevent from calling protobuf compiler
+      run:
+        echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+        find ./ -name *.pb.go -exec touch {} \;;
 
     - name: Compile "enclave-tls"
-      shell: bash
-      run: cd $GITHUB_WORKSPACE/enclave-tls;
-        source /root/.bashrc && make && make clean && make SGX=1 && make clean && make OCCLUM=1;
+      run:
+        cd enclave-tls;
+        source /root/.bashrc && make && make clean && make SGX=1 && make clean && make OCCLUM=1
 
     - name: Compile "rune shim-rune sgx-tools epm pal"
-      run: cd $GITHUB_WORKSPACE;
-        find ./ -name *.pb.go | xargs -I files touch files;
+      run:
         make -j${CPU_NUM} && make install -j${CPU_NUM};
         cd rune/libenclave/internal/runtime/pal/skeleton && make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
         cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
