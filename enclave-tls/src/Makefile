@@ -88,7 +88,7 @@ install: all
 	make install_libenclave_tls
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Libdir)
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Root)/include/enclave-tls
-	$(INSTALL) -m 0744 $(Enclave_Tls_Incdir)/enclave-tls/* $(Enclave_Tls_Root)/include/enclave-tls
+	$(INSTALL) -m 0444 $(Enclave_Tls_Incdir)/enclave-tls/* $(Enclave_Tls_Root)/include/enclave-tls
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Libdir)/crypto-wrappers
 	$(INSTALL) -m 0755 $(Build_Libdir)/crypto-wrappers/libcrypto_wrapper_* \
 	  $(Enclave_Tls_Libdir)/crypto-wrappers
