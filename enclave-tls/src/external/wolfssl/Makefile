@@ -16,6 +16,15 @@ endif
 
 all: $(Build_Libdir)/libwolfssl.so $(Build_Libdir)/libwolfssl_sgx.a
 
+SGX_LVI_MITIGATION ?= 1
+SGX_SDK ?= /opt/intel/sgxsdk
+
+ifeq ($(SGX_LVI_MITIGATION),1)
+  include $(SGX_SDK)/buildenv.mk
+  Wolfssl_Sgx_Cflags += $(MITIGATION_CFLAGS)
+  Wolfssl_Sgx_Ldflags += $(MITIGATION_LDFLAGS)
+endif
+
 this_dir := $(shell pwd)
 wolfssl_srcdir := $(this_dir)/wolfssl
 $(Build_Libdir)/libwolfssl.so: $(wolfssl_srcdir)/src/.libs/libwolfssl.so
