@@ -9,9 +9,9 @@ RUN yum install -y alinux-release-experimentals
 RUN yum install -y \
     which wget git make autoconf libtool openssl yum-utils \
     libseccomp-devel binutils-devel protobuf-devel protobuf-c-devel openssl-devel \
-    devtoolset-10-toolchain
+    devtoolset-9-toolchain
 
-RUN echo "source /opt/rh/devtoolset-10/enable" > /root/.bashrc
+RUN echo "source /opt/rh/devtoolset-9/enable" > /root/.bashrc
 
 WORKDIR /root
 
