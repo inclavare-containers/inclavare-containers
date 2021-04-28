@@ -1,19 +1,19 @@
-name: Build image for compiler check
+name: Build compilation testing image
 
 # This is a manual trigger.
 on: [workflow_dispatch]
 
 jobs:
-  generate-centos-image:
-      # Run all steps in the compilation testing containers
-      strategy:
-        matrix:
-          os: [ubuntu18.04, centos8.2, alinux2]
+  build-centos-image:
+    # Run all steps in the compilation testing containers
+    strategy:
+      matrix:
+        os: [ubuntu18.04, centos8.2, alinux2]
 
-      # GitHub Actions doesn't have CentOS VM provided
-      runs-on: ubuntu-18.04
+    # GitHub Actions doesn't have CentOS VM provided
+    runs-on: ubuntu-18.04
 
-      steps:
+    steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -29,7 +29,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push the image
         uses: docker/build-push-action@v2
         with:
           context: .
