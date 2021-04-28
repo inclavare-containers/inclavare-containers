@@ -4,7 +4,7 @@ name: Build compilation testing image
 on: [workflow_dispatch]
 
 jobs:
-  build-centos-image:
+  build-compilation-testing-image:
     # Run all steps in the compilation testing containers
     strategy:
       matrix:
