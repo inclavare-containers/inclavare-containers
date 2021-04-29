@@ -1,6 +1,6 @@
 name: Basic Compilation Check
 
-on: [pull_request, workflow_dispatch]
+on: pull_request
 
 jobs:
   basic_complication_check:
