@@ -26,7 +26,7 @@
 
 #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
-static sgx_enclave_id_t load_enclave(void)
+static sgx_enclave_id_t load_enclave(bool debug_enclave)
 {
 	sgx_launch_token_t t;
 
@@ -34,7 +34,7 @@ static sgx_enclave_id_t load_enclave(void)
 
 	sgx_enclave_id_t eid;
 	int updated = 0;
-	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
+	int ret = sgx_create_enclave(ENCLAVE_FILENAME, debug_enclave, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
 		ETLS_ERR("Failed to load enclave %d\n", ret);
 		return -1;
@@ -48,7 +48,8 @@ static sgx_enclave_id_t load_enclave(void)
 
 int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 		     char *attester_type, char *verifier_type,
-		     char *tls_type, char *crypto_type, bool mutual)
+		     char *tls_type, char *crypto_type, bool mutual,
+		     bool debug_enclave)
 {
 	enclave_tls_conf_t conf;
 
@@ -59,7 +60,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
 #ifdef SGX
-	conf.enclave_id = load_enclave();
+	conf.enclave_id = load_enclave(debug_enclave);
 #endif
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 {
 	printf("    - Welcome to Enclave-TLS sample client program\n");
 
-	char *const short_options = "a:v:t:c:ml:i:p:";
+	char *const short_options = "a:v:t:c:ml:i:p:D";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
 		{"verifier", required_argument, NULL, 'v'},
@@ -153,6 +154,7 @@ int main(int argc, char **argv)
 		{"log-level", required_argument, NULL, 'l'},
 		{"ip", required_argument, NULL, 'i'},
 		{"port", required_argument, NULL, 'p'},
+		{"debug-enclave", no_argument, NULL, 'D'},
 		{0, 0, 0, 0}
 	};
 
@@ -164,6 +166,7 @@ int main(int argc, char **argv)
 	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
 	char *srv_ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
+	bool debug_enclave = false;
 	int opt;
 
 	do {
@@ -205,6 +208,9 @@ int main(int argc, char **argv)
 		case 'p':
 			port = atoi(optarg);
 			break;
+		case 'D':
+			debug_enclave = true;
+			break;
 		case -1:
 			break;
 		default:
@@ -242,5 +248,5 @@ int main(int argc, char **argv)
 
 	return enclave_tls_echo(sockfd, log_level,
 				attester_type, verifier_type, tls_type,
-				crypto_type, mutual);
+				crypto_type, mutual, debug_enclave);
 }
