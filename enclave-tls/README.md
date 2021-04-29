@@ -41,6 +41,8 @@ If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_la,
 make SGX=1
 ```
 
+Note that [SGX LVI mitigation](https://software.intel.com/security-software-guidance/advisory-guidance/load-value-injection) is enabled by default. You can set macro `SGX_LVI_MITIGATION` to `0` to disable SGX LVI mitigation.
+
 # RUN
 
 Right now, Enclave TLS supports the following instance types:

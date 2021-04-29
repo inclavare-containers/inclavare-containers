@@ -51,6 +51,7 @@ app_edl = $(App_Name).edl
 
 SGX_DEBUG ?= $(DEBUG)
 SGX_PRERELEASE ?=
+SGX_LVI_MITIGATION ?= 1
 
 ifeq ($(SGX_DEBUG), 1)
   ifeq ($(SGX_PRERELEASE), 1)
@@ -59,6 +60,10 @@ ifeq ($(SGX_DEBUG), 1)
 endif
 
 SGX_SDK ?= /opt/intel/sgxsdk
+
+ifeq ($(SGX_LVI_MITIGATION),1)
+  include $(SGX_SDK)/buildenv.mk
+endif
 
 SGX_MODE ?= HW
 ifeq ($(SGX_MODE), HW)
@@ -172,6 +177,12 @@ Enclave_Cflags := \
 Enclave_Cxxflags := \
   $(CXXFLAGS) -nostdinc++ -std=c++11 $(sgx_common_cxxflags) $(enclave_common_flags) $(Enclave_Extra_Cxxflags)
 
+ifeq ($(SGX_LVI_MITIGATION),1)
+  Enclave_Cflags += $(MITIGATION_CFLAGS)
+  Enclave_Cxxflags += $(MITIGATION_CFLAGS)
+  sgx_common_libdir = $(SGX_TRUSTED_LIBRARY_PATH)
+endif
+
 # Define the LDFLAGS for enclave
 
 # To generate a proper enclave, it is recommended to follow below guideline to link the trusted libraries:
@@ -192,7 +203,10 @@ Enclave_Ldflags := \
   -Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
   -Wl,--defsym,__ImageBase=0 -Wl,--gc-sections   \
   -Wl,--version-script=$(enclave_linker_script)
-  #$(MITIGATION_LDFLAGS)
+
+ifeq ($(SGX_LVI_MITIGATION),1)
+  Enclave_Ldflags += $(MITIGATION_LDFLAGS)
+endif
 
 Sgx_Enclave := 1
 __Sgx_Env_Imported := 1
