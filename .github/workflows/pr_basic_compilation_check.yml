@@ -37,7 +37,7 @@ jobs:
 
       - name: Compile "rune shim-rune sgx-tools epm pal"
         run:
-          make -j${CPU_NUM} && make install -j${CPU_NUM};
+          source /root/.bashrc && make -j${CPU_NUM} && make install -j${CPU_NUM};
           cd rune/libenclave/internal/runtime/pal/skeleton &&
             make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
           cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
