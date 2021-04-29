@@ -91,31 +91,38 @@ jobs:
         rm -f sgx_rpm_local_repo.tar.gz;
         mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 
-    - name: Run enclave tls server for mutual sgx_la
-      if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a sgx_la -m' &
+    - id: random-port-generator1
+      uses: ./.github/actions/generate-random-port
 
-    - name: Run enclave tls client for mutual sgx_la
-      if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a sgx_la -m'
-        docker restart $inclavare_test;
-
-    - name: Run enclave tls server for mutual sgx_ecdsa
+    - name: Test enclave tls server for mutual sgx_la
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
-        docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
-        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_ecdsa -p 1236 -m' &
+        echo random-port1 ${{ steps.random-port-generator1.outputs.random-port }}
+        docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/
+        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a sgx_la -m -p ${{ steps.random-port-generator1.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a sgx_la -m -p ${{ steps.random-port-generator1.outputs.random-port }}'
+        docker restart $inclavare_test
 
-    - name: Run enclave tls client for mutual sgx_ecdsa
+    - id: random-port-generator2
+      uses: ./.github/actions/generate-random-port
+
+    - name: Test enclave tls server for mutual sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a sgx_ecdsa -p 1236 -m'
-        docker restart $inclavare_test;
+      run: |
+        echo random-port2 ${{ steps.random-port-generator2.outputs.random-port }}
+        docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/
+        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_ecdsa -m -p ${{ steps.random-port-generator2.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a sgx_ecdsa -m -p ${{ steps.random-port-generator2.outputs.random-port }}'
+        docker restart $inclavare_test
 
-    - name: Run enclave tls server for mutual nullquote
-      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a nullquote -m' &
+    - id: random-port-generator3
+      uses: ./.github/actions/generate-random-port
 
-    - name: Run enclave tls client for mutual nullquote
-      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a nullquote -m'
+    - name: Test enclave tls server for mutual nullquote
+      run: |
+        echo random-port3 ${{ steps.random-port-generator3.outputs.random-port }}
+        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && cd /opt/enclave-tls/bin/ && ./enclave-tls-client -l debug -a nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
