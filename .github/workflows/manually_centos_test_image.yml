@@ -32,8 +32,8 @@ jobs:
           crictl pull docker.io/inclavarecontainers/occlum-java-web:scratch;
           crictl pull docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch"
           docker exec centos bash -c "pkill -9 containerd"
-          docker commit centos inclavarecontainers/test:centos8.2-occlum-${{ github.event.inputs.occlum_version }}
+          docker commit centos runetest/test:centos8.2-occlum-${{ github.event.inputs.occlum_version }}
 
       - name: Push crictl image to Dockerhub
-        run: docker login -p ${{ secrets.DOCKER_PASSWORD }} -u ${{ secrets.DOCKER_USERNAME }};
-          docker push inclavarecontainers/test:centos8.2-occlum-${{ github.event.inputs.occlum_version }}
+        run: docker login -p ${{ secrets.TEST_DOCKER_PASSWORD }} -u ${{ secrets.TEST_DOCKER_USERNAME }};
+          docker push runetest/test:centos8.2-occlum-${{ github.event.inputs.occlum_version }}
