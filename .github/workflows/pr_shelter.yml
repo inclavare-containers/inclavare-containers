@@ -1,55 +1,157 @@
-name: Run shelter with rs-tls-server
+name: Run shelter with enclave-tls
 
 # Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
-on: 
+on:
   pull_request_target:
     types: labeled
 
 jobs:
   rune_shelter:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
-    runs-on: [self-hosted, SGX1]
+    runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
-        tag: [ubuntu18.04, centos8.2]
+        sgx: [[self-hosted, SGX1], [self-hosted, SGX2, vsgx]]
+        tag: [ubuntu18.04, centos8.2, alinux2]
     steps:
     - uses: actions/checkout@v2
       with:
         ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
     - name: Prepare work
-      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV; 
 
     - name: Create container
       run: |
-        rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }});
-        echo "rune_test=$rune_test" >> $GITHUB_ENV
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-centos8.2 inclavare-dev:centos8.2;
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-ubuntu18.04 inclavare-dev:ubuntu18.04;
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-alinux2 inclavare-dev:alinux2;
+        inclavare_dev=$(docker run -itd --privileged --rm --net host -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
+        echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
 
     - name: Config git proxy
       run: |
-        docker exec $rune_test bash -c "git config --global http.proxy socks5://localhost:5432"
-        docker exec $rune_test bash -c "git config --global https.proxy socks5://localhost:5432"
+        docker exec $inclavare_dev bash -c "git config --global http.proxy socks5://localhost:5432"
+        docker exec $inclavare_dev bash -c "git config --global https.proxy socks5://localhost:5432"
 
-    # ra-tls is buggy on parallel compilation. Always use -j1.
-    - name: Build and run ra-tls-server
+    # shelter depends on enclave-tls library
+    - name: Build and install enclave-tls sdk
+      run: docker exec $inclavare_dev bash -c 'cd /root && source /root/.bashrc;source /etc/profile;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
+        cd inclavare-containers-$RUNE_VERSION/enclave-tls;
+        make SGX=1 && make install;
+        cp -rf /opt/enclave-tls /root/inclavare-containers/${{ matrix.tag }}'
+
+    - name: Build shelter
+      run: docker exec $inclavare_dev bash -c 'cd /root && source /etc/profile;
+        cd inclavare-containers-$RUNE_VERSION/shelter;
+        make;
+        cd ..;
+        cp -rf shelter /root/inclavare-containers/${{ matrix.tag }};
+        cp /root/inclavare-containers-$RUNE_VERSION/enclave-tls/samples/sgx-stub-enclave/sgx_stub_enclave.signed.so /root/inclavare-containers/${{ matrix.tag }}/shelter;
+        cd /root/inclavare-containers/${{ matrix.tag }}'
+        
+    - name: Kill the dev container
+      run: docker stop $inclavare_dev
+
+    - name: Create runtime testing container
       run: |
-        docker exec $rune_test bash -c "mkdir -p /run/rune;
-        touch ra-tls.sock;
-        cp -r /root/inclavare-containers /root/inclavare-containers-test;
-        cd /root/inclavare-containers-test/ra-tls;
-        find ../ -name *.pb.go | xargs -I files touch files;
-        export SPID=${{ secrets.SPID }};
-        export EPID_SUBSCRIPTION_KEY=${{ secrets.SUB_KEY }};
-        export QUOTE_TYPE=SGX_UNLINKABLE_SIGNATURE;
-        make -j1;
-        cd /root/inclavare-containers-test/ra-tls/build/bin;
-        ./ra-tls-server run &"
+        docker tag ubuntu:18.04 inclavare-test:ubuntu18.04;
+        docker tag centos:8.2.2004 inclavare-test:centos8.2;
+        docker tag registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux inclavare-test:alinux2;
+        if ${{ contains(matrix.sgx, 'SGX2') }}; then
+                inclavare_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }});
+        else
+                inclavare_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }});
+        fi;
+        echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
 
-    - name: Build and run shelter
+    - name: Install ubuntu dependency
+      if: ${{ contains(matrix.tag, 'ubuntu') }}
       run: |
-        docker exec $rune_test bash -c "cd /root/inclavare-containers-test/shelter;
-        make -j1;
-        ./shelter remoteattestation"
+        docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget gnupg;
+        echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service;
+        cp -rf /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 
-    - name: Kill the container
-      run: docker stop $rune_test
+    - name: Install centos dependency
+      if: ${{ contains(matrix.tag, 'centos') }}
+      run: |
+        docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+        yum -y install yum-utils wget iptables;
+        wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
+        tar xzf sgx_rpm_local_repo.tgz;
+        yum-config-manager --add-repo sgx_rpm_local_repo;
+        yum makecache;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
+        rm -f sgx_rpm_local_repo.tgz;
+        mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
+
+    - name: Install alinux dependency
+      if: ${{ contains(matrix.tag, 'alinux') }}
+      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+        yum -y install yum-utils wget tar procps alinux-release-experimentals  protobuf-c-devel;
+        wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz;
+        tar xzf sgx_rpm_local_repo.tar.gz;
+        yum-config-manager --add-repo file:/root/inclavare-containers/${{ matrix.tag }}/sgx_rpm_local_repo;
+        yum makecache;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
+        rm -f sgx_rpm_local_repo.tar.gz;
+        mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
+
+    - id: random-port-generator1
+      uses: ./.github/actions/generate-random-port
+
+    - run: echo random-port1 ${{ steps.random-port-generator1.outputs.random-port }}
+      shell: bash
+
+    - name: Run enclave tls server for null quote
+      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a nullquote -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
+
+    - name: Run shelter for null quote
+      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation  --verifier nullquote --ip 127.0.0.1 --port ${{ steps.random-port-generator1.outputs.random-port }}'
+        docker restart $inclavare_test;
+
+    - id: random-port-generator2
+      uses: ./.github/actions/generate-random-port
+
+    - run: echo random-port2 ${{ steps.random-port-generator2.outputs.random-port }}
+      shell: bash
+
+    - name: Run enclave tls server for mutual sgx_ecdsa
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
+      run: |
+        docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
+        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_ecdsa -i 127.0.0.1 -p ${{ steps.random-port-generator2.outputs.random-port }} -m' &
+
+    - name: Run shelter for mutual sgx_ecdsa
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
+      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_ecdsa --mutual 1 --ip 127.0.0.1 --port ${{ steps.random-port-generator2.outputs.random-port }}'
+        docker restart $inclavare_test;
+
+    - id: random-port-generator3
+      uses: ./.github/actions/generate-random-port
+
+    - run: echo random-port3 ${{ steps.random-port-generator3.outputs.random-port }}
+      shell: bash
+
+    - name: Run enclave tls server for sgx_la
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
+      run: |
+        docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
+        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_la -t wolfssl_sgx -c wolfcrypt' -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+
+    - name: Run enclave tls server for sgx_la
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
+      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_la --ip 127.0.0.1 --port ${{ steps.random-port-generator3.outputs.random-port }}'
+
+    - name: Clean up the github workspace
+      if: ${{ always() }}
+      run:
+        docker restart $inclavare_test;
+        docker exec $inclavare_test bash -c 'rm -rf /root/inclavare-containers/${{ matrix.tag }}'
+
+    - name: Kill the test container
+      run: docker stop $inclavare_test 
