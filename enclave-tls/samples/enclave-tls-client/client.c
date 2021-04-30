@@ -18,7 +18,9 @@
 
 #ifdef OCCLUM
 #include <sgx_report.h>
-#else
+#endif
+
+#ifdef SGX
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 
@@ -56,7 +58,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
-#ifndef OCCLUM
+#ifdef SGX
 	conf.enclave_id = load_enclave();
 #endif
 	if (mutual)
@@ -96,6 +98,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 	buf[len] = '\0';
 
 	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
+#ifdef SGX
 	if (len >= 2 * sizeof(sgx_measurement_t)) {
 		printf("Server's SGX identity:\n");
 		printf("  . MRENCLAVE = ");
@@ -112,6 +115,9 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 		/* Server not running in SGX Enlcave will only send hello message to client */
 		printf("Server: %s\n", buf);
 	}
+#else
+	printf("Server: %s\n", buf);
+#endif
 
 err:
 	ret = enclave_tls_cleanup(handle);

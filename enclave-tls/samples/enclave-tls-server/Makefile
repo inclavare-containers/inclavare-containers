@@ -14,7 +14,9 @@ SERVER_LDFLAGS := \
   -Wl,--rpath=/opt/enclave-tls/lib,--enable-new-dtags
 
 ifndef OCCLUM
+ifdef SGX
   SERVER_LDFLAGS += -lsgx_urts -lm
+endif
 else
   C_FLAGS += -DOCCLUM
 endif

@@ -22,7 +22,9 @@
 #include <sgx_report.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#else
+#endif
+
+#ifdef SGX
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 
@@ -103,7 +105,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
-#ifndef OCCLUM
+#ifdef SGX
 	conf.enclave_id = load_enclave();
 #endif
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
