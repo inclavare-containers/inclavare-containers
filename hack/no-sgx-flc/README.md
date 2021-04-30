@@ -7,7 +7,7 @@ there are still non-trivial number of systems without FLC support.
 This page contains the information about how to re-enable no-FLC machines
 with SGX in-tree driver the latest SGX DCAP Linux Driver.
 
-If you still intend to use [legacy SGX out-of-tree Linux Driver (isgx)](https://github.com/intel/linux-sgx-driver), please skip the following sections read [this](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/README.md#for-isgx-linux-driver-users).
+If you still intend to use [legacy SGX out-of-tree Linux Driver (isgx)](https://github.com/intel/linux-sgx-driver), please skip the following sections and read [this](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/README.md#for-isgx-linux-driver-users).
 
 # Prerequisites
 
