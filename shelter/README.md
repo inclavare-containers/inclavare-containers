@@ -28,6 +28,10 @@ git clone https://github.com/alibaba/inclavare-containers
 
 2. Prepare the dependence libs required by shelter
 
+### Build and install enclave-tls
+
+Please follow [enclave-tls README](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls) to build and install enclave-tls firstly.
+
 ### For EPID RA
 
 ```shell
@@ -37,11 +41,12 @@ make
 
 ### For DCAP RA
 
-Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/README.md) to install DCAP. Note: If your platform is pre-product SGX platform (SBX), please follow this guide to resolve the quote verification problem on SBX platforms: https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platform/README.md.
+1. Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/README.md) to install DCAP. Note: If your platform is pre-product SGX platform (SBX), please follow this guide to resolve the quote verification problem on SBX platforms: https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platform/README.md.
+2. Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/tree/master/QuoteGeneration/pccs) to install and configure Intel PCCS service to make sure Intel PCCS to be luanched correctly.
 
 ```shell
 cd $WORKSPACE/inclavare-containers/shelter
-make ECDSA=1
+make 
 ```
 
 ## Run
@@ -73,10 +78,29 @@ shelter help
       --version, -v  print the version
 ```
 
-2. remote attestation for epid-sgx-ra & dcap-sgx-ra
+2. remote attestation for sgx-ra & sgx-la
 
 ```shell
-shelter remoteattestation
+OPTIONS:
+   --ip             tcp socket ip to connect inclavared
+   --port           tcp socket port to connect inclavared
+   --log-level      set the level of log output(debug, info, warn, error, fatal, off)
+   --verifier       set the type of quote verifier(nullquote, sgx_la or sgx_ecdsa)
+   --tls            set the type of tls wrapper(nulltls, wolfssl or wolfssl_sgx)
+   --crypto         set the type of crypto wrapper(nullcrypto, wolfcrypt or wolfcrypt_sgx)
+   --mutual         set to enable mutual attestation(True, False)
+```
+
+You can set command line parameters to specify different configurations.
+
+For example:
+```shell
+shelter remoteattestation --ip 127.0.0.1 --port 1234
+shelter remoteattestation --tls wolfssl
+shelter remoteattestation --tls wolfssl_sgx
+shelter remoteattestation --verifer sgx_ecdsa
+shelter remoteattestation --verifer sgx_la
+shelter remoteattestation --crypto wolfcrypt
 ```
 
 3. verify workload integrity by launch measurement.
