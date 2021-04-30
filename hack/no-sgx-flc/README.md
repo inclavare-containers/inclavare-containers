@@ -34,5 +34,5 @@ Note: For Occlum users, [Occlum](https://github.com/occlum/occlum) hosts a [modi
 
 If you are [isgx](https://github.com/intel/linux-sgx-driver) users,
 and don't want to make the efforts on software rebuild, please
-apply [this patch](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/Workaround-the-conflict-between-isgx-out-of-tree-and.patch) to [isgx driver 2.11](https://github.com/intel/linux-sgx-driver/tree/sgx_driver_2.11)
-and then reload the modified isgx driver to work around the issue.
+use the isgx driver newer than 2.11, or manually apply [this patch](https://github.com/intel/linux-sgx-driver/pull/133/commits/ed2c256929962db1a8805db53bed09bb8f2f4de3) then
+reload the modified isgx driver to work around the issue.
