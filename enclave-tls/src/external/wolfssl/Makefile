@@ -76,13 +76,6 @@ clean:
 install: all
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Libdir)
 	$(INSTALL) -m 0755 $(Build_Libdir)/libwolfssl* $(Enclave_Tls_Libdir)
-	dest=$(Enclave_Tls_Root)/include/wolfssl; \
-	$(INSTALL) -d -m 0755 $$dest; \
-	$(INSTALL) -m 0444 $(Build_Incdir)/wolfssl/*.h $$dest; \
-	$(INSTALL) -d -m 0755 $$dest/wolfcrypt; \
-	$(INSTALL) -m 0444 $(Build_Incdir)/wolfssl/wolfcrypt/*.h $$dest/wolfcrypt; \
-	$(INSTALL) -d -m 0755 $$dest/openssl; \
-	$(INSTALL) -m 0444 $(Build_Incdir)/wolfssl/openssl/*.h $$dest/openssl
 
 uninstall:
 	@rm -rf "$(Enclave_Tls_Libdir)"/libwolfssl*
