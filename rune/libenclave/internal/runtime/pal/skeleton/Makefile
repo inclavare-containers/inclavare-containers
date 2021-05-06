@@ -135,7 +135,8 @@ EXTRA_CLEAN := \
 	$(OUTPUT)/liberpal-skeleton*.o \
 	$(OUTPUT)/tls-server.o \
 	$(OUTPUT)/liberpal-skeleton*.so \
-	$(OUTPUT)/signing_key.pem
+	$(OUTPUT)/signing_key.pem \
+   	$(OUTPUT)/aesm.pb-c*     
 
 DIRS_TO_CLEAN := ../kvmtool
 ifdef TLS_SERVER
