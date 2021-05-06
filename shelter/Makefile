@@ -1,6 +1,6 @@
 CURRENTDIR := $(shell readlink -f .)
 TOPDIR := $(shell readlink -f ..)
-SGX_SDK := /opt/intel/sgxsdk
+SGX_SDK ?= /opt/intel/sgxsdk
 SGX_DCAP_INC ?=
 INCDIR ?=
 DEBUG ?= 0
