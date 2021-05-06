@@ -10,6 +10,7 @@ Enclave_Tls_Root ?= /opt/enclave-tls
 Enclave_Tls_Libdir := $(Enclave_Tls_Root)/lib
 Enclave_Tls_Incdir := $(Enclave_Tls_Root)/include
 TLS_SERVER ?=
+PROTOBUF_VERSION := $(shell protoc-c --version | grep libprotoc | awk '{print $$2}' | awk -F '.' '{print $$1}')
 
 HOST_CFLAGS := -Wall -Werror -g -fPIC -z noexecstack \
 	       -Wno-unused-const-variable -std=gnu11 -I../kvmtool/include \
@@ -90,8 +91,17 @@ $(OUTPUT)/aesm.o: aesm.c
 $(OUTPUT)/aesm.pb-c.o: aesm.pb-c.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
-$(OUTPUT)/aesm.pb-c.c: aesm.proto
-	@protoc-c --c_out=. $<
+$(OUTPUT)/aesm.pb-c.c: aesm.proto2 aesm.proto3
+ifeq ($(PROTOBUF_VERSION), 2)
+	@cp aesm.proto2 aesm.proto
+else ifeq ($(PROTOBUF_VERSION), 3)	
+	@cp aesm.proto3 aesm.proto
+else  
+	@echo "Unsupported protobuf version"
+endif
+	
+	@protoc-c --c_out=. aesm.proto
+	@rm aesm.proto
 
 $(OUTPUT)/sgx_call.o: sgx_call.S
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
