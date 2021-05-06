@@ -229,7 +229,7 @@ Note that only liberpal-skeleton-v3.so supports `rune attest` command.
 
 ### TLS Server
 
-You can refer to [this guide](running_skeleton_with_tls_server.md) to run skelton with tls server.
+You can refer to [this guide](intergrate_skeleton_with_enclave_tls.md) to run skeleton with tls server.
 
 ## Enclave metadata
 
