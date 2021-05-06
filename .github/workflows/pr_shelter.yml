@@ -8,6 +8,8 @@ on:
 env:
   SGX_UBUNTU_VERSION: 2.13.100.4-bionic1
   DCAP_UBUNTU_VERSION: 1.10.100.4-bionic1
+  SGX_CENTOS_VERSION: 2.13.100.4
+  DCAP_CENTOS_VERSION: 1.10.100.4
 
 jobs:
   rune_shelter:
@@ -89,7 +91,7 @@ jobs:
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-ql-devel-${{ env.DCAP_CENTOS_VERSION }} libsgx-uae-service-${{ env.SGX_CENTOS_VERSION }};
         rm -f sgx_rpm_local_repo.tgz;
         mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 

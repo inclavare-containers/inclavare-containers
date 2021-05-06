@@ -8,6 +8,8 @@ on:
 env:
   SGX_UBUNTU_VERSION: 2.13.100.4-bionic1
   DCAP_UBUNTU_VERSION: 1.10.100.4-bionic1
+  SGX_CENTOS_VERSION: 2.13.100.4
+  DCAP_CENTOS_VERSION: 1.10.100.4
 
 jobs:
   rune_skeleton:
@@ -122,7 +124,7 @@ jobs:
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-default-qply-${{ env.DCAP_CENTOS_VERSION }};
         rm -f sgx_rpm_local_repo.tgz;
         cd /root/inclavare-containers/${{ matrix.tag }};
         rpm -ivh *.rpm'
@@ -149,10 +151,15 @@ jobs:
     - name: Install sgx1 extra ubuntu dependency
       if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: |
-        docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid=${{ env.DCAP_UBUNTU_VERSION }}"
+        docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid=${{ env.SGX_UBUNTU_VERSION }}"
 
-    - name: Install sgx1 extra centos and alinux dependency
-      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'centos') || contains(matrix.tag, 'alinux2')) }}
+    - name: Install sgx1 extra centos dependency
+      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'centos')) }}
+      run: |
+        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid-${{ env.SGX_CENTOS_VERSION }}"
+
+    - name: Install sgx1 extra alinux dependency
+      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'alinux2')) }}
       run: |
         docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
 

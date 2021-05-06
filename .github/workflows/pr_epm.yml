@@ -8,6 +8,8 @@ on:
 env:
   SGX_UBUNTU_VERSION: 2.13.100.4-bionic1
   DCAP_UBUNTU_VERSION: 1.10.100.4-bionic1
+  SGX_CENTOS_VERSION: 2.13.100.4
+  DCAP_CENTOS_VERSION: 1.10.100.4
 
 jobs:
   rune_skeleton:
@@ -145,7 +147,7 @@ jobs:
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-default-qpl-${{ env.DCAP_CENTOS_VERSION }};
         rm -f sgx_rpm_local_repo.tgz;
         cd /root/inclavare-containers/${{ matrix.tag }};
         rpm -ivh *.rpm'
