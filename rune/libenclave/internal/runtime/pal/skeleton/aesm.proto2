@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+// Refer to https://github.com/intel/linux-sgx/blob/master/psw/ae/aesm_service/source/core/ipc/messages.proto
+
+message AesmServiceRequest {
+
+    message GetLaunchToken {
+        required bytes enclavehash = 1;
+        required bytes modulus     = 2;
+        required bytes attributes  = 3;
+        required uint32 timeout    = 9;
+    }
+
+    optional GetLaunchToken getLaunchToken = 3;
+}
+
+message AesmServiceResponse {
+
+    message GetLaunchToken {
+        required uint32 error = 1;
+        required bytes token  = 2;
+    }
+
+    optional GetLaunchToken getLaunchToken = 3;
+}
