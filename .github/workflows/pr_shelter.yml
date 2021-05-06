@@ -5,6 +5,10 @@ on:
   pull_request_target:
     types: labeled
 
+env:
+  SGX_UBUNTU_VERSION: 2.13.100.4-bionic1
+  DCAP_UBUNTU_VERSION: 1.10.100.4-bionic1
+
 jobs:
   rune_shelter:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
@@ -73,7 +77,7 @@ jobs:
       run: |
         docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget gnupg;
         echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
-        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service;
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify=${{ env.DCAP_UBUNTU_VERSION }} libsgx-dcap-default-qpl=${{ env.DCAP_UBUNTU_VERSION }} libsgx-dcap-ql-dev=${{ env.DCAP_UBUNTU_VERSION }} libsgx-uae-service=${{ env.SGX_UBUNTU_VERSION }};
         cp -rf /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 
     - name: Install centos dependency
