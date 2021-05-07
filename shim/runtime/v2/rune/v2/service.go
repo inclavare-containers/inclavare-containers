@@ -50,7 +50,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	ptypes "github.com/gogo/protobuf/types"
-	"github.com/inclavare-containers/shim/runtime/v2/rune"
 	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
@@ -320,22 +319,27 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	if err != nil {
 		return nil, err
 	}
-	if carrierKind != rune.Skeleton {
-		timeStart = time.Now()
-		carr, err := s.carrierMain(r)
-		logrus.Debugf("Create: carrierMain time cost: %d", (time.Now().Sub(timeStart))/time.Second)
-		if err != nil {
-			return nil, err
-		}
-		logrus.Infof("Carrier: %v", carr.Name())
+
+	timeStart = time.Now()
+	carr, err := s.carrierMain(r)
+	logrus.Debugf("Create: carrierMain time cost: %d", (time.Now().Sub(timeStart))/time.Second)
+	defer func() {
+		carr.Cleanup(err)
+	}()
+	if err != nil {
+		return nil, err
 	}
+	logrus.Infof("Carrier: %v", carr.Name())
 
 	data, _ := json.Marshal(r)
 	logrus.Infof("CreateTaskRequest: %s, Carrier: %v", string(data), carrierKind)
 
 	timeStart = time.Now()
 	container, err := runc.NewContainer(ctx, s.platform, r)
-
+	if err != nil {
+		logrus.Errorf("rune Create NewContainer error: %++v", err)
+		return nil, err
+	}
 	//FIXME debug
 	/*if carrierKind == "occlum" {
 		if err != nil {

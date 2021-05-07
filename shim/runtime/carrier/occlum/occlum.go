@@ -321,9 +321,17 @@ func (o *occlum) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carr
 }
 
 // Cleanup impl Carrier.
-func (o *occlum) Cleanup() error {
+func (o *occlum) Cleanup(err error) error {
 	timeStart := time.Now()
 	if o.bundleCacheConfig.epmConnection != nil {
+		if err != nil {
+			cacheId := o.bundleCacheConfig.cacheIDMap[types.BundleCache0PoolType]
+			if cacheId != "" {
+				if err := o.deleteBundleCache(types.BundleCache0PoolType, cacheId); err != nil {
+					logrus.Errorf("Cleanup: %v", err)
+				}
+			}
+		}
 		o.bundleCacheConfig.epmConnection.Close()
 	}
 	logrus.Debugf("Cleanup: total time cost: %d", (time.Now().Sub(timeStart))/time.Second)

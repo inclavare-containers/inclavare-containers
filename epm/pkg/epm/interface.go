@@ -3,6 +3,7 @@ package epm
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -103,7 +104,8 @@ func (d *DefaultEnclavePool) DeleteCache(ID string, subtype string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.RemoveAll(cache.SavePath); err != nil {
+	parentPath := filepath.Dir(filepath.Clean(cache.SavePath))
+	if err := os.RemoveAll(parentPath); err != nil {
 		return err
 	}
 	return d.CacheMetadata.DeleteCache(d.GetPoolType(), ID)

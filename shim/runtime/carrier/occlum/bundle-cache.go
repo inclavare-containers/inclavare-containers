@@ -132,11 +132,23 @@ func (o *occlum) saveBundleCacheByCacheId(typ types.BundleCachePoolType, cacheId
 		Cache:      cache,
 		SourcePath: sourcePath,
 	})
-	if err != nil {
-		return nil, err
-	}
-	if !resp.Ok {
-		return nil, fmt.Errorf("save bundle cache failed. type: %s", typ)
+	if err != nil || !resp.Ok {
+		return nil, fmt.Errorf("save bundle cache failed. error: %v, type: %s, cache: %v", err, typ, cache)
 	}
 	return cache, nil
+}
+
+func (o *occlum) deleteBundleCache(typ types.BundleCachePoolType, cacheId string) error {
+	if o.bundleCacheConfig.epmConnection == nil {
+		return fmt.Errorf("epm client is not exit")
+	}
+	cli := epm_api.NewEnclavePoolManagerClient(o.bundleCacheConfig.epmConnection)
+	resp, err := cli.DeleteCache(o.context, &epm_api.DeleteCacheRequest{
+		Type: string(typ),
+		ID:   cacheId,
+	})
+	if err != nil || !resp.Ok {
+		return fmt.Errorf("delete bundle cache failed. error: %v,  type: %s, id: %s", err, typ, cacheId)
+	}
+	return nil
 }

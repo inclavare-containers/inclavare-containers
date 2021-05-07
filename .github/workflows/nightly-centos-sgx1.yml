@@ -11,7 +11,7 @@ env:
     WORK_DIR: /root/pkgs
     HOME: /root
     OCCLUM_VERSION: 0.21.0
-    kubernetes_version: 1.16.9
+    kubernetes_version: 1.18.8
     nap_time: 60
 
 jobs:
@@ -70,11 +70,11 @@ jobs:
         [occlum]
         name=occlum
         enabled=1
-        baseurl=https://occlum.io/occlum-package-repos/rpm-repo/
+        baseurl=http://occlum.io/occlum-package-repos/rpm-repo/
         gpgcheck=1
         repo_gpgcheck=1
-        gpgkey=https://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign
-        gpgcakey=https://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+        gpgkey=http://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign
+        gpgcakey=http://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
         EOF
 
         yum install -y occlum-pal-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
@@ -190,7 +190,7 @@ jobs:
           echo y | kubeadm reset
         fi
         sudo systemctl enable kubelet.service
-        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v1.16.9 --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
 
         mkdir -p $HOME/.kube
         sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
