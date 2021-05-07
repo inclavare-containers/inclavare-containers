@@ -15,6 +15,7 @@ URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 
 BuildRequires: openssl-devel
+AutoReq: no
 ExclusiveArch: x86_64
 
 %description
