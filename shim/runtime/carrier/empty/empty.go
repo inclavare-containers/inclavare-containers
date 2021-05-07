@@ -42,6 +42,6 @@ func (c *empty) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *carri
 }
 
 // Cleanup impl Carrier.
-func (c *empty) Cleanup() error {
+func (c *empty) Cleanup(err error) error {
 	return nil
 }

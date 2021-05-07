@@ -13,7 +13,7 @@ env:
   OCCLUM_VERSION: 0.21.0
   SGX_VERSION: 2.13.100.4-bionic1
   DCAP_VERSION: 1.10.100.4-bionic1
-  kubernetes_version: 1.16.9
+  kubernetes_version: 1.18.8
   nap_time: 60
 
 jobs:
@@ -134,8 +134,8 @@ jobs:
           sudo apt-get install -y libsgx-uae-service
           popd
 
-          echo 'deb [arch=amd64] https://occlum.io/occlum-package-repos/debian bionic main' | tee /etc/apt/sources.list.d/occlum.list;
-          wget -qO - https://occlum.io/occlum-package-repos/debian/public.key | apt-key add -
+          echo 'deb [arch=amd64] http://occlum.io/occlum-package-repos/debian bionic main' | tee /etc/apt/sources.list.d/occlum.list;
+          wget -qO - http://occlum.io/occlum-package-repos/debian/public.key | apt-key add -
           sudo apt-get update
           sudo apt-get install -y occlum-pal=${{ env.OCCLUM_VERSION }}-1
           sudo apt-get install -y occlum-runtime=${{ env.OCCLUM_VERSION }}-1
@@ -250,7 +250,7 @@ jobs:
             kubeadm reset -f
           fi
           sudo systemctl enable kubelet.service
-          kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v1.16.9 --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+          kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
 
           mkdir -p $HOME/.kube
           sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config

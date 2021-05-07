@@ -52,7 +52,7 @@ func (c *graphene) CascadeEnclaveSignature(req *task.CreateTaskRequest, args *ca
 }
 
 // Cleanup impl Carrier.
-func (c *graphene) Cleanup() error {
+func (c *graphene) Cleanup(err error) error {
 	//TODO
 	return errors.New("graphene Cleanup unimplemented")
 }
