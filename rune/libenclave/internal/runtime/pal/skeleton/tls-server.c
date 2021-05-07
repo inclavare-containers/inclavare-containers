@@ -14,7 +14,7 @@
 #include "tls-server.h"
 
 #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
-#define ENCLAVE_TLS_HELLO "Hello and welcome to enclave-tls!"
+#define ENCLAVE_TLS_HELLO "Hello and welcome to Enclave TLS!\n"
 
 extern sgx_status_t ecall_generate_evidence(sgx_enclave_id_t eid, sgx_status_t *retval, uint8_t *hash, sgx_report_t *report);
 
