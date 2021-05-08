@@ -12,7 +12,7 @@ The verifying process is as below:
 
 ## Prerequisite
 
-Go 1.13.x or above.
+Go 1.14.x or above.
 
 ## Build
 
