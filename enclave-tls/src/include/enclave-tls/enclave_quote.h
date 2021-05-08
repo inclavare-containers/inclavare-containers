@@ -42,7 +42,7 @@ typedef struct {
 						uint8_t *hash);
 	enclave_quote_err_t (*verify_evidence)(enclave_quote_ctx_t *ctx,
 					       attestation_evidence_t *evidence,
-					       uint8_t *hash);
+					       uint8_t *hash, unsigned int hash_len);
 	enclave_quote_err_t (*collect_collateral)(enclave_quote_ctx_t *ctx);
 	enclave_quote_err_t (*cleanup)(enclave_quote_ctx_t *ctx);
 } enclave_quote_opts_t;

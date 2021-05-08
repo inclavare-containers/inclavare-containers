@@ -18,7 +18,8 @@ extern enclave_quote_err_t nullquote_collect_evidence(enclave_quote_ctx_t *,
 						      enclave_tls_cert_algo_t algo,
 						      uint8_t *);
 extern enclave_quote_err_t nullquote_verify_evidence(enclave_quote_ctx_t *,
-						     attestation_evidence_t *, uint8_t *);
+						     attestation_evidence_t *, uint8_t *,
+						     unsigned int hash_len);
 extern enclave_quote_err_t nullquote_cleanup(enclave_quote_ctx_t *);
 
 static enclave_quote_opts_t nullquote_opts = {

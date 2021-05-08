@@ -22,7 +22,7 @@
 
 enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
 					      attestation_evidence_t *evidence,
-					      uint8_t *hash)
+					      uint8_t *hash, unsigned int hash_len)
 {
 	ETLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
 
@@ -41,6 +41,12 @@ enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
 	uint32_t quote_size = 436 + pquote->signature_data_len;
 	ETLS_DEBUG("quote size is %d, quote signature_data_len is %d\n",
 		   quote_size, pquote->signature_data_len);
+
+	// First verify the hash value
+	if (memcmp(hash, pquote->report_body.report_data.d, hash_len) != 0) {
+		ETLS_ERR("Unmatched hash value in evidence\n");
+		return -ENCLAVE_QUOTE_ERR_INVALID;
+	}
 
 	/* 1 means trusted verify methond by QvE, 0 means verify by untructed QPL */
 	bool verify_by_qve = 0;
