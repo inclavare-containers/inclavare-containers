@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+BUILD_ROOT := $(CURDIR)/debian/inclavared
+BUILD_DIR := /usr/local/bin
+NAME := inclavared
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	make -C $(NAME)
+
+override_dh_auto_install:
+	install -d -p $(BUILD_ROOT)$(BUILD_DIR)
+	install -p -m 755 $(CURDIR)/$(NAME)/bin/$(NAME) $(BUILD_ROOT)$(BUILD_DIR)
+
+override_dh_usrlocal:
