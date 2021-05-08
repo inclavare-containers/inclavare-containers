@@ -34,7 +34,6 @@ brew install clang
 git clone https://github.com/alibaba/inclavare-containers.git
 cd inclavare-containers/
 export ROOT_DIR=`pwd`
-
 ```
 
 ### Based On Enclave-TLS
@@ -64,6 +63,9 @@ recv data from sockaddr1 and send to sockaddr2, and recv data from sockaddr2 and
 
 ```bash
 ${ROOT_DIR}/inclavared/bin/inclavared --listen <sockaddr1> --xfer <sockaddr2>
+
+# enable mutual for xfer stream
+${ROOT_DIR}/inclavared/bin/inclavared --listen <sockaddr1> --xfer <sockaddr2> --mutual
 ```
 
 * Run as client

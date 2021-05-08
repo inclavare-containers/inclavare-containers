@@ -59,20 +59,32 @@ impl DerefMut for EnclaveTls {
 impl EnclaveTls {
     fn new(server: bool,
             enclave_id: u64,
-            tls_type: &str,
-            attester_type: &str,
-            verifier_type: &str
+            tls_type: &Option<String>,
+            crypto: &Option<String>,
+            attester: &Option<String>,
+            verifier: &Option<String>,
+            mutual: bool
             ) -> Result<EnclaveTls, enclave_tls_err_t> {
         let mut conf: enclave_tls_conf_t = Default::default();
         conf.api_version = ENCLAVE_TLS_API_VERSION_DEFAULT;
         conf.log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
-        conf.tls_type[..tls_type.len()].copy_from_slice(tls_type.as_bytes());
-        conf.attester_type[..attester_type.len()].copy_from_slice(attester_type.as_bytes());
-        conf.verifier_type[..verifier_type.len()].copy_from_slice(verifier_type.as_bytes());
-        conf.crypto_type[.."wolfcrypt_sgx".len()].copy_from_slice("wolfcrypt_sgx".as_bytes());
+        if let Some(tls_type) = tls_type {
+            conf.tls_type[..tls_type.len()].copy_from_slice(tls_type.as_bytes());
+        }
+        if let Some(crypto) = crypto {
+            conf.crypto_type[..crypto.len()].copy_from_slice(crypto.as_bytes());
+        }
+        if let Some(attester) = attester {
+            conf.attester_type[..attester.len()].copy_from_slice(attester.as_bytes());
+        }
+        if let Some(verifier) = verifier {
+            conf.verifier_type[..verifier.len()].copy_from_slice(verifier.as_bytes());
+        }
         conf.cert_algo = ENCLAVE_TLS_CERT_ALGO_DEFAULT;
         conf.enclave_id = enclave_id;
-        conf.flags = ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
+        if mutual {
+            conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
+        }
         if server {
             conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
         }
