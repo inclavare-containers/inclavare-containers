@@ -200,3 +200,15 @@ cd /opt/enclave-tls/bin
 # run sgx_la remote attestation
 ./enclave-tls-client -a sgx_la -t wolfssl_sgx -c wolfcrypt_sgx
 ```
+
+## Run shelter
+
+[shelter](https://github.com/alibaba/inclavare-containers/blob/master/shelter/README.md) can also be used as an Enclave TLS client. After building and installing shelter, you can type the following commands to run shelter as an Enclave TLS client:
+
+```shell
+# run sgx_ecdsa remote attestation
+shelter remoteattestation --tls wolfssl_sgx --verifier sgx_ecdsa --crypto wolfcrypt_sgx
+
+# run sgx_la remote attestation
+shelter remoteattestation --tls wolfssl_sgx --verifier sgx_la --crypto wolfcrypt_sgx
+```
