@@ -101,7 +101,7 @@ else
 endif
 Enclave_Tls_Cflags := $(CFLAGS) -I$(Enclave_Tls_Incdir)
 
-LDFLAGS ?= -fPIC
+LDFLAGS ?=
 Enclave_Tls_Ldflags := \
   $(LDFLAGS) -shared -Bsymbolic -rpath=$(Enclave_Tls_Libdir) --enable-new-dtags
 
