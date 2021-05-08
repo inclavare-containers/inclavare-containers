@@ -124,7 +124,7 @@ jobs:
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-default-qply-${{ env.DCAP_CENTOS_VERSION }};
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-default-qpl-${{ env.DCAP_CENTOS_VERSION }};
         rm -f sgx_rpm_local_repo.tgz;
         cd /root/inclavare-containers/${{ matrix.tag }};
         rpm -ivh *.rpm'
