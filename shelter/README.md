@@ -78,7 +78,7 @@ shelter help
       --version, -v  print the version
 ```
 
-2. remote attestation for sgx-ra & sgx-la
+2. remote attestation for sgx-ra, sgx-la, and sgx-ecdsa
 
 ```shell
 OPTIONS:
@@ -98,8 +98,8 @@ For example:
 shelter remoteattestation --ip 127.0.0.1 --port 1234
 shelter remoteattestation --tls wolfssl
 shelter remoteattestation --tls wolfssl_sgx
-shelter remoteattestation --verifer sgx_ecdsa
-shelter remoteattestation --verifer sgx_la
+shelter remoteattestation --verifier sgx_ecdsa
+shelter remoteattestation --verifier sgx_la
 shelter remoteattestation --crypto wolfcrypt
 ```
 
