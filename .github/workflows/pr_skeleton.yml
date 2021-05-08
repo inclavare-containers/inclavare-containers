@@ -5,12 +5,6 @@ on:
   pull_request_target:
     types: labeled
 
-env:
-  SGX_UBUNTU_VERSION: 2.13.100.4-bionic1
-  DCAP_UBUNTU_VERSION: 1.10.100.4-bionic1
-  SGX_CENTOS_VERSION: 2.13.100.4
-  DCAP_CENTOS_VERSION: 1.10.100.4
-
 jobs:
   rune_skeleton:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
@@ -109,7 +103,7 @@ jobs:
         apt-get install -y libseccomp-dev libprotoc-dev binutils-dev autoconf libtool g++ pkg-config protobuf-compiler;
         wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz && tar -zxvf v1.3.1.tar.gz && cd protobuf-c-1.3.1 && ./autogen.sh && ./configure && make && make install;
         echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -; 
-        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify=${{ env.DCAP_UBUNTU_VERSION }} libsgx-dcap-default-qpl=${{ env.DCAP_UBUNTU_VERSION }};
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
         cd /root/inclavare-containers/${{ matrix.tag }};
         dpkg -i rune*.deb;
         dpkg -i shim*.deb;
@@ -124,7 +118,7 @@ jobs:
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-default-qpl-${{ env.DCAP_CENTOS_VERSION }};
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
         rm -f sgx_rpm_local_repo.tgz;
         cd /root/inclavare-containers/${{ matrix.tag }};
         rpm -ivh *.rpm'
@@ -151,12 +145,12 @@ jobs:
     - name: Install sgx1 extra ubuntu dependency
       if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
       run: |
-        docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid=${{ env.SGX_UBUNTU_VERSION }}"
+        docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid"
 
     - name: Install sgx1 extra centos dependency
       if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'centos')) }}
       run: |
-        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid-${{ env.SGX_CENTOS_VERSION }}"
+        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
 
     - name: Install sgx1 extra alinux dependency
       if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'alinux2')) }}

@@ -5,12 +5,6 @@ on:
   pull_request_target:
     types: labeled
 
-env:
-  SGX_UBUNTU_VERSION: 2.13.100.4-bionic1
-  DCAP_UBUNTU_VERSION: 1.10.100.4-bionic1
-  SGX_CENTOS_VERSION: 2.13.100.4
-  DCAP_CENTOS_VERSION: 1.10.100.4
-
 jobs:
   rune_shelter:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
@@ -79,7 +73,7 @@ jobs:
       run: |
         docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget gnupg;
         echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
-        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify=${{ env.DCAP_UBUNTU_VERSION }} libsgx-dcap-default-qpl=${{ env.DCAP_UBUNTU_VERSION }} libsgx-dcap-ql-dev=${{ env.DCAP_UBUNTU_VERSION }} libsgx-uae-service=${{ env.SGX_UBUNTU_VERSION }};
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service;
         cp -rf /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 
     - name: Install centos dependency
@@ -91,7 +85,7 @@ jobs:
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl-${{ env.DCAP_CENTOS_VERSION }} libsgx-dcap-ql-devel-${{ env.DCAP_CENTOS_VERSION }} libsgx-uae-service-${{ env.SGX_CENTOS_VERSION }};
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
         rm -f sgx_rpm_local_repo.tgz;
         mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
 
