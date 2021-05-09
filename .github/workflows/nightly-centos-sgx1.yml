@@ -410,6 +410,50 @@ jobs:
 
         timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
 
+    - name: Run off-cloud signed pod
+      run: |
+        cp /etc/inclavare-containers/config.toml /etc/inclavare-containers/config.toml.bak
+        sed -i 's/server/client/g' /etc/inclavare-containers/config.toml
+        cat <<- EOF >$WORK_DIR/helloworld_offcloud.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: helloworld-offcloud
+          name: helloworld-offcloud
+          namespace: default
+        spec:
+          restartPolicy: Always
+          containers:
+            - command:
+              - /bin/hello_world
+              env:
+                - name: ENCLAVE_TYPE
+                  value: intelSgx
+                - name: RUNE_CARRIER
+                  value: occlum
+                - name: ENCLAVE_RUNTIME_LOGLEVEL
+                  value: info
+                - name: ENCLAVE_RUNTIME_PATH
+                  value: /opt/occlum/build/lib/libocclum-pal.so.${OCCLUM_VERSION}
+                - name: ENCLAVE_RUNTIME_ARGS
+                  value: /run/rune/occlum_instance
+              image: docker.io/inclavarecontainers/occlum-helloworld-client:${OCCLUM_VERSION}
+              imagePullPolicy: IfNotPresent
+              name: hello-world-client
+          dnsPolicy: ClusterFirst
+        EOF
+        kubectl apply -f $WORK_DIR/helloworld_offcloud.yaml
+        sleep $nap_time
+        while true; do
+          count=$(kubectl get pod helloworld-offcloud | grep "Running" | grep -c "1/1")
+          if [ $count -eq 1 ]; then
+            break
+          fi
+          sleep 5
+        done
+        timeout 3 kubectl logs -f helloworld-offcloud  | grep "Hello World" || true
+
     - name: Clear the environment
       run: |
         sudo kubectl delete pod --all || true
