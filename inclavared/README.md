@@ -39,6 +39,12 @@ export ROOT_DIR=`pwd`
 
 ### Based On Enclave-TLS
 
+You can refer to [this guide](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls#building) to build and install Enclave-TLS, and then
+
+```shell
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/enclave-tls/lib
+```
+
 #### Build
 
 * inclavared
