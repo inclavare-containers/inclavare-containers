@@ -1,7 +1,7 @@
 package remoteattestation
 
 /*
-#cgo CFLAGS: -I/opt/enclave-tls/include
+#cgo CFLAGS: -I/opt/enclave-tls/include -std=gnu11
 #cgo LDFLAGS: -L/opt/enclave-tls/lib -lenclave_tls -Wl,-rpath,/opt/enclave-tls/lib -lm
 #include <enclave-tls/api.h>
 extern int ra_tls_echo(int, enclave_tls_log_level_t, char *, char *, char *, char *, bool);
