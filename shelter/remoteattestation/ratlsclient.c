@@ -8,30 +8,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <sgx_urts.h>
-#include <sgx_quote.h>
 #include <enclave-tls/api.h>
-
-#define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
-
-static sgx_enclave_id_t load_enclave(void)
-{
-	sgx_launch_token_t t;
-
-	memset(t, 0, sizeof(t));
-
-	sgx_enclave_id_t eid;
-	int updated = 0;
-	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
-	if (ret != SGX_SUCCESS) {
-		fprintf(stderr, "Failed to create Enclave: error %d\n", ret);
-		return -1;
-	}
-
-	printf("Success to load enclave id %ld\n", eid);
-
-	return eid;
-}
 
 int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 		char *attester_type, char *verifier_type, char *tls_type,
@@ -45,7 +22,6 @@ int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto);
-	conf.enclave_id = load_enclave();
 
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
