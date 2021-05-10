@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <enclave-tls/api.h>
 
+#define MRENCLAVE_SIZE 32
+
 int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 		char *attester_type, char *verifier_type, char *tls_type,
 		char *crypto, bool mutual)
@@ -47,20 +49,40 @@ int ra_tls_echo(int sockfd, enclave_tls_log_level_t log_level,
 		goto err;
 	}
 
-	char buff[256];
-	memset(buff, 0, sizeof(buff));
-	len = sizeof(buff) - 1;
-	ret = enclave_tls_receive(handle, buff, &len);
+	char buf[256];
+	memset(buf, 0, sizeof(buf));
+	len = sizeof(buf) - 1;
+	ret = enclave_tls_receive(handle, buf, &len);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		fprintf(stderr, "ERROR: failed to receive.\n");
 		goto err;
 	}
 
-	printf("Server:\n%s\n", buff);
+	if (len >= sizeof(buf))
+		len = sizeof(buf) - 1;
+	buf[len] = '\0';
+	if (len >= 2 * MRENCLAVE_SIZE) {
+		printf("Server's SGX identity:\n");
+		printf("  . MRENCLAVE = ");
+		for (int i = 0; i < 32; ++i)
+			printf("%02x", (uint8_t)buf[i]);
+		printf("\n");
+		printf("  . MRSIGNER  = ");
+		for (int i = 32; i < 64; ++i)
+			printf("%02x", (uint8_t)buf[i]);
+		printf("\n");
+		memcpy(buf, buf + 2 * MRENCLAVE_SIZE, len - 2 * MRENCLAVE_SIZE);
+		buf[len - 2 * MRENCLAVE_SIZE] = '\0';
+		printf("Server:\n%s\n", buf);
+	} else {
+		printf("Server:\n%s\n", buf);
+	}
 
 	ret = enclave_tls_cleanup(handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE)
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		fprintf(stderr, "ERROR: failed to cleanup.\n");
+		goto err;
+	}
 
 	return 0;
 err:
