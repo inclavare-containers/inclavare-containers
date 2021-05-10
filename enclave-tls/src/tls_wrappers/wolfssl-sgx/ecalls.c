@@ -15,6 +15,8 @@
 #include "../wolfssl/cleanup.c"
 #include "../wolfssl/oid.c"
 
+#define POSSIBLE_UNUSED __attribute__((unused))
+
 tls_wrapper_err_t ecall_wolfssl_pre_init(void)
 {
 	return wolfssl_pre_init();
@@ -63,7 +65,7 @@ tls_wrapper_err_t ecall_wolfssl_cleanup(tls_wrapper_ctx_t *ctx)
 size_t recv(int sockfd, void *buf, size_t len, int flags)
 {
 	size_t ret;
-	int sgxStatus = ocall_recv(&ret, sockfd, buf, len, flags);
+	sgx_status_t POSSIBLE_UNUSED sgxStatus = ocall_recv(&ret, sockfd, buf, len, flags);
 	assert(sgxStatus == SGX_SUCCESS);
 
 	return ret;
@@ -72,7 +74,7 @@ size_t recv(int sockfd, void *buf, size_t len, int flags)
 size_t send(int sockfd, const void *buf, size_t len, int flags)
 {
 	size_t ret;
-	int sgxStatus = ocall_send(&ret, sockfd, buf, len, flags);
+	sgx_status_t POSSIBLE_UNUSED sgxStatus = ocall_send(&ret, sockfd, buf, len, flags);
 	assert(sgxStatus == SGX_SUCCESS);
 
 	return ret;
