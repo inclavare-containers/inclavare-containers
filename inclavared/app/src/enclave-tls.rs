@@ -72,8 +72,9 @@ impl EnclaveTls {
         conf.crypto_type[.."wolfcrypt_sgx".len()].copy_from_slice("wolfcrypt_sgx".as_bytes());
         conf.cert_algo = ENCLAVE_TLS_CERT_ALGO_DEFAULT;
         conf.enclave_id = enclave_id;
+        conf.flags = ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
         if server {
-            conf.flags = ENCLAVE_TLS_CONF_FLAGS_SERVER;
+            conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
         }
 
         let mut handle: enclave_tls_handle = unsafe { std::mem::zeroed() };
