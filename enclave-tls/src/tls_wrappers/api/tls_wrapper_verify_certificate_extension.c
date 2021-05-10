@@ -12,7 +12,7 @@
 
 tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tls_ctx,
 							   attestation_evidence_t *evidence,
-							   uint8_t *hash)
+							   uint8_t *hash, unsigned int hash_len)
 {
 	ETLS_DEBUG("tls_wrapper_verify_certificate_extension() called with evidence type: '%s'\n", evidence->type);
 
@@ -29,7 +29,7 @@ tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tl
 		//quote_ctx->quote_private = tls_ctx->tls_private;
 		enclave_quote_err_t err =
 			quote_ctx->opts->verify_evidence(quote_ctx, evidence,
-							 hash);
+							 hash, hash_len);
 		if (err != ENCLAVE_QUOTE_ERR_NONE) {
 			ETLS_ERR("failed to verify evidence %#x\n", err);
 			return err;

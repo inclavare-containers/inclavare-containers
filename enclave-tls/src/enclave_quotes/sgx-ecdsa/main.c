@@ -19,7 +19,8 @@ extern enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 						      uint8_t *hash);
 extern enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
 						     attestation_evidence_t *evidence,
-						     uint8_t *hash);
+						     uint8_t *hash,
+						     unsigned int hash_len);
 extern enclave_quote_err_t sgx_ecdsa_cleanup(enclave_quote_ctx_t *ctx);
 
 static enclave_quote_opts_t sgx_ecdsa_opts = {

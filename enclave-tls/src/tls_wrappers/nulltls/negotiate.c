@@ -23,7 +23,7 @@ tls_wrapper_err_t nulltls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 		strncpy(evidence.type, "nulltls", sizeof(evidence.type));
 
 		err = tls_wrapper_verify_certificate_extension(ctx, &evidence,
-							       hash);
+							       hash, SHA256_HASH_SIZE);
 		if (err != TLS_WRAPPER_ERR_NONE) {
 			ETLS_ERR("ERROR: failed to verify certificate extension\n");
 			return err;

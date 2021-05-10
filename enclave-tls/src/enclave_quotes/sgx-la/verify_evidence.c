@@ -14,7 +14,7 @@
 /* Refer to explanation in sgx_la_collect_evidence */
 enclave_quote_err_t sgx_la_verify_evidence(enclave_quote_ctx_t *ctx,
 					   attestation_evidence_t *evidence,
-					   uint8_t *hash)
+					   uint8_t *hash, unsigned int hash_len)
 {
 	uint32_t quote_size = 0;
 	unsigned char quote[8192];
@@ -22,6 +22,14 @@ enclave_quote_err_t sgx_la_verify_evidence(enclave_quote_ctx_t *ctx,
 	quote3_error_t qe3_ret = SGX_QL_SUCCESS;
 
 	ETLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
+
+	// First verify hash value
+	sgx_report_t *lreport = (sgx_report_t *)evidence->la.report;
+
+	if (memcmp(hash, lreport->body.report_data.d, hash_len) != 0) {
+		ETLS_ERR("Unmatched hash value in evidence\n");
+		return -ENCLAVE_QUOTE_ERR_INVALID;
+	}
 
 	qe3_ret = sgx_qe_get_target_info(&qe_target_info);
 	if (SGX_QL_SUCCESS != qe3_ret) {

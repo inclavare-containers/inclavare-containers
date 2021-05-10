@@ -8,7 +8,7 @@
 
 enclave_quote_err_t nullquote_verify_evidence(enclave_quote_ctx_t *ctx,
 					      attestation_evidence_t *evidence,
-					      uint8_t *hash)
+					      uint8_t *hash, unsigned int hash_len)
 {
 	ETLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
 

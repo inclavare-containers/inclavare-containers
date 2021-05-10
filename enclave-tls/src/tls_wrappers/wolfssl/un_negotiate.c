@@ -241,7 +241,7 @@ int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store)
 		return 0;
 	}
 
-	tls_wrapper_err_t err = tls_wrapper_verify_certificate_extension(tls_ctx, &evidence, hash);
+	tls_wrapper_err_t err = tls_wrapper_verify_certificate_extension(tls_ctx, &evidence, hash, hash_size);
 	if (err != TLS_WRAPPER_ERR_NONE) {
 		ETLS_ERR("failed to verify certificate extension %#x\n", err);
 		return 0;

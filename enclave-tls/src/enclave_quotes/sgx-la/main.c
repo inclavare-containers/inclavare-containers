@@ -17,7 +17,8 @@ extern enclave_quote_err_t sgx_la_collect_evidence(enclave_quote_ctx_t *,
 						   uint8_t *);
 extern enclave_quote_err_t sgx_la_verify_evidence(enclave_quote_ctx_t *,
 						  attestation_evidence_t *,
-						  uint8_t *);
+						  uint8_t *,
+						  unsigned int hash_len);
 extern enclave_quote_err_t sgx_la_cleanup(enclave_quote_ctx_t *);
 
 static enclave_quote_opts_t sgx_la_opts = {
