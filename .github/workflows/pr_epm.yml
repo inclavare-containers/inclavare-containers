@@ -5,6 +5,9 @@ on:
   pull_request_target:
     types: labeled
 
+env:
+    ALINUX2_PROTOBUF_C_VERSION: 1.0.2
+
 jobs:
   rune_skeleton:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
@@ -148,18 +151,21 @@ jobs:
 
     - name: Install alinux dependency
       if: ${{ contains(matrix.tag, 'alinux') }}
-      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+      run: |
+        docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
          yum install -y alinux-release-experimentals;
-         yum install -y yum-utils wget tar gcc iptables protobuf-c libseccomp-devel;
-         wget -c https://mirrors.openanolis.org/inclavare-containers/alinux2/sgx_rpm_local_repo.tar.gz;
-         tar xzf sgx_rpm_local_repo.tar.gz;
-         yum-config-manager --add-repo file:/root/inclavare-containers/${{ matrix.tag }}/sgx_rpm_local_repo;
+         yum install -y yum-utils wget tar gcc iptables protobuf-c-${{ env.ALINUX2_PROTOBUF_C_VERSION }} libseccomp-devel;
+         yum-config-manager --add-repo https://enclave-cn-beijing.oss-cn-beijing.aliyuncs.com/repo/alinux/enclave-expr.repo;
          yum makecache;
          rm -f /var/lib/rpm/__db.*;
          rpm --rebuilddb;
          yum clean all;
-         yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
-         rm -f sgx_rpm_local_repo.tar.gz;
+         yum install --nogpgcheck -y libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \
+           libsgx-aesm-ecdsa-plugin libsgx-aesm-launch-plugin libsgx-aesm-pce-plugin libsgx-aesm-quote-ex-plugin \
+           libsgx-dcap-default-qpl libsgx-dcap-ql libsgx-dcap-quote-verify \
+           libsgx-enclave-common libsgx-launch libsgx-pce-logic libsgx-qe3-logic libsgx-quote-ex \
+           libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
+           sgx-aesm-service;
          cd /root/inclavare-containers/${{ matrix.tag }};
          rpm -ivh *.rpm'
 
