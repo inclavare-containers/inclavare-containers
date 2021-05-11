@@ -13,7 +13,7 @@ enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf,
 {
 	etls_core_context_t *ctx = (etls_core_context_t *)handle;
 
-	ETLS_DEBUG("handle %p, buf %p, buf_size %Zd\n", ctx, buf, buf_size);
+	ETLS_DEBUG("handle %p, buf %p, buf_size %p (%Zd-byte)\n", ctx, buf, buf_size, *buf_size);
 
 	if (!handle || !handle->tls_wrapper || !handle->tls_wrapper->opts ||
 	    !handle->tls_wrapper->opts->receive || !buf || !buf_size)
