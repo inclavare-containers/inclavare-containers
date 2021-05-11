@@ -258,7 +258,8 @@ jobs:
           sudo chown $(id -u):$(id -g) $HOME/.kube/config
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
-          wget -P $WORK_DIR http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/kube-flannel.yml
+          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
+            -P $WORK_DIR http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/kube-flannel.yml
           kubectl apply -f $WORK_DIR/kube-flannel.yml
 
       - name: Install runtimeclass

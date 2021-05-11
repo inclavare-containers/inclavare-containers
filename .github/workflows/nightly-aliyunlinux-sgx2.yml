@@ -16,7 +16,7 @@ env:
 
 jobs:
   k8s_aliyunlinux:
-    runs-on: [self-hosted, aliyunlinux, SGX2]
+    runs-on: [self-hosted, aliyunlinux]
     steps:
       - uses: actions/checkout@v1
 
@@ -235,7 +235,8 @@ jobs:
           sudo chown $(id -u):$(id -g) $HOME/.kube/config
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
-          wget -P $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
+          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
+            -P $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
           kubectl apply -f $WORK_DIR/kube-flannel.yml
 
       - name: Install runtimeclass
