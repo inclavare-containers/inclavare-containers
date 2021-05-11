@@ -147,7 +147,7 @@ jobs:
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
-        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_la -t wolfssl_sgx -c wolfcrypt' -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_la -t wolfssl_sgx -c wolfcrypt -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
 
     - name: Run enclave tls server for sgx_la
       if: ${{ contains(matrix.sgx, 'SGX2') }}
