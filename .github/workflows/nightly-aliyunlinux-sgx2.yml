@@ -1,4 +1,4 @@
-name: Nightly AliyunLinux SGX2
+name: Nightly Alibaba Cloud Linux2 SGX2
 
 # This is a manual trigger and schedule to run everyday at 2AM CST.
 on:
