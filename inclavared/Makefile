@@ -99,21 +99,21 @@ $(RUST_SDK):
 
 ######## EDL Objects ########
 
-$(Enclave_EDL_Files): $(SGX_EDGER8R) enclave/Enclave.edl
+$(Enclave_EDL_Files): $(RUST_SDK) $(SGX_EDGER8R) enclave/Enclave.edl
 	$(SGX_EDGER8R) --trusted enclave/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(RUST_SDK)/edl --trusted-dir enclave
 	$(SGX_EDGER8R) --untrusted enclave/Enclave.edl --search-path $(SGX_SDK)/include --search-path $(RUST_SDK)/edl --untrusted-dir app
 	@echo "GEN  =>  $(Enclave_EDL_Files)"
 
 ######## App Objects ########
 
-app/Enclave_u.o: $(Enclave_EDL_Files)
+app/Enclave_u.o: $(RUST_SDK) $(Enclave_EDL_Files)
 	@$(CC) $(App_C_Flags) -I$(RUST_SDK)/edl -c app/Enclave_u.c -o $@
 	@echo "CC   <=  $<"
 
 $(App_Enclave_u_Object): app/Enclave_u.o
 	$(AR) rcsD $@ $^
 
-$(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
+$(App_Name): $(RUST_SDK) $(App_Enclave_u_Object) $(App_SRC_Files)
 	@cd app && SGX_SDK=$(SGX_SDK) RUSTFLAGS="-C link-args=-Wl,-rpath=/opt/enclave-tls/lib,--enable-new-dtags" cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p bin
@@ -121,7 +121,7 @@ $(App_Name): $(App_Enclave_u_Object) $(App_SRC_Files)
 
 ######## Enclave Objects ########
 
-enclave/Enclave_t.o: $(Enclave_EDL_Files)
+enclave/Enclave_t.o: $(RUST_SDK) $(Enclave_EDL_Files)
 	@$(CC) $(RustEnclave_Compile_Flags) -I$(RUST_SDK)/edl -c enclave/Enclave_t.c -o $@
 	@echo "CC   <=  $<"
 
@@ -135,11 +135,25 @@ $(Signed_RustEnclave_Name): $(RustEnclave_Name)
 	@echo "SIGN =>  $@"
 
 .PHONY: enclave
-enclave:
+
+enclave: $(App_Name)
 	$(MAKE) -C ./enclave/
 
 
-.PHONY: clean
+.PHONY: install uninstall package clean
+
+PREFIX := $(DESTDIR)/usr/local
+BINDIR := $(PREFIX)/bin
+
+install: $(App_Name)
+	@install -D -m0755 $(App_Name) "$(BINDIR)"
+
+uninstall:
+	@rm -f $(BINDIR)/inclavared
+
+package:
+	$(MAKE) -C dist package
+
 clean:
 	@rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* app/*_u.* lib/*.a
 	@cd enclave && cargo clean && rm -f Cargo.lock
