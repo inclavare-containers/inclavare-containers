@@ -9,6 +9,7 @@ extern int ra_tls_echo(int, enclave_tls_log_level_t, char *, char *, char *, cha
 import "C"
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -24,22 +25,28 @@ const (
 func EnclaveTlsSetupTcpSock(ipaddress string, port string, logLevelInit string, attester string, verifier string, tls string, crypto string, mutual bool) error {
 	mediumstring := ":"
 	var bt bytes.Buffer
-	bt.WriteString(ipaddress)
-	bt.WriteString(mediumstring)
-	bt.WriteString(port)
-	addr := bt.String()
-	bt.Reset()
-	if addr == mediumstring {
+	if ipaddress != "" && port != "" {
+		bt.WriteString(ipaddress)
+		bt.WriteString(mediumstring)
+		bt.WriteString(port)
+	} else if ipaddress != "" && port == "" {
+		bt.WriteString(ipaddress)
+		bt.WriteString(mediumstring)
+		bt.WriteString(defaultPort)
+	} else if ipaddress == "" && port != "" {
+		bt.WriteString(defaultIpAddress)
+		bt.WriteString(mediumstring)
+		bt.WriteString(port)
+	} else if ipaddress == "" && port == "" {
 		bt.WriteString(defaultIpAddress)
 		bt.WriteString(mediumstring)
 		bt.WriteString(defaultPort)
-		addr = bt.String()
-		bt.Reset()
-		fmt.Printf("tcp sock address is %s\n", addr)
 	}
+	addr := bt.String()
+	bt.Reset()
+	fmt.Printf("tcp sock address is %s\n", addr)
 
 	conn, err := net.Dial("tcp", addr)
-	fmt.Printf("net dail tcp socket.\n")
 	if err != nil {
 		return fmt.Errorf("tcp connection failed with err %s.\n", err)
 	}
@@ -47,7 +54,7 @@ func EnclaveTlsSetupTcpSock(ipaddress string, port string, logLevelInit string, 
 
 	tcpConn, ok := conn.(*net.TCPConn)
 	if !ok {
-		return fmt.Errorf("casting to UnixConn failed.\n")
+		return fmt.Errorf("casting to tcp socket connection failed.\n")
 	}
 
 	sockfd, err := tcpConn.File()
@@ -68,7 +75,11 @@ func EnclaveTlsSetupTcpSock(ipaddress string, port string, logLevelInit string, 
 	} else if strings.EqualFold(logLevelInit, "off") {
 		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_NONE
 	}
-	C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto), C.bool(mutual))
+	ret := C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto), C.bool(mutual))
+	if ret != 0 {
+		var err error = errors.New("Remote attestation failed.\n")
+		return err
+	}
 	return nil
 
 }
@@ -88,7 +99,7 @@ func EnclaveTlsSetupUnixSock(address string, logLevelInit string, attester strin
 
 	unixConn, ok := conn.(*net.UnixConn)
 	if !ok {
-		return fmt.Errorf("casting to UnixConn failed.\n")
+		return fmt.Errorf("casting to unix socket connection failed.\n")
 	}
 
 	sockfd, err := unixConn.File()
@@ -109,6 +120,10 @@ func EnclaveTlsSetupUnixSock(address string, logLevelInit string, attester strin
 	} else if strings.EqualFold(logLevelInit, "off") {
 		logLevel = C.ENCLAVE_TLS_LOG_LEVEL_NONE
 	}
-	C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto), C.bool(mutual))
+	ret := C.ra_tls_echo(C.int(sockfd.Fd()), C.enclave_tls_log_level_t(logLevel), C.CString(attester), C.CString(verifier), C.CString(tls), C.CString(crypto), C.bool(mutual))
+	if ret != 0 {
+		var err error = errors.New("Remote attestation failed.\n")
+		return err
+	}
 	return nil
 }
