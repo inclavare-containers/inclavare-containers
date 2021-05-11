@@ -1,7 +1,7 @@
-From 7c15d5371cefd49e500571b61090598ccfd6c479 Mon Sep 17 00:00:00 2001
+From 0e878efc5addf4349eaadf92a05da6701658d011 Mon Sep 17 00:00:00 2001
 From: Liang Yang <liang3.yang@intel.com>
-Date: Tue, 11 May 2021 08:36:24 +0800
-Subject: [PATCH v1] wolfssl-sgx patch
+Date: Tue, 11 May 2021 12:18:54 +0800
+Subject: [PATCH] wolfssl-sgx patch
 
 Signed-off-by: Liang Yang <liang3.yang@intel.com>
 ---
@@ -9,13 +9,13 @@ Signed-off-by: Liang Yang <liang3.yang@intel.com>
  configure.ac                   |   2 +-
  m4/ax_vcs_checkout.m4          |   1 -
  pre-commit.sh                  |   6 +-
- wolfcrypt/src/asn.c            | 222 ++++++++++++++++++++++++++++++++-
+ wolfcrypt/src/asn.c            | 241 ++++++++++++++++++++++++++++++++-
  wolfssl/internal.h             |   2 +-
- wolfssl/wolfcrypt/asn_public.h |  18 +++
+ wolfssl/wolfcrypt/asn_public.h |  19 +++
  wolfssl/wolfcrypt/settings.h   |   2 +
  wolfssl/wolfcrypt/types.h      |   1 +
  wolfssl/wolfcrypt/wc_port.h    |   2 +-
- 10 files changed, 249 insertions(+), 10 deletions(-)
+ 10 files changed, 269 insertions(+), 10 deletions(-)
 
 diff --git a/IDE/LINUX-SGX/sgx_t_static.mk b/IDE/LINUX-SGX/sgx_t_static.mk
 index 41ff666f2..1767078e2 100644
@@ -91,7 +91,7 @@ index 9c76f4b30..992ecfe2a 100755
  make -j 8 >/dev/null 2>&1
  
 diff --git a/wolfcrypt/src/asn.c b/wolfcrypt/src/asn.c
-index 12ada17af..7ee415ccb 100644
+index 12ada17af..e65e91d02 100644
 --- a/wolfcrypt/src/asn.c
 +++ b/wolfcrypt/src/asn.c
 @@ -18,7 +18,7 @@
@@ -166,7 +166,7 @@ index 12ada17af..7ee415ccb 100644
  #ifdef WOLFSSL_CERT_REQ
      byte attrib[MAX_ATTRIB_SZ];        /* Cert req attributes encoded */
  #endif
-@@ -11873,6 +11899,14 @@ typedef struct DerCert {
+@@ -11873,6 +11899,15 @@ typedef struct DerCert {
      int  extKeyUsageSz;                /* encoded ExtendedKeyUsage extension length */
      int  certPoliciesSz;               /* encoded CertPolicies extension length*/
  #endif
@@ -176,12 +176,13 @@ index 12ada17af..7ee415ccb 100644
 +    unsigned int iasSigSz;
 +    unsigned int iasAttestationReportSz;
 +    unsigned int quoteSz;
++    unsigned int qvequoteSz;
 +    unsigned int lareportSz;
 +#endif
  #ifdef WOLFSSL_ALT_NAMES
      int  altNamesSz;                   /* encoded AltNames extension length */
  #endif
-@@ -12736,7 +12770,16 @@ static int SetKeyUsage(byte* output, word32 outSz, word16 input)
+@@ -12736,7 +12771,16 @@ static int SetKeyUsage(byte* output, word32 outSz, word16 input)
                         ku, idx);
  }
  
@@ -199,7 +200,7 @@ index 12ada17af..7ee415ccb 100644
      const byte* oid, word32 oidSz)
  {
      /* verify room */
-@@ -12750,6 +12793,53 @@ static int SetOjectIdValue(byte* output, word32 outSz, int* idx,
+@@ -12750,6 +12794,53 @@ static int SetOjectIdValue(byte* output, word32 outSz, int* idx,
      return 0;
  }
  
@@ -253,7 +254,7 @@ index 12ada17af..7ee415ccb 100644
  /* encode Extended Key Usage (RFC 5280 4.2.1.12), return total bytes written */
  static int SetExtKeyUsage(Cert* cert, byte* output, word32 outSz, byte input)
  {
-@@ -13431,6 +13521,17 @@ static int SetValidity(byte* output, int daysValid)
+@@ -13431,6 +13522,17 @@ static int SetValidity(byte* output, int daysValid)
      localTime.tm_year += 1900;
      localTime.tm_mon +=    1;
  
@@ -271,7 +272,7 @@ index 12ada17af..7ee415ccb 100644
      SetTime(&localTime, before + beforeSz);
      beforeSz += ASN_GEN_TIME_SZ;
  
-@@ -13450,6 +13551,15 @@ static int SetValidity(byte* output, int daysValid)
+@@ -13450,6 +13552,15 @@ static int SetValidity(byte* output, int daysValid)
      localTime.tm_year += 1900;
      localTime.tm_mon  +=    1;
  
@@ -287,7 +288,7 @@ index 12ada17af..7ee415ccb 100644
      SetTime(&localTime, after + afterSz);
      afterSz += ASN_GEN_TIME_SZ;
  
-@@ -13751,6 +13861,65 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
+@@ -13751,6 +13862,75 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
      else
          der->certPoliciesSz = 0;
  #endif /* WOLFSSL_CERT_EXT */
@@ -340,6 +341,16 @@ index 12ada17af..7ee415ccb 100644
 +        der->extensionsSz += der->quoteSz;
 +    }
 +
++    if (cert->qvequoteSz > 0) {
++	    const unsigned char qvequoteOid[] = OID(0x0f);
++	    der->qvequoteSz = SetSGXExt(der->quote, sizeof(der->quote),
++			    qvequoteOid, sizeof(qvequoteOid),
++			    cert->quote, cert->qvequoteSz);
++	    assert(der->qvequoteSz > 0);
++
++	    der->extensionsSz += der->qvequoteSz;
++    }
++
 +    if (cert->lareportSz > 0) {
 +	const unsigned char lareportOid[] = OID(0x0e);
 +	der->lareportSz = SetSGXExt(der->lareport, sizeof(der->lareport),
@@ -353,7 +364,7 @@ index 12ada17af..7ee415ccb 100644
  
      /* put extensions */
      if (der->extensionsSz > 0) {
-@@ -13828,6 +13997,53 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
+@@ -13828,6 +14008,61 @@ static int EncodeCert(Cert* cert, DerCert* der, RsaKey* rsaKey, ecc_key* eccKey,
                  return EXTENSIONS_E;
          }
  #endif /* WOLFSSL_CERT_EXT */
@@ -396,6 +407,14 @@ index 12ada17af..7ee415ccb 100644
 +
 +	}
 +
++	if (der->qvequoteSz > 0) {
++		ret = SetExtensions(der->extensions, sizeof(der->extensions),
++				&der->extensionsSz,
++				der->quote, der->qvequoteSz);
++		if (ret <= 0)
++			return EXTENSIONS_E;
++	}
++
 +	if (der->lareportSz > 0) {
 +		ret = SetExtensions(der->extensions, sizeof(der->extensions),
 +				&der->extensionsSz,
@@ -421,10 +440,10 @@ index 73581fe90..03c7aaae1 100644
  
  #ifndef SESSION_TICKET_LEN
 diff --git a/wolfssl/wolfcrypt/asn_public.h b/wolfssl/wolfcrypt/asn_public.h
-index 480b64f64..882969ee9 100644
+index 480b64f64..a5583ddfe 100644
 --- a/wolfssl/wolfcrypt/asn_public.h
 +++ b/wolfssl/wolfcrypt/asn_public.h
-@@ -332,6 +332,20 @@ typedef struct Cert {
+@@ -332,6 +332,21 @@ typedef struct Cert {
      char    certPolicies[CTC_MAX_CERTPOL_NB][CTC_MAX_CERTPOL_SZ];
      word16  certPoliciesNb;              /* Number of Cert Policy */
  #endif
@@ -439,13 +458,14 @@ index 480b64f64..882969ee9 100644
 +    unsigned int	iasAttestationReportSz;
 +    byte    		quote[8192];
 +    unsigned int	quoteSz;
++    unsigned int	qvequoteSz;
 +    byte    		lareport[8192];
 +    unsigned int	lareportSz;
 +#endif
  #if defined(WOLFSSL_CERT_EXT) || defined(OPENSSL_EXTRA)
      byte     issRaw[sizeof(CertName)];   /* raw issuer info */
      byte     sbjRaw[sizeof(CertName)];   /* raw subject info */
-@@ -583,6 +597,10 @@ WOLFSSL_API int wc_CreatePKCS8Key(byte* out, word32* outSz,
+@@ -583,6 +598,10 @@ WOLFSSL_API int wc_CreatePKCS8Key(byte* out, word32* outSz,
  WOLFSSL_API int wc_GetTime(void* timePtr, word32 timeSize);
  #endif
  

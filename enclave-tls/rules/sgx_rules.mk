@@ -101,8 +101,9 @@ $(unsigned_enclave): $(App_Name)_t.o $(Enclave_Static_Lib)
 ifeq ($(Tls_Wolfssl),1)
   Enclave_Cflags += $(Wolfssl_Sgx_Cflags)
 endif
+# Add macro HAVE_TM_TYPE to avoid compiling error about struct tm re-definition
 $(App_Name)_t.o: $(App_Name)_t.c
-	$(CC) $(Enclave_Cflags) -c $< -o $@
+	$(CC) $(Enclave_Cflags) -DHAVE_TM_TYPE -c $< -o $@
 	@echo "CC   <=  $<"
 
 $(App_Name)_t.c: $(App_Name)_t.h
@@ -119,8 +120,9 @@ $(enclave_cxx_objs): %.o : %.cpp
 	$(CXX) $(Enclave_Cxxflags) -c $< -o $@
 	@echo "CXX  <=  $<"
 
+# Add macro HAVE_TM_TYPE to avoid compiling error about struct tm re-definition
 $(enclave_c_objs): %.o : %.c
-	$(CC) $(Enclave_Cflags) -c $< -o $@
+	$(CC) $(Enclave_Cflags) -DHAVE_TM_TYPE -c $< -o $@
 	@echo "CC   <=  $<"
 
 app_cxx_objs := $(sort $(App_Cxx_Files:.cpp=.o))

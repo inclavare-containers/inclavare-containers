@@ -101,7 +101,7 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 
 	ETLS_DEBUG("Succeed to generate the quote!\n");
 
-	strcpy(evidence->type, "sgx_ecdsa");
+	strcpy(evidence->type, ctx->opts->type);
 	evidence->ecdsa.quote_len = quote_size;
 
 	return ENCLAVE_QUOTE_ERR_NONE;

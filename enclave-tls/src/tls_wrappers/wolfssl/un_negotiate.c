@@ -133,6 +133,11 @@ static int extract_cert_extensions(const uint8_t *ext, int ext_len,
 					      quote_oid, ias_oid_len,
 					      evidence->ecdsa.quote, &evidence->ecdsa.quote_len,
 					      sizeof(evidence->ecdsa.quote));
+	} else if (!strcmp(evidence->type, "sgx_ecdsa_qve")) {
+		return extract_x509_extension(ext, ext_len,
+					      qve_quote_oid, ias_oid_len,
+					      evidence->ecdsa.quote, &evidence->ecdsa.quote_len,
+					      sizeof(evidence->ecdsa.quote));
 	} else if (!strcmp(evidence->type, "sgx_la")) {
 		return extract_x509_extension(ext, ext_len,
 					la_report_oid, ias_oid_len,
@@ -229,6 +234,8 @@ int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store)
     	size_t ext_data_len;
 
 	strncpy(evidence.type, "nullquote", sizeof(evidence.type));
+	if (find_oid(der_cert, der_cert_len, qve_quote_oid, ias_oid_len, &ext_data, &ext_data_len) == 1)
+		strncpy(evidence.type, "sgx_ecdsa_qve", sizeof(evidence.type));
 	if (find_oid(der_cert, der_cert_len, quote_oid, ias_oid_len, &ext_data, &ext_data_len) == 1)
 		strncpy(evidence.type, "sgx_ecdsa", sizeof(evidence.type));
 	if (find_oid(der_cert, der_cert_len, la_report_oid, ias_oid_len, &ext_data, &ext_data_len) == 1)
