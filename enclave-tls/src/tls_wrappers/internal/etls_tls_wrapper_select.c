@@ -35,6 +35,13 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 		if (type && strcmp(type, tls_ctx->opts->type))
 			continue;
 
+		tls_wrapper_ctx_t *this_tls_ctx = malloc(sizeof(*this_tls_ctx));
+		if (!this_tls_ctx)
+			return -ENCLAVE_TLS_ERR_NO_MEM;
+
+		*this_tls_ctx = *tls_ctx;
+		tls_ctx = this_tls_ctx;
+
 		/* Set necessary configurations from enclave_tls_init() to
 		 * make init() working correctly.
 		 */

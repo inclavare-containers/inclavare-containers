@@ -37,6 +37,13 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 
 		if (type && strcmp(type, quote_ctx->opts->type))
 			continue;
+	
+		enclave_quote_ctx_t *this_quote_ctx = malloc(sizeof(*this_quote_ctx));
+		if (!this_quote_ctx)
+			 return -ENCLAVE_TLS_ERR_NO_MEM;
+		
+		memcpy(this_quote_ctx, quote_ctx, sizeof(*this_quote_ctx));
+		quote_ctx = this_quote_ctx;
 
 		/* Set necessary configurations from enclave_tls_init() to
 		 * make init() working correctly.
