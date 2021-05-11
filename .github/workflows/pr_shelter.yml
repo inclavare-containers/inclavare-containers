@@ -117,7 +117,7 @@ jobs:
       run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a nullquote -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
 
     - name: Run shelter for null quote
-      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation  --verifier nullquote --ip 127.0.0.1 --port ${{ steps.random-port-generator1.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation  --verifier nullquote --addr=tcp://127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}'
         docker restart $inclavare_test;
 
     - id: random-port-generator2
@@ -134,7 +134,7 @@ jobs:
 
     - name: Run shelter for mutual sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_ecdsa --mutual 1 --ip 127.0.0.1 --port ${{ steps.random-port-generator2.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_ecdsa --mutual 1 --addr=tcp://127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }}'
         docker restart $inclavare_test;
 
     - id: random-port-generator3
@@ -151,7 +151,7 @@ jobs:
 
     - name: Run enclave tls server for sgx_la
       if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_la --ip 127.0.0.1 --port ${{ steps.random-port-generator3.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_la --addr=tcp://127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }}'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
