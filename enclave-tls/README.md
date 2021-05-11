@@ -73,7 +73,7 @@ The options of enclave-tls-server are as followed:
 
 ```shell
 OPTIONS:
-   --attester/-a value   set he type of quote attester
+   --attester/-a value   set the type of quote attester
    --verifier/-v value   set the type of quote verifier
    --tls/-t value        set the type of tls wrapper
    --crypto/-c value     set the type of crypto wrapper

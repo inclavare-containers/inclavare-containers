@@ -191,7 +191,7 @@ int main(int argc, char **argv)
 {
 	printf("    - Welcome to Enclave-TLS sample server program\n");
 
-	char *const short_options = "a:v:t:c:ml:i:p:D";
+	char *const short_options = "a:v:t:c:ml:i:p:D:h";
 	struct option long_options[] = {
 		{"attester", required_argument, NULL, 'a'},
 		{"verifier", required_argument, NULL, 'v'},
@@ -202,6 +202,7 @@ int main(int argc, char **argv)
 		{"ip", required_argument, NULL, 'i'},
 		{"port", required_argument, NULL, 'p'},
 		{"debug-enclave", no_argument, NULL, 'D'},
+		{"help", no_argument, NULL, 'h'},
 		{0, 0, 0, 0}
 	};
 
@@ -260,6 +261,20 @@ int main(int argc, char **argv)
 			break;
 		case -1:
 			break;
+		case 'h':
+			puts("    Usage:\n\n"
+			"        enclave-tls-server <options> [arguments]\n\n"
+			"    Options:\n\n"
+			"        --attester/-a value   set the type of quote attester\n"
+			"        --verifier/-v value   set the type of quote verifier\n"
+			"        --tls/-t value        set the type of tls wrapper\n"
+			"        --crypto/-c value     set the type of crypto wrapper\n"
+			"        --mutual/-m           set to enable mutual attestation\n"
+			"        --log-level/-l        set the log level\n"
+			"        --ip/-i               set the listening ip address\n"
+			"        --port/-p             set the listening tcp port\n"
+			"        --debug-enclave/-D    set to enable enclave debugging\n"
+			"        --help/-h             show the usage\n");
 		default:
 			exit(1);
 		}
