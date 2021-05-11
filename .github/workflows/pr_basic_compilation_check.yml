@@ -32,8 +32,8 @@ jobs:
       - name: Compile "enclave-tls"
         run:
           cd enclave-tls;
-          source /root/.bashrc && make && make clean && make SGX=1 &&
-            make clean && make OCCLUM=1
+          source /root/.bashrc && make && make install && make clean &&
+            make SGX=1 && make clean && make OCCLUM=1
 
       - name: Compile "rune shim-rune sgx-tools epm pal"
         run:
@@ -42,3 +42,5 @@ jobs:
             make -j${CPU_NUM} && ls liberpal-skeleton-v*.so;
           cd ../nitro_enclaves && make -j${CPU_NUM} && ls libpal_ne.so;
           which rune epm containerd-shim-rune-v2 sgx-tools
+        env:
+          HOME: /root
