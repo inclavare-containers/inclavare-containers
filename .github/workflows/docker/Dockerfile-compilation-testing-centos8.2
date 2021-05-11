@@ -6,7 +6,7 @@ RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y which wget git \
     make gcc gcc-c++ libseccomp-devel binutils-devel protobuf \
     protobuf-devel protobuf-c-devel openssl openssl-devel yum-utils \
-    autoconf libtool
+    autoconf libtool file
 
 WORKDIR /root
 
@@ -21,6 +21,10 @@ ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
 ENV GO111MODULE  on
+
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+ENV PATH         /root/.cargo/bin:$PATH
 
 # install SGX
 RUN [ ! -f sgx_linux_x64_sdk_2.13.100.4.bin ] && \

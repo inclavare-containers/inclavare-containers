@@ -10,7 +10,7 @@ ENV PROTOBUF_VERSION 2.5.0
 ENV PROTOBUF_C_VERSION 1.0.2
 
 RUN yum install -y \
-    which wget git make autoconf libtool openssl yum-utils \
+    which wget git make autoconf libtool openssl yum-utils file \
     libseccomp-devel binutils-devel openssl-devel devtoolset-9-toolchain \
     protobuf-devel-$PROTOBUF_VERSION protobuf-c-devel-$PROTOBUF_C_VERSION
 
@@ -29,6 +29,10 @@ ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GOPROXY      "https://mirrors.aliyun.com/goproxy,direct"
 ENV GO111MODULE  on
+
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+ENV PATH         /root/.cargo/bin:$PATH
 
 # Configure Alibaba Cloud TEE SDK yum repo
 RUN yum-config-manager --add-repo \
