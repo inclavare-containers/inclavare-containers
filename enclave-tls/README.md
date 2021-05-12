@@ -35,7 +35,7 @@ make install
 
 `{enclave-tls-server,enclave-tls-client}` will be installed to `/opt/enclave-tls/bin/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
 
-If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_la, wolfcrypt\_sgx), please type the following command.
+If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_ecdsa\_qve, sgx\_la, wolfcrypt\_sgx), please type the following command.
 
 ```shell
 make SGX=1
@@ -47,11 +47,11 @@ Note that [SGX LVI mitigation](https://software.intel.com/security-software-guid
 
 Right now, Enclave TLS supports the following instance types:
 
-| Priority | Tls Wrapper instances | Encalve Quote instances | Crypto Wrapper Instance |
-| -------- | --------------------- | ----------------------- | ----------------------- |
-| low      | nulltls               | nullquote               | nullcrypto              |
-| Medium   | wolfssl               | sgx\_la                 | wolfcrypt               |
-| High     | wolfssl\_sgx          | sgx\_ecdsa              | wolfcrypt\_sgx          |
+| Priority | Tls Wrapper instances | Encalve Quote instances    | Crypto Wrapper Instance |
+| -------- | --------------------- | -------------------------- | ----------------------- |
+| low      | nulltls               | nullquote                  | nullcrypto              |
+| Medium   | wolfssl               | sgx\_la                    | wolfcrypt               |
+| High     | wolfssl\_sgx          | sgx\_ecdsa sgx\_ecdsa\_qve | wolfcrypt\_sgx          |
 
 By default,  Enclave TLS will select the **highest priority** instance to use.
 
@@ -92,8 +92,9 @@ For example:
 ./enclave-tls-server --tls wolfssl
 ./enclave-tls-server --tls wolfssl_sgx
 ./enclave-tls-server --attester sgx_ecdsa
+./enclave-tls-server --attester sgx_ecdsa_qve
 ./enclave-tls-server --attester sgx_la
-./enclave-tls-server run  --crypto wolfcrypt
+./enclave-tls-server run --crypto wolfcrypt
 ```
 
 Enclave TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
@@ -128,3 +129,13 @@ In the early bootstrap of enclave-tls, the debug message is mute by default. In 
 ## Occlum LibOS
 
 Please refer to [this guide](docs/run_enclave_tls_with_occlum.md) to run Enclave Tls with [Occlum](https://github.com/occlum/occlum) and [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune).
+
+## Non-SGX Enviroment
+
+In non-sgx enviroment, it's possible to show the error messages as below when running the command `./enclave-tls-client --attester sgx_ecdsa`. According to Intel DCAP's implementation, when calling to sgx_qv_get_quote_supplemental_data_size(),
+if the libsgx_urts library is present, it will try to load QvE firstly. If failed, the verification will be launched by QVL. So the error info can be ignored and have no impact on the final attestation result.
+
+```
+[load_qve ../sgx_dcap_quoteverify.cpp:209] Error, call sgx_create_enclave for QvE fail [load_qve], SGXError:2006.
+[sgx_qv_get_quote_supplemental_data_size ../sgx_dcap_quoteverify.cpp:527] Error, failed to load QvE.
+```
