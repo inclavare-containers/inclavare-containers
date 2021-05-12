@@ -25,7 +25,7 @@ epm is a service that is used to manage the cache pools to optimize the startup 
 %setup -q -n %{PROJECT}-%{version}
 
 %build
-# we cann't download go1.13 through 'yum install' in centos, so that wo check the go version in the '%build' section rather than in the 'BuildRequires' section.
+# we can't download go 1.13 through 'yum install' in centos, so that we check the go version in the '%build' section rather than in the 'BuildRequires' section.
 if ! [ -x "$(command -v go)" ]; then
   echo 'Error: go is not installed. Please install Go 1.13 and above'
   exit 1
