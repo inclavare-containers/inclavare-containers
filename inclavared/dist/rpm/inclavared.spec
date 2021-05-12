@@ -14,7 +14,6 @@ License: Apache License 2.0
 URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 
-BuildRequires: rust
 BuildRequires: enclave-tls == %{version}
 ExclusiveArch: x86_64
 
@@ -26,8 +25,13 @@ inclavared is a coordinator which creates a m-TLS(Mutal Transport Layer Security
 
 %build
 if ! [ -x "$(command -v rustc)" ]; then
-  echo 'Error: Rust is not installed. Please install Rust firstly'
+  echo 'Error: Rust is not installed. Please type the "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $HOME/.cargo/env" command to install Rust firstly'
   exit 1
+fi
+
+if ! [ -x "$(command -v cargo)" ]; then
+   echo 'Error: Cargo is not installed. Please type the "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $HOME/.cargo/env" command to install Cargo firstly'
+   exit 1
 fi
 
 pushd %{name}
