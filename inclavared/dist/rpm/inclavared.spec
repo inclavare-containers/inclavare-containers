@@ -15,7 +15,7 @@ URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 
 BuildRequires: rust
-AutoReq: no
+BuildRequires: enclave-tls == %{version}
 ExclusiveArch: x86_64
 
 %description
