@@ -46,22 +46,6 @@ enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle)
 		}
 	}
 
-	for (unsigned int i = 0; i < tls_wrappers_nums; ++i) {
-		if (tls_wrappers_ctx[i]) {
-			if (tls_wrappers_ctx[i]->handle)
-				dlclose(tls_wrappers_ctx[i]->handle);
-			free(tls_wrappers_ctx[i]);
-		}
-	}
-
-	for (unsigned int i = 0; i < enclave_quote_nums; ++i) {
-		if (enclave_quotes_ctx[i]) {
-			if (enclave_quotes_ctx[i]->handle)
-				dlclose(enclave_quotes_ctx[i]->handle);
-			free(enclave_quotes_ctx[i]);
-		}
-	}
-
 	free(ctx);
 
 	return ENCLAVE_TLS_ERR_NONE;
