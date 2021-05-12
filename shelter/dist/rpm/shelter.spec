@@ -25,7 +25,7 @@ shelter is designed as a remote attestation tool for customer to verify if their
 %setup -q -n %{PROJECT}-%{version}
 
 %build
-# we cann't download go1.14 through 'yum install' in centos, so that wo check the go version in the '%build' section rather than in the 'BuildRequires' section.
+# we can't download go 1.14 through 'yum install' in centos, so that we check the go version in the '%build' section rather than in the 'BuildRequires' section.
 if ! [ -x "$(command -v go)" ]; then
   echo 'Error: go is not installed. Please install Go 1.14 and above'
   exit 1
