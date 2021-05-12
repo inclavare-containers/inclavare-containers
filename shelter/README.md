@@ -32,18 +32,6 @@ git clone https://github.com/alibaba/inclavare-containers
 
 Please follow [enclave-tls README](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls) to build and install enclave-tls firstly.
 
-### For EPID RA
-
-```shell
-cd $WORKSPACE/inclavare-containers/shelter
-make
-```
-
-### For DCAP RA
-
-1. Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/README.md) to install DCAP. Note: If your platform is pre-product SGX platform (SBX), please follow this guide to resolve the quote verification problem on SBX platforms: https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platform/README.md.
-2. Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/tree/master/QuoteGeneration/pccs) to install and configure Intel PCCS service to make sure Intel PCCS to be luanched correctly.
-
 ```shell
 cd $WORKSPACE/inclavare-containers/shelter
 make 
@@ -82,8 +70,7 @@ shelter help
 
 ```shell
 OPTIONS:
-   --ip             tcp socket ip to connect inclavared
-   --port           tcp socket port to connect inclavared
+   --addr           specify tcp or unix socket address, e.g, '--addr=tcp://ip:port or --addr=unix://path'
    --log-level      set the level of log output(debug, info, warn, error, fatal, off)
    --verifier       set the type of quote verifier(nullquote, sgx_la or sgx_ecdsa)
    --tls            set the type of tls wrapper(nulltls, wolfssl or wolfssl_sgx)
@@ -95,7 +82,8 @@ You can set command line parameters to specify different configurations.
 
 For example:
 ```shell
-shelter remoteattestation --ip 127.0.0.1 --port 1234
+shelter remoteattestation --addr=tcp://127.0.0.1:1234
+shelter remoteattestation --addr=unix:///run/enclave-tls/tls.sock
 shelter remoteattestation --tls wolfssl
 shelter remoteattestation --tls wolfssl_sgx
 shelter remoteattestation --verifier sgx_ecdsa
