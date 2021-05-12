@@ -197,7 +197,7 @@ Enclave_Ldflags := \
   -Wl,-z,relro,-z,now,-z,noexecstack \
   -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(sgx_common_libdir) \
   $(Enclave_Extra_Ldflags) \
-  -Wl,--whole-archive -l$(trts_lib) -Wl,--no-whole-archive \
+  -Wl,--whole-archive -l$(trts_lib) -lsgx_dcap_tvl -Wl,--no-whole-archive \
   -Wl,--start-group -lsgx_tstdc -lsgx_tcxx -l$(crypto_lib) -l$(service_lib) -Wl,--end-group \
   -Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
   -Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \

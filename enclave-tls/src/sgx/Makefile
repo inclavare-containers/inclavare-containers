@@ -21,6 +21,7 @@ include $(Topdir)/rules/instance.mk
 
 Enclave_C_Files := \
   ecalls.c ../enclave_quotes/sgx-ecdsa/ecalls.c \
+  ../enclave_quotes/sgx-ecdsa-qve/ecalls.c \
   ../enclave_quotes/sgx-la/ecalls.c \
   ../tls_wrappers/wolfssl-sgx/ecalls.c \
   ../crypto_wrappers/wolfcrypt-sgx/ecalls.c
