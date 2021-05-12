@@ -11,6 +11,16 @@ in the official binaries of untrusted QVL and trusted QvE.
 This means the user cannot use QVL and QvE to verify the quote with the
 PCK certificate provided by Intel provisioning service for SBX platforms.
 
+To confirm whether you are using a SBX platform, run the following command:
+
+```shell
+strings /sys/firmware/efi/efivars/SgxRegistrationConfiguration-18b3bc81-e210-42b9-9ec8-2c5a7d4d89b6  | grep intel.com
+```
+
+If the result is `https://sbx.api.trustedservices.intel.com:443`, please
+access to `https://sbx.api.portal.trustedservices.intel.com/provisioning-certification`
+to subscribe the primary key for SBX platform.
+
 # Solution
 
 The modified QVL/QVE applied to this patch at least allows the user to
@@ -21,8 +31,10 @@ In order to minimize the influence, it is recommended to run applications
 ethod:
 
 ```shell
-# Re-configure Intel PCCS with SBX support
+# re-configure Intel PCCS with SBX support
 sudo sed -i 's/api.trustedservices.intel.com/sbx.api.trustedservices.intel.com/' /opt/intel/sgx-dcap-pccs/config/default.json
+# replace ApiKey field with the subscribed SBX primary key
+# restart Intel PCCS service
 sudo systemctl restart pccs
 # apply the patch
 cd $PATH_TO_SGX_SDK_SOURCE/external/dcap_source
