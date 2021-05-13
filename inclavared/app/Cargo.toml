@@ -1,6 +1,6 @@
 [package]
 name = "inclavared"
-version = "1.0.0"
+version = "0.0.1"
 authors = ["Tianjia Zhang <tianjia.zhang@linux.alibaba.com>"]
 build = "build.rs"
 edition = "2018"
@@ -12,6 +12,7 @@ env_logger = "0.8.3"
 clap = "2.33.3"
 serde_json = "1.0.64"
 hex = "0.4.3"
+shadow-rs = "0.5.25"
 foreign-types = "0.5.0"
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
@@ -21,4 +22,4 @@ sgx_types = { path = "../rust-sgx/sgx_types" }
 sgx_urts = { path = "../rust-sgx/sgx_urts" }
 
 [build-dependencies]
-bindgen = "0.58.1"
+shadow-rs = "0.5.25"

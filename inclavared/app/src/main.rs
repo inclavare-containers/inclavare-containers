@@ -20,6 +20,7 @@ use std::sync::Arc;
 use libc::{c_void};
 use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
 use clap::{Arg, App};
+use shadow_rs::shadow;
 use serde_json::{json, Value};
 use sgx_types::{
     SgxResult, sgx_attributes_t, sgx_launch_token_t, sgx_misc_attribute_t
@@ -28,6 +29,8 @@ use sgx_urts::SgxEnclave;
 
 #[macro_use]
 extern crate log;
+
+shadow!(build);
 
 include!("ffi.rs");
 include!("enclave-tls.rs");
@@ -227,8 +230,11 @@ fn run_server(sockaddr: &str, upstream: Option<String>,
 fn main() {
     env_logger::builder().filter(None, log::LevelFilter::Trace).init();
 
+    let version = format!("v{}\ncommit: {}\nbuildtime: {}",
+                    build::PKG_VERSION, build::COMMIT_HASH, build::BUILD_TIME);
     let matches = App::new("inclavared")
-                    .version("0.1")
+                    .version(version.as_str())
+                    .long_version(version.as_str())
                     .author("Inclavare-Containers Team")
                     .arg(Arg::with_name("listen")
                         .short("l")
@@ -289,7 +295,8 @@ fn main() {
                     )
                     .get_matches();
 
-    info!("enter");
+    info!("enter v{}, {} - {}", build::PKG_VERSION,
+                    build::COMMIT_HASH, build::BUILD_TIME);
 
     let tls_type = matches.value_of("tls").map(|s| s.to_string());
     let crypto = matches.value_of("crypto").map(|s| s.to_string());
