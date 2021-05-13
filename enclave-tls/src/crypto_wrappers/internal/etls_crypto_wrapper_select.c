@@ -28,19 +28,15 @@ enclave_tls_err_t etls_crypto_wrapper_select(etls_core_context_t *ctx,
 	ETLS_DEBUG("selecting the crypto wrapper '%s' ...\n", type);
 
 	crypto_wrapper_ctx_t *crypto_ctx = NULL;
-	unsigned int i = 0;
-	for (; i < registerd_crypto_wrapper_nums; ++i) {
-		crypto_ctx = crypto_wrappers_ctx[i];
-
-		if (type && strcmp(type, crypto_ctx->opts->type))
+	for (unsigned int i = 0; i < registerd_crypto_wrapper_nums; ++i) {
+		if (type && strcmp(type, crypto_wrappers_ctx[i]->opts->type))
 			continue;
 
-		crypto_wrapper_ctx_t *this_crypto_ctx = malloc(sizeof(*this_crypto_ctx));
-		if (!this_crypto_ctx)
+		crypto_ctx = malloc(sizeof(*crypto_ctx));
+		if (!crypto_ctx)
 			return -ENCLAVE_TLS_ERR_NO_MEM;
 
-		*this_crypto_ctx = *crypto_ctx;
-		crypto_ctx = this_crypto_ctx;
+		*crypto_ctx = *crypto_wrappers_ctx[i];
 
 		/* Set necessary configurations from enclave_tls_init() to
 		 * make init() working correctly.
@@ -52,9 +48,12 @@ enclave_tls_err_t etls_crypto_wrapper_select(etls_core_context_t *ctx,
 
 		if (init_crypto_wrapper(crypto_ctx) == ENCLAVE_TLS_ERR_NONE)
 			break;
+
+		free(crypto_ctx);
+		crypto_ctx = NULL;
 	}
 
-	if (i == registerd_crypto_wrapper_nums) {
+	if (!crypto_ctx) {
 		if (!type)
 			ETLS_ERR("failed to select a crypto wrapper\n");
 		else

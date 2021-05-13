@@ -31,19 +31,15 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 	ETLS_DEBUG("selecting the enclave quote '%s' ...\n", type);
 
 	enclave_quote_ctx_t *quote_ctx = NULL;
-	unsigned int i = 0;
-	for (; i < registerd_enclave_quote_nums; ++i) {
-		quote_ctx = enclave_quotes_ctx[i];
-
-		if (type && strcmp(type, quote_ctx->opts->type))
+	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
+		if (type && strcmp(type, enclave_quotes_ctx[i]->opts->type))
 			continue;
 	
-		enclave_quote_ctx_t *this_quote_ctx = malloc(sizeof(*this_quote_ctx));
-		if (!this_quote_ctx)
+		quote_ctx = malloc(sizeof(*quote_ctx));
+		if (!quote_ctx)
 			 return -ENCLAVE_TLS_ERR_NO_MEM;
-		
-		memcpy(this_quote_ctx, quote_ctx, sizeof(*this_quote_ctx));
-		quote_ctx = this_quote_ctx;
+
+		memcpy(quote_ctx, enclave_quotes_ctx[i], sizeof(*quote_ctx));
 
 		/* Set necessary configurations from enclave_tls_init() to
 		 * make init() working correctly.
@@ -53,9 +49,12 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 
 		if (init_enclave_quote(ctx, quote_ctx, algo) == ENCLAVE_TLS_ERR_NONE)
 			break;
+
+		free(quote_ctx);
+		quote_ctx = NULL;
 	}
 
-	if (i == registerd_enclave_quote_nums) {
+	if (!quote_ctx) {
 		if (!type)
 			ETLS_ERR("failed to select an enclave quote\n");
 		else
