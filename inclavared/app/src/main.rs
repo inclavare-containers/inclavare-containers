@@ -68,6 +68,8 @@ fn enclave_info_fetch(sockfd: RawFd, buf: &mut [u8],
 
     let n = tls.receive(buf).unwrap();
 
+    /* XXX TODO: tls must be droped before enclave */
+    drop(tls);
     enclave.destroy();
 
     n
@@ -150,6 +152,8 @@ fn handle_client(sockfd: RawFd, upstream: &Option<String>,
         assert!(n > 0);
     }
 
+    /* XXX TODO: tls must be droped before enclave */
+    drop(tls);
     enclave.destroy();
 }
 
