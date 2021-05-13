@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-extern crate bindgen;
-
 use std::env;
 
-fn main () {
+fn main () -> shadow_rs::SdResult<()> {
     let sdk_dir = env::var("SGX_SDK")
                     .unwrap_or_else(|_| "/opt/intel/sgxsdk".to_string());
     let is_sim = env::var("SGX_MODE")
@@ -28,4 +26,6 @@ fn main () {
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=build.rs");
+
+    shadow_rs::new()
 }
