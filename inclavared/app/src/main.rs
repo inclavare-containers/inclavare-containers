@@ -20,7 +20,7 @@ use std::sync::Arc;
 use libc::{c_void};
 use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
 use clap::{Arg, App};
-use serde_json::json;
+use serde_json::{json, Value};
 use sgx_types::{
     SgxResult, sgx_attributes_t, sgx_launch_token_t, sgx_misc_attribute_t
 };
@@ -116,39 +116,56 @@ fn handle_client(sockfd: RawFd, upstream: &Option<String>,
     let n = tls.receive(&mut buffer).unwrap();
     info!("req: {}", String::from_utf8((&buffer[..n]).to_vec()).unwrap());
 
-    if let Some(upstream) = upstream {
-        /* fetch enclave information from upstream */
-        let n = client_fetch(&upstream, &mut buffer,
-                    tls_type, crypto, attester, verifier, mutual, enclavefile);
-        info!("message length from upstream: {}", n);
+    let req: Value = match serde_json::from_slice(&buffer[..n]) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("json::from_slice() failed, {}", e);
 
-        /* TODO: shit code */
-        let resp = if n > 64 {
-            let mrenclave = &buffer[0..32];
-            let mrsigner = &buffer[32..64];
-            let message = String::from_utf8((&buffer[64..n]).to_vec()).unwrap();
-            info!("message from upstream: {}", message);
+            /* XXX TODO: tls must be droped before enclave */
+            drop(tls);
+            enclave.destroy();
+            return;
+        }
+    };
 
-            let resp = json!({
-                "id": "123456",
-                "msgtype": "ENCLAVEINFO",
-                "version": 1,
-                "mrenclave": hex::encode(mrenclave),
-                "mrsigner": hex::encode(mrsigner),
-                "message": message
-            });
-            resp.to_string()
-        } else if n > 0 {
-            String::from_utf8((&buffer[..n]).to_vec()).unwrap()
+    if req["type"] == "GETENCLAVEINFO" {
+        if let Some(upstream) = upstream {
+            /* fetch enclave information from upstream */
+            let n = client_fetch(&upstream, &mut buffer, tls_type, crypto,
+                        attester, verifier, mutual, enclavefile);
+            info!("message length from upstream: {}", n);
+
+            /* TODO */
+            let resp = if n > 64 {
+                let mrenclave = &buffer[0..32];
+                let mrsigner = &buffer[32..64];
+                let message = String::from_utf8((&buffer[64..n]).to_vec()).unwrap();
+                info!("message from upstream: {}", message);
+
+                let resp = json!({
+                    "id": "123456",
+                    "msgtype": "ENCLAVEINFO",
+                    "version": 1,
+                    "mrenclave": hex::encode(mrenclave),
+                    "mrsigner": hex::encode(mrsigner),
+                    "message": message
+                });
+                resp.to_string()
+            } else if n > 0 {
+                String::from_utf8((&buffer[..n]).to_vec()).unwrap()
+            } else {
+                String::from("reply from inclavared!\n")
+            };
+            info!("resp: {}", resp);
+
+            /* response reply */
+            tls.transmit(resp.as_bytes()).unwrap();
         } else {
-            String::from("reply from inclavared!\n")
-        };
-        info!("resp: {}", resp);
-
-        /* response reply */
-        tls.transmit(resp.as_bytes()).unwrap();
+            let n = tls.transmit(b"reply from inclavared!\n").unwrap();
+            assert!(n > 0);
+        }
     } else {
-        let n = tls.transmit(b"reply from inclavared!\n").unwrap();
+        let n = tls.transmit(b"hello from inclavared!\n").unwrap();
         assert!(n > 0);
     }
 

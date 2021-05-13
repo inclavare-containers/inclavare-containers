@@ -10,8 +10,8 @@ libc = "0.2.94"
 log = "0.4.14"
 env_logger = "0.8.3"
 clap = "2.33.3"
-serde_json = "1.0.62"
-hex = "0.4.2"
+serde_json = "1.0.64"
+hex = "0.4.3"
 foreign-types = "0.5.0"
 sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_urts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
