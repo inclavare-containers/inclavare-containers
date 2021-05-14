@@ -95,6 +95,7 @@ jobs:
         cp $WORK_DIR/v$RUNE_VERSION.tar.gz $WORK_DIR/rpmbuild/SOURCES/
         source /etc/profile
         sed -i 's/shelter//g' Makefile
+        sed -i 's/inclavared//g' Makefile
         make package RPMBUILD_DIR=$WORK_DIR/rpmbuild RELEASE_TARBALL_FILE=$WORK_DIR/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM}
         rpm -ivh rune-$RUNE_VERSION*.rpm
         rpm -ivh shim-rune-$RUNE_VERSION*.rpm
