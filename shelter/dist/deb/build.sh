@@ -36,6 +36,6 @@ fi
 # build_deb_package
 cp -rf  $SCRIPT_DIR/debian $DEB_BUILD_FOLDER
 cd $DEB_BUILD_FOLDER
-dpkg-buildpackage -us -uc
+DEB_CFLAGS_SET="-std=gnu11 -fPIC" DEB_CXXFLAGS_SET="-std=c++11 -fPIC" DEB_LDFLAGS_SET="-fPIC" dpkg-buildpackage -us -uc
 cp $DEBBUILD_DIR/*.*deb $PROJECT_DIR
 rm -rf $DEBBUILD_DIR
