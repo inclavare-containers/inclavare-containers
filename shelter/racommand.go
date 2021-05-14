@@ -44,7 +44,7 @@ EXAMPLE:
 			Name:  "crypto",
 			Usage: "set the type of crypto wrapper",
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name:  "mutual",
 			Usage: "set the attestation type is mutual or not",
 		},
@@ -58,7 +58,9 @@ EXAMPLE:
 		tls := cliContext.String("tls")
 		crypto := cliContext.String("crypto")
 		var mutual bool = false
-		mutual = (bool)(cliContext.Bool("mutual"))
+		if cliContext.Bool("mutual") {
+			mutual = true
+		}
 		var ret error = nil
 		var tcpIp string = ""
 		var tcpPort string = ""
