@@ -44,6 +44,7 @@ jobs:
         cp -f /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES;
         find ./ -path '*dist/Makefile' | xargs -I files sed -i '16 d' files;
         sed -i 's/shelter//g' Makefile;
+        sed -i 's/inclavared//g' Makefile;
         make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
         mv *.rpm /root/inclavare-containers/${{ matrix.tag }}"
 
@@ -57,6 +58,7 @@ jobs:
         find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
         find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
         sed -i 's/shelter//g' Makefile;
+        sed -i 's/inclavared//g' Makefile;
         make package -j${CPU_NUM};
         mv *.deb /root/inclavare-containers/${{ matrix.tag }}"
 
