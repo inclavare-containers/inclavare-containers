@@ -8,6 +8,8 @@ export GO111MODULE := on
 %:
 	dh $@
 
+override_dh_auto_clean:
+
 override_dh_auto_build:
 	make -C $(NAME)
 override_dh_auto_install:
