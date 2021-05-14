@@ -2,7 +2,7 @@ Source: shelter
 Section: devel
 Priority: extra
 Maintainer: zhiming hu <zhiming.hu@intel.com>
-Build-Depends: debhelper (>=9), openssl
+Build-Depends: debhelper (>=9), openssl, libssl-dev, enclave-tls
 Standards-Version: 3.9.8
 Homepage: https://github.com/alibaba/inclavare-containers
 
