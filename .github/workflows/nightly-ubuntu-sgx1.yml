@@ -155,6 +155,8 @@ jobs:
           echo "$RUNE_VERSION" > VERSION
           find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
           find ./ -path "*deb/build.sh" | xargs -I files sed -i "17icp $WORK_DIR/v*.tar.gz \$DEBBUILD_DIR" files;
+          sed -i 's/shelter//g' Makefile
+          sed -i 's/inclavared//g' Makefile
           make package -j${CPU_NUM};
           dpkg -i rune_$RUNE_VERSION-1_amd64.deb;
           dpkg -i shim-rune_$RUNE_VERSION-1_amd64.deb
