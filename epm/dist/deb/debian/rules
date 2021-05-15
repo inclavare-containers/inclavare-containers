@@ -6,6 +6,8 @@ LICENSE := /usr/share/licenses/epm
 %:
 	dh $@
 
+override_dh_auto_clean:
+
 override_dh_auto_build:
 	GOOS=linux make binaries -C epm
 override_dh_auto_install:
