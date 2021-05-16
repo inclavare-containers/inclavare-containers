@@ -6,6 +6,9 @@ BUILD_ROOT := $(CURDIR)/debian/enclave-tls
 
 override_dh_auto_clean:
 
+# avoid building dbgsym packages
+override_dh_strip:
+
 override_dh_auto_build:
 	make -C enclave-tls SGX=1
 
