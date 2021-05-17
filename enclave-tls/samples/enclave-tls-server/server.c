@@ -166,7 +166,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
 		memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
 
-		len = 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO);
+		len = 2 * sizeof(sgx_measurement_t) + strlen(ENCLAVE_TLS_HELLO);
 #endif
 
 		/* Reply back to the client */
