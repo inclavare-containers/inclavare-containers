@@ -69,7 +69,7 @@ endif
 endif
 
 sgx_enclave_signer := $(SGX_SDK)/bin/$(SGX_ARCH)/sgx_sign
-signed_enclave := $(enclave_name).signed.so
+signed_enclave := $(Build_Bindir)/$(enclave_name).signed.so
 unsigned_enclave := $(enclave_name).so
 $(signed_enclave): $(unsigned_enclave)
 ifeq ($(build_mode),HW_DEBUG)
