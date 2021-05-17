@@ -74,7 +74,7 @@ Build_Bindir := $(Build_Dir)/bin
 Build_Libdir := $(Build_Dir)/lib
 Build_Incdir := $(Build_Dir)/include
 
-Enclave_Tls_Bindir := /usr/share/enclave-tls/samples
+Enclave_Tls_Bindir ?= /usr/share/enclave-tls/samples
 ifneq ($(Enclave_Tls_Srcdir),)
   # in-tree
   Enclave_Tls_Incdir := $(Enclave_Tls_Srcdir)/include
