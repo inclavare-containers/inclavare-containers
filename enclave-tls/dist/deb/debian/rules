@@ -13,4 +13,4 @@ override_dh_auto_build:
 	make -C enclave-tls SGX=1
 
 override_dh_auto_install:
-	Enclave_Tls_Root=$(BUILD_ROOT)/opt/enclave-tls make -C enclave-tls install
+	Enclave_Tls_Root=$(BUILD_ROOT)/opt/enclave-tls Enclave_Tls_Bindir=$(BUILD_ROOT)/usr/share/enclave-tls/samples make -C enclave-tls install
