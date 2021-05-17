@@ -1,6 +1,6 @@
-/opt/enclave-tls/bin/enclave-tls-server
-/opt/enclave-tls/bin/enclave-tls-client
-/opt/enclave-tls/bin/sgx_stub_enclave.signed.so
+/usr/share/enclave-tls/samples/enclave-tls-server
+/usr/share/enclave-tls/samples/enclave-tls-client
+/usr/share/enclave-tls/samples/sgx_stub_enclave.signed.so
 /opt/enclave-tls/include/*
 /opt/enclave-tls/lib/libenclave_tls.so*
 /opt/enclave-tls/lib/libwolfssl*

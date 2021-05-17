@@ -51,7 +51,7 @@ popd
 
 %install
 pushd %{name}
-Enclave_Tls_Root=%{?buildroot}/opt/enclave-tls make install
+Enclave_Tls_Root=%{?buildroot}/opt/enclave-tls Enclave_Tls_Bindir=%{?buildroot}/usr/share/enclave-tls/samples make install
 popd
 
 %files -f %{SOURCE10}
