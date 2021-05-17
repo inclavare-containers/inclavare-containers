@@ -33,6 +33,6 @@ install: all
 	$(INSTALL) -m 0755 $(Targets) $(Enclave_Tls_Bindir)
 
 uninstall:
-	@rm -f $(Enclave_Tls_Bindir)/$(notdir $(target))
+	@rm -f $(Enclave_Tls_Bindir)/$(notdir $(Targets))
 
 include $(Topdir)/rules/build_rules.mk
