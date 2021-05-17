@@ -22,7 +22,7 @@ include $(Topdir)/rules/sgx_rules.mk
 
 install:
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Bindir)
-	$(INSTALL) -m 0755 $(App_Name)_enclave.signed.so $(Enclave_Tls_Bindir)
+	$(INSTALL) -m 0755 $(Build_Bindir)/$(App_Name)_enclave.signed.so $(Enclave_Tls_Bindir)
 
 uninstall:
 	@rm -f $(Enclave_Tls_Bindir)/$(App_Name)_enclave.signed.so
