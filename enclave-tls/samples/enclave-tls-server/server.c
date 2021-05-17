@@ -107,6 +107,10 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.crypto_type, crypto_type);
 #ifdef SGX
 	conf.enclave_id = load_enclave(debug_enclave);
+	if (conf.enclave_id == -1) {
+		ETLS_ERR("Failed to load sgx stub enclave\n");
+		return -1;
+	}
 #endif
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
 	if (mutual)
