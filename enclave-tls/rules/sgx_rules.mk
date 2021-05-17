@@ -80,8 +80,12 @@ else ifeq ($(build_mode),HW_PRERELEASE)
 	@echo "The project has been built in pre-release hardware mode."
 else ifeq ($(build_mode),SIM_PRERELEASE)
 	@echo "The project has been built in pre-release simulation mode."
-else
+else ifeq ($(build_mode),HW_RELEASE)
+	@echo "The project has been built in release hardware mode."
+else ifeq ($(build_mode),SIM_RELEASE)
 	@echo "The project has been built in release simulation mode."
+else
+	$(error "Unknown build mode.")
 endif
 	$(sgx_enclave_signer) sign -key $(enclave_signing_key) -enclave $< \
 	  -out $@ -config $(enclave_config_file)
