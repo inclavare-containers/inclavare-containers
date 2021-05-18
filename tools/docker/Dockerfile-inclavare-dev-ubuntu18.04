@@ -4,7 +4,7 @@ LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 
 RUN apt-get update && apt-get install -y make wget git \
     libseccomp-dev gnupg gcc pkg-config libssl-dev binutils-dev debhelper \
-    libprotoc-dev protobuf-compiler libbinutils
+    libprotoc-dev protobuf-compiler libbinutils file curl
 
 WORKDIR /root
 
@@ -27,6 +27,10 @@ ENV GOROOT       /usr/lib/go
 ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GO111MODULE  on
+
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+ENV PATH         /root/.cargo/bin:$PATH
 
 # install docker
 RUN apt-get install -y iptables && \

@@ -5,7 +5,7 @@ LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y wget make libseccomp-devel \
     gcc git openssl-devel glibc-static binutils-devel protobuf-c-devel \
-    rpm-build yum-utils protobuf-c autoconf libtool gcc-c++
+    rpm-build yum-utils protobuf-c autoconf libtool gcc-c++ file
 
 WORKDIR /root
 
@@ -21,6 +21,10 @@ ENV GOROOT       /usr/lib/go
 ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GO111MODULE  on
+
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+ENV PATH         /root/.cargo/bin:$PATH
 
 # install docker
 RUN dnf --enablerepo=PowerTools install -y iptables && \
