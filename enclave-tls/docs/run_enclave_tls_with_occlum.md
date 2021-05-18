@@ -57,7 +57,7 @@ Right now, Enclave TLS running on Occlum Libos supports the following instance t
 ## Building Occlum container image
 
 ```shell
-cd /opt/enclave-tls/bin/
+cd /usr/share/enclave-tls/samples
 
 # 1. Init Occlum server Workspace
 rm -rf occlum_workspace_server
@@ -138,7 +138,7 @@ There are two way to run client.
 ### Run client based on Occlum
 
 ```shell
-cd /opt/enclave-tls/bin
+cd /usr/share/enclave-tls/samples
 
 # 1. Init Occlum client Workspace
 rm -rf occlum_workspace_client
@@ -161,6 +161,6 @@ occlum run /bin/enclave-tls-client -l debug -m
 ```shell
 cd "$WORKSPACE"/inclavare-containers/enclave-tls
 make clean && make uninstall && make SGX=1 && make install
-cd /opt/enclave-tls/bin/
+cd /usr/share/enclave-tls/samples
 ./enclave-tls-client -a sgx_ecdsa -m -l debug
 ```

@@ -33,7 +33,7 @@ make
 make install
 ```
 
-`{enclave-tls-server,enclave-tls-client}` will be installed to `/opt/enclave-tls/bin/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
+`{enclave-tls-server,enclave-tls-client}` will be installed to `/usr/share/enclave-tls/samples/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
 
 If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_ecdsa\_qve, sgx\_la, wolfcrypt\_sgx), please type the following command.
 
@@ -57,13 +57,13 @@ By default,  Enclave TLS will select the **highest priority** instance to use.
 
 ## Run enclave tls server
 ```
-cd /opt/enclave-tls/bin
+cd /usr/share/enclave-tls/samples
 ./enclave-tls-server
 ```
 
 ## Run enclave tls client
 ```
-cd /opt/enclave-tls/bin
+cd /usr/share/enclave-tls/samples
 ./enclave-tls-client
 ```
 
@@ -94,7 +94,7 @@ For example:
 ./enclave-tls-server --attester sgx_ecdsa
 ./enclave-tls-server --attester sgx_ecdsa_qve
 ./enclave-tls-server --attester sgx_la
-./enclave-tls-server run --crypto wolfcrypt
+./enclave-tls-server --crypto wolfcrypt
 ```
 
 Enclave TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
