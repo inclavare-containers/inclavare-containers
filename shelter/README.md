@@ -75,7 +75,7 @@ OPTIONS:
    --verifier       set the type of quote verifier(nullquote, sgx_la or sgx_ecdsa)
    --tls            set the type of tls wrapper(nulltls, wolfssl or wolfssl_sgx)
    --crypto         set the type of crypto wrapper(nullcrypto, wolfcrypt or wolfcrypt_sgx)
-   --mutual         set to enable mutual attestation(True, False)
+   --mutual         enable mutual attestation
 ```
 
 You can set command line parameters to specify different configurations.
@@ -89,6 +89,7 @@ shelter remoteattestation --tls wolfssl_sgx
 shelter remoteattestation --verifier sgx_ecdsa
 shelter remoteattestation --verifier sgx_la
 shelter remoteattestation --crypto wolfcrypt
+shelter remoteattestation --mutual
 ```
 
 3. verify workload integrity by launch measurement.
