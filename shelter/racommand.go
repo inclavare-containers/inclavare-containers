@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/inclavare-containers/shelter/remoteattestation"
+	"github.com/inclavare-containers/shelter/utils"
 	"github.com/urfave/cli"
 	"strings"
 )
@@ -65,16 +66,18 @@ EXAMPLE:
 		var tcpIp string = ""
 		var tcpPort string = ""
 		var unixSock string = ""
+		var manageCmd string = ""
+		manageCmd = utils.ManageCmd1
 
 		if sockAddr != "" {
 			s1 := strings.Contains(sockAddr, "tcp")
 			s2 := strings.Contains(sockAddr, "unix")
 			if !s1 && !s2 {
 				return fmt.Errorf("warning: specify tcp or unix socket address with error format.\n")
-			} 
+			}
 			if s1 {
 				ss := strings.Split(sockAddr, ":")
-				if len (ss) < 3 {
+				if len(ss) < 3 {
 					return fmt.Errorf("warning: specify tcp socket address with error format.\n")
 				}
 				tcpPort = ss[2]
@@ -93,21 +96,21 @@ EXAMPLE:
 				}
 				sss := strings.TrimPrefix(ss[1], "//")
 				unixSock = sss
-			} 
+			}
 		}
 		//attestation based on enclave-tls in tcp socket
 		if tcpIp != "" || tcpPort != "" {
-			ret = remoteattestation.EnclaveTlsSetupTcpSock(tcpIp, tcpPort, logLevelInit, attester, verifier, tls, crypto, mutual)
+			ret = remoteattestation.EnclaveTlsSetupTcpSock(tcpIp, tcpPort, logLevelInit, attester, verifier, tls, crypto, mutual, manageCmd)
 		} else if unixSock != "" {
-			ret = remoteattestation.EnclaveTlsSetupUnixSock(unixSock, logLevelInit, attester, verifier, tls, crypto, mutual)
+			ret = remoteattestation.EnclaveTlsSetupUnixSock(unixSock, logLevelInit, attester, verifier, tls, crypto, mutual, manageCmd)
 		} else if unixSock == "" && tcpIp == "" && tcpPort == "" {
 			//if no any socket is specified, try to connect use default tcp port to connect firstly;
-			ret = remoteattestation.EnclaveTlsSetupTcpSock(tcpIp, tcpPort, logLevelInit, attester, verifier, tls, crypto, mutual)
+			ret = remoteattestation.EnclaveTlsSetupTcpSock(tcpIp, tcpPort, logLevelInit, attester, verifier, tls, crypto, mutual, manageCmd)
 			retstr := fmt.Sprintf("%s", ret)
 			if strings.Contains(retstr, "connection") {
 				//if tcp socket connection is refused, try to connect use default unix socket to connect as backup;
 				fmt.Printf("Try to connect default tcp socket failed then retry with default unix socket.\n")
-				ret = remoteattestation.EnclaveTlsSetupUnixSock(unixSock, logLevelInit, attester, verifier, tls, crypto, mutual)
+				ret = remoteattestation.EnclaveTlsSetupUnixSock(unixSock, logLevelInit, attester, verifier, tls, crypto, mutual, manageCmd)
 			}
 		}
 		if ret != nil {
