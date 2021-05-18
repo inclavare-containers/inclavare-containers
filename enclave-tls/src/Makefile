@@ -59,7 +59,7 @@ ifdef SGX
 endif
 
 $(Build_Libdir)/libwolfssl.so $(Build_Libdir)/libwolfssl_sgx.a:
-	make -C $(Wolfssl_Root) $@ install
+	make -C $(Wolfssl_Root) $@
 
 libenclave_tls_objs := $(libenclave_tls_files:.c=.o)
 $(Build_Libdir)/$(libenclave_tls): $(Build_Dependencies) $(libenclave_tls_objs)

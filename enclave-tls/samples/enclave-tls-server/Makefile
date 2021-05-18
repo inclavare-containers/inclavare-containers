@@ -24,7 +24,7 @@ Dependencies += $(Build_Libdir)/libenclave_tls.so
 $(Targets): server.c $(Build_Libdir)/libenclave_tls.so
 	dest=$(dir $@); \
 	$(INSTALL) -d -m 0755 $$dest
-	$(CC) $(cflags) server.c -o $@ $(ldflags)
+	LD_LIBRARY_PATH=$(Topdir)/build/lib $(CC) $(cflags) server.c -o $@ $(ldflags)
 
 $(Build_Libdir)/libenclave_tls.so:
 	make -C $(Enclave_Tls_Srcdir) $@
