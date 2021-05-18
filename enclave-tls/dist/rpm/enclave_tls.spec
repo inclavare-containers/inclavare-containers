@@ -5,6 +5,9 @@
 %global _missing_build_ids_terminate_build 0
 %global PROJECT inclavare-containers
 
+%global ENCLAVE_TLS_ROOTDIR /opt/enclave-tls
+%global ENCLAVE_TLS_BINDIR /usr/share/enclave-tls/samples
+
 Name: enclave-tls
 Version: 0.6.1
 Release: %{centos_base_release}%{?dist}
@@ -51,8 +54,11 @@ popd
 
 %install
 pushd %{name}
-Enclave_Tls_Root=%{?buildroot}/opt/enclave-tls Enclave_Tls_Bindir=%{?buildroot}/usr/share/enclave-tls/samples make install
+Enclave_Tls_Root=%{?buildroot}%{ENCLAVE_TLS_ROOTDIR} Enclave_Tls_Bindir=%{?buildroot}%{ENCLAVE_TLS_BINDIR} make install
 popd
+
+%postun
+rm -rf %{ENCLAVE_TLS_ROOTDIR} $(dirname %{ENCLAVE_TLS_BINDIR})
 
 %files -f %{SOURCE10}
 
