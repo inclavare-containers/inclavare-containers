@@ -58,14 +58,25 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		goto err_ctx;
 
-	/* Select the target enclave quote to be used */
+	/* Select the target attester to be used */
 	choice = ctx->config.attester_type;
 	if (choice[0] == '\0') {
 		choice = global_core_context.config.attester_type;
 		if (choice[0] == '\0')
 			choice = NULL;
 	}
-	err = etls_enclave_quote_select(ctx, choice, ctx->config.cert_algo);
+	err = etls_attester_select(ctx, choice, ctx->config.cert_algo);
+	if (err != ENCLAVE_TLS_ERR_NONE)
+		goto err_ctx;
+
+	/* Select the target verifier to be used */
+	choice = ctx->config.verifier_type;
+	if (choice[0] == '\0') {
+		choice = global_core_context.config.verifier_type;
+		if (choice[0] == '\0')
+			choice = NULL;
+	}
+	err = etls_verifier_select(ctx, choice, ctx->config.cert_algo);
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		goto err_ctx;
 

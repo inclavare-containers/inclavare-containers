@@ -193,9 +193,9 @@ static crypto_wrapper_err_t calc_pubkey_hash(DecodedCert *crt,
 }
 
 #ifdef WOLFSSL_SGX_WRAPPER
-int verify_certificate(uint8_t *der_cert, uint32_t der_cert_len)
+int verify_certificate(void *ctx, uint8_t *der_cert, uint32_t der_cert_len)
 {
-	tls_wrapper_ctx_t *tls_ctx;
+	tls_wrapper_ctx_t *tls_ctx = ctx;
 #else
 int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store)
 {

@@ -63,6 +63,7 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 
 	ctx->tls_wrapper = tls_ctx;
 	ctx->flags |= ENCLAVE_TLS_CTX_FLAGS_TLS_INITIALIZED;
+	tls_ctx->etls_handle = ctx;
 
 	ETLS_INFO("the tls wrapper '%s' selected\n", tls_ctx->opts->type);
 
