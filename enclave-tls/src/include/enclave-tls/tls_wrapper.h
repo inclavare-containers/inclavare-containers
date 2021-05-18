@@ -45,6 +45,8 @@ typedef struct {
 } tls_wrapper_opts_t;
 
 struct tls_wrapper_ctx {
+	/* associate tls wrapper with enclave quote's verifier and attester */
+	struct etls_core_context_t *etls_handle;
 	tls_wrapper_opts_t *opts;
 	void *tls_private;
 	int fd;

@@ -17,8 +17,8 @@ size_t ocall_send(int sockfd, const void *buf, size_t len, int flags)
         return send(sockfd, buf, len, flags);
 }
 
-int ocall_verify_certificate(uint8_t *der_crt, uint32_t der_crt_len)
+int ocall_verify_certificate(void *ctx, uint8_t *der_crt, uint32_t der_crt_len)
 {
-	ETLS_DEBUG("der_crt %p, der_crt_len %d\n", der_crt, der_crt_len);
-	return verify_certificate(der_crt, der_crt_len);
+	ETLS_DEBUG("ctx %p, der_crt %p, der_crt_len %d\n", ctx, der_crt, der_crt_len);
+	return verify_certificate(ctx, der_crt, der_crt_len);
 }
