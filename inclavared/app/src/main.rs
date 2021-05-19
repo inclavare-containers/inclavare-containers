@@ -108,11 +108,21 @@ fn handle_client(sockfd: RawFd, upstream: &Option<String>,
     };
 
     /* XXX: mutual is always false */
-    let tls = EnclaveTls::new(true, enclave.geteid(),
-                tls_type, crypto, attester, verifier, false).unwrap();
+    let tls = match EnclaveTls::new(true, enclave.geteid(), tls_type,
+                                    crypto, attester, verifier, false) {
+        Ok(r) => r,
+        Err(_e) => {
+            enclave.destroy();
+            return;
+        }
+    };
 
     /* accept */
-    tls.negotiate(sockfd).unwrap();
+    if tls.negotiate(sockfd).is_err() {
+        drop(tls);
+        enclave.destroy();
+        return;
+    }
 
     /* get client request */
     let mut buffer = [0u8; 512];
@@ -195,7 +205,7 @@ fn run_server(sockaddr: &str, upstream: Option<String>,
         let listener = UnixListener::bind(sockaddr).unwrap();
         loop {
             let (socket, addr) = listener.accept().unwrap();
-            info!("thread for {:?}", addr);
+            info!("thread for {} {:?}", socket.as_raw_fd(), addr);
             let upstream = upstream.clone();
             let tls_type = tls_type.clone();
             let crypto = crypto.clone();
@@ -212,7 +222,7 @@ fn run_server(sockaddr: &str, upstream: Option<String>,
         let listener = TcpListener::bind(sockaddr).unwrap();
         loop {
             let (socket, addr) = listener.accept().unwrap();
-            info!("thread for {:?}", addr);
+            info!("thread for {} {:?}", socket.as_raw_fd(), addr);
             let upstream = upstream.clone();
             let tls_type = tls_type.clone();
             let crypto = crypto.clone();
@@ -305,7 +315,7 @@ fn main() {
     let mutual = matches.is_present("mutual");
 
     let enclavefile = matches.value_of("enclave")
-                .unwrap_or("/opt/enclave-tls/bin/sgx_stub_enclave.signed.so");
+            .unwrap_or("/usr/share/enclave-tls/samples/sgx_stub_enclave.signed.so");
     let enclavefile = enclavefile.to_string();
 
     if matches.is_present("listen") {
