@@ -50,17 +50,8 @@ fn sgx_enclave_create(file: &str) -> SgxResult<SgxEnclave> {
 fn enclave_info_fetch(sockfd: RawFd, buf: &mut [u8],
                 tls_type: &Option<String>, crypto: &Option<String>,
                 attester: &Option<String>, verifier: &Option<String>,
-                mutual: bool, enclavefile: &String) -> usize {
-    /* TODO: use one enclave */
-    let enclave = match sgx_enclave_create(enclavefile) {
-        Ok(r) => r,
-        Err(e) => {
-            error!("sgx_enclave_create() failed, {}", e.as_str());
-            return 0;
-        }
-    };
-
-    let tls = EnclaveTls::new(false, enclave.geteid(),
+                mutual: bool, enclave_id: u64) -> usize {
+    let tls = EnclaveTls::new(false, enclave_id,
                 tls_type, crypto, attester, verifier, mutual).unwrap();
 
     /* connect */
@@ -71,56 +62,42 @@ fn enclave_info_fetch(sockfd: RawFd, buf: &mut [u8],
 
     let n = tls.receive(buf).unwrap();
 
-    /* XXX TODO: tls must be droped before enclave */
-    drop(tls);
-    enclave.destroy();
-
     n
 }
 
 fn client_fetch(sockaddr: &str, buf: &mut [u8],
                 tls_type: &Option<String>, crypto: &Option<String>,
                 attester: &Option<String>, verifier: &Option<String>,
-                mutual: bool, enclavefile: &String) -> usize {
+                mutual: bool, enclave_id: u64) -> usize {
     let addr = sockaddr.parse::<SocketAddr>();
     if addr.is_err() {
         /* unix socket */
         let stream = UnixStream::connect(sockaddr).unwrap();
         enclave_info_fetch(stream.as_raw_fd(), buf,
-                tls_type, crypto, attester, verifier, mutual, enclavefile)
+                tls_type, crypto, attester, verifier, mutual, enclave_id)
     } else {
         let stream = TcpStream::connect(sockaddr).unwrap();
         enclave_info_fetch(stream.as_raw_fd(), buf,
-                tls_type, crypto, attester, verifier, mutual, enclavefile)
+                tls_type, crypto, attester, verifier, mutual, enclave_id)
     }
 }
 
 fn handle_client(sockfd: RawFd, upstream: &Option<String>,
                 tls_type: &Option<String>, crypto: &Option<String>,
                 attester: &Option<String>, verifier: &Option<String>,
-                mutual: bool, enclavefile: &String) {
-    let enclave = match sgx_enclave_create(enclavefile) {
-        Ok(r) => r,
-        Err(e) => {
-            error!("sgx_enclave_create() failed, {}", e.as_str());
-            return;
-        }
-    };
-
+                mutual: bool, enclave_id: u64) {
     /* XXX: mutual is always false */
-    let tls = match EnclaveTls::new(true, enclave.geteid(), tls_type,
+    let tls = match EnclaveTls::new(true, enclave_id, tls_type,
                                     crypto, attester, verifier, false) {
         Ok(r) => r,
         Err(_e) => {
-            enclave.destroy();
             return;
         }
     };
 
     /* accept */
     if tls.negotiate(sockfd).is_err() {
-        drop(tls);
-        enclave.destroy();
+        warn!("tls_negotiate() failed, sockfd = {}", sockfd);
         return;
     }
 
@@ -133,10 +110,6 @@ fn handle_client(sockfd: RawFd, upstream: &Option<String>,
         Ok(r) => r,
         Err(e) => {
             error!("json::from_slice() failed, {}", e);
-
-            /* XXX TODO: tls must be droped before enclave */
-            drop(tls);
-            enclave.destroy();
             return;
         }
     };
@@ -145,7 +118,7 @@ fn handle_client(sockfd: RawFd, upstream: &Option<String>,
         if let Some(upstream) = upstream {
             /* fetch enclave information from upstream */
             let n = client_fetch(&upstream, &mut buffer, tls_type, crypto,
-                        attester, verifier, mutual, enclavefile);
+                        attester, verifier, mutual, enclave_id);
             info!("message length from upstream: {}", n);
 
             /* TODO */
@@ -181,22 +154,26 @@ fn handle_client(sockfd: RawFd, upstream: &Option<String>,
         let n = tls.transmit(b"hello from inclavared!\n").unwrap();
         assert!(n > 0);
     }
-
-    /* XXX TODO: tls must be droped before enclave */
-    drop(tls);
-    enclave.destroy();
 }
 
 fn run_server(sockaddr: &str, upstream: Option<String>,
             tls_type: Option<String>, crypto: Option<String>,
             attester: Option<String>, verifier: Option<String>,
             mutual: bool, enclavefile: String) {
+    let enclave = match sgx_enclave_create(&enclavefile) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("sgx_enclave_create() failed, {}", e.as_str());
+            return;
+        }
+    };
+    let enclave_id = enclave.geteid();
+
     let upstream = Arc::new(upstream);
     let tls_type = Arc::new(tls_type);
     let crypto = Arc::new(crypto);
     let attester = Arc::new(attester);
     let verifier = Arc::new(verifier);
-    let enclavefile = Arc::new(enclavefile);
     let addr = sockaddr.parse::<SocketAddr>();
     /* TODO: Abstract together */
     if addr.is_err() {
@@ -211,10 +188,9 @@ fn run_server(sockaddr: &str, upstream: Option<String>,
             let crypto = crypto.clone();
             let attester = attester.clone();
             let verifier = verifier.clone();
-            let enclavefile = enclavefile.clone();
             thread::spawn(move || {
                 handle_client(socket.as_raw_fd(), &upstream, &tls_type,
-                    &crypto, &attester, &verifier, mutual, &enclavefile);
+                    &crypto, &attester, &verifier, mutual, enclave_id);
             });
         }
     } else {
@@ -228,13 +204,16 @@ fn run_server(sockaddr: &str, upstream: Option<String>,
             let crypto = crypto.clone();
             let attester = attester.clone();
             let verifier = verifier.clone();
-            let enclavefile = enclavefile.clone();
             thread::spawn(move || {
                 handle_client(socket.as_raw_fd(), &upstream, &tls_type,
-                    &crypto, &attester, &verifier, mutual, &enclavefile);
+                    &crypto, &attester, &verifier, mutual, enclave_id);
             });
         }
     }
+
+    /* unreachable
+    enclave.destroy();
+    */
 }
 
 fn main() {
@@ -326,15 +305,24 @@ fn main() {
                 tls_type, crypto, attester, verifier, mutual, enclavefile);
     } else {
         let sockaddr = matches.value_of("connect").unwrap();
+        let enclave = match sgx_enclave_create(&enclavefile) {
+            Ok(r) => r,
+            Err(e) => {
+                error!("sgx_enclave_create() failed, {}", e.as_str());
+                return;
+            }
+        };
 
         let mut buffer = [0u8; 512];
-        let n = client_fetch(sockaddr, &mut buffer,
-                    &tls_type, &crypto, &attester, &verifier, mutual, &enclavefile);
+        let n = client_fetch(sockaddr, &mut buffer, &tls_type, &crypto,
+                    &attester, &verifier, mutual, enclave.geteid());
         assert!(n > 0);
         info!("length from upstream: {}", n);
 
         let message = String::from_utf8((&buffer[64..]).to_vec()).unwrap();
         info!("message from upstream: {}", message);
+
+        enclave.destroy();
     }
 
     info!("leave");
