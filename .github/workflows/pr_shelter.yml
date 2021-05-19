@@ -7,6 +7,8 @@ on:
 
 env:
   ALINUX2_PROTOBUF_C_VERSION: 1.0.2
+  ENCLAVE_TLS_BINDIR: /usr/share/enclave-tls/samples
+  ENCLAVE_TLS_ROOTDIR: /opt/enclave-tls
 
 jobs:
   rune_shelter:
@@ -45,7 +47,8 @@ jobs:
         mkdir -p /root/inclavare-containers/${{ matrix.tag }};
         cd inclavare-containers-$RUNE_VERSION/enclave-tls;
         make SGX=1 && make install;
-        cp -rf /opt/enclave-tls /root/inclavare-containers/${{ matrix.tag }}'
+        cp -rf ${{ env.ENCLAVE_TLS_ROOTDIR }} /root/inclavare-containers/${{ matrix.tag }};
+        cp -rf ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}/enclave-tls'
 
     - name: Build shelter
       run: docker exec $inclavare_dev bash -c 'cd /root && source /root/.bashrc;source /etc/profile;
@@ -76,8 +79,7 @@ jobs:
       run: |
         docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget gnupg;
         echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
-        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service;
-        cp -rf /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service'
 
     - name: Install centos dependency
       if: ${{ contains(matrix.tag, 'centos') }}
@@ -89,8 +91,7 @@ jobs:
         yum-config-manager --add-repo sgx_rpm_local_repo;
         yum makecache;
         yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
-        rm -f sgx_rpm_local_repo.tgz;
-        mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
+        rm -f sgx_rpm_local_repo.tgz'
 
     - name: Install alinux dependency
       if: ${{ contains(matrix.tag, 'alinux') }}
@@ -104,8 +105,14 @@ jobs:
           libsgx-dcap-default-qpl libsgx-dcap-ql libsgx-dcap-quote-verify \
           libsgx-enclave-common libsgx-launch libsgx-pce-logic libsgx-qe3-logic libsgx-quote-ex \
           libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
-          sgx-aesm-service;
-        mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt'
+          sgx-aesm-service'
+
+    - name: Install enclave-tls
+      run: |
+        docker exec $inclavare_test bash -c 'mkdir -p ${{ env.ENCLAVE_TLS_BINDIR }};
+        cp -rf /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt;
+        cp -rf /root/inclavare-containers/${{ matrix.tag }}/enclave-tls/samples/* ${{ env.ENCLAVE_TLS_BINDIR }};
+        cp ${{ env.ENCLAVE_TLS_BINDIR }}/sgx_stub_enclave.signed.so ./'
 
     - id: random-port-generator1
       uses: ./.github/actions/generate-random-port
@@ -114,7 +121,7 @@ jobs:
       shell: bash
 
     - name: Run enclave tls server for null quote
-      run: docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -a nullquote -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
+      run: docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
 
     - name: Run shelter for null quote
       run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation  --verifier nullquote --addr=tcp://127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}'
@@ -126,15 +133,15 @@ jobs:
     - run: echo random-port2 ${{ steps.random-port-generator2.outputs.random-port }}
       shell: bash
 
-    - name: Run enclave tls server for mutual sgx_ecdsa
+    - name: Run enclave tls server for sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
-        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_ecdsa -i 127.0.0.1 -p ${{ steps.random-port-generator2.outputs.random-port }} -m' &
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_ecdsa -i 127.0.0.1 -p ${{ steps.random-port-generator2.outputs.random-port }}' &
 
-    - name: Run shelter for mutual sgx_ecdsa
+    - name: Run shelter for sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_ecdsa --mutual 1 --addr=tcp://127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c 'ls /root/inclavare-containers/${{ matrix.tag }} && cd /root/inclavare-containers/${{ matrix.tag }}/shelter && ./shelter remoteattestation --crypto wolfcrypt --verifier sgx_ecdsa --addr=tcp://127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }}'
         docker restart $inclavare_test;
 
     - id: random-port-generator3
@@ -147,7 +154,7 @@ jobs:
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
-        docker exec $inclavare_test bash -c 'cd /opt/enclave-tls/bin/ && ./enclave-tls-server -l debug -a sgx_la -t wolfssl_sgx -c wolfcrypt -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_la -t wolfssl_sgx -c wolfcrypt -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
 
     - name: Run enclave tls server for sgx_la
       if: ${{ contains(matrix.sgx, 'SGX2') }}
