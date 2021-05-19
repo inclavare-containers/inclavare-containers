@@ -1,8 +1,19 @@
 %define centos_base_release 1
-%define _debugsource_template %{nil}
-%define debug_package %{nil}
 
-%global _missing_build_ids_terminate_build 0
+%define __enclave_tls_install_post \
+    cp %{_builddir}/%{PROJECT}-%{version}/%{name}/build/bin/sgx_stub_enclave.signed.so %{?buildroot}%{ENCLAVE_TLS_BINDIR} \
+%{nil}
+
+%define __spec_install_post \
+    %{?__debug_package:%{__debug_install_post}}\
+    %{__arch_install_post}\
+    %{__os_install_post}\
+    %{__enclave_tls_install_post}
+
+%global _find_debuginfo_dwz_opts %{nil}
+%global _dwz_low_mem_die_limit 0
+%undefine _missing_build_ids_terminate_build
+
 %global PROJECT inclavare-containers
 
 %global ENCLAVE_TLS_ROOTDIR /opt/enclave-tls
