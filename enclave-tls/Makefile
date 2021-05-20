@@ -33,6 +33,7 @@ uninstall:
 	@for d in $(dirs); do \
 	  make -C $$d $@; \
 	done
+	@rm -rf $(shell dirname $(Enclave_Tls_Bindir))
 
 package:
 	$(MAKE) -C dist package
