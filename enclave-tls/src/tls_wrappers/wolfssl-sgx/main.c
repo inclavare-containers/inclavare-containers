@@ -30,6 +30,7 @@ static tls_wrapper_opts_t wolfssl_sgx_opts = {
 	.transmit = wolfssl_sgx_transmit,
 	.receive = wolfssl_sgx_receive,
 	.cleanup = wolfssl_sgx_cleanup,
+	.flags = TLS_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE,
 };
 
 void __attribute__((constructor))

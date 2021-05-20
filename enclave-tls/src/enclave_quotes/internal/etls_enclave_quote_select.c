@@ -34,7 +34,7 @@ enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
 	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
 		if (type && strcmp(type, enclave_quotes_ctx[i]->opts->type))
 			continue;
-	
+
 		quote_ctx = malloc(sizeof(*quote_ctx));
 		if (!quote_ctx)
 			 return -ENCLAVE_TLS_ERR_NO_MEM;
