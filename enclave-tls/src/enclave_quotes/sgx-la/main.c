@@ -23,7 +23,7 @@ extern enclave_quote_err_t sgx_la_cleanup(enclave_quote_ctx_t *);
 
 static enclave_quote_opts_t sgx_la_opts = {
 	.api_version = ENCLAVE_QUOTE_API_VERSION_DEFAULT,
-	.flags = ENCLAVE_QUOTE_FLAGS_DEFAULT,
+	.flags = ENCLAVE_QUOTE_OPTS_FLAGS_SGX_ENCLAVE,
 	.type = "sgx_la",
 	.priority = 15,
 	.pre_init = sgx_la_pre_init,

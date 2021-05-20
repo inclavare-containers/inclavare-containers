@@ -45,6 +45,7 @@ libenclave_tls_files := \
     $(this_dir)/crypto_wrappers/internal/*.c $(this_dir)/crypto_wrappers/api/*.c \
     $(this_dir)/tls_wrappers/internal/*.c $(this_dir)/tls_wrappers/api/*.c \
     $(this_dir)/enclave_quotes/internal/*.c $(this_dir)/enclave_quotes/api/*.c \
+    $(this_dir)/util/*.c \
   )
 
 ocall_files := \

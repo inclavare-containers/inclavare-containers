@@ -31,6 +31,7 @@ static crypto_wrapper_opts_t wolfcrypt_sgx_opts = {
 	.gen_pubkey_hash = wolfcrypt_sgx_gen_pubkey_hash,
 	.gen_cert = wolfcrypt_sgx_gen_cert,
 	.cleanup = wolfcrypt_sgx_cleanup,
+	.flags = CRYPTO_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE,
 };
 
 void __attribute__((constructor))libcrypto_wrapper_wolfcrypt_sgx_init(void)
