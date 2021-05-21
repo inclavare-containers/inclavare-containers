@@ -14,11 +14,13 @@
 
 sgx_status_t ecall_generate_evidence(uint8_t *hash, sgx_report_t *app_report)
 {
-	sgx_report_data_t report_data = { 0, };
-	assert(sizeof(report_data.d) > SHA256_HASH_SIZE);
+	sgx_report_data_t report_data;
+	assert(sizeof(report_data.d) >= SHA256_HASH_SIZE);
+	memset(&report_data, 0, sizeof(sgx_report_data_t));
 	memcpy(report_data.d, hash, SHA256_HASH_SIZE);
 
-	sgx_target_info_t qe_target_info = { 0 };
+	sgx_target_info_t qe_target_info;
+	memset(&qe_target_info, 0, sizeof(sgx_target_info_t));
 	ocall_ratls_get_target_info(&qe_target_info);
 
 	/* Generate the report for the app_enclave */
