@@ -122,10 +122,10 @@ jobs:
       shell: bash
 
     - name: Run enclave tls server for null quote
-      run: docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
+      run: docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -v nullquote -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
 
     - name: Run shelter for null quote
-      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation  --verifier nullquote --addr=tcp://127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --attester nullquote --verifier nullquote --addr=tcp://127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}'
         docker restart $inclavare_test;
 
     - id: random-port-generator2
