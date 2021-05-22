@@ -20,7 +20,7 @@ tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tl
 			!tls_ctx->etls_handle->verifier->opts->verify_evidence)
 		return -TLS_WRAPPER_ERR_INVALID;
 
-	if (strcmp(tls_ctx->etls_handle->verifier->opts->type, evidence->type)) {
+	if (strcmp(tls_ctx->etls_handle->verifier->opts->type, evidence->type) && !(tls_ctx->etls_handle->flags & ENCLAVE_TLS_CONF_VERIFIER_ENFORCED)) {
 		ETLS_WARN("type doesn't match between verifier '%s' and evidence '%s'\n", tls_ctx->etls_handle->verifier->opts->name, evidence->type);
 		enclave_tls_err_t tlserr = etls_verifier_select(tls_ctx->etls_handle, evidence->type, tls_ctx->etls_handle->config.cert_algo);
 		if (tlserr != ENCLAVE_TLS_ERR_NONE) {
@@ -29,12 +29,10 @@ tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tl
 		}
 	}
 
-	enclave_quote_err_t err =
-		tls_ctx->etls_handle->verifier->opts->verify_evidence(tls_ctx->etls_handle->verifier, evidence,
-				hash, hash_len);
+	enclave_quote_err_t err = tls_ctx->etls_handle->verifier->opts->verify_evidence(tls_ctx->etls_handle->verifier, evidence, hash, hash_len);
 	if (err != ENCLAVE_QUOTE_ERR_NONE) {
 		ETLS_ERR("failed to verify evidence %#x\n", err);
-		return err;
+		return -TLS_WRAPPER_ERR_INVALID;
 	}
 
 	return TLS_WRAPPER_ERR_NONE;
