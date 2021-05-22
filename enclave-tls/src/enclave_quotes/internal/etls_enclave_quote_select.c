@@ -30,6 +30,10 @@ enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
 {
 	ETLS_DEBUG("selecting the attester '%s' ...\n", name);
 
+	// Explicitly specifying verifier which will never be changed
+	if (name)
+		 ctx->flags |= ENCLAVE_TLS_CONF_VERIFIER_ENFORCED;
+
 	enclave_quote_ctx_t *quote_ctx = NULL;
 	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
 		if (name && strcmp(name, enclave_quotes_ctx[i]->opts->name))
