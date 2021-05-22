@@ -20,60 +20,55 @@
  * Bit 22-00: sub-class specific error codes
  */
 
-#define ERR_CODE_CLASS_SHIFT            28
-#define ERR_CODE_SUBCLASS_SHIFT         23
-#define ERR_CODE_CLASS_MASK             0x70000000
-#define ERR_CODE_SUBCLASS_MASK          0x0f800000
-#define ERR_CODE_ERROR_MASK             ((1 << ERR_CODE_SUBCLASS_SHIFT) - 1)
-#define ERR_CODE_NAGATIVE               (1 << 31)
+#define ERR_CODE_CLASS_SHIFT	28
+#define ERR_CODE_SUBCLASS_SHIFT 23
+#define ERR_CODE_CLASS_MASK	0x70000000
+#define ERR_CODE_SUBCLASS_MASK	0x0f800000
+#define ERR_CODE_ERROR_MASK	((1 << ERR_CODE_SUBCLASS_SHIFT) - 1)
+#define ERR_CODE_NAGATIVE	(1 << 31)
 
 /* The error code class */
-#define ENCLAVE_TLS_ERR_BASE            (0 << ERR_CODE_CLASS_SHIFT)
-#define TLS_WRAPPER_ERR_BASE            (1 << ERR_CODE_CLASS_SHIFT)
-#define ENCLAVE_QUOTE_ERR_BASE          (2 << ERR_CODE_CLASS_SHIFT)
-#define CRYPTO_WRAPPER_ERR_BASE         (3 << ERR_CODE_CLASS_SHIFT)
+#define ENCLAVE_TLS_ERR_BASE	(0 << ERR_CODE_CLASS_SHIFT)
+#define TLS_WRAPPER_ERR_BASE	(1 << ERR_CODE_CLASS_SHIFT)
+#define ENCLAVE_QUOTE_ERR_BASE	(2 << ERR_CODE_CLASS_SHIFT)
+#define CRYPTO_WRAPPER_ERR_BASE (3 << ERR_CODE_CLASS_SHIFT)
 
 /* The base of error code used by wolfssl */
-#define WOLFSSL_ERR_BASE                (0 << ERR_CODE_SUBCLASS_SHIFT)
+#define WOLFSSL_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
 /* The base of error code used by wolfssl-sgx */
-#define WOLFSSL_SGX_ERR_BASE            (1 << ERR_CODE_SUBCLASS_SHIFT)
+#define WOLFSSL_SGX_ERR_BASE (1 << ERR_CODE_SUBCLASS_SHIFT)
 
 /* The base of error code used by wolfcrypt */
-#define WOLFCRYPT_ERR_BASE              (0 << ERR_CODE_SUBCLASS_SHIFT)
+#define WOLFCRYPT_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
 
 /* The base of error code used by sgx-ecdsa */
-#define SGX_ECDSA_ERR_BASE		(0 << ERR_CODE_SUBCLASS_SHIFT)
+#define SGX_ECDSA_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
 
 /* The base of error code used by sgx-la */
-#define SGX_LA_ERR_BASE                 (0 << ERR_CODE_SUBCLASS_SHIFT)
+#define SGX_LA_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
 
 // Error code used to construct TLS Wrapper instance
-#define __TLS_WRAPPER_ERR_CODE(base, err) \
-	(((TLS_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
-	 ((err) & ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
+#define __TLS_WRAPPER_ERR_CODE(base, err)                                                        \
+	(((TLS_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | ((err)&ERR_CODE_ERROR_MASK) | \
+	 ERR_CODE_NAGATIVE)
 
-#define WOLFSSL_ERR_CODE(err) \
-	__TLS_WRAPPER_ERR_CODE(WOLFSSL_ERR_BASE, err)
+#define WOLFSSL_ERR_CODE(err) __TLS_WRAPPER_ERR_CODE(WOLFSSL_ERR_BASE, err)
 
-#define WOLFSSL_SGX_ERR_CODE(err) \
-	__TLS_WRAPPER_ERR_CODE(WOLFSSL_SGX_ERR_BASE, err)
+#define WOLFSSL_SGX_ERR_CODE(err) __TLS_WRAPPER_ERR_CODE(WOLFSSL_SGX_ERR_BASE, err)
 
-#define __CRYPTO_WRAPPER_ERR_CODE(base, err) \
+#define __CRYPTO_WRAPPER_ERR_CODE(base, err)                          \
 	(((CRYPTO_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
-	 ((err) & ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
+	 ((err)&ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
 
-#define WOLFCRYPT_ERR_CODE(err) \
-	__CRYPTO_WRAPPER_ERR_CODE(WOLFCRYPT_ERR_BASE, err)
+#define WOLFCRYPT_ERR_CODE(err) __CRYPTO_WRAPPER_ERR_CODE(WOLFCRYPT_ERR_BASE, err)
 
-#define __ENCLAVE_QUOTE_ERR_CODE(base, err) \
-	(((ENCLAVE_QUOTE_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
-	 ((err) & ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
+#define __ENCLAVE_QUOTE_ERR_CODE(base, err)                                                        \
+	(((ENCLAVE_QUOTE_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | ((err)&ERR_CODE_ERROR_MASK) | \
+	 ERR_CODE_NAGATIVE)
 
-#define SGX_ECDSA_ERR_CODE(err) \
-	__ENCLAVE_QUOTE_ERR_CODE(SGX_ECDSA_ERR_BASE, err)	
+#define SGX_ECDSA_ERR_CODE(err) __ENCLAVE_QUOTE_ERR_CODE(SGX_ECDSA_ERR_BASE, err)
 
-#define SGX_LA_ERR_CODE(err) \
-	__ENCLAVE_QUOTE_ERR_CODE(SGX_LA_ERR_BASE, err)
+#define SGX_LA_ERR_CODE(err) __ENCLAVE_QUOTE_ERR_CODE(SGX_LA_ERR_BASE, err)
 
 typedef enum {
 	ENCLAVE_TLS_ERR_NONE = ENCLAVE_TLS_ERR_BASE,

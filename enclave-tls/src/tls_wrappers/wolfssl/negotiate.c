@@ -12,15 +12,15 @@
 extern int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store);
 #endif
 
-tls_wrapper_err_t wolfssl_internal_negotiate(tls_wrapper_ctx_t *ctx,
-					     unsigned long conf_flags, int fd,
-					     int (*verify)(int, WOLFSSL_X509_STORE_CTX *))
+tls_wrapper_err_t wolfssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned long conf_flags,
+					     int fd, int (*verify)(int, WOLFSSL_X509_STORE_CTX *))
 {
 	int flags = WOLFSSL_VERIFY_PEER;
 	wolfssl_ctx_t *ws_ctx = ctx->tls_private;
 
-	if ((conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL) && (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER))
-             flags |= WOLFSSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+	if ((conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL) &&
+	    (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER))
+		flags |= WOLFSSL_VERIFY_FAIL_IF_NO_PEER_CERT;
 
 	if (verify)
 		wolfSSL_CTX_set_verify(ws_ctx->ws, flags, verify);
@@ -66,7 +66,8 @@ static int ssl_ctx_set_verify_callback(int mode, WOLFSSL_X509_STORE_CTX *store)
 {
 	(void)mode;
 	int result;
-	int sgxStatus = ocall_verify_certificate(&result, store->userCtx, store->certs->buffer, store->certs->length);
+	int sgxStatus = ocall_verify_certificate(&result, store->userCtx, store->certs->buffer,
+						 store->certs->length);
 	if (sgxStatus != SGX_SUCCESS)
 		return 0;
 
@@ -84,7 +85,8 @@ tls_wrapper_err_t wolfssl_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 	int (*verify)(int, WOLFSSL_X509_STORE_CTX *) = NULL;
 	unsigned long conf_flags = ctx->conf_flags;
 
-	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER) || (conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)) {
+	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER) ||
+	    (conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)) {
 #ifdef WOLFSSL_SGX_WRAPPER
 		verify = ssl_ctx_set_verify_callback;
 #else

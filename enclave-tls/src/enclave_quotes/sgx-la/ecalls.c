@@ -5,6 +5,6 @@
 
 /* This function only exists to make edger8r happy. There must be at
    least one trusted (ECALL) function. */
-void dummy(void) {
+void dummy(void)
+{
 }
-

@@ -9,9 +9,8 @@
 #include <enclave-tls/cert.h>
 #include "wolfcrypt.h"
 
-crypto_wrapper_err_t
-wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
-		   enclave_tls_cert_info_t *cert_info)
+crypto_wrapper_err_t wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
+					enclave_tls_cert_info_t *cert_info)
 {
 	ETLS_DEBUG("ctx %p, cert_info %p\n", ctx, cert_info);
 
@@ -22,14 +21,11 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 	wc_InitCert(&crt);
 
 	cert_subject_t *subject = &cert_info->subject;
-	strncpy(crt.subject.org, subject->organization,
-		sizeof(crt.subject.org) - 1);
+	strncpy(crt.subject.org, subject->organization, sizeof(crt.subject.org) - 1);
 	crt.subject.org[sizeof(crt.subject.org) - 1] = '\0';
-	strncpy(crt.subject.unit, subject->organization_unit,
-		sizeof(crt.subject.unit) - 1);
+	strncpy(crt.subject.unit, subject->organization_unit, sizeof(crt.subject.unit) - 1);
 	crt.subject.unit[sizeof(crt.subject.unit) - 1] = '\0';
-	strncpy(crt.subject.commonName, subject->common_name,
-		sizeof(crt.subject.commonName) - 1);
+	strncpy(crt.subject.commonName, subject->common_name, sizeof(crt.subject.commonName) - 1);
 	crt.subject.commonName[sizeof(crt.subject.commonName) - 1] = '\0';
 
 	ETLS_DEBUG("evidence type '%s' requested\n", cert_info->evidence.type);
@@ -68,8 +64,7 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 	RNG rng;
 	wc_InitRng(&rng);
 	wolfcrypt_ctx_t *wc_ctx = (wolfcrypt_ctx_t *)ctx->crypto_private;
-	int cert_len = wc_MakeSelfCert(&crt, cert_info->cert_buf,
-				       sizeof(cert_info->cert_buf),
+	int cert_len = wc_MakeSelfCert(&crt, cert_info->cert_buf, sizeof(cert_info->cert_buf),
 				       &wc_ctx->key, &rng);
 	if (cert_len <= 0) {
 		ETLS_DEBUG("failed to create self-signing certificate %d\n", cert_info->cert_len);

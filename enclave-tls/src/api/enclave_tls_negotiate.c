@@ -13,8 +13,7 @@ enclave_tls_err_t enclave_tls_negotiate(enclave_tls_handle handle, int fd)
 
 	ETLS_DEBUG("handle %p, fd %d\n", ctx, fd);
 
-	if (!ctx || !ctx->tls_wrapper ||
-	    !ctx->tls_wrapper->opts ||
+	if (!ctx || !ctx->tls_wrapper || !ctx->tls_wrapper->opts ||
 	    !ctx->tls_wrapper->opts->negotiate || fd < 0)
 		return -ENCLAVE_TLS_ERR_INVALID;
 

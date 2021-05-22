@@ -8,9 +8,8 @@
 #include <enclave-tls/cert.h>
 #include "wolfcrypt_sgx.h"
 
-crypto_wrapper_err_t
-wolfcrypt_sgx_gen_cert(crypto_wrapper_ctx_t *ctx,
-		       enclave_tls_cert_info_t *cert_info)
+crypto_wrapper_err_t wolfcrypt_sgx_gen_cert(crypto_wrapper_ctx_t *ctx,
+					    enclave_tls_cert_info_t *cert_info)
 {
 	ETLS_DEBUG("ctx %p, cert_info %p\n", ctx, cert_info);
 

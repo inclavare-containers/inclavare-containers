@@ -11,11 +11,11 @@
 #include <stddef.h>
 #include <enclave-tls/err.h>
 
-#define TLS_TYPE_NAME_SIZE      32
-#define QUOTE_TYPE_NAME_SIZE    32
-#define CRYPTO_TYPE_NAME_SIZE   32
+#define TLS_TYPE_NAME_SIZE	32
+#define QUOTE_TYPE_NAME_SIZE	32
+#define CRYPTO_TYPE_NAME_SIZE	32
 #define ENCLAVE_SGX_SPID_LENGTH 16
-#define SHA256_HASH_SIZE        32
+#define SHA256_HASH_SIZE	32
 
 typedef enum {
 	ENCLAVE_TLS_LOG_LEVEL_DEBUG,
@@ -37,10 +37,12 @@ typedef enum {
 } enclave_tls_cert_algo_t;
 
 /* FIXME: add the type of ecdsa verification */
+// clang-format off
 typedef enum {
 	VERIFICATION_TYPE_QVL,
 	VERIFICATION_TYPE_QEL
 } quote_sgx_ecdsa_verification_type_t;
+// clang-format on
 
 typedef struct {
 	unsigned int api_version;
@@ -68,29 +70,24 @@ typedef struct {
 	} quote_sgx_ecdsa;
 } enclave_tls_conf_t;
 
-#define ENCLAVE_TLS_API_VERSION_1                   1
-#define ENCLAVE_TLS_API_VERSION_MAX                 ENCLAVE_TLS_API_VERSION_1
-#define ENCLAVE_TLS_API_VERSION_DEFAULT             ENCLAVE_TLS_API_VERSION_1
+#define ENCLAVE_TLS_API_VERSION_1	1
+#define ENCLAVE_TLS_API_VERSION_MAX	ENCLAVE_TLS_API_VERSION_1
+#define ENCLAVE_TLS_API_VERSION_DEFAULT ENCLAVE_TLS_API_VERSION_1
 
-#define ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT    0
-#define ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT   32
-#define	ENCLAVE_TLS_CONF_FLAGS_VERENFORCED_MASK_SHIFT	33
+#define ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT      0
+#define ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT     32
+#define ENCLAVE_TLS_CONF_FLAGS_VERENFORCED_MASK_SHIFT 33
 
 #define ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK          (ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK << ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT
 
-#define ENCLAVE_TLS_CONF_FLAGS_MUTUAL               (1UL << ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT)
+#define ENCLAVE_TLS_CONF_FLAGS_MUTUAL	   (1UL << ENCLAVE_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT)
+#define ENCLAVE_TLS_CONF_FLAGS_SERVER	   (1UL << ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT)
+#define ENCLAVE_TLS_CONF_VERIFIER_ENFORCED (1UL << ENCLAVE_TLS_CONF_FLAGS_VERENFORCED_MASK_SHIFT)
 
-#define ENCLAVE_TLS_CONF_FLAGS_SERVER               (1UL << ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT)
-
-#define ENCLAVE_TLS_CONF_VERIFIER_ENFORCED          (1UL << ENCLAVE_TLS_CONF_FLAGS_VERENFORCED_MASK_SHIFT)
-
-enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
-				   enclave_tls_handle *handle);
+enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf, enclave_tls_handle *handle);
 enclave_tls_err_t enclave_tls_negotiate(enclave_tls_handle handle, int fd);
-enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf,
-				      size_t *buf_size);
-enclave_tls_err_t enclave_tls_transmit(enclave_tls_handle handle, void *buf,
-				       size_t *buf_size);
+enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf, size_t *buf_size);
+enclave_tls_err_t enclave_tls_transmit(enclave_tls_handle handle, void *buf, size_t *buf_size);
 enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle);
 
 #endif

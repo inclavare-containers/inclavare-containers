@@ -12,17 +12,17 @@
 #include <enclave-tls/api.h>
 #include <enclave-tls/cert.h>
 
-#define ENCLAVE_QUOTE_TYPE_MAX               32
+#define ENCLAVE_QUOTE_TYPE_MAX 32
 
-#define ENCLAVE_QUOTE_API_VERSION_1          1
-#define ENCLAVE_QUOTE_API_VERSION_MAX        ENCLAVE_QUOTE_API_VERSION_1
-#define ENCLAVE_QUOTE_API_VERSION_DEFAULT    ENCLAVE_QUOTE_API_VERSION_1
+#define ENCLAVE_QUOTE_API_VERSION_1	  1
+#define ENCLAVE_QUOTE_API_VERSION_MAX	  ENCLAVE_QUOTE_API_VERSION_1
+#define ENCLAVE_QUOTE_API_VERSION_DEFAULT ENCLAVE_QUOTE_API_VERSION_1
 
 #define ENCLAVE_QUOTE_OPTS_FLAGS_SGX_ENCLAVE 1
 
-#define ENCLAVE_QUOTE_FLAGS_DEFAULT          0
+#define ENCLAVE_QUOTE_FLAGS_DEFAULT 0
 
-typedef struct enclave_quote_ctx             enclave_quote_ctx_t;
+typedef struct enclave_quote_ctx enclave_quote_ctx_t;
 
 typedef struct {
 	uint8_t api_version;
@@ -37,17 +37,15 @@ typedef struct {
 
 	/* Optional */
 	enclave_quote_err_t (*pre_init)(void);
-	enclave_quote_err_t (*init)(enclave_quote_ctx_t *ctx,
-				    enclave_tls_cert_algo_t algo);
+	enclave_quote_err_t (*init)(enclave_quote_ctx_t *ctx, enclave_tls_cert_algo_t algo);
 	enclave_quote_err_t (*extend_cert)(enclave_quote_ctx_t *ctx,
 					   const enclave_tls_cert_info_t *cert_info);
 	enclave_quote_err_t (*collect_evidence)(enclave_quote_ctx_t *ctx,
 						attestation_evidence_t *evidence,
-						enclave_tls_cert_algo_t algo,
-						uint8_t *hash);
+						enclave_tls_cert_algo_t algo, uint8_t *hash);
 	enclave_quote_err_t (*verify_evidence)(enclave_quote_ctx_t *ctx,
-					       attestation_evidence_t *evidence,
-					       uint8_t *hash, unsigned int hash_len);
+					       attestation_evidence_t *evidence, uint8_t *hash,
+					       unsigned int hash_len);
 	enclave_quote_err_t (*collect_collateral)(enclave_quote_ctx_t *ctx);
 	enclave_quote_err_t (*cleanup)(enclave_quote_ctx_t *ctx);
 } enclave_quote_opts_t;

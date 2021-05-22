@@ -14,16 +14,16 @@
 static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 {
 #if defined(__x86_64__)
-	asm volatile ("cpuid"
-		      : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
-		      : "0" (*eax), "2" (*ecx)
-		      : "memory");
+	asm volatile("cpuid"
+		     : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+		     : "0"(*eax), "2"(*ecx)
+		     : "memory");
 #else
 	/* on 32bit, ebx can NOT be used as PIC code */
-	asm volatile ("xchgl %%ebx, %1; cpuid; xchgl %%ebx, %1"
-		      : "=a" (*eax), "=r" (*ebx), "=c" (*ecx), "=d" (*edx)
-		      : "0" (*eax), "2" (*ecx)
-		      : "memory");
+	asm volatile("xchgl %%ebx, %1; cpuid; xchgl %%ebx, %1"
+		     : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
+		     : "0"(*eax), "2"(*ecx)
+		     : "memory");
 #endif
 }
 
@@ -84,9 +84,9 @@ bool is_sgx_supported_and_configured(void)
 	if (!is_sgx2_supported() && !is_sgx1_supported())
 		return false;
 
-	if (!is_dcap_oot_kernel_driver() &&
-	    !is_legacy_oot_kernel_driver() && !is_in_tree_kernel_driver())
+	if (!is_dcap_oot_kernel_driver() && !is_legacy_oot_kernel_driver() &&
+	    !is_in_tree_kernel_driver())
 		return false;
-                        
+
 	return true;
 }

@@ -11,8 +11,8 @@
 #include "internal/core.h"
 #include "internal/tls_wrapper.h"
 
-#define PATTERN_PREFIX          "libtls_wrapper_"
-#define PATTERN_SUFFIX          ".so"
+#define PATTERN_PREFIX "libtls_wrapper_"
+#define PATTERN_SUFFIX ".so"
 
 enclave_tls_err_t etls_tls_wrapper_load_single(const char *fname)
 {
@@ -21,8 +21,10 @@ enclave_tls_err_t etls_tls_wrapper_load_single(const char *fname)
 	/* Check whether the filename pattern matches up libtls_wrapper_<name>.so */
 	if (strlen(fname) <= strlen(PATTERN_PREFIX) + strlen(PATTERN_SUFFIX) ||
 	    strncmp(fname, PATTERN_PREFIX, strlen(PATTERN_PREFIX)) ||
-	    strncmp(fname + strlen(fname) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX))) {
-		ETLS_ERR("The filename pattern of '%s' NOT match " PATTERN_PREFIX "<name>" PATTERN_SUFFIX "\n",
+	    strncmp(fname + strlen(fname) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX,
+		    strlen(PATTERN_SUFFIX))) {
+		ETLS_ERR("The filename pattern of '%s' NOT match " PATTERN_PREFIX
+			 "<name>" PATTERN_SUFFIX "\n",
 			 fname);
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}

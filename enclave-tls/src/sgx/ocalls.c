@@ -13,7 +13,7 @@ static double current_time()
 
 	gettimeofday(&tv, NULL);
 
-	return (double)(1000000 * tv.tv_sec + tv.tv_usec)/1000000.0;
+	return (double)(1000000 * tv.tv_sec + tv.tv_usec) / 1000000.0;
 }
 
 void ocall_print_string(const char *str)

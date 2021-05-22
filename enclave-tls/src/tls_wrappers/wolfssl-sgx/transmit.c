@@ -7,8 +7,7 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "wolfssl_sgx.h"
 
-tls_wrapper_err_t wolfssl_sgx_transmit(tls_wrapper_ctx_t *ctx, void *buf,
-				       size_t *buf_size)
+tls_wrapper_err_t wolfssl_sgx_transmit(tls_wrapper_ctx_t *ctx, void *buf, size_t *buf_size)
 {
 	ETLS_DEBUG("called\n");
 

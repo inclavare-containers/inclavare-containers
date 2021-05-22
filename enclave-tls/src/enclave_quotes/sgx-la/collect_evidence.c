@@ -21,22 +21,18 @@
  */
 enclave_quote_err_t sgx_la_collect_evidence(enclave_quote_ctx_t *ctx,
 					    attestation_evidence_t *evidence,
-					    enclave_tls_cert_algo_t algo,
-					    uint8_t *hash)
+					    enclave_tls_cert_algo_t algo, uint8_t *hash)
 {
-	ETLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence,
-		   algo, hash);
+	ETLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence, algo, hash);
 
-	sgx_la_ctx_t *la_ctx = (sgx_la_ctx_t *) ctx->quote_private;
+	sgx_la_ctx_t *la_ctx = (sgx_la_ctx_t *)ctx->quote_private;
 
 	sgx_report_t isv_report;
 	sgx_status_t generate_evidence_ret;
 	sgx_status_t status =
-		ecall_generate_evidence(la_ctx->eid, &generate_evidence_ret,
-					hash, &isv_report);
+		ecall_generate_evidence(la_ctx->eid, &generate_evidence_ret, hash, &isv_report);
 	if (status != SGX_SUCCESS || generate_evidence_ret != SGX_SUCCESS) {
-		ETLS_ERR("failed to generate evidence %#x\n",
-			 generate_evidence_ret);
+		ETLS_ERR("failed to generate evidence %#x\n", generate_evidence_ret);
 		return SGX_LA_ERR_CODE((int)generate_evidence_ret);
 	}
 

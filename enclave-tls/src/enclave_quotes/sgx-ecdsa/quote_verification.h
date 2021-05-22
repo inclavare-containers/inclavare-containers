@@ -34,7 +34,7 @@ typedef struct {
 	uint8_t *supplemental_data;
 } sgxioc_ver_dcap_quote_arg_t;
 
-#define SGXIOC_GET_DCAP_SUPPLEMENTAL_SIZE    _IOR('s', 9, uint32_t)
-#define SGXIOC_VER_DCAP_QUOTE                _IOWR('s', 10, sgxioc_ver_dcap_quote_arg_t)
+#define SGXIOC_GET_DCAP_SUPPLEMENTAL_SIZE _IOR('s', 9, uint32_t)
+#define SGXIOC_VER_DCAP_QUOTE		  _IOWR('s', 10, sgxioc_ver_dcap_quote_arg_t)
 
 #endif /* QUOTE_VERIFICATION_H_ */

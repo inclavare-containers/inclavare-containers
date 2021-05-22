@@ -30,16 +30,14 @@ crypto_wrapper_err_t ecall_wolfcrypt_init(crypto_wrapper_ctx_t *ctx)
 }
 
 crypto_wrapper_err_t ecall_wolfcrypt_gen_privkey(crypto_wrapper_ctx_t *ctx,
-						 enclave_tls_cert_algo_t algo,
-						 uint8_t *privkey_buf,
+						 enclave_tls_cert_algo_t algo, uint8_t *privkey_buf,
 						 unsigned int *privkey_len)
 {
 	return wolfcrypt_gen_privkey(ctx, algo, privkey_buf, privkey_len);
 }
 
 crypto_wrapper_err_t ecall_wolfcrypt_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
-						     enclave_tls_cert_algo_t algo,
-						     uint8_t *hash)
+						     enclave_tls_cert_algo_t algo, uint8_t *hash)
 {
 	return wolfcrypt_gen_pubkey_hash(ctx, algo, hash);
 }

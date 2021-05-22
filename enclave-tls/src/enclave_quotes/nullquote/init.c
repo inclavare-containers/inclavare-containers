@@ -8,8 +8,7 @@
 
 static unsigned int dummy_private;
 
-enclave_quote_err_t nullquote_init(enclave_quote_ctx_t *ctx,
-				   enclave_tls_cert_algo_t algo)
+enclave_quote_err_t nullquote_init(enclave_quote_ctx_t *ctx, enclave_tls_cert_algo_t algo)
 {
 	ETLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 

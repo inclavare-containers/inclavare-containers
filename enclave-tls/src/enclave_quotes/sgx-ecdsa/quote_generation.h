@@ -28,14 +28,14 @@ typedef struct {
 } sgxioc_gen_dcap_quote_arg_t;
 
 typedef struct {
-	const sgx_target_info_t *target_info;	// input (optinal)
-	const sgx_report_data_t *report_data;	// input (optional)
-	sgx_report_t *report;	// output
+	const sgx_target_info_t *target_info; // input (optinal)
+	const sgx_report_data_t *report_data; // input (optional)
+	sgx_report_t *report; // output
 } sgxioc_create_report_arg_t;
 
-#define SGXIOC_GET_DCAP_QUOTE_SIZE	_IOR('s', 7, uint32_t)
-#define SGXIOC_GEN_DCAP_QUOTE		_IOWR('s', 8, sgxioc_gen_dcap_quote_arg_t)
-#define SGXIOC_CREATE_REPORT		_IOWR('s', 4, sgxioc_create_report_arg_t)
+#define SGXIOC_GET_DCAP_QUOTE_SIZE _IOR('s', 7, uint32_t)
+#define SGXIOC_GEN_DCAP_QUOTE	   _IOWR('s', 8, sgxioc_gen_dcap_quote_arg_t)
+#define SGXIOC_CREATE_REPORT	   _IOWR('s', 4, sgxioc_create_report_arg_t)
 
 int generate_quote(int sgx_fd, sgxioc_gen_dcap_quote_arg_t *gen_quote_arg);
 

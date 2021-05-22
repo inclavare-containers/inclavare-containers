@@ -9,14 +9,12 @@
 
 extern enclave_quote_err_t enclave_quote_register(enclave_quote_opts_t *);
 extern enclave_quote_err_t nullquote_pre_init(void);
-extern enclave_quote_err_t nullquote_init(enclave_quote_ctx_t *,
-					  enclave_tls_cert_algo_t algo);
+extern enclave_quote_err_t nullquote_init(enclave_quote_ctx_t *, enclave_tls_cert_algo_t algo);
 //extern enclave_quote_err_t nullquote_extend_cert(enclave_quote_ctx_t *ctx,
 //					    const enclave_tls_cert_info_t *cert_info);
 extern enclave_quote_err_t nullquote_collect_evidence(enclave_quote_ctx_t *,
 						      attestation_evidence_t *,
-						      enclave_tls_cert_algo_t algo,
-						      uint8_t *);
+						      enclave_tls_cert_algo_t algo, uint8_t *);
 extern enclave_quote_err_t nullquote_verify_evidence(enclave_quote_ctx_t *,
 						     attestation_evidence_t *, uint8_t *,
 						     unsigned int hash_len);
@@ -35,8 +33,7 @@ static enclave_quote_opts_t nullquote_opts = {
 	.cleanup = nullquote_cleanup,
 };
 
-void __attribute__((constructor))
-libenclave_quote_nullquote_init(void)
+void __attribute__((constructor)) libenclave_quote_nullquote_init(void)
 {
 	ETLS_DEBUG("called\n");
 

@@ -11,11 +11,10 @@ extern crypto_wrapper_err_t wolfcrypt_pre_init(void);
 extern crypto_wrapper_err_t wolfcrypt_init(crypto_wrapper_ctx_t *);
 extern crypto_wrapper_err_t __secured wolfcrypt_gen_privkey(crypto_wrapper_ctx_t *ctx,
 							    enclave_tls_cert_algo_t algo,
-						  	    uint8_t *privkey_buf,
+							    uint8_t *privkey_buf,
 							    unsigned int *privkey_len);
 extern crypto_wrapper_err_t wolfcrypt_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
-						      enclave_tls_cert_algo_t algo,
-						      uint8_t *hash);
+						      enclave_tls_cert_algo_t algo, uint8_t *hash);
 extern crypto_wrapper_err_t wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 					       enclave_tls_cert_info_t *cert_info);
 extern crypto_wrapper_err_t wolfcrypt_cleanup(crypto_wrapper_ctx_t *);
@@ -32,8 +31,7 @@ static crypto_wrapper_opts_t wolfcrypt_opts = {
 	.cleanup = wolfcrypt_cleanup,
 };
 
-void __attribute__((constructor))
-libcrypto_wrapper_wolfcrypt_init(void)
+void __attribute__((constructor)) libcrypto_wrapper_wolfcrypt_init(void)
 {
 	ETLS_DEBUG("called\n");
 
