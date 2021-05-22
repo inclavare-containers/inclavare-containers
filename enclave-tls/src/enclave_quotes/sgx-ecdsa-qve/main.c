@@ -23,7 +23,8 @@ extern enclave_quote_err_t sgx_ecdsa_cleanup(enclave_quote_ctx_t *ctx);
 static enclave_quote_opts_t sgx_ecdsa_qve_opts = {
 	.api_version = ENCLAVE_QUOTE_API_VERSION_DEFAULT,
 	.flags = ENCLAVE_QUOTE_OPTS_FLAGS_SGX_ENCLAVE,
-	.type = "sgx_ecdsa_qve",
+	.name = "sgx_ecdsa_qve",
+	.type = "sgx_ecdsa",
 	.priority = 53,
 	.pre_init = sgx_ecdsa_pre_init,
 	.init = sgx_ecdsa_qve_init,

@@ -20,7 +20,7 @@ extern tls_wrapper_err_t wolfssl_sgx_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t wolfssl_sgx_opts = {
 	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
-	.type = "wolfssl_sgx",
+	.name = "wolfssl_sgx",
 	.priority = 50,
 	.pre_init = wolfssl_sgx_pre_init,
 	.init = wolfssl_sgx_init,

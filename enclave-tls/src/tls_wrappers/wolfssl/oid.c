@@ -13,7 +13,7 @@ const uint8_t ias_root_cert_oid[] = OID(0x03);
 const uint8_t ias_leaf_cert_oid[] = OID(0x04);
 const uint8_t ias_report_signature_oid[] = OID(0x05);
 
-const uint8_t quote_oid[] = OID(0x06);
+const uint8_t ecdsa_quote_oid[] = OID(0x06);
 const uint8_t pck_crt_oid[] = OID(0x07);
 const uint8_t pck_sign_chain_oid[] = OID(0x08);
 const uint8_t tcb_info_oid[] = OID(0x09);
@@ -22,6 +22,5 @@ const uint8_t qe_identity_oid[] = OID(0x0b);
 const uint8_t root_ca_crl_oid[] = OID(0x0c);
 const uint8_t pck_crl_oid[] = OID(0x0d);
 const uint8_t la_report_oid[] = OID(0x0e);
-const uint8_t qve_quote_oid[] = OID(0x0f);
 
 const size_t ias_oid_len = sizeof(ias_response_body_oid);

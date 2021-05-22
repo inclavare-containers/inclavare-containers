@@ -106,7 +106,10 @@ enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
                 goto errout;
         }
 
-        if (!strcmp(ctx->opts->type, "sgx_ecdsa_qve")) {
+	/* sgx_ecdsa_qve instance re-uses this code and thus we need to distinguish
+	 * it from sgx_ecdsa instance.
+	 */
+        if (!strcmp(ctx->opts->name, "sgx_ecdsa_qve")) {
                 qve_report_info = malloc(sizeof(sgx_ql_qe_report_info_t));
                 if (!qve_report_info) {
                         ETLS_ERR("failed to malloc qve report info.\n");
@@ -168,7 +171,7 @@ enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
                 goto errret;
         }
 
-        if (!strcmp(ctx->opts->type, "sgx_ecdsa_qve")) {
+        if (!strcmp(ctx->opts->name, "sgx_ecdsa_qve")) {
                 sgx_ret = sgx_tvl_verify_qve_report_and_identity((sgx_enclave_id_t)ecdsa_ctx->eid,
                                 &verify_qveid_ret,
                                 evidence->ecdsa.

@@ -15,11 +15,11 @@ crypto_wrapper_err_t crypto_wrapper_register(const crypto_wrapper_opts_t *opts)
 	if (!opts)
 		return -CRYPTO_WRAPPER_ERR_INVALID;
 
-	ETLS_DEBUG("registering the crypto wrapper '%s' ...\n", opts->type);
+	ETLS_DEBUG("registering the crypto wrapper '%s' ...\n", opts->name);
 
 	if (opts->flags & CRYPTO_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE) {
 		if (!is_sgx_supported_and_configured()) {
-			ETLS_DEBUG("failed to register the crypto wrapper '%s' due to lack of SGX capability\n", opts->type);
+			ETLS_DEBUG("failed to register the crypto wrapper '%s' due to lack of SGX capability\n", opts->name);
 			return -CRYPTO_WRAPPER_ERR_INVALID;
 		}
 	}
@@ -31,8 +31,8 @@ crypto_wrapper_err_t crypto_wrapper_register(const crypto_wrapper_opts_t *opts)
 
 	memcpy(new_opts, opts, sizeof(*new_opts));
 
-	if (new_opts->type[0] == '\0') {
-		ETLS_ERR("invalid crypto wrapper type\n");
+	if (new_opts->name[0] == '\0') {
+		ETLS_ERR("invalid crypto wrapper name\n");
 		goto err;
 	}
 
@@ -44,7 +44,7 @@ crypto_wrapper_err_t crypto_wrapper_register(const crypto_wrapper_opts_t *opts)
 
 	crypto_wrappers_opts[registerd_crypto_wrapper_nums++] = new_opts;
 
-	ETLS_INFO("the crypto wrapper '%s' registered\n", opts->type);
+	ETLS_INFO("the crypto wrapper '%s' registered\n", opts->name);
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 

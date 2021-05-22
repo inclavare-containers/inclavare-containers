@@ -58,11 +58,6 @@ wolfcrypt_gen_cert(crypto_wrapper_ctx_t *ctx,
 
 		memcpy(crt.quote, ecdsa->quote, ecdsa->quote_len);
 		crt.quoteSz = ecdsa->quote_len;
-	} else if (!strcmp(cert_info->evidence.type, "sgx_ecdsa_qve")) {
-		ecdsa_attestation_evidence_t *ecdsa = &cert_info->evidence.ecdsa;
-
-		memcpy(crt.quote, ecdsa->quote, ecdsa->quote_len);
-		crt.qvequoteSz = ecdsa->quote_len;
 	} else if (!strcmp(cert_info->evidence.type, "sgx_la")) {
 		la_attestation_evidence_t *la = &cert_info->evidence.la;
 

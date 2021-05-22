@@ -26,7 +26,7 @@ typedef struct crypto_wrapper_ctx             crypto_wrapper_ctx_t;
 typedef struct {
 	uint8_t api_version;
 	unsigned long flags;
-	const char type[CRYPTO_TYPE_NAME_SIZE];
+	const char name[CRYPTO_TYPE_NAME_SIZE];
 	uint8_t priority;
 
 	/* Optional */

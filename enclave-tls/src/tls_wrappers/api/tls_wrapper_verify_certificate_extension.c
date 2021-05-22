@@ -21,7 +21,7 @@ tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tl
 		return -TLS_WRAPPER_ERR_INVALID;
 
 	if (strcmp(tls_ctx->etls_handle->verifier->opts->type, evidence->type)) {
-		ETLS_WARN("type doesn't match between verifier '%s' and evidence '%s'\n", tls_ctx->etls_handle->verifier->opts->type, evidence->type);
+		ETLS_WARN("type doesn't match between verifier '%s' and evidence '%s'\n", tls_ctx->etls_handle->verifier->opts->name, evidence->type);
 		enclave_tls_err_t tlserr = etls_verifier_select(tls_ctx->etls_handle, evidence->type, tls_ctx->etls_handle->config.cert_algo);
 		if (tlserr != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("the verifier selecting err %#x during verifying cert extension\n", tlserr);

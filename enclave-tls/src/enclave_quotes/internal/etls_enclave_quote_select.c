@@ -25,14 +25,14 @@ static enclave_tls_err_t init_enclave_quote(etls_core_context_t *ctx,
 }
 
 enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
-					    const char *type,
+					    const char *name,
 					    enclave_tls_cert_algo_t algo)
 {
-	ETLS_DEBUG("selecting the attester '%s' ...\n", type);
+	ETLS_DEBUG("selecting the attester '%s' ...\n", name);
 
 	enclave_quote_ctx_t *quote_ctx = NULL;
 	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
-		if (type && strcmp(type, enclave_quotes_ctx[i]->opts->type))
+		if (name && strcmp(name, enclave_quotes_ctx[i]->opts->name))
 			continue;
 
 		quote_ctx = malloc(sizeof(*quote_ctx));
@@ -55,10 +55,10 @@ enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
 	}
 
 	if (!quote_ctx) {
-		if (!type)
+		if (!name)
 			ETLS_ERR("failed to select an attester\n");
 		else
-			ETLS_ERR("failed to select the attester '%s'\n", type);
+			ETLS_ERR("failed to select the attester '%s'\n", name);
 
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
@@ -66,20 +66,20 @@ enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
 	ctx->attester = quote_ctx;
 	ctx->flags |= ENCLAVE_TLS_CTX_FLAGS_QUOTING_INITIALIZED;
 
-	ETLS_INFO("the attester '%s' selected\n", ctx->attester->opts->type);
+	ETLS_INFO("the attester '%s' selected\n", ctx->attester->opts->name);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }
 
 enclave_tls_err_t etls_verifier_select(etls_core_context_t *ctx,
-					    const char *type,
+					    const char *name,
 					    enclave_tls_cert_algo_t algo)
 {
-	ETLS_DEBUG("selecting the verifier '%s' ...\n", type);
+	ETLS_DEBUG("selecting the verifier '%s' ...\n", name);
 
 	enclave_quote_ctx_t *quote_ctx = NULL;
 	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
-		if (type && strcmp(type, enclave_quotes_ctx[i]->opts->type))
+		if (name && strcmp(name, enclave_quotes_ctx[i]->opts->name))
 			continue;
 
 		quote_ctx = malloc(sizeof(*quote_ctx));
@@ -102,17 +102,17 @@ enclave_tls_err_t etls_verifier_select(etls_core_context_t *ctx,
 	}
 
 	if (!quote_ctx) {
-		if (!type)
+		if (!name)
 			ETLS_ERR("failed to select a verifier\n");
 		else
-			ETLS_ERR("failed to select the verifier '%s'\n", type);
+			ETLS_ERR("failed to select the verifier '%s'\n", name);
 
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
 	ctx->verifier = quote_ctx;
 
-	ETLS_INFO("the verifier '%s' selected\n", ctx->verifier->opts->type);
+	ETLS_INFO("the verifier '%s' selected\n", ctx->verifier->opts->name);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

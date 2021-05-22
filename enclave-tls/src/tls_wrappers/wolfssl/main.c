@@ -21,7 +21,7 @@ extern tls_wrapper_err_t wolfssl_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t wolfssl_opts = {
 	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
-	.type = "wolfssl",
+	.name = "wolfssl",
 	.priority = 20,
 	.pre_init = wolfssl_pre_init,
 	.init = wolfssl_init,

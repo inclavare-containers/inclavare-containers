@@ -25,7 +25,7 @@ extern enclave_quote_err_t nullquote_cleanup(enclave_quote_ctx_t *);
 static enclave_quote_opts_t nullquote_opts = {
 	.api_version = ENCLAVE_QUOTE_API_VERSION_DEFAULT,
 	.flags = ENCLAVE_QUOTE_FLAGS_DEFAULT,
-	.type = "nullquote",
+	.name = "nullquote",
 	.priority = 0,
 	.pre_init = nullquote_pre_init,
 	.init = nullquote_init,

@@ -22,7 +22,7 @@ extern crypto_wrapper_err_t wolfcrypt_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t wolfcrypt_opts = {
 	.api_version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
-	.type = "wolfcrypt",
+	.name = "wolfcrypt",
 	.priority = 20,
 	.pre_init = wolfcrypt_pre_init,
 	.init = wolfcrypt_init,
