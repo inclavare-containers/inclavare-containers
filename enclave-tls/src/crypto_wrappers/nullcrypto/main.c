@@ -21,7 +21,7 @@ extern crypto_wrapper_err_t nullcrypto_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t nullcrypto_opts = {
 	.api_version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
-	.type = "nullcrypto",
+	.name = "nullcrypto",
 	.priority = 0,
 	.pre_init = nullcrypto_pre_init,
 	.init = nullcrypto_init,

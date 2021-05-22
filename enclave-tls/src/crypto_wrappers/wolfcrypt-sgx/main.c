@@ -23,7 +23,7 @@ extern crypto_wrapper_err_t wolfcrypt_sgx_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t wolfcrypt_sgx_opts = {
 	.api_version = CRYPTO_WRAPPER_API_VERSION_DEFAULT,
-	.type = "wolfcrypt_sgx",
+	.name = "wolfcrypt_sgx",
 	.priority = 50,
 	.pre_init = wolfcrypt_sgx_pre_init,
 	.init = wolfcrypt_sgx_init,

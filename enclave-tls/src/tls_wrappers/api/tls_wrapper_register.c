@@ -15,11 +15,11 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 	if (!opts)
 		return -CRYPTO_WRAPPER_ERR_INVALID;
 
-	ETLS_DEBUG("registering the tls wrapper '%s' ...\n", opts->type);
+	ETLS_DEBUG("registering the tls wrapper '%s' ...\n", opts->name);
 
 	if (opts->flags & TLS_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE) {
 		if (!is_sgx_supported_and_configured()) {
-			ETLS_DEBUG("failed to register the tls wrapper '%s' due to lack of SGX capability\n", opts->type);
+			ETLS_DEBUG("failed to register the tls wrapper '%s' due to lack of SGX capability\n", opts->name);
 			return -TLS_WRAPPER_ERR_INVALID;
 		}
 	}
@@ -31,8 +31,8 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 
 	memcpy(new_opts, opts, sizeof(*new_opts));
 
-	if (new_opts->type[0] == '\0') {
-		ETLS_ERR("invalid tls wrapper type\n");
+	if (new_opts->name[0] == '\0') {
+		ETLS_ERR("invalid tls wrapper name\n");
 		goto err;
 	}
 
@@ -44,7 +44,7 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 
 	tls_wrappers_opts[registerd_tls_wrapper_nums++] = new_opts;
 
-	ETLS_INFO("the tls wrapper '%s' registered\n", opts->type);
+	ETLS_INFO("the tls wrapper '%s' registered\n", opts->name);
 
 	return TLS_WRAPPER_ERR_NONE;
 

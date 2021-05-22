@@ -14,21 +14,21 @@
 #define PATTERN_PREFIX          "libcrypto_wrapper_"
 #define PATTERN_SUFFIX          ".so"
 
-enclave_tls_err_t etls_crypto_wrapper_load_single(const char *name)
+enclave_tls_err_t etls_crypto_wrapper_load_single(const char *fname)
 {
-	ETLS_DEBUG("loading the crypto wrapper instance '%s' ...\n", name);
+	ETLS_DEBUG("loading the crypto wrapper instance '%s' ...\n", fname);
 
-	/* Check whether the filename pattern matches up libcrypto_wrapper_<type>.so */
-	if (strlen(name) <= strlen(PATTERN_PREFIX) + strlen(PATTERN_SUFFIX) ||
-	    strncmp(name, PATTERN_PREFIX, strlen(PATTERN_PREFIX)) ||
-	    strncmp(name + strlen(name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX))) {
-		ETLS_ERR("The filename pattern of '%s' NOT match " PATTERN_PREFIX "<type>" PATTERN_SUFFIX "\n",
-			 name);
+	/* Check whether the filename pattern matches up libcrypto_wrapper_<name>.so */
+	if (strlen(fname) <= strlen(PATTERN_PREFIX) + strlen(PATTERN_SUFFIX) ||
+	    strncmp(fname, PATTERN_PREFIX, strlen(PATTERN_PREFIX)) ||
+	    strncmp(fname + strlen(fname) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX))) {
+		ETLS_ERR("The filename pattern of '%s' NOT match " PATTERN_PREFIX "<name>" PATTERN_SUFFIX "\n",
+			 fname);
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	char realpath[strlen(CRYPTO_WRAPPERS_DIR) + strlen(name) + 1];
-	sprintf(realpath, "%s%s", CRYPTO_WRAPPERS_DIR, name);
+	char realpath[strlen(CRYPTO_WRAPPERS_DIR) + strlen(fname) + 1];
+	sprintf(realpath, "%s%s", CRYPTO_WRAPPERS_DIR, fname);
 
 	void *handle = dlopen(realpath, RTLD_LAZY);
 	if (!handle) {
@@ -36,22 +36,22 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *name)
 		return -ENCLAVE_TLS_ERR_DLOPEN;
 	}
 
-	size_t type_len = strlen(name) - strlen(PATTERN_PREFIX) - strlen(PATTERN_SUFFIX);
-	char type[type_len + 1];
-	strncpy(type, name + strlen(PATTERN_PREFIX), type_len);
-	type[type_len] = '\0';
+	size_t name_len = strlen(fname) - strlen(PATTERN_PREFIX) - strlen(PATTERN_SUFFIX);
+	char name[name_len + 1];
+	strncpy(name, fname + strlen(PATTERN_PREFIX), name_len);
+	name[name_len] = '\0';
 
 	unsigned int i = 0;
 	crypto_wrapper_opts_t *opts = NULL;
 	for (i = 0; i < registerd_crypto_wrapper_nums; ++i) {
 		opts = crypto_wrappers_opts[i];
 
-		if (!strcmp(type, opts->type))
+		if (!strcmp(name, opts->name))
 			break;
 	}
 
 	if (i == registerd_crypto_wrapper_nums) {
-		ETLS_ERR("the crypto wrapper '%s' is not registered yet\n", type);
+		ETLS_ERR("the crypto wrapper '%s' is not registered yet\n", name);
 		return -ENCLAVE_TLS_ERR_NOT_REGISTERED;
 	}
 
@@ -59,7 +59,7 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *name)
 		enclave_tls_err_t err = opts->pre_init();
 
 		if (err != CRYPTO_WRAPPER_ERR_NONE) {
-			ETLS_ERR("failed on pre_init() of crypto wrapper '%s' %#x\n", type, err);
+			ETLS_ERR("failed on pre_init() of crypto wrapper '%s' %#x\n", name, err);
 			return err;
 		}
 	}
@@ -76,7 +76,7 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *name)
 
 	crypto_wrappers_ctx[crypto_wrappers_nums++] = crypto_ctx;
 
-	ETLS_DEBUG("the crypto wrapper '%s' loaded\n", type);
+	ETLS_DEBUG("the crypto wrapper '%s' loaded\n", name);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

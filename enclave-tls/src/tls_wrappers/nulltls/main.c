@@ -21,7 +21,7 @@ extern tls_wrapper_err_t nulltls_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t nulltls_opts = {
 	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
-	.type = "nulltls",
+	.name = "nulltls",
 	.priority = 0,
 	.pre_init = nulltls_pre_init,
 	.init = nulltls_init,

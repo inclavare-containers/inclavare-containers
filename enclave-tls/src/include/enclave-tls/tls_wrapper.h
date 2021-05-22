@@ -25,7 +25,7 @@ typedef struct tls_wrapper_ctx             tls_wrapper_ctx_t;
 typedef struct {
 	uint8_t api_version;
 	unsigned long flags;
-	const char type[TLS_TYPE_NAME_SIZE];
+	const char name[TLS_TYPE_NAME_SIZE];
 	uint8_t priority;
 
 	/* Optional */
