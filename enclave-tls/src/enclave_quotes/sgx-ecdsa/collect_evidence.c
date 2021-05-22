@@ -16,10 +16,11 @@
 #include <sgx_error.h>
 #include "sgx_ecdsa.h"
 #include "sgx_stub_u.h"
+// clang-format off
 #ifdef OCCLUM
-#include "sgx_edger8r.h"
-#include "sgx_report.h"
-#include "quote_generation.h"
+  #include "sgx_edger8r.h"
+  #include "sgx_report.h"
+  #include "quote_generation.h"
 
 int generate_quote(int sgx_fd, sgxioc_gen_dcap_quote_arg_t *gen_quote_arg)
 {
@@ -36,14 +37,13 @@ int generate_quote(int sgx_fd, sgxioc_gen_dcap_quote_arg_t *gen_quote_arg)
 	return 0;
 }
 #endif
+// clang-format on
 
 enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 					       attestation_evidence_t *evidence,
-					       enclave_tls_cert_algo_t algo,
-					       uint8_t *hash)
+					       enclave_tls_cert_algo_t algo, uint8_t *hash)
 {
-	ETLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence,
-		   algo, hash);
+	ETLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence, algo, hash);
 
 #ifdef OCCLUM
 	int sgx_fd;
@@ -52,7 +52,9 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 		return -ENCLAVE_QUOTE_ERR_INVALID;
 	}
 
-	sgx_report_data_t report_data = { 0, };
+	sgx_report_data_t report_data = {
+		0,
+	};
 	assert(sizeof(report_data.d) > SHA256_HASH_SIZE);
 	memcpy(report_data.d, hash, SHA256_HASH_SIZE);
 
@@ -62,11 +64,9 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 		return -ENCLAVE_QUOTE_ERR_INVALID;
 	}
 
-	sgxioc_gen_dcap_quote_arg_t gen_quote_arg = {
-		.report_data = &report_data,
-		.quote_len = &quote_size,
-		.quote_buf = evidence->ecdsa.quote
-	};
+	sgxioc_gen_dcap_quote_arg_t gen_quote_arg = { .report_data = &report_data,
+						      .quote_len = &quote_size,
+						      .quote_buf = evidence->ecdsa.quote };
 
 	if (generate_quote(sgx_fd, &gen_quote_arg) != 0) {
 		ETLS_ERR("failed to generate quote\n");
@@ -78,8 +78,8 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 
 	sgx_report_t app_report;
 	sgx_status_t generate_evidence_ret;
-	sgx_status_t status = ecall_generate_evidence(ecdsa_ctx->eid, &generate_evidence_ret,
-						      hash, &app_report);
+	sgx_status_t status =
+		ecall_generate_evidence(ecdsa_ctx->eid, &generate_evidence_ret, hash, &app_report);
 	if (status != SGX_SUCCESS || generate_evidence_ret != SGX_SUCCESS) {
 		ETLS_ERR("failed to generate evidence %#x, %#x\n", status, generate_evidence_ret);
 		return SGX_ECDSA_ERR_CODE((int)generate_evidence_ret);

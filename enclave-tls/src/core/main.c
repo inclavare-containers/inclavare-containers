@@ -40,7 +40,9 @@ void __attribute__((constructor)) libenclave_tls_init(void)
 	 * attester_type, verifier_type and crypto_type empty to take the
 	 * best guess.
 	 */
+	// clang-format off
 	global_core_context.config.api_version = ENCLAVE_TLS_API_VERSION_DEFAULT;
+	// clang-format on
 	global_core_context.config.log_level = global_log_level;
 	global_core_context.config.cert_algo = ENCLAVE_TLS_CERT_ALGO_DEFAULT;
 

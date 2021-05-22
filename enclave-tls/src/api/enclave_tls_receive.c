@@ -8,8 +8,7 @@
 
 #include "internal/core.h"
 
-enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf,
-				      size_t *buf_size)
+enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf, size_t *buf_size)
 {
 	etls_core_context_t *ctx = (etls_core_context_t *)handle;
 
@@ -20,8 +19,7 @@ enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf,
 		return -ENCLAVE_TLS_ERR_INVALID;
 
 	enclave_tls_err_t err;
-	err = handle->tls_wrapper->opts->receive(handle->tls_wrapper, buf,
-						 buf_size);
+	err = handle->tls_wrapper->opts->receive(handle->tls_wrapper, buf, buf_size);
 	if (err != TLS_WRAPPER_ERR_NONE)
 		return err;
 

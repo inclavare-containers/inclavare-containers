@@ -19,9 +19,8 @@ enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle)
 	ETLS_DEBUG("handle %p\n", ctx);
 
 	if (!handle || !handle->tls_wrapper || !handle->tls_wrapper->opts ||
-	    !handle->tls_wrapper->opts->cleanup || !handle->attester ||
-	    !handle->attester->opts || !handle->attester->opts->cleanup ||
-	    !handle->verifier || !handle->verifier->opts ||
+	    !handle->tls_wrapper->opts->cleanup || !handle->attester || !handle->attester->opts ||
+	    !handle->attester->opts->cleanup || !handle->verifier || !handle->verifier->opts ||
 	    !handle->verifier->opts->cleanup)
 		return -ENCLAVE_TLS_ERR_INVALID;
 

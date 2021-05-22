@@ -16,18 +16,19 @@
 #include <enclave-tls/api.h>
 #include <enclave-tls/log.h>
 
-#define DEFAULT_PORT         1234
-#define DEFAULT_IP           "127.0.0.1"
+#define DEFAULT_PORT 1234
+#define DEFAULT_IP   "127.0.0.1"
 
+// clang-format off
 #ifdef OCCLUM
-#include <sgx_report.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
+  #include <sgx_report.h>
+  #include <fcntl.h>
+  #include <sys/ioctl.h>
 #elif defined(SGX)
-#include <sgx_urts.h>
-#include <sgx_quote.h>
+  #include <sgx_urts.h>
+  #include <sgx_quote.h>
 
-#define ENCLAVE_FILENAME     "sgx_stub_enclave.signed.so"
+  #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
 static sgx_enclave_id_t load_enclave(bool debug_enclave)
 {
@@ -53,12 +54,12 @@ static sgx_enclave_id_t load_enclave(bool debug_enclave)
 typedef struct {
 	const sgx_target_info_t *target_info;
 	const sgx_report_data_t *report_data;
-	sgx_report_t            *report;
+	sgx_report_t *report;
 } sgxioc_create_report_arg_t;
 
-#define SGXIOC_SELF_TARGET	_IOR('s', 3, sgx_target_info_t)
-#define SGXIOC_CREATE_REPORT	_IOWR('s', 4, sgxioc_create_report_arg_t)
-#define ENCLAVE_TLS_HELLO	"Hello and welcome to Enclave TLS!\n"
+  #define SGXIOC_SELF_TARGET   _IOR('s', 3, sgx_target_info_t)
+  #define SGXIOC_CREATE_REPORT _IOWR('s', 4, sgxioc_create_report_arg_t)
+  #define ENCLAVE_TLS_HELLO    "Hello and welcome to Enclave TLS!\n"
 
 static int sgx_create_report(sgx_report_t *report)
 {
@@ -91,10 +92,10 @@ static int sgx_create_report(sgx_report_t *report)
 	return 0;
 }
 #endif
+// clang-format on
 
-int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
-			       char *attester_type, char *verifier_type,
-			       char *tls_type, char *crypto_type, bool mutual,
+int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, char *attester_type,
+			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
 			       bool debug_enclave)
 {
 	enclave_tls_conf_t conf;
@@ -167,8 +168,10 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 		/* Write mrencalve, mesigner and hello into buff */
 		memset(buf, 0, sizeof(buf));
 		memcpy(buf, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
-		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
-		memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
+		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer,
+		       sizeof(sgx_measurement_t));
+		memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO,
+		       sizeof(ENCLAVE_TLS_HELLO));
 
 		len = 2 * sizeof(sgx_measurement_t) + strlen(ENCLAVE_TLS_HELLO);
 #endif
@@ -196,19 +199,21 @@ int main(int argc, char **argv)
 	printf("    - Welcome to Enclave-TLS sample server program\n");
 
 	char *const short_options = "a:v:t:c:ml:i:p:D:h";
+	// clang-format off
 	struct option long_options[] = {
-		{"attester", required_argument, NULL, 'a'},
-		{"verifier", required_argument, NULL, 'v'},
-		{"tls", required_argument, NULL, 't'},
-		{"crypto", required_argument, NULL, 'c'},
-		{"mutual", no_argument, NULL, 'm'},
-		{"log-level", required_argument, NULL, 'l'},
-		{"ip", required_argument, NULL, 'i'},
-		{"port", required_argument, NULL, 'p'},
-		{"debug-enclave", no_argument, NULL, 'D'},
-		{"help", no_argument, NULL, 'h'},
-		{0, 0, 0, 0}
+		{ "attester", required_argument, NULL, 'a' },
+		{ "verifier", required_argument, NULL, 'v' },
+		{ "tls", required_argument, NULL, 't' },
+		{ "crypto", required_argument, NULL, 'c' },
+		{ "mutual", no_argument, NULL, 'm' },
+		{ "log-level", required_argument, NULL, 'l' },
+		{ "ip", required_argument, NULL, 'i' },
+		{ "port", required_argument, NULL, 'p' },
+		{ "debug-enclave", no_argument, NULL, 'D' },
+		{ "help", no_argument, NULL, 'h' },
+		{ 0, 0, 0, 0 }
 	};
+	// clang-format on
 
 	char *attester_type = "";
 	char *verifier_type = "";
@@ -222,8 +227,7 @@ int main(int argc, char **argv)
 	int opt;
 
 	do {
-		opt = getopt_long(argc, argv, short_options, long_options,
-				  NULL);
+		opt = getopt_long(argc, argv, short_options, long_options, NULL);
 		switch (opt) {
 		case 'a':
 			attester_type = optarg;
@@ -267,18 +271,18 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			puts("    Usage:\n\n"
-			"        enclave-tls-server <options> [arguments]\n\n"
-			"    Options:\n\n"
-			"        --attester/-a value   set the type of quote attester\n"
-			"        --verifier/-v value   set the type of quote verifier\n"
-			"        --tls/-t value        set the type of tls wrapper\n"
-			"        --crypto/-c value     set the type of crypto wrapper\n"
-			"        --mutual/-m           set to enable mutual attestation\n"
-			"        --log-level/-l        set the log level\n"
-			"        --ip/-i               set the listening ip address\n"
-			"        --port/-p             set the listening tcp port\n"
-			"        --debug-enclave/-D    set to enable enclave debugging\n"
-			"        --help/-h             show the usage\n");
+			     "        enclave-tls-server <options> [arguments]\n\n"
+			     "    Options:\n\n"
+			     "        --attester/-a value   set the type of quote attester\n"
+			     "        --verifier/-v value   set the type of quote verifier\n"
+			     "        --tls/-t value        set the type of tls wrapper\n"
+			     "        --crypto/-c value     set the type of crypto wrapper\n"
+			     "        --mutual/-m           set to enable mutual attestation\n"
+			     "        --log-level/-l        set the log level\n"
+			     "        --ip/-i               set the listening ip address\n"
+			     "        --port/-p             set the listening tcp port\n"
+			     "        --debug-enclave/-D    set to enable enclave debugging\n"
+			     "        --help/-h             show the usage\n");
 		default:
 			exit(1);
 		}
@@ -291,8 +295,7 @@ int main(int argc, char **argv)
 	}
 
 	int reuse = 1;
-	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
-			     (const void *)&reuse, sizeof(int));
+	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(int));
 	if (ret < 0) {
 		perror("Failed to call setsockopt()");
 		return -1;
@@ -316,7 +319,6 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	return enclave_tls_server_startup(sockfd, log_level,
-					  attester_type, verifier_type,
-					  tls_type, crypto_type, mutual, debug_enclave);
+	return enclave_tls_server_startup(sockfd, log_level, attester_type, verifier_type, tls_type,
+					  crypto_type, mutual, debug_enclave);
 }

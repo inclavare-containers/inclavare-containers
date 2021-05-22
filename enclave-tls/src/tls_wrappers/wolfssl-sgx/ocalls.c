@@ -9,12 +9,12 @@
 
 size_t ocall_recv(int sockfd, void *buf, size_t len, int flags)
 {
-        return recv(sockfd, buf, len, flags);
+	return recv(sockfd, buf, len, flags);
 }
 
 size_t ocall_send(int sockfd, const void *buf, size_t len, int flags)
 {
-        return send(sockfd, buf, len, flags);
+	return send(sockfd, buf, len, flags);
 }
 
 int ocall_verify_certificate(void *ctx, uint8_t *der_crt, uint32_t der_crt_len)

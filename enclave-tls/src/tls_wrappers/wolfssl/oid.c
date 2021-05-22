@@ -6,7 +6,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define OID(N) {0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF8, 0x4D, 0x8A, 0x39, (N)}
+#define OID(N)                                                                  \
+	{                                                                       \
+		0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF8, 0x4D, 0x8A, 0x39, (N) \
+	}
 
 const uint8_t ias_response_body_oid[] = OID(0x02);
 const uint8_t ias_root_cert_oid[] = OID(0x03);

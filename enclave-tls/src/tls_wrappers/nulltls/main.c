@@ -9,8 +9,7 @@
 
 extern tls_wrapper_err_t nulltls_pre_init(void);
 extern tls_wrapper_err_t nulltls_init(tls_wrapper_ctx_t *);
-extern tls_wrapper_err_t nulltls_use_privkey(tls_wrapper_ctx_t *ctx,
-					     void *privkey_buf,
+extern tls_wrapper_err_t nulltls_use_privkey(tls_wrapper_ctx_t *ctx, void *privkey_buf,
 					     size_t privkey_len);
 extern tls_wrapper_err_t nulltls_use_cert(tls_wrapper_ctx_t *ctx,
 					  enclave_tls_cert_info_t *cert_info);
@@ -33,8 +32,7 @@ static tls_wrapper_opts_t nulltls_opts = {
 	.cleanup = nulltls_cleanup,
 };
 
-void __attribute__((constructor))
-libtls_wrapper_nulltls_init(void)
+void __attribute__((constructor)) libtls_wrapper_nulltls_init(void)
 {
 	ETLS_DEBUG("called\n");
 

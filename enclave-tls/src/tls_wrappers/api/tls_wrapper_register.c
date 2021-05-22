@@ -19,13 +19,14 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 
 	if (opts->flags & TLS_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE) {
 		if (!is_sgx_supported_and_configured()) {
+			// clang-format off
 			ETLS_DEBUG("failed to register the tls wrapper '%s' due to lack of SGX capability\n", opts->name);
+			// clang-format on
 			return -TLS_WRAPPER_ERR_INVALID;
 		}
 	}
 
-	tls_wrapper_opts_t *new_opts =
-		(tls_wrapper_opts_t *)malloc(sizeof(*new_opts));
+	tls_wrapper_opts_t *new_opts = (tls_wrapper_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
 		return -TLS_WRAPPER_ERR_NO_MEM;
 
@@ -37,8 +38,8 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 	}
 
 	if (new_opts->api_version > TLS_WRAPPER_API_VERSION_MAX) {
-		ETLS_ERR("unsupported tls wrapper api version %d > %d\n",
-			 new_opts->api_version, TLS_WRAPPER_API_VERSION_MAX);
+		ETLS_ERR("unsupported tls wrapper api version %d > %d\n", new_opts->api_version,
+			 TLS_WRAPPER_API_VERSION_MAX);
 		goto err;
 	}
 

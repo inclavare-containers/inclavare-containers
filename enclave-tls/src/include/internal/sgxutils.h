@@ -5,6 +5,6 @@
 
 #include <stdbool.h>
 
-#define SGX_CPUID				0x12
+#define SGX_CPUID 0x12
 
 extern bool is_sgx_supported_and_configured(void);

@@ -10,7 +10,7 @@
 enclave_quote_err_t sgx_ecdsa_cleanup(enclave_quote_ctx_t *ctx)
 {
 	ETLS_DEBUG("called\n");
-	
+
 	sgx_ecdsa_ctx_t *ecdsa_ctx = (sgx_ecdsa_ctx_t *)ctx->quote_private;
 
 	free(ecdsa_ctx);

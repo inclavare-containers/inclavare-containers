@@ -13,8 +13,8 @@
 
 /* Refer to explanation in sgx_la_collect_evidence */
 enclave_quote_err_t sgx_la_verify_evidence(enclave_quote_ctx_t *ctx,
-					   attestation_evidence_t *evidence,
-					   uint8_t *hash, unsigned int hash_len)
+					   attestation_evidence_t *evidence, uint8_t *hash,
+					   unsigned int hash_len)
 {
 	uint32_t quote_size = 0;
 	unsigned char quote[8192];

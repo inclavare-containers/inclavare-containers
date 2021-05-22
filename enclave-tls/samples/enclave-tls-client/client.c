@@ -15,16 +15,17 @@
 #include <enclave-tls/api.h>
 #include <enclave-tls/log.h>
 
-#define DEFAULT_PORT     1234
-#define DEFAULT_IP       "127.0.0.1"
+#define DEFAULT_PORT 1234
+#define DEFAULT_IP   "127.0.0.1"
 
+// clang-format off
 #ifdef OCCLUM
-#include <sgx_report.h>
+  #include <sgx_report.h>
 #elif defined(SGX)
-#include <sgx_urts.h>
-#include <sgx_quote.h>
+  #include <sgx_urts.h>
+  #include <sgx_quote.h>
 
-#define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
+  #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
 static sgx_enclave_id_t load_enclave(bool debug_enclave)
 {
@@ -45,10 +46,10 @@ static sgx_enclave_id_t load_enclave(bool debug_enclave)
 	return eid;
 }
 #endif
+// clang-format on
 
-int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
-		     char *attester_type, char *verifier_type,
-		     char *tls_type, char *crypto_type, bool mutual,
+int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_type,
+		     char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
 		     bool debug_enclave)
 {
 	enclave_tls_conf_t conf;
@@ -115,7 +116,8 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level,
 			printf("%02x", (uint8_t)buf[i]);
 		printf("\n");
 
-		memcpy(buf, buf + 2 * sizeof(sgx_measurement_t), len - 2 * sizeof(sgx_measurement_t));
+		memcpy(buf, buf + 2 * sizeof(sgx_measurement_t),
+		       len - 2 * sizeof(sgx_measurement_t));
 		buf[len - 2 * sizeof(sgx_measurement_t)] = '\0';
 
 		ETLS_INFO("Server:\n%s\n", buf);
@@ -149,19 +151,21 @@ int main(int argc, char **argv)
 	printf("    - Welcome to Enclave-TLS sample client program\n");
 
 	char *const short_options = "a:v:t:c:ml:i:p:D:h";
+	// clang-format off
 	struct option long_options[] = {
-		{"attester", required_argument, NULL, 'a'},
-		{"verifier", required_argument, NULL, 'v'},
-		{"tls", required_argument, NULL, 't'},
-		{"crypto", required_argument, NULL, 'c'},
-		{"mutual", no_argument, NULL, 'm'},
-		{"log-level", required_argument, NULL, 'l'},
-		{"ip", required_argument, NULL, 'i'},
-		{"port", required_argument, NULL, 'p'},
-		{"debug-enclave", no_argument, NULL, 'D'},
-		{"help", no_argument, NULL, 'h'},
-		{0, 0, 0, 0}
+		{ "attester", required_argument, NULL, 'a' },
+		{ "verifier", required_argument, NULL, 'v' },
+		{ "tls", required_argument, NULL, 't' },
+		{ "crypto", required_argument, NULL, 'c' },
+		{ "mutual", no_argument, NULL, 'm' },
+		{ "log-level", required_argument, NULL, 'l' },
+		{ "ip", required_argument, NULL, 'i' },
+		{ "port", required_argument, NULL, 'p' },
+		{ "debug-enclave", no_argument, NULL, 'D' },
+		{ "help", no_argument, NULL, 'h' },
+		{ 0, 0, 0, 0 }
 	};
+	// clang-format on
 
 	char *attester_type = "";
 	char *verifier_type = "";
@@ -175,8 +179,7 @@ int main(int argc, char **argv)
 	int opt;
 
 	do {
-		opt = getopt_long(argc, argv, short_options, long_options,
-				  NULL);
+		opt = getopt_long(argc, argv, short_options, long_options, NULL);
 		switch (opt) {
 		case 'a':
 			attester_type = optarg;
@@ -219,19 +222,19 @@ int main(int argc, char **argv)
 		case -1:
 			break;
 		case 'h':
-                        puts("    Usage:\n\n"
-                        "        enclave-tls-client <options> [arguments]\n\n"
-                        "    Options:\n\n"
-                        "        --attester/-a value   set the type of quote attester\n"
-                        "        --verifier/-v value   set the type of quote verifier\n"
-                        "        --tls/-t value        set the type of tls wrapper\n"
-                        "        --crypto/-c value     set the type of crypto wrapper\n"
-                        "        --mutual/-m           set to enable mutual attestation\n"
-                        "        --log-level/-l        set the log level\n"
-                        "        --ip/-i               set the listening ip address\n"
-                        "        --port/-p             set the listening tcp port\n"
-                        "        --debug-enclave/-D    set to enable enclave debugging\n"
-                        "        --help/-h             show the usage\n");
+			puts("    Usage:\n\n"
+			     "        enclave-tls-client <options> [arguments]\n\n"
+			     "    Options:\n\n"
+			     "        --attester/-a value   set the type of quote attester\n"
+			     "        --verifier/-v value   set the type of quote verifier\n"
+			     "        --tls/-t value        set the type of tls wrapper\n"
+			     "        --crypto/-c value     set the type of crypto wrapper\n"
+			     "        --mutual/-m           set to enable mutual attestation\n"
+			     "        --log-level/-l        set the log level\n"
+			     "        --ip/-i               set the listening ip address\n"
+			     "        --port/-p             set the listening tcp port\n"
+			     "        --debug-enclave/-D    set to enable enclave debugging\n"
+			     "        --help/-h             show the usage\n");
 		default:
 			exit(1);
 		}
@@ -260,12 +263,11 @@ int main(int argc, char **argv)
 	}
 
 	/* Connect to the server */
-	if (connect(sockfd, (struct sockaddr *) &s_addr, sizeof(s_addr)) == -1) {
+	if (connect(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
 		perror("failed to call connect()\n");
 		return -1;
 	}
 
-	return enclave_tls_echo(sockfd, log_level,
-				attester_type, verifier_type, tls_type,
+	return enclave_tls_echo(sockfd, log_level, attester_type, verifier_type, tls_type,
 				crypto_type, mutual, debug_enclave);
 }

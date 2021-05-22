@@ -16,7 +16,7 @@ extern crypto_wrapper_err_t wolfcrypt_sgx_gen_privkey(crypto_wrapper_ctx_t *ctx,
 						      unsigned int *privkey_len);
 extern crypto_wrapper_err_t wolfcrypt_sgx_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
 							  enclave_tls_cert_algo_t algo,
-							  uint8_t * hash);
+							  uint8_t *hash);
 extern crypto_wrapper_err_t wolfcrypt_sgx_gen_cert(crypto_wrapper_ctx_t *ctx,
 						   enclave_tls_cert_info_t *cert_info);
 extern crypto_wrapper_err_t wolfcrypt_sgx_cleanup(crypto_wrapper_ctx_t *);
@@ -34,7 +34,7 @@ static crypto_wrapper_opts_t wolfcrypt_sgx_opts = {
 	.flags = CRYPTO_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE,
 };
 
-void __attribute__((constructor))libcrypto_wrapper_wolfcrypt_sgx_init(void)
+void __attribute__((constructor)) libcrypto_wrapper_wolfcrypt_sgx_init(void)
 {
 	ETLS_DEBUG("called\n");
 

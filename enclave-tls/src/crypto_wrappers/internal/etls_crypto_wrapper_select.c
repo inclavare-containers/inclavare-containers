@@ -22,8 +22,7 @@ static enclave_tls_err_t init_crypto_wrapper(crypto_wrapper_ctx_t *crypto_ctx)
 	return ENCLAVE_TLS_ERR_NONE;
 }
 
-enclave_tls_err_t etls_crypto_wrapper_select(etls_core_context_t *ctx,
-					     const char *name)
+enclave_tls_err_t etls_crypto_wrapper_select(etls_core_context_t *ctx, const char *name)
 {
 	ETLS_DEBUG("selecting the crypto wrapper '%s' ...\n", name);
 

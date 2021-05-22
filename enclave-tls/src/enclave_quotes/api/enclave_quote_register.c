@@ -19,20 +19,20 @@ enclave_quote_err_t enclave_quote_register(const enclave_quote_opts_t *opts)
 
 	if (opts->flags & ENCLAVE_QUOTE_OPTS_FLAGS_SGX_ENCLAVE) {
 		if (!is_sgx_supported_and_configured()) {
+			// clang-format off
 			ETLS_DEBUG("failed to register the enclave quote '%s' due to lack of SGX capability\n", opts->type);
+			// clang-format on
 			return -ENCLAVE_QUOTE_ERR_INVALID;
 		}
 	}
 
-	enclave_quote_opts_t *new_opts =
-		(enclave_quote_opts_t *)malloc(sizeof(*new_opts));
+	enclave_quote_opts_t *new_opts = (enclave_quote_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
 		return -ENCLAVE_QUOTE_ERR_NO_MEM;
 
 	memcpy(new_opts, opts, sizeof(*new_opts));
 
-	if ((new_opts->name[0] == '\0') ||
-	    (strlen(new_opts->name) >= sizeof(new_opts->name))) {
+	if ((new_opts->name[0] == '\0') || (strlen(new_opts->name) >= sizeof(new_opts->name))) {
 		ETLS_ERR("invalid enclave quote name\n");
 		goto err;
 	}
@@ -43,8 +43,8 @@ enclave_quote_err_t enclave_quote_register(const enclave_quote_opts_t *opts)
 	}
 
 	if (new_opts->api_version > ENCLAVE_QUOTE_API_VERSION_MAX) {
-		ETLS_ERR("unsupported enclave quote api version %d > %d\n",
-			 new_opts->api_version, ENCLAVE_QUOTE_API_VERSION_MAX);
+		ETLS_ERR("unsupported enclave quote api version %d > %d\n", new_opts->api_version,
+			 ENCLAVE_QUOTE_API_VERSION_MAX);
 		goto err;
 	}
 
@@ -54,8 +54,8 @@ enclave_quote_err_t enclave_quote_register(const enclave_quote_opts_t *opts)
 
 	enclave_quotes_opts[registerd_enclave_quote_nums++] = new_opts;
 
-	ETLS_INFO("the enclave quote '%s' registered with type '%s'\n",
-		  new_opts->name, new_opts->type);
+	ETLS_INFO("the enclave quote '%s' registered with type '%s'\n", new_opts->name,
+		  new_opts->type);
 
 	return ENCLAVE_QUOTE_ERR_NONE;
 

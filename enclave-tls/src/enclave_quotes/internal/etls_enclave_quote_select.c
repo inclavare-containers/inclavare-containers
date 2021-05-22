@@ -24,15 +24,14 @@ static enclave_tls_err_t init_enclave_quote(etls_core_context_t *ctx,
 	return ENCLAVE_TLS_ERR_NONE;
 }
 
-enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
-					    const char *name,
-					    enclave_tls_cert_algo_t algo)
+enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx, const char *name,
+				       enclave_tls_cert_algo_t algo)
 {
 	ETLS_DEBUG("selecting the attester '%s' ...\n", name);
 
-	// Explicitly specifying verifier which will never be changed
+	/* Explicitly specifying verifier which will never be changed */
 	if (name)
-		 ctx->flags |= ENCLAVE_TLS_CONF_VERIFIER_ENFORCED;
+		ctx->flags |= ENCLAVE_TLS_CONF_VERIFIER_ENFORCED;
 
 	enclave_quote_ctx_t *quote_ctx = NULL;
 	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
@@ -41,7 +40,7 @@ enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
 
 		quote_ctx = malloc(sizeof(*quote_ctx));
 		if (!quote_ctx)
-			 return -ENCLAVE_TLS_ERR_NO_MEM;
+			return -ENCLAVE_TLS_ERR_NO_MEM;
 
 		memcpy(quote_ctx, enclave_quotes_ctx[i], sizeof(*quote_ctx));
 
@@ -75,9 +74,8 @@ enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx,
 	return ENCLAVE_TLS_ERR_NONE;
 }
 
-enclave_tls_err_t etls_verifier_select(etls_core_context_t *ctx,
-					    const char *name,
-					    enclave_tls_cert_algo_t algo)
+enclave_tls_err_t etls_verifier_select(etls_core_context_t *ctx, const char *name,
+				       enclave_tls_cert_algo_t algo)
 {
 	ETLS_DEBUG("selecting the verifier '%s' ...\n", name);
 
@@ -88,7 +86,7 @@ enclave_tls_err_t etls_verifier_select(etls_core_context_t *ctx,
 
 		quote_ctx = malloc(sizeof(*quote_ctx));
 		if (!quote_ctx)
-			 return -ENCLAVE_TLS_ERR_NO_MEM;
+			return -ENCLAVE_TLS_ERR_NO_MEM;
 
 		memcpy(quote_ctx, enclave_quotes_ctx[i], sizeof(*quote_ctx));
 
