@@ -132,8 +132,8 @@ jobs:
     - name: Test enclave tls server for mutual nullquote
       run: |
         echo random-port3 ${{ steps.random-port-generator3.outputs.random-port }}
-        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}' &
-        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}'
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -v nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a nullquote -v nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
