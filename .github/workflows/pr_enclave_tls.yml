@@ -110,8 +110,8 @@ jobs:
       run: |
         echo random-port1 ${{ steps.random-port-generator1.outputs.random-port }}
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/
-        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a sgx_la -m -p ${{ steps.random-port-generator1.outputs.random-port }}' &
-        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a sgx_la -m -p ${{ steps.random-port-generator1.outputs.random-port }}'
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a sgx_la -v sgx_la -m -p ${{ steps.random-port-generator1.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a sgx_la -v sgx_la -m -p ${{ steps.random-port-generator1.outputs.random-port }}'
         docker restart $inclavare_test
 
     - id: random-port-generator2
@@ -122,8 +122,8 @@ jobs:
       run: |
         echo random-port2 ${{ steps.random-port-generator2.outputs.random-port }}
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/
-        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_ecdsa -m -p ${{ steps.random-port-generator2.outputs.random-port }}' &
-        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a sgx_ecdsa -m -p ${{ steps.random-port-generator2.outputs.random-port }}'
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_ecdsa -v sgx_ecdsa -m -p ${{ steps.random-port-generator2.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a sgx_ecdsa -v sgx_ecdsa -m -p ${{ steps.random-port-generator2.outputs.random-port }}'
         docker restart $inclavare_test
 
     - id: random-port-generator3
