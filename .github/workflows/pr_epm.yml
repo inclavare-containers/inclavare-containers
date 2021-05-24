@@ -141,7 +141,7 @@ jobs:
     - name: Install centos dependency
       if: ${{ contains(matrix.tag, 'centos') }}
       run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-        yum clean all && yum -y install yum-utils wget iptables protobuf-c;
+        yum -y install yum-utils wget iptables protobuf-c;
         wget  -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
         tar xzf sgx_rpm_local_repo.tgz;
         yum-config-manager --add-repo sgx_rpm_local_repo;
