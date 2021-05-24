@@ -9,12 +9,7 @@ Welcome to join Inclavare Containers project. Here's links to the primary ways t
 
 Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) before making contribution.
 
-## Reporting security issues
-
-We take security issues seriously and discourage anyone to spread security issues. If you find a security issue in Inclavare Containers, please do not discuss it in public and even do not open a public issue. Instead we encourage you to send us a private email to 
-[security@inclavare-containers.io](mailto:security@inclavare-containers.io) to report the security issue.
-
-## Reporting general issues
+## Reporting issues
 
 Any Inclavare Containers user can potentially be a contributor. If you have any feedback for the project, feel free to open an issue via [NEW ISSUE](https://github.com/alibaba/inclavare-containers/issues/new).
 
