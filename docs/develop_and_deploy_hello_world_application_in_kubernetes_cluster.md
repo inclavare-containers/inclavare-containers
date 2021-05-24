@@ -80,6 +80,11 @@ You can choose one suitable occlum SDK image from the list in [this page](https:
 ### 2. Develop the "Hello World" application in the container
 If you were to write an SGX Hello World project using some SGX SDK, the project would consist of hundreds of lines of code. And to do that, you have to spend a great deal of time to learn the APIs, the programming model, and the built system of the SGX SDK.<br />Thanks to Occlum, you can be freed from writing any extra SGX-aware code and only need to type some simple commands to protect your application with SGX transparently.
 
+Note that the version of Linux SGX software stack must be same with the one [installed on host](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#2-install-linux-sgx-software-stack). Please run this command to check the version:
+```shell
+/opt/intel/sgxsdk/bin/x64/sgx_sign -version
+```
+
 - Step 1. Create a working directory in the container
     ```c
     mkdir /root/occlum_workspace && cd /root/occlum_workspace/
@@ -105,7 +110,6 @@ If you were to write an SGX Hello World project using some SGX SDK, the project 
     ```bash
     occlum-gcc -o hello_world hello_world.c
     ```
-
 
 - Step 4. Initialize a directory as the Occlum context via `occlum init`
     ```bash
