@@ -7,3 +7,4 @@ signing_key.pem
 *.so
 *.token
 Dockerfile
+aesm.pb-c.*

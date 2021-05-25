@@ -10,14 +10,16 @@
 #include <enclave-tls/log.h>
 #include "internal/crypto_wrapper.h"
 
+// clang-format off
 #ifdef OCCLUM
-  #define PATTERN_SUFFIX          ".so"
+  #define PATTERN_SUFFIX ".so"
 #endif
+// clang-format on
 
 static int crypto_wrapper_cmp(const void *a, const void *b)
 {
 	return (*(crypto_wrapper_ctx_t **)b)->opts->priority -
-		(*(crypto_wrapper_ctx_t **)a)->opts->priority;
+	       (*(crypto_wrapper_ctx_t **)a)->opts->priority;
 }
 
 enclave_tls_err_t etls_crypto_wrapper_load_all(void)
@@ -33,15 +35,15 @@ enclave_tls_err_t etls_crypto_wrapper_load_all(void)
 	unsigned int total_loaded = 0;
 	struct dirent *ptr;
 	while ((ptr = readdir(dir))) {
-		if (!strcmp(ptr->d_name, ".") ||
-		    !strcmp(ptr->d_name, ".."))
+		if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, ".."))
 			continue;
 #ifdef OCCLUM
 		/* Occlum can't identify the d_type of the file, always return DT_UNKNOWN */
-		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)) == 0) {
+		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX),
+			    PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)) == 0) {
 #else
 		if (ptr->d_type == DT_REG) {
-#endif	
+#endif
 			if (etls_crypto_wrapper_load_single(ptr->d_name) == ENCLAVE_TLS_ERR_NONE)
 				++total_loaded;
 		}
@@ -50,8 +52,7 @@ enclave_tls_err_t etls_crypto_wrapper_load_all(void)
 	closedir(dir);
 
 	if (!total_loaded) {
-		ETLS_ERR("unavailable crypto wrapper instance under %s\n",
-			 CRYPTO_WRAPPERS_DIR);
+		ETLS_ERR("unavailable crypto wrapper instance under %s\n", CRYPTO_WRAPPERS_DIR);
 		return -ENCLAVE_TLS_ERR_LOAD_CRYPTO_WRAPPERS;
 	}
 

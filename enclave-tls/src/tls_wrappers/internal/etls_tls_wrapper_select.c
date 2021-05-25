@@ -22,18 +22,20 @@ static enclave_tls_err_t init_tls_wrapper(tls_wrapper_ctx_t *tls_ctx)
 	return ENCLAVE_TLS_ERR_NONE;
 }
 
-enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
-					  const char *type)
+enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx, const char *name)
 {
-	ETLS_DEBUG("selecting the tls wrapper '%s' ...\n", type);
+	ETLS_DEBUG("selecting the tls wrapper '%s' ...\n", name);
 
 	tls_wrapper_ctx_t *tls_ctx = NULL;
-	unsigned int i = 0;
-	for (; i < registerd_tls_wrapper_nums; ++i) {
-		tls_ctx = tls_wrappers_ctx[i];
-
-		if (type && strcmp(type, tls_ctx->opts->type))
+	for (unsigned int i = 0; i < registerd_tls_wrapper_nums; ++i) {
+		if (name && strcmp(name, tls_wrappers_ctx[i]->opts->name))
 			continue;
+
+		tls_ctx = malloc(sizeof(*tls_ctx));
+		if (!tls_ctx)
+			return -ENCLAVE_TLS_ERR_NO_MEM;
+
+		*tls_ctx = *tls_wrappers_ctx[i];
 
 		/* Set necessary configurations from enclave_tls_init() to
 		 * make init() working correctly.
@@ -44,21 +46,25 @@ enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *ctx,
 
 		if (init_tls_wrapper(tls_ctx) == ENCLAVE_TLS_ERR_NONE)
 			break;
+
+		free(tls_ctx);
+		tls_ctx = NULL;
 	}
 
-	if (i == registerd_tls_wrapper_nums) {
-		if (!type)
+	if (!tls_ctx) {
+		if (!name)
 			ETLS_ERR("failed to select a tls wrapper\n");
 		else
-			ETLS_ERR("failed to select the tls wrapper '%s'\n", type);
+			ETLS_ERR("failed to select the tls wrapper '%s'\n", name);
 
 		return -ENCLAVE_TLS_ERR_INIT;
 	}
 
 	ctx->tls_wrapper = tls_ctx;
 	ctx->flags |= ENCLAVE_TLS_CTX_FLAGS_TLS_INITIALIZED;
+	tls_ctx->etls_handle = ctx;
 
-	ETLS_INFO("the tls wrapper '%s' selected\n", tls_ctx->opts->type);
+	ETLS_INFO("the tls wrapper '%s' selected\n", tls_ctx->opts->name);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

@@ -1,0 +1,165 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# clang-format configuration file. Intended for clang-format >= 9.
+# Refer to https://github.com/torvalds/linux/blob/master/.clang-format
+#
+# For more information, see:
+#
+#   Documentation/process/clang-format.rst
+#   https://clang.llvm.org/docs/ClangFormat.html
+#   https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+#
+---
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+#AlignConsecutiveBitFields: None # Unknown to clang-format-9.0
+AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: true # Unknown to clang-format-6.0
+AlignEscapedNewlines: Left # Unknown to clang-format-4.0
+AlignOperands: true
+AlignTrailingComments: false
+AllowAllArgumentsOnNextLine: false # Unknown to clang-format-6.0
+AllowAllConstructorInitializersOnNextLine: false # Unknown to clang-format-6.0
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+#AllowShortEnumsOnASingleLine: truetrue  # Unknown to clang-format-9.0
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None # Unknown to clang-format-6.0
+AllowShortLoopsOnASingleLine: false
+#AlwaysBreakAfterDefinitionReturnType: None # Deprecated
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: false
+#AttributeMacros: ['__trusted', '__untrusted'] # Unused
+BinPackArguments: true
+BinPackParameters: true
+#BitFieldColonSpacing: None # Unknown to clang-format-9.0
+BraceWrapping:
+  AfterCaseLabel: false # Unknown to clang-format-6.0
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false # Unknown to clang-format-5.0
+  BeforeCatch: false
+  #BeforeLambdaBody: false # Unknown to clang-format-9.0
+  #BeforeWhile: false # Unknown to clang-format-9.0
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: true # Unknown to clang-format-4.0
+  SplitEmptyRecord: true # Unknown to clang-format-4.0
+  SplitEmptyNamespace: true # Unknown to clang-format-4.0
+BreakAfterJavaFieldAnnotations: true
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
+#BreakBeforeConceptDeclarations: false # Unknown to clang-format-9.0
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeComma # Unknown to clang-format-4.0
+BreakInheritanceList: BeforeColon # Unknown to clang-format-6.0
+BreakAfterJavaFieldAnnotations: false
+BreakStringLiterals: false
+ColumnLimit: 100
+CommentPragmas: '^ IC pragma:'
+CompactNamespaces: false # Unknown to clang-format-4.0
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 8
+ContinuationIndentWidth: 8
+Cpp11BracedListStyle: false
+#DeriveLineEnding: false # Unknown to clang-format-9.0
+DerivePointerAlignment: false
+DisableFormat: false
+#EmptyLineAfterAccessModifier: Never # Unknown to clang-format-9.0
+#EmptyLineBeforeAccessModifier: LogicalBlock # Unknown to clang-format-9.0
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: false # Unknown to clang-format-4.0
+ForEachMacros: ['foreach', 'FOREACH']
+IncludeBlocks: Preserve # Unknown to clang-format-5.0
+IncludeCategories:
+  - Regex: '.*'
+    Priority: 1
+IncludeIsMainRegex: '(Test)?$'
+#IncludeIsMainSourceRegex: # Not required 
+#IndentAccessModifiers: true # Unknown to clang-format-9.0
+#IndentCaseBlocks: false # Unknown to clang-format-9.0
+IndentCaseLabels: false
+#IndentExternBlock: Indent # Unknown to clang-format-9.0
+#IndentGotoLabels: false # Unknown to clang-format-9.0
+IndentPPDirectives: BeforeHash # Unknown to clang-format-6.0
+#IndentRequires: false # Unknown to clang-format-9.0
+IndentWidth: 8
+IndentWrappedFunctionNames: false
+#InsertTrailingCommas: Wrapped # Unknown to clang-format-9.0
+JavaImportGroups: ['com.example', 'com', 'org'] # Unknown to clang-format-6.0
+JavaScriptQuotes: Leave
+JavaScriptWrapImports: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+#Language: # Not required
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+#NamespaceMacros: # Not required
+ObjCBinPackProtocolList: Auto # Unknown to clang-format-6.0
+ObjCBlockIndentWidth: 8
+#ObjCBreakBeforeNestedBlockParam: 8 # Unknown to clang-format-9.0
+ObjCSpaceAfterProperty: true
+ObjCSpaceBeforeProtocolList: true
+# Taken from git's rules
+PenaltyBreakAssignment: 10 # Unknown to clang-format-4.0
+PenaltyBreakBeforeFirstCallParameter: 30
+PenaltyBreakComment: 10
+PenaltyBreakFirstLessLess: 0
+PenaltyBreakString: 10
+PenaltyBreakTemplateDeclaration: 10 # Unknown to clang-format-6.0
+PenaltyExcessCharacter: 100
+#PenaltyIndentedWhitespace: 0 # Unknown to clang-format-9.0
+PenaltyReturnTypeOnItsOwnLine: 60
+
+PointerAlignment: Right
+#RawStringFormats: # Not required
+ReflowComments: false
+#ShortNamespaceLines: 1 # Unknown to clang-format-9.0
+SortIncludes: false
+#SortJavaStaticImport: Before # Unknown to clang-format-9.0
+SortUsingDeclarations: false # Unknown to clang-format-4.0
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false # Unknown to clang-format-6.0
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+#SpaceBeforeCaseColon: false # Unknown to clang-format-9.0
+SpaceBeforeCpp11BracedList: true # Unknown to clang-format-6.0
+SpaceBeforeCtorInitializerColon: true # Unknown to clang-format-6.0
+SpaceBeforeInheritanceColon: true # Unknown to clang-format-6.0
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true # Unknown to clang-format-6.0
+#SpaceBeforeSquareBrackets: false # Unknown to clang-format-9.0
+SpaceInEmptyParentheses: false
+#SpaceInEmptyBlock: true # Unknown to clang-format-9.0
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+#SpacesInConditionalStatement: false # Unknown to clang-format-9.0
+SpacesInContainerLiterals: false
+#SpacesInLineCommentPrefix: # Unknown to clang-format-9.0
+#  - Minimum: 1
+#  - Maximum: -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: Cpp03
+#StatementAttributeLikeMacros: # Not required
+#StatementMacros: # Not required
+TabWidth: 8
+#TypenameMacros: # Not required
+#UseCRLF: false # Unknown to clang-format-9.0
+UseTab: Always
+#WhitespaceSensitiveMacros: # Not required
+...

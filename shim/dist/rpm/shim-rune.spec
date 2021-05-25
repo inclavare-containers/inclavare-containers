@@ -8,7 +8,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name: shim-rune
-Version: 0.6.0
+Version: 0.6.1
 Release: %{centos_base_release}%{?dist}
 Summary: shim for Inclavare Containers(runE)
 Group: Development/Tools
@@ -25,7 +25,7 @@ containerd-shim-rune-v2 is a shim for Inclavare Containers(runE).
 %setup -q -n %{PROJECT}-%{version}
 
 %build
-# we cann't download go1.13 through 'yum install' in centos, so that wo check the go version in the '%build' section rather than in the 'BuildRequires' section.
+# we can't download go 1.13 through 'yum install' in centos, so that we check the go version in the '%build' section rather than in the 'BuildRequires' section.
 if ! [ -x "$(command -v go)" ]; then
   echo 'Error: go is not installed. Please install Go 1.13 and above'
   exit 1
@@ -81,6 +81,9 @@ rm -f %{SHIM_CONFIG_DIR}/config.toml
 %{SHIM_BIN_DIR}/containerd-shim-rune-v2
 
 %changelog
+* Mon May 24 2021 Liang Yang <Liang3.Yang@intel.com> - 0.6.1
+- Update to version 0.6.1
+
 * Mon Feb 8 2021 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.6.0
 - Update to version 0.6.0
 

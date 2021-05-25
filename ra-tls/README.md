@@ -1,3 +1,5 @@
+**This project is depreciated and replaced by [enclave-tls](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls).**
+
 # Configure SGX RA settings
 
 ## For EPID RA

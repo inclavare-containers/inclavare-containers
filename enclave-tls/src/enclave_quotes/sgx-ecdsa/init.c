@@ -7,8 +7,7 @@
 #include <enclave-tls/enclave_quote.h>
 #include "sgx_ecdsa.h"
 
-enclave_quote_err_t sgx_ecdsa_init(enclave_quote_ctx_t *ctx,
-				   enclave_tls_cert_algo_t algo)
+enclave_quote_err_t sgx_ecdsa_init(enclave_quote_ctx_t *ctx, enclave_tls_cert_algo_t algo)
 {
 	ETLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 

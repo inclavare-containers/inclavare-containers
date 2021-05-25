@@ -9,12 +9,11 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "internal/core.h"
 
-#define TLS_WRAPPERS_DIR    "/opt/enclave-tls/lib/tls-wrappers/"
+#define TLS_WRAPPERS_DIR "/opt/enclave-tls/lib/tls-wrappers/"
 
 extern enclave_tls_err_t etls_tls_wrapper_load_all(void);
 extern enclave_tls_err_t etls_tls_wrapper_load_single(const char *);
-extern enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *,
-						 const char *);
+extern enclave_tls_err_t etls_tls_wrapper_select(etls_core_context_t *, const char *);
 
 extern tls_wrapper_ctx_t *tls_wrappers_ctx[TLS_WRAPPER_TYPE_MAX];
 extern tls_wrapper_opts_t *tls_wrappers_opts[TLS_WRAPPER_TYPE_MAX];

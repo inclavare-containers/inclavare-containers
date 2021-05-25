@@ -11,7 +11,7 @@ enclave_quote_err_t sgx_la_cleanup(enclave_quote_ctx_t *ctx)
 {
 	ETLS_DEBUG("called\n");
 
-	sgx_la_ctx_t *la_ctx = (sgx_la_ctx_t *) ctx->quote_private;
+	sgx_la_ctx_t *la_ctx = (sgx_la_ctx_t *)ctx->quote_private;
 
 	free(la_ctx);
 

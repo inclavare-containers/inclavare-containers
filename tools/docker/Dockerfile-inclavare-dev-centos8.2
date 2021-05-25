@@ -5,7 +5,7 @@ LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y wget make libseccomp-devel \
     gcc git openssl-devel glibc-static binutils-devel protobuf-c-devel \
-    rpm-build yum-utils protobuf-c
+    rpm-build yum-utils protobuf-c autoconf libtool gcc-c++ file
 
 WORKDIR /root
 
@@ -22,6 +22,10 @@ ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GO111MODULE  on
 
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+ENV PATH         /root/.cargo/bin:$PATH
+
 # install docker
 RUN dnf --enablerepo=PowerTools install -y iptables && \
     wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz && \
@@ -32,10 +36,15 @@ RUN mkdir -p /etc/docker && \
     echo -e "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t}\n}" >> /etc/docker/daemon.json
 
 # install SGX
+RUN [ ! -f sgx_linux_x64_sdk_2.13.100.4.bin ] && \
+    wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_linux_x64_sdk_2.13.100.4.bin && \
+    chmod +x sgx_linux_x64_sdk_2.13.100.4.bin && echo -e 'no\n/opt/intel\n' | ./sgx_linux_x64_sdk_2.13.100.4.bin && \
+    rm -rf sgx_linux_x64_sdk_2.13.100.4.bin
+
 RUN [ ! -f sgx_rpm_local_repo.tgz ] && \
-    wget -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
+    wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
     tar xzf sgx_rpm_local_repo.tgz && \
     yum-config-manager --add-repo sgx_rpm_local_repo && \
     yum makecache && rm sgx_rpm_local_repo.tgz
 
-RUN yum install --nogpgcheck -y libsgx-uae-service libsgx-dcap-quote-verify-devel
+RUN yum install --nogpgcheck -y libsgx-dcap-quote-verify-devel libsgx-dcap-ql-devel libsgx-uae-service

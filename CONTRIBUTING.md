@@ -9,12 +9,7 @@ Welcome to join Inclavare Containers project. Here's links to the primary ways t
 
 Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) before making contribution.
 
-## Reporting security issues
-
-We take security issues seriously and discourage anyone to spread security issues. If you find a security issue in Inclavare Containers, please do not discuss it in public and even do not open a public issue. Instead we encourage you to send us a private email to 
-[security@inclavare-containers.io](mailto:security@inclavare-containers.io) to report the security issue.
-
-## Reporting general issues
+## Reporting issues
 
 Any Inclavare Containers user can potentially be a contributor. If you have any feedback for the project, feel free to open an issue via [NEW ISSUE](https://github.com/alibaba/inclavare-containers/issues/new).
 
@@ -78,38 +73,38 @@ Right now we assume every contribution via pull request is for the `master` bran
 
 ### Format C Codes
 
-Inclavare Containers project uses `indent` to format C codes.
+Inclavare Containers project uses `clang-format` to format C codes.
 
-1. Install `indent`. Please make sure the version of `indent` must be 2.2.12 or higher to get advanced features.
+1. Install `clang-format`. Please make sure the version of `clang-format` must be 9.x or higher to get advanced features.
 
+For Ubuntu:
 ```shell
-wget -c https://ftp.gnu.org/gnu/indent/indent-2.2.12.tar.gz
-tar xzf indent-2.2.12.tar.gz
-cd indent-2.2.12
-./configure
-make
-sudo make install
+sudo apt-get install -y clang-format-9
+```
+
+For CentOS:
+```shell
+sudo yum install -y clang
 ```
 
 2. Format C code style using the following command:
 
 ```shell
-indent -npro -linux -il-8 -ppi2 -nbbo -ci0 -cs -cp1 -gts foo.c
+clang-format -i foo.c
 ```
 
-However, `indent` might generate unexpected results sometimes due to its limitation. For example, `indent` will completely destroy the indentation of the inline assembly because it does not recognize the syntax of inline assembly codes.
+`clang-format` might generate unexpected results sometimes due to its limitation. To avoid the problem, you need to temporarily disable formatting with [special comments](https://clang.llvm.org/docs/ClangFormatStyleOptions.html#disabling-formatting-on-a-piece-of-code), e.g, forbidding formatting the following codes:
 
-To avoid this problem, you need to temporarily disable formatting with [the pair of control comment](https://www.gnu.org/software/indent/manual/indent.html#SEC13), e.g, forbidding formatting the following inline assembly codes.
-
-```shell
-/* *INDENT-OFF* */
-asm volatile(".byte 0x0f,0x01,0xd0" /* xgetbv */
-	     : "=a" (eax), "=d" (edx)
-	     : "c" (index));
-/* *INDENT-ON* */
+```C
+// clang-format off
+typedef enum {
+        VERIFICATION_TYPE_QVL,
+        VERIFICATION_TYPE_QEL
+} quote_sgx_ecdsa_verification_type_t;
+// clang-format on
 ```
 
-Please refer to [this manual](https://www.gnu.org/software/indent/manual/indent.html) for the details about the options of `indent`.
+Please refer to [this page](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) for the details about the options of `clang-format`.
 
 ### Commit Rules
 

@@ -239,3 +239,8 @@ void enc_create_key_and_x509(WOLFSSL_CTX* ctx) {
                                       SSL_FILETYPE_ASN1);
     assert(ret == SSL_SUCCESS);
 }
+
+/* This function only exists to make edger8r happy. There must be at
+   least one trusted (ECALL) function. */
+void dummy(void) {
+}

@@ -16,6 +16,15 @@ endif
 
 all: $(Build_Libdir)/libwolfssl.so $(Build_Libdir)/libwolfssl_sgx.a
 
+SGX_LVI_MITIGATION ?= 1
+SGX_SDK ?= /opt/intel/sgxsdk
+
+ifeq ($(SGX_LVI_MITIGATION),1)
+  include $(SGX_SDK)/buildenv.mk
+  Wolfssl_Sgx_Cflags += $(MITIGATION_CFLAGS)
+  Wolfssl_Sgx_Ldflags += $(MITIGATION_LDFLAGS)
+endif
+
 this_dir := $(shell pwd)
 wolfssl_srcdir := $(this_dir)/wolfssl
 $(Build_Libdir)/libwolfssl.so: $(wolfssl_srcdir)/src/.libs/libwolfssl.so
@@ -67,13 +76,6 @@ clean:
 install: all
 	$(INSTALL) -d -m 0755 $(Enclave_Tls_Libdir)
 	$(INSTALL) -m 0755 $(Build_Libdir)/libwolfssl* $(Enclave_Tls_Libdir)
-	dest=$(Enclave_Tls_Root)/include/wolfssl; \
-	$(INSTALL) -d -m 0755 $$dest; \
-	$(INSTALL) -m 0755 $(Build_Incdir)/wolfssl/*.h $$dest; \
-	$(INSTALL) -d -m 0755 $$dest/wolfcrypt; \
-	$(INSTALL) -m 0755 $(Build_Incdir)/wolfssl/wolfcrypt/*.h $$dest/wolfcrypt; \
-	$(INSTALL) -d -m 0755 $$dest/openssl; \
-	$(INSTALL) -m 0755 $(Build_Incdir)/wolfssl/openssl/*.h $$dest/openssl
 
 uninstall:
 	@rm -rf "$(Enclave_Tls_Libdir)"/libwolfssl*

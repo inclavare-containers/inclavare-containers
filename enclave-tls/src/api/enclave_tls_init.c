@@ -12,8 +12,7 @@
 #include "internal/tls_wrapper.h"
 #include "internal/enclave_quote.h"
 
-enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
-				   enclave_tls_handle *handle)
+enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf, enclave_tls_handle *handle)
 {
 	if (!conf || !handle)
 		return -ENCLAVE_TLS_ERR_INVALID;
@@ -29,14 +28,15 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 	enclave_tls_err_t err = -ENCLAVE_TLS_ERR_INVALID;
 
 	if (ctx->config.api_version > ENCLAVE_TLS_API_VERSION_MAX) {
-		ETLS_ERR("unsupported enclave-tls api version %d > %d\n",
-			 ctx->config.api_version, ENCLAVE_TLS_API_VERSION_MAX);
+		ETLS_ERR("unsupported enclave-tls api version %d > %d\n", ctx->config.api_version,
+			 ENCLAVE_TLS_API_VERSION_MAX);
 		goto err_ctx;
 	}
 
 	if (ctx->config.log_level < 0 || ctx->config.log_level >= ENCLAVE_TLS_LOG_LEVEL_MAX) {
 		ctx->config.log_level = global_core_context.config.log_level;
-		ETLS_WARN("log level reset to global value %d\n", global_core_context.config.log_level);
+		ETLS_WARN("log level reset to global value %d\n",
+			  global_core_context.config.log_level);
 	}
 
 	if (ctx->config.cert_algo < 0 || ctx->config.cert_algo >= ENCLAVE_TLS_CERT_ALGO_MAX) {
@@ -58,14 +58,25 @@ enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf,
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		goto err_ctx;
 
-	/* Select the target enclave quote to be used */
+	/* Select the target attester to be used */
 	choice = ctx->config.attester_type;
 	if (choice[0] == '\0') {
 		choice = global_core_context.config.attester_type;
 		if (choice[0] == '\0')
 			choice = NULL;
 	}
-	err = etls_enclave_quote_select(ctx, choice, ctx->config.cert_algo);
+	err = etls_attester_select(ctx, choice, ctx->config.cert_algo);
+	if (err != ENCLAVE_TLS_ERR_NONE)
+		goto err_ctx;
+
+	/* Select the target verifier to be used */
+	choice = ctx->config.verifier_type;
+	if (choice[0] == '\0') {
+		choice = global_core_context.config.verifier_type;
+		if (choice[0] == '\0')
+			choice = NULL;
+	}
+	err = etls_verifier_select(ctx, choice, ctx->config.cert_algo);
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		goto err_ctx;
 

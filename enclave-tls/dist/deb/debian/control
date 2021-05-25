@@ -1,0 +1,12 @@
+Source: enclave-tls
+Section: devel
+Priority: extra
+Maintainer: shirong <shirong@linux.alibaba.com>
+Build-Depends: debhelper (>=9), git, make, autoconf, libtool, gcc, g++, libsgx-dcap-quote-verify-dev, libsgx-dcap-ql-dev, libsgx-uae-service
+Standards-Version: 3.9.8
+Homepage: https://github.com/alibaba/inclavare-containers
+
+Package: enclave-tls
+Architecture: amd64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: enclave-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.

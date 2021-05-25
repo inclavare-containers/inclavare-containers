@@ -1,230 +1,329 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License..
+/* Copyright (c) 2020-2021 Alibaba Cloud and Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-#![allow(dead_code)]
-#![allow(unused_assignments)]
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 extern crate sgx_types;
 extern crate sgx_urts;
-use sgx_types::*;
+
+use std::thread;
+use std::os::unix::io::{RawFd, AsRawFd};
+use std::os::unix::net::{UnixStream, UnixListener};
+use std::net::{SocketAddr, TcpStream, TcpListener};
+use std::ops::{Deref, DerefMut};
+use std::ptr::NonNull;
+use std::sync::Arc;
+use libc::{c_void};
+use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
+use clap::{Arg, App};
+use shadow_rs::shadow;
+use serde_json::{json, Value};
+use sgx_types::{
+    SgxResult, sgx_attributes_t, sgx_launch_token_t, sgx_misc_attribute_t
+};
 use sgx_urts::SgxEnclave;
 
-use std::os::unix::io::{IntoRawFd, AsRawFd};
-use std::env;
-use std::net::{TcpListener, TcpStream, SocketAddr};
-use std::str;
+#[macro_use]
+extern crate log;
 
-const BUFFER_SIZE: usize = 1024;
+shadow!(build);
 
-static ENCLAVE_FILE: &'static str = "enclave.signed.so";
-static ENCLAVE_TOKEN: &'static str = "enclave.token";
+include!("ffi.rs");
+include!("enclave-tls.rs");
 
-extern {
-    fn run_server(eid: sgx_enclave_id_t, retval: *mut sgx_status_t,
-        socket_fd: c_int) -> sgx_status_t;
-    fn run_client(eid: sgx_enclave_id_t, retval: *mut sgx_status_t,
-        socket_fd: c_int) -> sgx_status_t;
+
+fn sgx_enclave_create(file: &str) -> SgxResult<SgxEnclave> {
+    let debug = 1;
+    let mut token: sgx_launch_token_t = [0; 1024];
+    let mut updated: i32 = 0;
+    let mut attr = sgx_misc_attribute_t {
+        secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
+        misc_select: 0,
+    };
+    SgxEnclave::create(file, debug, &mut token, &mut updated, &mut attr)
 }
 
-#[no_mangle]
-pub extern "C"
-fn ocall_sgx_init_quote(ret_ti: *mut sgx_target_info_t,
-                        ret_gid : *mut sgx_epid_group_id_t) -> sgx_status_t {
-    println!("Entering ocall_sgx_init_quote");
-    unsafe {sgx_init_quote(ret_ti, ret_gid)}
+fn enclave_info_fetch(sockfd: RawFd, buf: &mut [u8],
+                tls_type: &Option<String>, crypto: &Option<String>,
+                attester: &Option<String>, verifier: &Option<String>,
+                mutual: bool, enclave_id: u64) -> usize {
+    let tls = EnclaveTls::new(false, enclave_id,
+                tls_type, crypto, attester, verifier, mutual).unwrap();
+
+    /* connect */
+    tls.negotiate(sockfd).unwrap();
+
+    let n = tls.transmit(b"hello from inclavared").unwrap();
+    assert!(n > 0);
+
+    let n = tls.receive(buf).unwrap();
+
+    n
 }
 
+fn client_fetch(sockaddr: &str, buf: &mut [u8],
+                tls_type: &Option<String>, crypto: &Option<String>,
+                attester: &Option<String>, verifier: &Option<String>,
+                mutual: bool, enclave_id: u64) -> usize {
+    let addr = sockaddr.parse::<SocketAddr>();
+    if addr.is_err() {
+        /* unix socket */
+        let stream = UnixStream::connect(sockaddr).unwrap();
+        enclave_info_fetch(stream.as_raw_fd(), buf,
+                tls_type, crypto, attester, verifier, mutual, enclave_id)
+    } else {
+        let stream = TcpStream::connect(sockaddr).unwrap();
+        enclave_info_fetch(stream.as_raw_fd(), buf,
+                tls_type, crypto, attester, verifier, mutual, enclave_id)
+    }
+}
 
-pub fn lookup_ipv4(host: &str, port: u16) -> SocketAddr {
-    use std::net::ToSocketAddrs;
+fn handle_client(sockfd: RawFd, upstream: &Option<String>,
+                tls_type: &Option<String>, crypto: &Option<String>,
+                attester: &Option<String>, verifier: &Option<String>,
+                mutual: bool, enclave_id: u64) {
+    /* XXX: mutual is always false */
+    let tls = match EnclaveTls::new(true, enclave_id, tls_type,
+                                    crypto, attester, verifier, false) {
+        Ok(r) => r,
+        Err(_e) => {
+            return;
+        }
+    };
 
-    let addrs = (host, port).to_socket_addrs().unwrap();
-    for addr in addrs {
-        if let SocketAddr::V4(_) = addr {
-            return addr;
+    /* accept */
+    if tls.negotiate(sockfd).is_err() {
+        warn!("tls_negotiate() failed, sockfd = {}", sockfd);
+        return;
+    }
+
+    /* get client request */
+    let mut buffer = [0u8; 512];
+    let n = tls.receive(&mut buffer).unwrap();
+    info!("req: {}", String::from_utf8((&buffer[..n]).to_vec()).unwrap());
+
+    let req: Value = match serde_json::from_slice(&buffer[..n]) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("json::from_slice() failed, {}", e);
+            return;
+        }
+    };
+
+    if req["type"] == "GETENCLAVEINFO" {
+        if let Some(upstream) = upstream {
+            /* fetch enclave information from upstream */
+            let n = client_fetch(&upstream, &mut buffer, tls_type, crypto,
+                        attester, verifier, mutual, enclave_id);
+            info!("message length from upstream: {}", n);
+
+            /* TODO */
+            let resp = if n > 64 {
+                let mrenclave = &buffer[0..32];
+                let mrsigner = &buffer[32..64];
+                let message = String::from_utf8((&buffer[64..n]).to_vec()).unwrap();
+                info!("message from upstream: {}", message);
+
+                let resp = json!({
+                    "id": "123456",
+                    "msgtype": "ENCLAVEINFO",
+                    "version": 1,
+                    "mrenclave": hex::encode(mrenclave),
+                    "mrsigner": hex::encode(mrsigner),
+                    "message": message
+                });
+                resp.to_string()
+            } else if n > 0 {
+                String::from_utf8((&buffer[..n]).to_vec()).unwrap()
+            } else {
+                String::from("reply from inclavared!\n")
+            };
+            info!("resp: {}", resp);
+
+            /* response reply */
+            tls.transmit(resp.as_bytes()).unwrap();
+        } else {
+            let n = tls.transmit(b"reply from inclavared!\n").unwrap();
+            assert!(n > 0);
+        }
+    } else {
+        let n = tls.transmit(b"hello from inclavared!\n").unwrap();
+        assert!(n > 0);
+    }
+}
+
+fn run_server(sockaddr: &str, upstream: Option<String>,
+            tls_type: Option<String>, crypto: Option<String>,
+            attester: Option<String>, verifier: Option<String>,
+            mutual: bool, enclavefile: String) {
+    let enclave = match sgx_enclave_create(&enclavefile) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("sgx_enclave_create() failed, {}", e.as_str());
+            return;
+        }
+    };
+    let enclave_id = enclave.geteid();
+
+    let upstream = Arc::new(upstream);
+    let tls_type = Arc::new(tls_type);
+    let crypto = Arc::new(crypto);
+    let attester = Arc::new(attester);
+    let verifier = Arc::new(verifier);
+    let addr = sockaddr.parse::<SocketAddr>();
+    /* TODO: Abstract together */
+    if addr.is_err() {
+        /* unix socket */
+        let _ = std::fs::remove_file(sockaddr);
+        let listener = UnixListener::bind(sockaddr).unwrap();
+        loop {
+            let (socket, addr) = listener.accept().unwrap();
+            info!("thread for {} {:?}", socket.as_raw_fd(), addr);
+            let upstream = upstream.clone();
+            let tls_type = tls_type.clone();
+            let crypto = crypto.clone();
+            let attester = attester.clone();
+            let verifier = verifier.clone();
+            thread::spawn(move || {
+                handle_client(socket.as_raw_fd(), &upstream, &tls_type,
+                    &crypto, &attester, &verifier, mutual, enclave_id);
+            });
+        }
+    } else {
+        /* tcp */
+        let listener = TcpListener::bind(sockaddr).unwrap();
+        loop {
+            let (socket, addr) = listener.accept().unwrap();
+            info!("thread for {} {:?}", socket.as_raw_fd(), addr);
+            let upstream = upstream.clone();
+            let tls_type = tls_type.clone();
+            let crypto = crypto.clone();
+            let attester = attester.clone();
+            let verifier = verifier.clone();
+            thread::spawn(move || {
+                handle_client(socket.as_raw_fd(), &upstream, &tls_type,
+                    &crypto, &attester, &verifier, mutual, enclave_id);
+            });
         }
     }
 
-    unreachable!("Cannot lookup address");
-}
-
-
-#[no_mangle]
-pub extern "C"
-fn ocall_get_ias_socket(ret_fd : *mut c_int) -> sgx_status_t {
-    let port = 443;
-    let hostname = "api.trustedservices.intel.com";
-    let addr = lookup_ipv4(hostname, port);
-    let sock = TcpStream::connect(&addr).expect("[-] Connect tls server failed!");
-
-    unsafe {*ret_fd = sock.into_raw_fd();}
-
-    sgx_status_t::SGX_SUCCESS
-}
-
-#[no_mangle]
-pub extern "C"
-fn ocall_get_quote (p_sigrl            : *const u8,
-                    sigrl_len          : u32,
-                    p_report           : *const sgx_report_t,
-                    quote_type         : sgx_quote_sign_type_t,
-                    p_spid             : *const sgx_spid_t,
-                    p_nonce            : *const sgx_quote_nonce_t,
-                    p_qe_report        : *mut sgx_report_t,
-                    p_quote            : *mut u8,
-                    _maxlen             : u32,
-                    p_quote_len        : *mut u32) -> sgx_status_t {
-    println!("Entering ocall_get_quote");
-
-    let mut real_quote_len : u32 = 0;
-
-    let ret = unsafe {
-        sgx_calc_quote_size(p_sigrl, sigrl_len, &mut real_quote_len as *mut u32)
-    };
-
-    if ret != sgx_status_t::SGX_SUCCESS {
-        println!("sgx_calc_quote_size returned {}", ret);
-        return ret;
-    }
-
-    println!("quote size = {}", real_quote_len);
-    unsafe { *p_quote_len = real_quote_len; }
-
-    let ret = unsafe {
-        sgx_get_quote(p_report,
-                      quote_type,
-                      p_spid,
-                      p_nonce,
-                      p_sigrl,
-                      sigrl_len,
-                      p_qe_report,
-                      p_quote as *mut sgx_quote_t,
-                      real_quote_len)
-    };
-
-    if ret != sgx_status_t::SGX_SUCCESS {
-        println!("sgx_calc_quote_size returned {}", ret);
-        return ret;
-    }
-
-    println!("sgx_calc_quote_size returned {}", ret);
-    ret
-}
-
-#[no_mangle]
-pub extern "C"
-fn ocall_get_update_info (platform_blob: * const sgx_platform_info_t,
-                          enclave_trusted: i32,
-                          update_info: * mut sgx_update_info_bit_t) -> sgx_status_t {
-    unsafe{
-        sgx_report_attestation_status(platform_blob, enclave_trusted, update_info)
-    }
-}
-
-fn init_enclave() -> SgxResult<SgxEnclave> {
-    let mut launch_token: sgx_launch_token_t = [0; 1024];
-    let mut launch_token_updated: i32 = 0;
-    // call sgx_create_enclave to initialize an enclave instance
-    // Debug Support: set 2nd parameter to 1
-    let debug = 1;
-    let mut misc_attr = sgx_misc_attribute_t {secs_attr: sgx_attributes_t { flags:0, xfrm:0}, misc_select:0};
-    SgxEnclave::create(ENCLAVE_FILE,
-                       debug,
-                       &mut launch_token,
-                       &mut launch_token_updated,
-                       &mut misc_attr)
-}
-
-enum Mode {
-    Client,
-    Server,
+    /* unreachable
+    enclave.destroy();
+    */
 }
 
 fn main() {
-    let mut mode:Mode = Mode::Server;
-    let mut args: Vec<_> = env::args().collect();
-    args.remove(0);
-    while !args.is_empty() {
-        match args.remove(0).as_ref() {
-            "--client" => mode = Mode::Client,
-            "--server" => mode = Mode::Server,
-            _ => {
-                panic!("Only --client/server/unlink is accepted");
+    env_logger::builder().filter(None, log::LevelFilter::Trace).init();
+
+    let version = format!("v{}\ncommit: {}\nbuildtime: {}",
+                    build::PKG_VERSION, build::COMMIT_HASH, build::BUILD_TIME);
+    let matches = App::new("inclavared")
+                    .version(version.as_str())
+                    .long_version(version.as_str())
+                    .author("Inclavare-Containers Team")
+                    .arg(Arg::with_name("listen")
+                        .short("l")
+                        .long("listen")
+                        .value_name("sockaddr")
+                        .help("Work in listen mode")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("xfer")
+                        .short("x")
+                        .long("xfer")
+                        .value_name("sockaddr")
+                        .help("Xfer data from client to server")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("connect")
+                        .short("c")
+                        .long("connect")
+                        .value_name("sockaddr")
+                        .help("Work in client mode")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("tls")
+                        .long("tls")
+                        .value_name("tls_type")
+                        .help("Specify the TLS type")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("crypto")
+                        .long("crypto")
+                        .value_name("crypto_type")
+                        .help("Specify the crypto type")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("attester")
+                        .long("attester")
+                        .value_name("attester_type")
+                        .help("Specify the attester type")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("verifier")
+                        .long("verifier")
+                        .value_name("verifier_type")
+                        .help("Specify the verifier type")
+                        .takes_value(true)
+                    )
+                    .arg(Arg::with_name("mutual")
+                        .short("m")
+                        .long("mutual")
+                        .help("Work in mutual mode")
+                    )
+                    .arg(Arg::with_name("enclave")
+                        .short("e")
+                        .long("enclave")
+                        .value_name("file")
+                        .help("Specify the enclave file")
+                        .takes_value(true)
+                    )
+                    .get_matches();
+
+    info!("enter v{}, {} - {}", build::PKG_VERSION,
+                    build::COMMIT_HASH, build::BUILD_TIME);
+
+    let tls_type = matches.value_of("tls").map(|s| s.to_string());
+    let crypto = matches.value_of("crypto").map(|s| s.to_string());
+    let attester = matches.value_of("attester").map(|s| s.to_string());
+    let verifier = matches.value_of("verifier").map(|s| s.to_string());
+    let mutual = matches.is_present("mutual");
+
+    let enclavefile = matches.value_of("enclave")
+            .unwrap_or("/usr/share/enclave-tls/samples/sgx_stub_enclave.signed.so");
+    let enclavefile = enclavefile.to_string();
+
+    if matches.is_present("listen") {
+        let sockaddr = matches.value_of("listen").unwrap();
+        let xfer = matches.value_of("xfer").map(|s| s.to_string());
+
+        run_server(sockaddr, xfer,
+                tls_type, crypto, attester, verifier, mutual, enclavefile);
+    } else {
+        let sockaddr = matches.value_of("connect").unwrap();
+        let enclave = match sgx_enclave_create(&enclavefile) {
+            Ok(r) => r,
+            Err(e) => {
+                error!("sgx_enclave_create() failed, {}", e.as_str());
+                return;
             }
-        }
+        };
+
+        let mut buffer = [0u8; 512];
+        let n = client_fetch(sockaddr, &mut buffer, &tls_type, &crypto,
+                    &attester, &verifier, mutual, enclave.geteid());
+        assert!(n > 0);
+        info!("length from upstream: {}", n);
+
+        let message = String::from_utf8((&buffer[64..]).to_vec()).unwrap();
+        info!("message from upstream: {}", message);
+
+        enclave.destroy();
     }
 
-    let enclave = match init_enclave() {
-        Ok(r) => {
-            println!("[+] Init Enclave Successful {}!", r.geteid());
-            r
-        },
-        Err(x) => {
-            println!("[-] Init Enclave Failed {}!", x.as_str());
-            return;
-        },
-    };
-
-    match mode {
-        Mode::Server => {
-            println!("Running as server...");
-            let listener = TcpListener::bind("0.0.0.0:3443").unwrap();
-            loop {
-                match listener.accept() {
-                    Ok((socket, addr)) => {
-                        println!("new client from {:?} {}", addr, socket.as_raw_fd());
-                        let mut retval = sgx_status_t::SGX_SUCCESS;
-                        let result = unsafe {
-                            run_server(enclave.geteid(), &mut retval, socket.as_raw_fd())
-                        };
-                        match result {
-                            sgx_status_t::SGX_SUCCESS => {
-                                println!("ECALL success!");
-                            },
-                            _ => {
-                                println!("[-] ECALL Enclave Failed {}!", result.as_str());
-                                return;
-                            }
-                        }
-                    }
-                    Err(e) => println!("couldn't get client: {:?}", e),
-                }
-            } //loop
-        }
-        Mode::Client => {
-            println!("Running as client...");
-            let socket = TcpStream::connect("localhost:3443").unwrap();
-            let mut retval = sgx_status_t::SGX_SUCCESS;
-            let result = unsafe {
-                run_client(enclave.geteid(), &mut retval, socket.as_raw_fd())
-            };
-            match result {
-                sgx_status_t::SGX_SUCCESS => {
-                    println!("ECALL success!");
-                },
-                _ => {
-                    println!("[-] ECALL Enclave Failed {}!", result.as_str());
-                    return;
-                }
-            }
-        }
-    }
-
-    println!("[+] Done!");
-
-    enclave.destroy();
+    info!("leave");
 }

@@ -12,7 +12,7 @@ The verifying process is as below:
 
 ## Prerequisite
 
-Go 1.13.x or above.
+Go 1.14.x or above.
 
 ## Build
 
@@ -28,20 +28,13 @@ git clone https://github.com/alibaba/inclavare-containers
 
 2. Prepare the dependence libs required by shelter
 
-### For EPID RA
+### Build and install enclave-tls
+
+Please follow [enclave-tls README](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls) to build and install enclave-tls firstly.
 
 ```shell
 cd $WORKSPACE/inclavare-containers/shelter
-make
-```
-
-### For DCAP RA
-
-Please refer to [this guide](https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/README.md) to install DCAP. Note: If your platform is pre-product SGX platform (SBX), please follow this guide to resolve the quote verification problem on SBX platforms: https://github.com/alibaba/inclavare-containers/blob/master/hack/use-sbx-platform/README.md.
-
-```shell
-cd $WORKSPACE/inclavare-containers/shelter
-make ECDSA=1
+make 
 ```
 
 ## Run
@@ -73,10 +66,30 @@ shelter help
       --version, -v  print the version
 ```
 
-2. remote attestation for epid-sgx-ra & dcap-sgx-ra
+2. remote attestation for sgx-ra, sgx-la, and sgx-ecdsa
 
 ```shell
-shelter remoteattestation
+OPTIONS:
+   --addr           specify tcp or unix socket address, e.g, '--addr=tcp://ip:port or --addr=unix://path'
+   --log-level      set the level of log output(debug, info, warn, error, fatal, off)
+   --verifier       set the type of quote verifier(nullquote, sgx_la or sgx_ecdsa)
+   --tls            set the type of tls wrapper(nulltls, wolfssl or wolfssl_sgx)
+   --crypto         set the type of crypto wrapper(nullcrypto, wolfcrypt or wolfcrypt_sgx)
+   --mutual         enable mutual attestation
+```
+
+You can set command line parameters to specify different configurations.
+
+For example:
+```shell
+shelter remoteattestation --addr=tcp://127.0.0.1:1234
+shelter remoteattestation --addr=unix:///run/enclave-tls/tls.sock
+shelter remoteattestation --tls wolfssl
+shelter remoteattestation --tls wolfssl_sgx
+shelter remoteattestation --verifier sgx_ecdsa
+shelter remoteattestation --verifier sgx_la
+shelter remoteattestation --crypto wolfcrypt
+shelter remoteattestation --mutual
 ```
 
 3. verify workload integrity by launch measurement.

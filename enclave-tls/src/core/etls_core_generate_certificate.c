@@ -12,9 +12,8 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 {
 	ETLS_DEBUG("ctx %p\n", ctx);
 
-	if (!ctx || !ctx->tls_wrapper || !ctx->tls_wrapper->opts ||
-	    !ctx->crypto_wrapper || !ctx->crypto_wrapper->opts ||
-	    !ctx->crypto_wrapper->opts->gen_pubkey_hash ||
+	if (!ctx || !ctx->tls_wrapper || !ctx->tls_wrapper->opts || !ctx->crypto_wrapper ||
+	    !ctx->crypto_wrapper->opts || !ctx->crypto_wrapper->opts->gen_pubkey_hash ||
 	    !ctx->crypto_wrapper->opts->gen_cert)
 		return -ENCLAVE_TLS_ERR_INVALID;
 
@@ -40,8 +39,7 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	crypto_wrapper_err_t c_err;
 	uint8_t privkey_buf[2048];
 	unsigned int privkey_len = sizeof(privkey_buf);
-	c_err = ctx->crypto_wrapper->opts->gen_privkey(ctx->crypto_wrapper,
-						       ctx->config.cert_algo,
+	c_err = ctx->crypto_wrapper->opts->gen_privkey(ctx->crypto_wrapper, ctx->config.cert_algo,
 						       privkey_buf, &privkey_len);
 	if (c_err != CRYPTO_WRAPPER_ERR_NONE)
 		return c_err;
@@ -49,8 +47,7 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	/* Generate the hash of public key */
 	uint8_t hash[hash_size];
 	c_err = ctx->crypto_wrapper->opts->gen_pubkey_hash(ctx->crypto_wrapper,
-							   ctx->config.cert_algo,
-							   hash);
+							   ctx->config.cert_algo, hash);
 	if (c_err != CRYPTO_WRAPPER_ERR_NONE)
 		return c_err;
 
@@ -77,8 +74,7 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	if (privkey_len) {
 		tls_wrapper_err_t t_err;
 
-		t_err = ctx->tls_wrapper->opts->use_privkey(ctx->tls_wrapper,
-							    privkey_buf,
+		t_err = ctx->tls_wrapper->opts->use_privkey(ctx->tls_wrapper, privkey_buf,
 							    privkey_len);
 		if (t_err != TLS_WRAPPER_ERR_NONE)
 			return t_err;

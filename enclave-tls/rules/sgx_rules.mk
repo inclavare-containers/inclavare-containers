@@ -69,7 +69,7 @@ endif
 endif
 
 sgx_enclave_signer := $(SGX_SDK)/bin/$(SGX_ARCH)/sgx_sign
-signed_enclave := $(enclave_name).signed.so
+signed_enclave := $(Build_Bindir)/$(enclave_name).signed.so
 unsigned_enclave := $(enclave_name).so
 $(signed_enclave): $(unsigned_enclave)
 ifeq ($(build_mode),HW_DEBUG)
@@ -80,8 +80,12 @@ else ifeq ($(build_mode),HW_PRERELEASE)
 	@echo "The project has been built in pre-release hardware mode."
 else ifeq ($(build_mode),SIM_PRERELEASE)
 	@echo "The project has been built in pre-release simulation mode."
-else
+else ifeq ($(build_mode),HW_RELEASE)
+	@echo "The project has been built in release hardware mode."
+else ifeq ($(build_mode),SIM_RELEASE)
 	@echo "The project has been built in release simulation mode."
+else
+	$(error "Unknown build mode.")
 endif
 	$(sgx_enclave_signer) sign -key $(enclave_signing_key) -enclave $< \
 	  -out $@ -config $(enclave_config_file)
@@ -101,8 +105,9 @@ $(unsigned_enclave): $(App_Name)_t.o $(Enclave_Static_Lib)
 ifeq ($(Tls_Wolfssl),1)
   Enclave_Cflags += $(Wolfssl_Sgx_Cflags)
 endif
+# Add macro HAVE_TM_TYPE to avoid compiling error about struct tm re-definition
 $(App_Name)_t.o: $(App_Name)_t.c
-	$(CC) $(Enclave_Cflags) -c $< -o $@
+	$(CC) $(Enclave_Cflags) -DHAVE_TM_TYPE -c $< -o $@
 	@echo "CC   <=  $<"
 
 $(App_Name)_t.c: $(App_Name)_t.h
@@ -119,8 +124,9 @@ $(enclave_cxx_objs): %.o : %.cpp
 	$(CXX) $(Enclave_Cxxflags) -c $< -o $@
 	@echo "CXX  <=  $<"
 
+# Add macro HAVE_TM_TYPE to avoid compiling error about struct tm re-definition
 $(enclave_c_objs): %.o : %.c
-	$(CC) $(Enclave_Cflags) -c $< -o $@
+	$(CC) $(Enclave_Cflags) -DHAVE_TM_TYPE -c $< -o $@
 	@echo "CC   <=  $<"
 
 app_cxx_objs := $(sort $(App_Cxx_Files:.cpp=.o))

@@ -9,10 +9,11 @@
 #include <enclave-tls/crypto_wrapper.h>
 #include "wolfcrypt.h"
 
-static const int rsa_pub_3072_raw_der_len = 398;	/* rsa_pub_3072_pcks_der_len - pcks_nr_1_header_len */
+/* rsa_pub_3072_pcks_der_len - pcks_nr_1_header_len */
+static const int rsa_pub_3072_raw_der_len = 398;
 
-static int
-gen_rsa3072_pubkey(wolfcrypt_ctx_t *wc_ctx, uint8_t *pub_key_buf, unsigned int *pub_key_len)
+static int gen_rsa3072_pubkey(wolfcrypt_ctx_t *wc_ctx, uint8_t *pub_key_buf,
+			      unsigned int *pub_key_len)
 {
 	/* SetRsaPublicKey() only exports n and e without wrapping them in
 	   additional ASN.1 (PKCS#1). */
@@ -31,8 +32,7 @@ gen_rsa3072_pubkey(wolfcrypt_ctx_t *wc_ctx, uint8_t *pub_key_buf, unsigned int *
 }
 
 crypto_wrapper_err_t wolfcrypt_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
-					       enclave_tls_cert_algo_t algo,
-					       uint8_t *hash)
+					       enclave_tls_cert_algo_t algo, uint8_t *hash)
 {
 	ETLS_DEBUG("ctx %p, algo %d, hash %p\n", ctx, algo, hash);
 
@@ -57,8 +57,8 @@ crypto_wrapper_err_t wolfcrypt_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
 	wc_Sha256Final(&sha256, hash);
 
 	ETLS_DEBUG("the sha256 of public key %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
-		hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
-		hash[28], hash[29], hash[30], hash[31]);
+		   hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7], hash[28],
+		   hash[29], hash[30], hash[31]);
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }

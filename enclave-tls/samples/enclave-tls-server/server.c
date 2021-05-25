@@ -3,34 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <getopt.h>
-#include <sys/socket.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #include <enclave-tls/api.h>
+#include <enclave-tls/log.h>
 
-#define DEFAULT_PORT         1234
-#define DEFAULT_IP           "127.0.0.1"
+#define DEFAULT_PORT 1234
+#define DEFAULT_IP   "127.0.0.1"
 
+// clang-format off
 #ifdef OCCLUM
-#include <sgx_report.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#endif
+  #include <sgx_report.h>
+  #include <fcntl.h>
+  #include <sys/ioctl.h>
+#elif defined(SGX)
+  #include <sgx_urts.h>
+  #include <sgx_quote.h>
 
-#ifdef SGX
-#include <sgx_urts.h>
-#include <sgx_quote.h>
+  #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
-#define ENCLAVE_FILENAME     "sgx_stub_enclave.signed.so"
-
-static sgx_enclave_id_t load_enclave(void)
+static sgx_enclave_id_t load_enclave(bool debug_enclave)
 {
 	sgx_launch_token_t t;
 
@@ -38,13 +38,13 @@ static sgx_enclave_id_t load_enclave(void)
 
 	sgx_enclave_id_t eid;
 	int updated = 0;
-	int ret = sgx_create_enclave(ENCLAVE_FILENAME, 1, &t, &updated, &eid, NULL);
+	int ret = sgx_create_enclave(ENCLAVE_FILENAME, debug_enclave, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
-		fprintf(stderr, "Failed to load enclave %d\n", ret);
+		ETLS_ERR("Failed to load enclave %d\n", ret);
 		return -1;
 	}
 
-	printf("Success to load enclave id %ld\n", eid);
+	ETLS_DEBUG("Success to load enclave id %ld\n", eid);
 
 	return eid;
 }
@@ -54,26 +54,26 @@ static sgx_enclave_id_t load_enclave(void)
 typedef struct {
 	const sgx_target_info_t *target_info;
 	const sgx_report_data_t *report_data;
-	sgx_report_t            *report;
+	sgx_report_t *report;
 } sgxioc_create_report_arg_t;
 
-#define SGXIOC_SELF_TARGET	_IOR('s', 3, sgx_target_info_t)
-#define SGXIOC_CREATE_REPORT	_IOWR('s', 4, sgxioc_create_report_arg_t)
-#define ENCLAVE_TLS_HELLO	"Hello and welcome to enclave-tls!"
+  #define SGXIOC_SELF_TARGET   _IOR('s', 3, sgx_target_info_t)
+  #define SGXIOC_CREATE_REPORT _IOWR('s', 4, sgxioc_create_report_arg_t)
+  #define ENCLAVE_TLS_HELLO    "Hello and welcome to Enclave TLS!\n"
 
-int sgx_create_report(sgx_report_t *report)
+static int sgx_create_report(sgx_report_t *report)
 {
 	int sgx_fd = open("/dev/sgx", O_RDONLY);
 
 	if (sgx_fd < 0) {
-		fprintf(stderr, "open sgx device error\n");
+		ETLS_ERR("Failed to open sgx device\n");
 		return -1;
 	}
 
 	sgx_target_info_t target_info;
 	if (ioctl(sgx_fd, SGXIOC_SELF_TARGET, &target_info) < 0) {
 		close(sgx_fd);
-		fprintf(stderr, "failed to ioctl get quote and returned errno %s\n", strerror(errno));
+		ETLS_ERR("Failed to ioctl get quote and returned errno %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -83,7 +83,7 @@ int sgx_create_report(sgx_report_t *report)
 	arg.report = report;
 	if (ioctl(sgx_fd, SGXIOC_CREATE_REPORT, &arg) < 0) {
 		close(sgx_fd);
-		fprintf(stderr, "failed to ioctl get report and return error %s\n", strerror(errno));
+		ETLS_ERR("Failed to ioctl get report and return error %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -92,10 +92,11 @@ int sgx_create_report(sgx_report_t *report)
 	return 0;
 }
 #endif
+// clang-format on
 
-int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
-			       char *attester_type, char *verifier_type,
-			       char *tls_type, char *crypto_type, bool mutual)
+int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, char *attester_type,
+			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			       bool debug_enclave)
 {
 	enclave_tls_conf_t conf;
 
@@ -106,7 +107,11 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
 #ifdef SGX
-	conf.enclave_id = load_enclave();
+	conf.enclave_id = load_enclave(debug_enclave);
+	if (conf.enclave_id == -1) {
+		ETLS_ERR("Failed to load sgx stub enclave\n");
+		return -1;
+	}
 #endif
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
 	if (mutual)
@@ -115,7 +120,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to initialize enclave tls %#x\n", ret);
+		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
 		return -1;
 	}
 
@@ -123,7 +128,7 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 	struct sockaddr_in c_addr;
 	socklen_t size = sizeof(c_addr);
 	while (1) {
-		printf("Waiting for a connection ...\n");
+		ETLS_INFO("Waiting for a connection ...\n");
 
 		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
 		if (connd < 0) {
@@ -133,17 +138,17 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 
 		ret = enclave_tls_negotiate(handle, connd);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
-			fprintf(stderr, "failed to negotiate %#x\n", ret);
+			ETLS_ERR("Failed to negotiate %#x\n", ret);
 			goto err;
 		}
 
-		printf("Client connected successfully\n");
+		ETLS_DEBUG("Client connected successfully\n");
 
 		char buf[256];
 		size_t len = sizeof(buf);
 		ret = enclave_tls_receive(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
-			fprintf(stderr, "failed to receive %#x\n", ret);
+			ETLS_ERR("Failed to receive %#x\n", ret);
 			goto err;
 		}
 
@@ -151,74 +156,78 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level,
 			len = sizeof(buf) - 1;
 		buf[len] = '\0';
 
-		printf("Client: %s\n", buf);
+		ETLS_INFO("Client: %s\n", buf);
 
 #ifdef OCCLUM
 		sgx_report_t app_report;
 		if (sgx_create_report(&app_report) < 0) {
-			fprintf(stderr, "failed to generate local report\n");
+			ETLS_ERR("Failed to generate local report\n");
 			goto err;
 		}
 
 		/* Write mrencalve, mesigner and hello into buff */
 		memset(buf, 0, sizeof(buf));
 		memcpy(buf, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
-		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer, sizeof(sgx_measurement_t));
-		memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO, sizeof(ENCLAVE_TLS_HELLO));
+		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer,
+		       sizeof(sgx_measurement_t));
+		memcpy(buf + 2 * sizeof(sgx_measurement_t), ENCLAVE_TLS_HELLO,
+		       sizeof(ENCLAVE_TLS_HELLO));
 
-		len = 2 * sizeof(sgx_measurement_t) + sizeof(ENCLAVE_TLS_HELLO);
+		len = 2 * sizeof(sgx_measurement_t) + strlen(ENCLAVE_TLS_HELLO);
 #endif
 
 		/* Reply back to the client */
 		ret = enclave_tls_transmit(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
-			fprintf(stderr, "failed to transmit %#x\n", ret);
+			ETLS_ERR("Failed to transmit %#x\n", ret);
 			goto err;
 		}
 
 		close(connd);
 	}
 
-err:
-	ret = enclave_tls_cleanup(handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		fprintf(stderr, "failed to cleanup %#x\n", ret);
-		return -1;
-	}
-
 	return 0;
+
+err:
+	/* Ignore the error code of cleanup in order to return the prepositional error */
+	enclave_tls_cleanup(handle);
+	return -1;
 }
 
 int main(int argc, char **argv)
 {
 	printf("    - Welcome to Enclave-TLS sample server program\n");
 
-	char *const short_options = "a:v:t:c:ml:i:p:";
+	char *const short_options = "a:v:t:c:ml:i:p:D:h";
+	// clang-format off
 	struct option long_options[] = {
-		{"attester", required_argument, NULL, 'a'},
-		{"verifier", required_argument, NULL, 'v'},
-		{"tls", required_argument, NULL, 't'},
-		{"crypto", required_argument, NULL, 'c'},
-		{"mutual", no_argument, NULL, 'm'},
-		{"log-level", required_argument, NULL, 'l'},
-		{"ip", required_argument, NULL, 'i'},
-		{"port", required_argument, NULL, 'p'},
-		{0, 0, 0, 0}
+		{ "attester", required_argument, NULL, 'a' },
+		{ "verifier", required_argument, NULL, 'v' },
+		{ "tls", required_argument, NULL, 't' },
+		{ "crypto", required_argument, NULL, 'c' },
+		{ "mutual", no_argument, NULL, 'm' },
+		{ "log-level", required_argument, NULL, 'l' },
+		{ "ip", required_argument, NULL, 'i' },
+		{ "port", required_argument, NULL, 'p' },
+		{ "debug-enclave", no_argument, NULL, 'D' },
+		{ "help", no_argument, NULL, 'h' },
+		{ 0, 0, 0, 0 }
 	};
+	// clang-format on
 
 	char *attester_type = "";
 	char *verifier_type = "";
 	char *tls_type = "";
 	char *crypto_type = "";
 	bool mutual = false;
-	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
+	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
 	char *ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
+	bool debug_enclave = false;
 	int opt;
 
 	do {
-		opt = getopt_long(argc, argv, short_options, long_options,
-				  NULL);
+		opt = getopt_long(argc, argv, short_options, long_options, NULL);
 		switch (opt) {
 		case 'a':
 			attester_type = optarg;
@@ -255,8 +264,25 @@ int main(int argc, char **argv)
 		case 'p':
 			port = atoi(optarg);
 			break;
+		case 'D':
+			debug_enclave = true;
+			break;
 		case -1:
 			break;
+		case 'h':
+			puts("    Usage:\n\n"
+			     "        enclave-tls-server <options> [arguments]\n\n"
+			     "    Options:\n\n"
+			     "        --attester/-a value   set the type of quote attester\n"
+			     "        --verifier/-v value   set the type of quote verifier\n"
+			     "        --tls/-t value        set the type of tls wrapper\n"
+			     "        --crypto/-c value     set the type of crypto wrapper\n"
+			     "        --mutual/-m           set to enable mutual attestation\n"
+			     "        --log-level/-l        set the log level\n"
+			     "        --ip/-i               set the listening ip address\n"
+			     "        --port/-p             set the listening tcp port\n"
+			     "        --debug-enclave/-D    set to enable enclave debugging\n"
+			     "        --help/-h             show the usage\n");
 		default:
 			exit(1);
 		}
@@ -269,8 +295,7 @@ int main(int argc, char **argv)
 	}
 
 	int reuse = 1;
-	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
-			     (const void *)&reuse, sizeof(int));
+	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(int));
 	if (ret < 0) {
 		perror("Failed to call setsockopt()");
 		return -1;
@@ -294,7 +319,6 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	return enclave_tls_server_startup(sockfd, log_level,
-					  attester_type, verifier_type,
-					  tls_type, crypto_type, mutual);
+	return enclave_tls_server_startup(sockfd, log_level, attester_type, verifier_type, tls_type,
+					  crypto_type, mutual, debug_enclave);
 }

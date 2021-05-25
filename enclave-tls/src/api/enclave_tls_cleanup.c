@@ -19,9 +19,8 @@ enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle)
 	ETLS_DEBUG("handle %p\n", ctx);
 
 	if (!handle || !handle->tls_wrapper || !handle->tls_wrapper->opts ||
-	    !handle->tls_wrapper->opts->cleanup || !handle->attester ||
-	    !handle->attester->opts || !handle->attester->opts->cleanup ||
-	    !handle->verifier || !handle->verifier->opts ||
+	    !handle->tls_wrapper->opts->cleanup || !handle->attester || !handle->attester->opts ||
+	    !handle->attester->opts->cleanup || !handle->verifier || !handle->verifier->opts ||
 	    !handle->verifier->opts->cleanup)
 		return -ENCLAVE_TLS_ERR_INVALID;
 
@@ -43,22 +42,6 @@ enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle)
 		if (err != ENCLAVE_QUOTE_ERR_NONE) {
 			ETLS_DEBUG("failed to clean up verifier %#x\n", err);
 			return err;
-		}
-	}
-
-	for (unsigned int i = 0; i < tls_wrappers_nums; ++i) {
-		if (tls_wrappers_ctx[i]) {
-			if (tls_wrappers_ctx[i]->handle)
-				dlclose(tls_wrappers_ctx[i]->handle);
-			free(tls_wrappers_ctx[i]);
-		}
-	}
-
-	for (unsigned int i = 0; i < enclave_quote_nums; ++i) {
-		if (enclave_quotes_ctx[i]) {
-			if (enclave_quotes_ctx[i]->handle)
-				dlclose(enclave_quotes_ctx[i]->handle);
-			free(enclave_quotes_ctx[i]);
 		}
 	}
 

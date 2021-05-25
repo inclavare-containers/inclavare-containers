@@ -4,7 +4,7 @@ LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 
 RUN apt-get update && apt-get install -y make wget git \
     libseccomp-dev gnupg gcc pkg-config libssl-dev binutils-dev debhelper \
-    libprotoc-dev protobuf-compiler libbinutils
+    libprotoc-dev protobuf-compiler libbinutils file curl
 
 WORKDIR /root
 
@@ -28,6 +28,10 @@ ENV GOPATH       /root/gopath
 ENV PATH         $PATH:$GOROOT/bin:$GOPATH/bin
 ENV GO111MODULE  on
 
+# install rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+ENV PATH         /root/.cargo/bin:$PATH
+
 # install docker
 RUN apt-get install -y iptables && \
     wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz && \
@@ -38,7 +42,12 @@ RUN mkdir -p /etc/docker && \
     echo "{\n\t\"runtimes\": {\n\t\t\"rune\": {\n\t\t\t\"path\": \"/usr/local/bin/rune\",\n\t\t\t\"runtimeArgs\": []\n\t\t}\n\t}\n}" >> /etc/docker/daemon.json
 
 # install SGX
+RUN [ ! -f sgx_linux_x64_sdk_2.13.100.4.bin ] && \
+    wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.13.100.4.bin && \
+    chmod +x sgx_linux_x64_sdk_2.13.100.4.bin && echo -e 'no\n/opt/intel\n' | ./sgx_linux_x64_sdk_2.13.100.4.bin && \
+    rm -rf sgx_linux_x64_sdk_2.13.100.4.bin
+
 RUN echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && \
     wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -
 
-RUN apt-get update -y && apt-get install -y libsgx-uae-service libsgx-dcap-quote-verify-dev
+RUN apt-get update -y && apt-get install -y libsgx-dcap-quote-verify-dev libsgx-dcap-ql-dev libsgx-uae-service

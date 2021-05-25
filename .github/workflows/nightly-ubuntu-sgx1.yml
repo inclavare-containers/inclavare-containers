@@ -13,7 +13,7 @@ env:
   OCCLUM_VERSION: 0.21.0
   SGX_VERSION: 2.13.100.4-bionic1
   DCAP_VERSION: 1.10.100.4-bionic1
-  kubernetes_version: 1.16.9
+  kubernetes_version: 1.18.8
   nap_time: 60
 
 jobs:
@@ -23,6 +23,7 @@ jobs:
       - name: Prepare the execution enviorment
         run: |
           rm -f /etc/apt/sources.list.d/kubernetes.list
+          rm -f /etc/apt/sources.list.d/occlum.list
           rm -fr $WORK_DIR
           mkdir -p $WORK_DIR
           pushd $WORK_DIR
@@ -134,8 +135,8 @@ jobs:
           sudo apt-get install -y libsgx-uae-service
           popd
 
-          echo 'deb [arch=amd64] https://occlum.io/occlum-package-repos/debian bionic main' | tee /etc/apt/sources.list.d/occlum.list;
-          wget -qO - https://occlum.io/occlum-package-repos/debian/public.key | apt-key add -
+          echo 'deb [arch=amd64] http://occlum.io/occlum-package-repos/debian bionic main' | tee /etc/apt/sources.list.d/occlum.list;
+          wget -qO - http://occlum.io/occlum-package-repos/debian/public.key | apt-key add -
           sudo apt-get update
           sudo apt-get install -y occlum-pal=${{ env.OCCLUM_VERSION }}-1
           sudo apt-get install -y occlum-runtime=${{ env.OCCLUM_VERSION }}-1
@@ -154,6 +155,8 @@ jobs:
           echo "$RUNE_VERSION" > VERSION
           find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
           find ./ -path "*deb/build.sh" | xargs -I files sed -i "17icp $WORK_DIR/v*.tar.gz \$DEBBUILD_DIR" files;
+          sed -i 's/shelter//g' Makefile
+          sed -i 's/inclavared//g' Makefile
           make package -j${CPU_NUM};
           dpkg -i rune_$RUNE_VERSION-1_amd64.deb;
           dpkg -i shim-rune_$RUNE_VERSION-1_amd64.deb
@@ -250,14 +253,15 @@ jobs:
             kubeadm reset -f
           fi
           sudo systemctl enable kubelet.service
-          kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v1.16.9 --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+          kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
 
           mkdir -p $HOME/.kube
           sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
           sudo chown $(id -u):$(id -g) $HOME/.kube/config
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
-          wget -P $WORK_DIR http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/kube-flannel.yml
+          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
+            -P $WORK_DIR http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/kube-flannel.yml
           kubectl apply -f $WORK_DIR/kube-flannel.yml
 
       - name: Install runtimeclass
@@ -435,29 +439,6 @@ jobs:
         timeout-minutes: 10
         run: |
           kubectl delete pod helloworld
-          cat <<- EOF >$WORK_DIR/helloworld.yaml
-          apiVersion: v1
-          kind: Pod
-          metadata:
-            labels:
-              run: helloworld
-            name: helloworld
-          spec:
-            runtimeClassName: rune
-            containers:
-            - command:
-              - /bin/hello_world
-              env:
-              - name: RUNE_CARRIER
-                value: occlum
-              - name: IMAGE_DIGEST
-                value: "408fbccd943bb"
-              image: docker.io/inclavarecontainers/occlum-hello-world:scratch
-              imagePullPolicy: IfNotPresent
-              name: helloworld
-              workingDir: /run/rune
-          EOF
-
           kubectl apply -f $WORK_DIR/helloworld.yaml
           sleep $nap_time
           while true; do
@@ -467,8 +448,51 @@ jobs:
             fi
             sleep 5
           done
-
           timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
+
+      - name: Run off-cloud signed pod
+        run: |
+          cp /etc/inclavare-containers/config.toml /etc/inclavare-containers/config.toml.bak
+          sed -i 's/server/client/g' /etc/inclavare-containers/config.toml
+          cat <<- EOF >$WORK_DIR/helloworld_offcloud.yaml
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            labels:
+              run: helloworld-offcloud
+            name: helloworld-offcloud
+            namespace: default
+          spec:
+            restartPolicy: Always
+            containers:
+              - command:
+                - /bin/hello_world
+                env:
+                  - name: ENCLAVE_TYPE
+                    value: intelSgx
+                  - name: RUNE_CARRIER
+                    value: occlum
+                  - name: ENCLAVE_RUNTIME_LOGLEVEL
+                    value: info
+                  - name: ENCLAVE_RUNTIME_PATH
+                    value: /opt/occlum/build/lib/libocclum-pal.so.${OCCLUM_VERSION}
+                  - name: ENCLAVE_RUNTIME_ARGS
+                    value: /run/rune/occlum_instance
+                image: docker.io/inclavarecontainers/occlum-helloworld-client:${OCCLUM_VERSION}
+                imagePullPolicy: IfNotPresent
+                name: hello-world-client
+            dnsPolicy: ClusterFirst
+          EOF
+          kubectl apply -f $WORK_DIR/helloworld_offcloud.yaml
+          sleep $nap_time
+          while true; do
+            count=$(kubectl get pod helloworld-offcloud | grep "Running" | grep -c "1/1")
+            if [ $count -eq 1 ]; then
+              break
+            fi
+            sleep 5
+          done
+          timeout 3 kubectl logs -f helloworld-offcloud  | grep "Hello World" || true
 
       - name: Clear the environment
         run: |

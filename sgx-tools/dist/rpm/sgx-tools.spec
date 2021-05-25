@@ -5,7 +5,7 @@
 %global BIN_DIR /usr/local/bin
 
 Name: sgx-tools
-Version: 0.6.0
+Version: 0.6.1
 Release: %{centos_base_release}%{?dist}
 Summary: sgx-tools is a commandline tool, used to interact Intel SGX aesm service.
 
@@ -24,7 +24,7 @@ sgx-tools is a command line tool for inclavare-containers. Interact Intel SGX ae
 %setup -q -n %{PROJECT}-%{version}
 
 %build
-# we cann't download go1.14 through 'yum install' in centos, so that wo check the go version in the '%build' section rather than in the 'BuildRequires' section.
+# we can't download go 1.14 through 'yum install' in centos, so that we check the go version in the '%build' section rather than in the 'BuildRequires' section.
 if ! [ -x "$(command -v go)" ]; then
   echo 'Error: go is not installed. Please install Go 1.14 and above'
   exit 1
@@ -52,6 +52,9 @@ install -p -m 755 %{name}/%{name} %{buildroot}%{BIN_DIR}
 %{BIN_DIR}/%{name}
 
 %changelog
+* Mon May 24 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.1
+- Update to version 0.6.1
+
 * Sun Feb 07 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.0
 - Update to version 0.6.0
 

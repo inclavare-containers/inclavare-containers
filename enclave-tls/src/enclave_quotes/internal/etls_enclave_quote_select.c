@@ -24,19 +24,25 @@ static enclave_tls_err_t init_enclave_quote(etls_core_context_t *ctx,
 	return ENCLAVE_TLS_ERR_NONE;
 }
 
-enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
-					    const char *type,
-					    enclave_tls_cert_algo_t algo)
+enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx, const char *name,
+				       enclave_tls_cert_algo_t algo)
 {
-	ETLS_DEBUG("selecting the enclave quote '%s' ...\n", type);
+	ETLS_DEBUG("selecting the attester '%s' ...\n", name);
+
+	/* Explicitly specifying verifier which will never be changed */
+	if (name)
+		ctx->flags |= ENCLAVE_TLS_CONF_VERIFIER_ENFORCED;
 
 	enclave_quote_ctx_t *quote_ctx = NULL;
-	unsigned int i = 0;
-	for (; i < registerd_enclave_quote_nums; ++i) {
-		quote_ctx = enclave_quotes_ctx[i];
-
-		if (type && strcmp(type, quote_ctx->opts->type))
+	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
+		if (name && strcmp(name, enclave_quotes_ctx[i]->opts->name))
 			continue;
+
+		quote_ctx = malloc(sizeof(*quote_ctx));
+		if (!quote_ctx)
+			return -ENCLAVE_TLS_ERR_NO_MEM;
+
+		memcpy(quote_ctx, enclave_quotes_ctx[i], sizeof(*quote_ctx));
 
 		/* Set necessary configurations from enclave_tls_init() to
 		 * make init() working correctly.
@@ -46,21 +52,69 @@ enclave_tls_err_t etls_enclave_quote_select(etls_core_context_t *ctx,
 
 		if (init_enclave_quote(ctx, quote_ctx, algo) == ENCLAVE_TLS_ERR_NONE)
 			break;
+
+		free(quote_ctx);
+		quote_ctx = NULL;
 	}
 
-	if (i == registerd_enclave_quote_nums) {
-		if (!type)
-			ETLS_ERR("failed to select an enclave quote\n");
+	if (!quote_ctx) {
+		if (!name)
+			ETLS_ERR("failed to select an attester\n");
 		else
-			ETLS_ERR("failed to select the enclave quote '%s'\n", type);
+			ETLS_ERR("failed to select the attester '%s'\n", name);
 
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	ctx->attester = ctx->verifier = quote_ctx;
+	ctx->attester = quote_ctx;
 	ctx->flags |= ENCLAVE_TLS_CTX_FLAGS_QUOTING_INITIALIZED;
 
-	ETLS_INFO("the enclave quote '%s' selected\n", ctx->attester->opts->type);
+	ETLS_INFO("the attester '%s' selected\n", ctx->attester->opts->name);
+
+	return ENCLAVE_TLS_ERR_NONE;
+}
+
+enclave_tls_err_t etls_verifier_select(etls_core_context_t *ctx, const char *name,
+				       enclave_tls_cert_algo_t algo)
+{
+	ETLS_DEBUG("selecting the verifier '%s' ...\n", name);
+
+	enclave_quote_ctx_t *quote_ctx = NULL;
+	for (unsigned int i = 0; i < registerd_enclave_quote_nums; ++i) {
+		if (name && strcmp(name, enclave_quotes_ctx[i]->opts->name))
+			continue;
+
+		quote_ctx = malloc(sizeof(*quote_ctx));
+		if (!quote_ctx)
+			return -ENCLAVE_TLS_ERR_NO_MEM;
+
+		memcpy(quote_ctx, enclave_quotes_ctx[i], sizeof(*quote_ctx));
+
+		/* Set necessary configurations from enclave_tls_init() to
+		 * make init() working correctly.
+		 */
+		quote_ctx->enclave_id = ctx->config.enclave_id;
+		quote_ctx->log_level = ctx->config.log_level;
+
+		if (init_enclave_quote(ctx, quote_ctx, algo) == ENCLAVE_TLS_ERR_NONE)
+			break;
+
+		free(quote_ctx);
+		quote_ctx = NULL;
+	}
+
+	if (!quote_ctx) {
+		if (!name)
+			ETLS_ERR("failed to select a verifier\n");
+		else
+			ETLS_ERR("failed to select the verifier '%s'\n", name);
+
+		return -ENCLAVE_TLS_ERR_INVALID;
+	}
+
+	ctx->verifier = quote_ctx;
+
+	ETLS_INFO("the verifier '%s' selected\n", ctx->verifier->opts->name);
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

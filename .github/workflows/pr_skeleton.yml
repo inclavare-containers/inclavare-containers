@@ -1,0 +1,294 @@
+name: Run rune with skeleton
+
+# Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
+on:
+  pull_request_target:
+    types: labeled
+
+env:
+  ALINUX2_PROTOBUF_VERSION: 2.5.0
+  ALINUX2_PROTOBUF_C_VERSION: 1.0.2
+
+jobs:
+  rune_skeleton:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+    runs-on: ${{ matrix.sgx }}
+    strategy:
+      matrix:
+        sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
+        tag: [ubuntu18.04, centos8.2, alinux2]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+    - name: Prepare work
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+
+    - name: Create inclavare development container
+      run: |
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-centos8.2 inclavare-dev:centos8.2;
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-ubuntu18.04 inclavare-dev:ubuntu18.04;
+        docker tag inclavarecontainers/dev:$RUNE_VERSION-alinux2 inclavare-dev:alinux2;
+        inclavare_dev=$(docker run -itd --privileged --rm --net host -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
+        echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
+
+    - name: Build rpm packages
+      if: ${{ contains(matrix.tag, 'centos') || contains(matrix.tag, 'alinux') }}
+      run: docker exec $inclavare_dev bash -c "cd /root && source /etc/profile;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
+        cp -f /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES;
+        find ./ -path '*dist/Makefile' | xargs -I files sed -i '16 d' files;
+        sed -i 's/shelter//g' Makefile;
+        sed -i 's/inclavared//g' Makefile;
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
+        mv *.rpm /root/inclavare-containers/${{ matrix.tag }}"
+
+    - name: Build deb packages
+      if: ${{ contains(matrix.tag, 'ubuntu') }}
+      run: docker exec $inclavare_dev bash -c "cd /root;
+        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
+        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
+        cd inclavare-containers-$RUNE_VERSION;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
+        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
+        sed -i 's/shelter//g' Makefile;
+        sed -i 's/inclavared//g' Makefile;
+        make package -j${CPU_NUM};
+        mv *.deb /root/inclavare-containers/${{ matrix.tag }}"
+
+    - name: Start docker daemon
+      run: |
+        docker exec -d $inclavare_dev bash -c "dockerd -b docker0 --storage-driver=vfs &"
+
+    - name: Build skeleton docker image
+      run: |
+        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
+        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /root/inclavare-containers/${{ matrix.tag }};
+        mv /etc/docker/daemon.json /root/inclavare-containers/${{ matrix.tag }}"
+        
+        docker exec $inclavare_dev bash -c "cat >Dockerfile <<-EOF
+        FROM scratch
+        
+        COPY encl.bin /
+        COPY encl.ss /
+        
+        ENTRYPOINT [\"dummy\"]
+        EOF"
+       
+        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
+        docker build . -t skeleton-enclave -f /root/Dockerfile;
+        cd /root/inclavare-containers/${{ matrix.tag }};
+        docker save -o skeleton-enclave.tar skeleton-enclave"
+    
+    - name: Kill the dev container
+      run: docker stop $inclavare_dev
+
+    - name: Create runtime testing container
+      run: |
+        docker tag ubuntu:18.04 inclavare-test:ubuntu18.04;
+        docker tag centos:8.2.2004 inclavare-test:centos8.2;
+        docker tag registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux inclavare-test:alinux2;
+        if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
+            inclavare_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }});
+        else
+            inclavare_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }});
+        fi;
+        echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
+
+    - name: Install ubuntu dependency
+      if: ${{ contains(matrix.tag, 'ubuntu') }}
+      run: |
+        docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget iptables gnupg libbinutils;
+        apt-get install -y libseccomp-dev libprotoc-dev binutils-dev autoconf libtool g++ pkg-config protobuf-compiler;
+        wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz && tar -zxvf v1.3.1.tar.gz && cd protobuf-c-1.3.1 && ./autogen.sh && ./configure && make && make install;
+        echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -; 
+        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+        cd /root/inclavare-containers/${{ matrix.tag }};
+        dpkg -i rune*.deb;
+        dpkg -i shim*.deb;
+        dpkg -i sgx-tools*.deb'
+
+    - name: Install centos dependency
+      if: ${{ contains(matrix.tag, 'centos') }}
+      run: |
+        docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+        yum -y install yum-utils wget iptables protobuf-c;
+        wget  -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
+        tar xzf sgx_rpm_local_repo.tgz;
+        yum-config-manager --add-repo sgx_rpm_local_repo;
+        yum makecache;
+        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+        rm -f sgx_rpm_local_repo.tgz;
+        cd /root/inclavare-containers/${{ matrix.tag }};
+        rpm -ivh *.rpm'
+
+    - name: Install alinux dependency
+      if: ${{ contains(matrix.tag, 'alinux') }}
+      run: |
+         docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+         yum install -y alinux-release-experimentals;
+         yum install -y yum-utils wget tar gcc iptables libseccomp-devel make;
+         yum install -y libprotoc-devel binutils-devel autoconf libtool gcc-c++ pkg-config;
+         yum install -y protobuf-compiler-${{ env.ALINUX2_PROTOBUF_VERSION }} protobuf-devel-${{ env.ALINUX2_PROTOBUF_VERSION }};
+         yum install -y protobuf-c-${{ env.ALINUX2_PROTOBUF_C_VERSION }} protobuf-c-devel-${{ env.ALINUX2_PROTOBUF_C_VERSION }};
+         yum-config-manager --add-repo https://enclave-cn-beijing.oss-cn-beijing.aliyuncs.com/repo/alinux/enclave-expr.repo;
+         yum makecache;
+         rm -f /var/lib/rpm/__db.*;
+         rpm --rebuilddb;
+         yum clean all;
+         yum install --nogpgcheck -y libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \
+           libsgx-aesm-ecdsa-plugin libsgx-aesm-launch-plugin libsgx-aesm-pce-plugin libsgx-aesm-quote-ex-plugin \
+           libsgx-dcap-default-qpl libsgx-dcap-ql libsgx-dcap-quote-verify \
+           libsgx-enclave-common libsgx-launch libsgx-pce-logic libsgx-qe3-logic libsgx-quote-ex \
+           libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
+           sgx-aesm-service;
+         cd /root/inclavare-containers/${{ matrix.tag }};
+         rpm -ivh *.rpm'
+
+    - name: Install sgx1 extra ubuntu dependency
+      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
+      run: |
+        docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid"
+
+    - name: Install sgx1 extra centos dependency
+      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'centos')) }}
+      run: |
+        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
+
+    - name: Install sgx1 extra alinux dependency
+      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'alinux2')) }}
+      run: |
+        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
+
+    - name: Install runtime dependency
+      if: always()
+      run : docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+        mv liberpal-skeleton-v*.so /usr/lib;
+        wget https://download.docker.com/linux/static/stable/x86_64/docker-19.03.8.tgz;
+        tar -zxvf docker-19.03.8.tgz;
+        mv docker/* /usr/bin;
+        rm -rf docker docker-19.03.8.tgz;
+        mkdir -p /etc/docker;
+        mv daemon.json /etc/docker'
+
+    - name: Start docker daemon
+      run: |
+        docker exec -d $inclavare_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+
+    - name: Load docker image
+      run: |
+        docker exec $inclavare_test bash -c "cd /root/inclavare-containers/${{ matrix.tag }};
+        docker load -i skeleton-enclave.tar;
+        rm -f skeleton-enclave.tar"
+
+    - name: Run skeleton v1
+      if: always()
+      run: docker exec $inclavare_test bash -c 'docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v1.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave'
+
+    - name: Run skeleton v2
+      if: always()
+      run: docker exec $inclavare_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v2.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
+
+    - name: Run skeleton v3
+      if: always()
+      run: docker exec $inclavare_test bash -c "docker run -i --rm --runtime=rune -e ENCLAVE_TYPE=intelSgx -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so -e ENCLAVE_RUNTIME_ARGS=debug -e ENCLAVE_RUNTIME_LOGLEVEL="info" skeleton-enclave"
+
+    - name: Run skeleton v2 bundle
+      if: always()
+      run: |
+        docker exec $inclavare_test bash -c "mkdir rootfs;
+        docker create --name skeleton-enclave skeleton-enclave;
+        docker export skeleton-enclave | tar -C rootfs -xvf -;
+        cp -f /etc/resolv.conf rootfs/etc/resolv.conf;
+        mkdir -p /var/run/rune;
+        cp -f /usr/lib/liberpal-skeleton-v2.so /var/run/rune/liberpal-skeleton-v2.so;
+        rune spec;
+        sed -i '4 c \"terminal\": false,' config.json;
+        sed -i '16 c \"cwd\": \"\/\",' config.json;
+        rune --debug run ra"
+
+    - name: Generate skeleton ra config.json
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: |
+        docker exec $inclavare_test bash -c "sed -i '161,163d' config.json;
+        sed -i 's/\/var\/run\/rune\/liberpal-skeleton-v2.so/\/usr\/lib\/liberpal-skeleton-v3.so/g' config.json;
+        sed -i '10 c  \"sh\",\"wait_timeout\",\"6000\"' config.json;
+        sed -i '144 a \"enclave.attestation.ra_epid_is_linkable\": \"false\",' config.json;
+        sed -i '144 a \"enclave.attestation.ra_epid_subscription_key\": \"${{ secrets.SUB_KEY }}\",' config.json;
+        sed -i '144 a \"enclave.attestation.ra_epid_spid\": \"${{ secrets.SPID }}\",' config.json;
+        sed -i '144 a \"enclave.attestation.ra_type\":\"EPID\",' config.json"
+
+    - name: Run skeleton v3 bundle
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: docker exec $inclavare_test bash -c "rune --debug run skeleton-enclave-container" &
+
+    - name: Wait RA containers Running with rune list command
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      timeout-minutes: 2
+      run: |
+        docker exec $inclavare_test bash -c "while true; do
+        status=\$(rune list 2>/dev/null | grep skeleton-enclave-container | awk '{print \$3}')
+        echo Current status: \$status
+        if [[ \$status = 'running' ]]; then
+          break
+        fi
+        sleep 5
+        done"
+
+    - name: Get local report with rune attest command
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: docker exec $inclavare_test bash -c "rune --debug attest --reportFile=/report.bin --quote-type=epidUnlinkable skeleton-enclave-container"
+
+    - name: Get remote report with rune attest command
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: docker exec $inclavare_test bash -c "rune --debug attest --isRA --quote-type=epidUnlinkable --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
+
+    - name: Kill RA containers with rune kill command
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      timeout-minutes: 3
+      run: |
+        docker exec $inclavare_test bash -c "
+        status=\$(rune list 2>/dev/null | grep skeleton-enclave-container | awk '{print \$3}')
+        echo Current status: \$status
+        if [[ \$status = 'running' ]]; then
+          echo Killing RA containers...
+          rune kill skeleton-enclave-container 9
+          while true; do
+                status=\$(rune list 2>/dev/null | grep skeleton-enclave-container | awk '{print \$3}')
+                echo Current status: \$status
+                if [[ \$status = '' ]]; then
+                    echo Killing successfully
+                    break
+                fi
+                sleep 5
+          done
+        fi"
+
+    - name: Get target info with sgx-tools
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: docker exec $inclavare_test bash -c "cd rootfs;
+        sgx-tools -verbose gen-qe-target-info --quote-type=epidUnlinkable"
+
+    - name: Get quote with sgx-tools
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: docker exec $inclavare_test bash -c "cd rootfs;
+        sgx-tools -verbose gen-quote --report report.bin --spid=${{ secrets.SPID }} --quote-type=epidUnlinkable"
+
+    - name: Verify quote with sgx-tools
+      if: ${{ contains(matrix.sgx, 'SGX1') }}
+      run: docker exec $inclavare_test bash -c "cd rootfs;
+        sgx-tools -verbose verify-quote --quote-type=epidUnlinkable --quote quote.bin --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }}"
+
+    - name: Clean up the github workspace
+      run:
+          docker exec $inclavare_test bash -c "rm -rf /root/inclavare-containers/${{ matrix.tag }}"
+
+    - name: Kill the test container
+      run: docker stop $inclavare_test

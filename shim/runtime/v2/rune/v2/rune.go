@@ -29,9 +29,6 @@ func (s *service) carrierMain(req *taskAPI.CreateTaskRequest) (carrier.Carrier, 
 	var err error
 	var carr carrier.Carrier
 
-	defer func() {
-		carr.Cleanup()
-	}()
 	found, carrierKind, err := getCarrierKind(req.Bundle)
 	if err != nil {
 		return carr, err
@@ -122,7 +119,7 @@ func getCarrierKind(bundlePath string) (found bool, value rune.CarrierKind, err 
 		return true, rune.Empty, nil
 	}
 	value = rune.CarrierKind(v)
-	if value == rune.Occlum || value == rune.Graphene || value == rune.Empty || value == rune.Skeleton {
+	if value == rune.Occlum || value == rune.Graphene || value == rune.Empty {
 		found = true
 		return
 	}

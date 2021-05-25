@@ -74,7 +74,7 @@ Build_Bindir := $(Build_Dir)/bin
 Build_Libdir := $(Build_Dir)/lib
 Build_Incdir := $(Build_Dir)/include
 
-Enclave_Tls_Bindir := $(Enclave_Tls_Root)/bin
+Enclave_Tls_Bindir ?= /usr/share/enclave-tls/samples
 ifneq ($(Enclave_Tls_Srcdir),)
   # in-tree
   Enclave_Tls_Incdir := $(Enclave_Tls_Srcdir)/include
@@ -88,6 +88,9 @@ CXXFLAGS ?= -std=c++11 -fPIC
 ifdef OCCLUM
   CFLAGS += -DOCCLUM
   CXXFLAGS += -DOCCLUM
+else ifdef SGX
+  CFLAGS += -DSGX
+  CXXFLAGS += -DSGX
 endif
 ifeq ($(DEBUG),1)
   CFLAGS += -ggdb -O0
@@ -98,7 +101,7 @@ else
 endif
 Enclave_Tls_Cflags := $(CFLAGS) -I$(Enclave_Tls_Incdir)
 
-LDFLAGS ?= -fPIC
+LDFLAGS ?=
 Enclave_Tls_Ldflags := \
   $(LDFLAGS) -shared -Bsymbolic -rpath=$(Enclave_Tls_Libdir) --enable-new-dtags
 

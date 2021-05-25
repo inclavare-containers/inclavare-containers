@@ -11,7 +11,7 @@ env:
     WORK_DIR: /root/pkgs
     HOME: /root
     OCCLUM_VERSION: 0.21.0
-    kubernetes_version: 1.16.9
+    kubernetes_version: 1.18.8
     nap_time: 60
 
 jobs:
@@ -70,11 +70,11 @@ jobs:
         [occlum]
         name=occlum
         enabled=1
-        baseurl=https://occlum.io/occlum-package-repos/rpm-repo/
+        baseurl=http://occlum.io/occlum-package-repos/rpm-repo/
         gpgcheck=1
         repo_gpgcheck=1
-        gpgkey=https://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign
-        gpgcakey=https://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+        gpgkey=http://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign
+        gpgcakey=http://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
         EOF
 
         yum install -y occlum-pal-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
@@ -94,6 +94,8 @@ jobs:
         mkdir -p $WORK_DIR/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
         cp $WORK_DIR/v$RUNE_VERSION.tar.gz $WORK_DIR/rpmbuild/SOURCES/
         source /etc/profile
+        sed -i 's/shelter//g' Makefile
+        sed -i 's/inclavared//g' Makefile
         make package RPMBUILD_DIR=$WORK_DIR/rpmbuild RELEASE_TARBALL_FILE=$WORK_DIR/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM}
         rpm -ivh rune-$RUNE_VERSION*.rpm
         rpm -ivh shim-rune-$RUNE_VERSION*.rpm
@@ -190,14 +192,15 @@ jobs:
           echo y | kubeadm reset
         fi
         sudo systemctl enable kubelet.service
-        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v1.16.9 --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
 
         mkdir -p $HOME/.kube
         sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
         sudo chown $(id -u):$(id -g) $HOME/.kube/config
         kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
         kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
-        wget -P $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
+        wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
+          -P $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
         kubectl apply -f $WORK_DIR/kube-flannel.yml
 
     - name: Install runtimeclass
@@ -409,6 +412,50 @@ jobs:
         done
 
         timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
+
+    - name: Run off-cloud signed pod
+      run: |
+        cp /etc/inclavare-containers/config.toml /etc/inclavare-containers/config.toml.bak
+        sed -i 's/server/client/g' /etc/inclavare-containers/config.toml
+        cat <<- EOF >$WORK_DIR/helloworld_offcloud.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            run: helloworld-offcloud
+          name: helloworld-offcloud
+          namespace: default
+        spec:
+          restartPolicy: Always
+          containers:
+            - command:
+              - /bin/hello_world
+              env:
+                - name: ENCLAVE_TYPE
+                  value: intelSgx
+                - name: RUNE_CARRIER
+                  value: occlum
+                - name: ENCLAVE_RUNTIME_LOGLEVEL
+                  value: info
+                - name: ENCLAVE_RUNTIME_PATH
+                  value: /opt/occlum/build/lib/libocclum-pal.so.${OCCLUM_VERSION}
+                - name: ENCLAVE_RUNTIME_ARGS
+                  value: /run/rune/occlum_instance
+              image: docker.io/inclavarecontainers/occlum-helloworld-client:${OCCLUM_VERSION}
+              imagePullPolicy: IfNotPresent
+              name: hello-world-client
+          dnsPolicy: ClusterFirst
+        EOF
+        kubectl apply -f $WORK_DIR/helloworld_offcloud.yaml
+        sleep $nap_time
+        while true; do
+          count=$(kubectl get pod helloworld-offcloud | grep "Running" | grep -c "1/1")
+          if [ $count -eq 1 ]; then
+            break
+          fi
+          sleep 5
+        done
+        timeout 3 kubectl logs -f helloworld-offcloud  | grep "Hello World" || true
 
     - name: Clear the environment
       run: |

@@ -1,0 +1,6 @@
+enclave {
+        trusted {
+		/* In edl, it must have a root trust function */
+		public void dummy(void);
+        };
+};
