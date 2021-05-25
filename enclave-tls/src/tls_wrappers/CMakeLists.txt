@@ -1,0 +1,5 @@
+add_subdirectory(nulltls)
+add_subdirectory(wolfssl)
+if(SGX)
+    add_subdirectory(wolfssl-sgx)
+endif()
