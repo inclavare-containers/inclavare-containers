@@ -38,5 +38,5 @@ void __attribute__((constructor)) libtls_wrapper_wolfssl_sgx_init(void)
 
 	tls_wrapper_err_t err = tls_wrapper_register(&wolfssl_sgx_opts);
 	if (err != TLS_WRAPPER_ERR_NONE)
-		ETLS_ERR("failed to register the tls wrapper 'wolfssl_sgx' %#x\n", err);
+		ETLS_DEBUG("failed to register the tls wrapper 'wolfssl_sgx' %#x\n", err);
 }

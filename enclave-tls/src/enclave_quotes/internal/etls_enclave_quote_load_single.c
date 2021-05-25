@@ -53,7 +53,7 @@ enclave_tls_err_t etls_enclave_quote_load_single(const char *fname)
 	}
 
 	if (i == registerd_enclave_quote_nums) {
-		ETLS_ERR("the enclave quote '%s' is not registered yet\n", name);
+		ETLS_DEBUG("the enclave quote '%s' failed to register\n", name);
 		return -ENCLAVE_TLS_ERR_NOT_REGISTERED;
 	}
 

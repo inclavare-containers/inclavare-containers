@@ -34,5 +34,5 @@ void __attribute__((constructor)) libenclave_quote_sgx_la_init(void)
 
 	enclave_quote_err_t err = enclave_quote_register(&sgx_la_opts);
 	if (err != ENCLAVE_QUOTE_ERR_NONE)
-		ETLS_ERR("failed to register the enclave quote 'sgx_la' %#x\n", err);
+		ETLS_DEBUG("failed to register the enclave quote 'sgx_la' %#x\n", err);
 }

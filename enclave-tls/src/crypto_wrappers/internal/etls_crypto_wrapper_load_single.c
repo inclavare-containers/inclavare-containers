@@ -53,7 +53,7 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *fname)
 	}
 
 	if (i == registerd_crypto_wrapper_nums) {
-		ETLS_ERR("the crypto wrapper '%s' is not registered yet\n", name);
+		ETLS_DEBUG("the crypto wrapper '%s' failed to register\n", name);
 		return -ENCLAVE_TLS_ERR_NOT_REGISTERED;
 	}
 

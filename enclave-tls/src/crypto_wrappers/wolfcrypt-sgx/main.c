@@ -40,5 +40,5 @@ void __attribute__((constructor)) libcrypto_wrapper_wolfcrypt_sgx_init(void)
 
 	crypto_wrapper_err_t err = crypto_wrapper_register(&wolfcrypt_sgx_opts);
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
-		ETLS_ERR("failed to register the crypto wrapper 'wolfcrypt_sgx' %#x\n", err);
+		ETLS_DEBUG("failed to register the crypto wrapper 'wolfcrypt_sgx' %#x\n", err);
 }
