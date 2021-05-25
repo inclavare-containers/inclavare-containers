@@ -17,8 +17,8 @@
 #include "sgx_ecdsa.h"
 #ifdef SGX
 #include "sgx_stub_u.h"
-// clang-format off
 #endif
+// clang-format off
 #ifdef OCCLUM
   #include "sgx_edger8r.h"
   #include "sgx_report.h"

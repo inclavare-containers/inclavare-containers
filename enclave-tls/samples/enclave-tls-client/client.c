@@ -105,7 +105,6 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 
 #if defined(OCCLUM) || defined(SGX)
 	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
-#ifdef SGX
 	if (len >= 2 * sizeof(sgx_measurement_t)) {
 		ETLS_INFO("Server's SGX identity:\n");
 		ETLS_INFO("  . MRENCLAVE = ");
@@ -128,9 +127,6 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 		/* Server not running in SGX Enlcave will only send hello message to client */
 		ETLS_INFO("Server: %s\n", buf);
 	}
-#else
-	printf("Server: %s\n", buf);
-#endif
 
 	/* Sanity check whether the response is expected */
 	if (strcmp(msg, buf)) {

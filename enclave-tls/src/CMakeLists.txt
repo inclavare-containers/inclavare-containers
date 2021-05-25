@@ -33,6 +33,7 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/enclave_quotes/internal/etls_enclave_quote_load_single.c
     ${CMAKE_CURRENT_SOURCE_DIR}/enclave_quotes/internal/etls_enclave_quote_select.c
     ${CMAKE_CURRENT_SOURCE_DIR}/enclave_quotes/api/enclave_quote_register.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/util/sgxutils.c
     )
 
 # Generate library
