@@ -15,7 +15,9 @@
 #include <assert.h>
 #include <sgx_error.h>
 #include "sgx_ecdsa.h"
+#ifdef SGX
 #include "sgx_stub_u.h"
+#endif
 // clang-format off
 #ifdef OCCLUM
   #include "sgx_edger8r.h"

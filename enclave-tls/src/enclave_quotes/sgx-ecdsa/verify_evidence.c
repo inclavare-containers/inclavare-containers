@@ -12,7 +12,9 @@
 #include <sgx_ql_quote.h>
 #include <sgx_dcap_quoteverify.h>
 #include "sgx_ecdsa.h"
+#ifdef SGX
 #include "sgx_stub_u.h"
+#endif
 // clang-format off
 #ifdef OCCLUM
   #include <sys/stat.h>
