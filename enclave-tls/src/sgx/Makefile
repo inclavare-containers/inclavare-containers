@@ -20,9 +20,11 @@ Enclave_Tls_Extra_Ldflags := \
 include $(Topdir)/rules/instance.mk
 
 Enclave_C_Files := \
-  ecalls.c ../enclave_quotes/sgx-ecdsa/ecalls.c \
-  ../enclave_quotes/sgx-ecdsa-qve/ecalls.c \
-  ../enclave_quotes/sgx-la/ecalls.c \
+  ecalls.c ../attesters/sgx-ecdsa/ecalls.c \
+  ../attesters/sgx-la/ecalls.c \
+  ../verifiers/sgx-la/ecalls.c \
+  ../verifiers/sgx-ecdsa-qve/ecalls.c \
+  ../verifiers/sgx-ecdsa/ecalls.c \
   ../tls_wrappers/wolfssl-sgx/ecalls.c \
   ../crypto_wrappers/wolfcrypt-sgx/ecalls.c
 Enclave_Cflags += -DWOLFSSL_SGX_WRAPPER

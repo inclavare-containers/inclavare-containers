@@ -8,7 +8,8 @@
 #include <enclave-tls/err.h>
 #include "internal/core.h"
 #include "internal/tls_wrapper.h"
-#include "internal/enclave_quote.h"
+#include "internal/attester.h"
+#include "internal/verifier.h"
 #include "internal/crypto_wrapper.h"
 
 /* The global configurations present by /opt/enclave-tls/config.toml */
@@ -53,10 +54,15 @@ void __attribute__((constructor)) libenclave_tls_init(void)
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		ETLS_FATAL("failed to load any crypto wrapper %#x\n", err);
 
-	/* Load all enclave quote instances */
-	err = etls_enclave_quote_load_all();
+	/* Load all enclave attester instances */
+	err = etls_enclave_attester_load_all();
 	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any enclave quote %#x\n", err);
+		ETLS_FATAL("failed to load any enclave attester %#x\n", err);
+
+	/* Load all enclave verifier instances */
+	err = etls_enclave_verifier_load_all();
+	if (err != ENCLAVE_TLS_ERR_NONE)
+		ETLS_FATAL("failed to load any enclave verifier %#x\n", err);
 
 	/* Load all tls wrapper instances */
 	err = etls_tls_wrapper_load_all();

@@ -25,8 +25,10 @@ ifeq ($(Enclave_Tls_Instance_Type),crypto-wrapper)
   instance_files := $(addsuffix .c,gen_privkey gen_pubkey_hash gen_cert)
 else ifeq ($(Enclave_Tls_Instance_Type), tls-wrapper)
   instance_files := $(addsuffix .c,negotiate receive transmit use_cert use_privkey)
-else ifeq ($(Enclave_Tls_Instance_Type), enclave-quote)
-  instance_files := $(addsuffix .c,collect_evidence verify_evidence)
+else ifeq ($(Enclave_Tls_Instance_Type), attester)
+  instance_files := $(addsuffix .c,collect_evidence)
+else ifeq ($(Enclave_Tls_Instance_Type), verifier)
+  instance_files := $(addsuffix .c,verify_evidence)
 else ifeq ($(Enclave_Tls_Instance_Type), enclave-tls)
   instance_files :=
 else

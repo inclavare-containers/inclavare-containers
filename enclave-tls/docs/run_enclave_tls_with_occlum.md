@@ -48,10 +48,10 @@ In addition, Occlum only provides `occlum-go` to compile go program. While the e
 
 Right now, Enclave TLS running on Occlum Libos supports the following instance types:
 
-| Priority | Tls Wrapper instances | Encalve Quote instances | Crypto Wrapper Instance |
-| -------- | --------------------- | ----------------------- | ----------------------- |
-| low      | nulltls               | nullquote               | nullcrypto              |
-| Medium   | wolfssl               | sgx\_ecdsa              | wolfcrypt               |
+| Priority | Tls Wrapper instances |     Attester instances    |     Verifier instances    | Crypto Wrapper Instance |
+| -------- | --------------------- | ------------------------- | ------------------------- | ----------------------- |
+| low      | nulltls               | nullattester              | nullverifier              | nullcrypto              |
+| Medium   | wolfssl               | sgx\_ecdsa                | sgx\_ecdsa\_qve           | wolfcrypt               |
 
 
 ## Building Occlum container image
