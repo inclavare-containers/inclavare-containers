@@ -2,6 +2,8 @@
 
 This page shows how to develop a "Hello World" application, build a "Hello World" image and run a "Hello World" container in a Kubernetes cluster.
 
+Note: this is an experimental and demonstrative guide. Please don't deploy it in product.
+
 ## Before you begin
 
 - You need to have a Kubernetes cluster and the nodes' hardware in the cluster must support Intel SGX. If you do not already have a cluster, you can create one following the documentation [Create a confidential computing Kubernetes cluster with inclavare-containers](create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md).
