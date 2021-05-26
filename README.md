@@ -44,6 +44,26 @@ The major components of Inclavare Containers are:
   
   In addition, you can write your own enclave runtime with any programming language and SDK (e.g, [Intel SGX SDK](https://github.com/intel/linux-sgx)) you prefer as long as it implements Enclave Runtime PAL API.
 
+# Attestation
+
+Inclavare Containers implements Enclave Attestation Architecture (EAA), a universal and cross-platform remote attestation infrastructure. EAA can prove that sensitive workloads are running on a genuine and trusted hardware TEE based on confidential computing technology. The formal design of EAA will be published for RFC.
+
+![architecture](docs/design/eaa_demo.png)
+
+The major components of EAA are:
+
+- [Enclave-TLS](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)  
+  `Enclave-TLS` enhances the standard TLS to support the trusted communications between heterogeneous hardware TEEs based on confidential computing technology, which is evolved from the [ra-tls (deprecated)](https://github.com/alibaba/inclavare-containers/tree/master/ra-tls). Even a non-hardware TEE platforms using `Enclave-TLS` can communicate with a hardware TEE, e.g, SGX Enclave, through the attested and secured channel to transmit the sensitive information. In other words, the boundary of TCB is extended from execution environment to network transmission with `Enclave-TLS`. In addition, `Enclave-TLS` has an extensible model to support various hardware TEE.
+
+- Confidential Container  
+  Confidential container in the form of the enclave runtime `Occlum` responds to the request from `Inclavared`, and then sends back the attestation evidence of confidential container to `Inclavared`. Confidential container plays the role of the attester.
+
+- [Inclavared](https://github.com/alibaba/inclavare-containers/tree/master/inclavared)  
+  `Inclavared` is responsible for forwarding the traffic between the confidential container and `Shelter`. The communication process is protected by the attested `Enclave-TLS` channel.
+
+- [Shelter](https://github.com/alibaba/inclavare-containers/tree/master/shelter)  
+  `Shelter`, as the role of the verifier deployed in the off-cloud, records the launch measurements of enclave runtime, and afterward establishes the attested `Enclave-TLS` channel to communicate with `Inclavared`. Eventually, it retrieves the evidence about enclave runtimes for verification.
+
 # Non-core components 
 
 - sgx-tools  
