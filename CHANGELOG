@@ -1,3 +1,11 @@
+# 2021-05-26 v0.6.1
+- Implement an experimental and demonstrative remote attestation infrastructure called Enclave Attestation Architecture (EAA)
+- Evolved from ra-tls to Enclave-TLS
+- Implement Inclavared
+- Integrate shelter with Enclave-TLS
+- Enhance skeleton enclave runtime
+- Support Occlum 0.21.0
+
 # 2021-02-10 v0.6.0
 - Implement SGX DCAP (ECDSA-based attestation) in ra-tls
 - Support bundle cache level 2
