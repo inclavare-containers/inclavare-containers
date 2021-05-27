@@ -24,9 +24,9 @@ jobs:
     - name: Create container
       run: |
         if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
-          rune_test=$(docker run -itd --privileged --rm --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+          rune_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
         else
-          rune_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
+          rune_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers rune-test:${{ matrix.tag }})
         fi;
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 

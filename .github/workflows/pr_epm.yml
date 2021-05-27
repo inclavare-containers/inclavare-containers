@@ -30,7 +30,7 @@ jobs:
         docker tag inclavarecontainers/dev:$RUNE_VERSION-centos8.2 inclavare-dev:centos8.2;
         docker tag inclavarecontainers/dev:$RUNE_VERSION-ubuntu18.04 inclavare-dev:ubuntu18.04;
         docker tag inclavarecontainers/dev:$RUNE_VERSION-alinux2 inclavare-dev:alinux2;
-        inclavare_dev=$(docker run -itd --privileged --rm --net host -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
+        inclavare_dev=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
         echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
 
     - name: Build rpm packages
@@ -127,7 +127,7 @@ jobs:
 
     - name: Create runtime testing container
       run: |
-        inclavare_test=$(docker run -itd --privileged --rm --net host -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }} /sbin/init);
+        inclavare_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }} /sbin/init);
         echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
 
     - name: Install ubuntu dependency
