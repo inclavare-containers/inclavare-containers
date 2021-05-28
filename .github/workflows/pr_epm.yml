@@ -138,9 +138,14 @@ jobs:
         cd /root/inclavare-containers/${{ matrix.tag }};
         dpkg -i *.deb'
 
+    # dnf-makecache.timer service is running by default which periodically runs dnf makecache --timer with
+    # deleting the lock file in /var/cache/dnf/, and if we do the yum install command at the same time,
+    # system will not found lock file in /var/cache/dnf/. Stop dnf-makecache.timer srvice can solve this problem.
+    # In addition, systemd process needs time to start.
     - name: Install centos dependency
       if: ${{ contains(matrix.tag, 'centos') }}
-      run: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+      run: docker exec $inclavare_test bash -c 'sleep 20 && systemctl stop dnf-makecache.timer;
+        cd /root/inclavare-containers/${{ matrix.tag }};
         yum -y install yum-utils wget iptables protobuf-c;
         wget  -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
         tar xzf sgx_rpm_local_repo.tgz;
