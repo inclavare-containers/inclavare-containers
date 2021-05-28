@@ -78,7 +78,33 @@ Please refer to [Inclavare Containers Roadmap](ROADMAP.md) for the details. This
 
 # Building
 
-Please follow the command to build Inclavare Containers from the latested source code on your system. 
+It's recommended to use [Inclavare Containers development docker image](https://hub.docker.com/repository/docker/inclavarecontainers/dev) to build Inclavare Containers from scratch.
+
+Note that the environment of launching Inclavare Containers development docker image must be capable of hardware TEE and install the corresponding software stack, e.g, Intel SGX and [Intel SGX SDK & PSW for Linux](https://download.01.org/intel-sgx/latest/linux-latest/docs/Intel_SGX_Installation_Guide_Linux_2.13.3_Open_Source.pdf).
+
+The exact command to run the docker image requires to be specified explicitly according to the type of SGX device driver.
+
+- For legacy out-of-tree driver:
+
+```shell
+docker run -it -v /var/run/aesmd:/var/run/aesmd \
+  -device /dev/isgx \
+  inclavarecontainers/dev:$version-$os
+```
+
+- For DCAP and in-tree driver:
+
+```shell
+docker run -it -v /var/run/aesmd:/var/run/aesmd \
+  -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision \
+  inclavarecontainers/dev:$version-$os
+```
+
+where:
+- `$version` denotes the version of Inclavare Containers in use.
+- `$os` denotes the OS type of development docker image, which may be ubuntu18.04, centos8.2 or alinux2.
+
+Please be aware of running the commands listed below in the development container launched by Inclavare Containers development docker image.
 
 1. Download the latest source code of Inclavare Containers
 
@@ -88,17 +114,11 @@ cd "$WORKSPACE"
 git clone https://github.com/alibaba/inclavare-containers
 ```
 
-2. Install the Dependency required by Inclavare Containers
-- Go version 1.14 or higher.
-- `libseccomp`.
-- [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the rpm(centos) or deb(ubuntu) from "https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro"
-	- libsgx-dcap-quote-verify-dev(ubuntu) or libsgx-dcap-quote-verify-devel(centos)
-
-3. Build Inclavare Containers
+2. Build Inclavare Containers
 
 ```shell
 cd inclavare-containers
-# build rune, shim-rune, epm and sgx-tools
+# build rune, shim-rune, epm, sgx-tools, enclave-tls, shelter and inclavared
 make
 ```
 
@@ -110,20 +130,20 @@ After build Inclavare Containers on your system, you can use the following comma
 sudo make install
 ```
 
-`{rune,shim-rune,epm,sgx-tools}` will be installed to `/usr/local/bin/{rune,containerd-shim-rune-v2,epm,sgx-tools}` on your system.
+`{rune,shim-rune,epm,sgx-tools,shelter,inclavared}` will be installed to `/usr/local/bin/{rune,containerd-shim-rune-v2,epm,sgx-tools,shelter,inclavared}` on your system. Enclave-TLS SDK will be installed to `/opt/enclave-tls`. `{enclave-tls-server,enclave-tls-client}` will be installed to `/usr/share/enclave-tls/samples`.
 
 If you don't want to build and install Inclavare Containers from latest source code. We also provide RPM/DEB repository to help you install Inclavare Containers quickly. Please see the [steps about how to configure repository](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#1-add-inclavare-containers-repository) firstly. Then you can run the following command to install Inclavare Containers on your system.
 
 - On CentOS 8.2
 
 ```shell
-sudo yum install rune shim-rune epm sgx-tools
+sudo yum install rune shim-rune epm sgx-tools enclave-tls shelter inclavared
 ```
 
 - On Ubuntu 18.04 server
 
 ```
-sudo apt-get install rune shim-rune epm sgx-tools
+sudo apt-get install rune shim-rune epm sgx-tools enclave-tls shelter inclavared
 ```
 
 # Integrating
@@ -155,6 +175,12 @@ You can check whether `rune` is correctly enabled or not with:
 
 ```shell
 docker info | grep rune
+```
+
+Note that the systemd is not installed by default, so please manually start up dockerd:
+
+```shell
+dockerd -b docker0 --storage-driver=vfs &
 ```
 
 ## containerd 
