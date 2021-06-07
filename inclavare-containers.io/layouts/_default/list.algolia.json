@@ -1,0 +1,11 @@
+{{/* Generates a valid Algolia search index */}}
+{{- $.Scratch.Add "index" slice -}}
+{{- $section := $.Site.GetPage "section" .Section }}
+{{- range .Site.AllPages -}}
+    {{- if and (not .Draft) (eq .Kind "page") -}}
+      {{- if or (and (.IsDescendant $section) (not .Params.private)) $section.IsHome -}}
+      {{- $.Scratch.Add "index" (dict "objectID" .UniqueID "date" .Date.UTC.Unix "description" .Description "dir" .Dir "fuzzywordcount" .FuzzyWordCount "kind" .Kind "lang" .Lang "lastmod" .Lastmod.UTC.Unix "permalink" .Permalink "publishdate" .PublishDate "readingtime" .ReadingTime "relpermalink" .RelPermalink "summary" .Summary "title" .Title "type" .Type "url" .URL "wordcount" .WordCount "tags" .Params.Tags "categories" .Params.Categories "author" .Params.Author "content" ((.Content|plainify|truncate 3000)))}}
+      {{- end -}}
+    {{- end -}}
+{{- end -}}
+{{- $.Scratch.Get "index" | jsonify -}}

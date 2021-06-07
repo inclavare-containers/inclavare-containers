@@ -1,0 +1,210 @@
+[slogan]
+	title = "Inclavare Containers"
+	description = "An open source enclave container runtime and security architecture for confidential computing scenarios."
+	quick_start_text = "Quick Start"
+	quick_start_link = "/en/guides/qucik-start/"
+	github_link = "https://github.com/alibaba/inclavare-containers"
+
+[[feature]]
+	title = "Confidential"
+	description = "Designed to help users protect the security, integrity and confidentiality of data in use"
+	img = "img/home/icon-secret.png"
+
+
+[[feature]]
+	title = "Open Standard"
+	description = "Fully open source and co-constructed, maintaining community neutrality, compatible communities, and compatible open source ecology"
+    img = "img/home/icon-open.png"
+
+[[feature]]
+	title = "Cloud Native"
+    description = "Create a cloud-native confidential computing universal base for trusted business applications and second-party products to the cloud"
+	img = "img/home/icon-cloud-native.png"
+
+
+[[charpter_description]]
+	title = "What is Inclavare Containers?"
+	description = "Inclavare Containers, developed by Alibaba Cloud and Ant Group and cooperated with Intel, is the industry's first open source container runtime for confidential computing. Inclavare Containers significantly reduces the user's threshold for use. A variety of different enclave forms are available, providing more choices and flexibility between safety and cost for end users."
+	#img = "img/home/ArchitrctureFinal.jpg"
+	#img_width = "85%"
+    img = "img/home/Architecture1.jpg"
+	img_width = "100%"
+
+[[charpter_description_1]]
+    title = "Application Scenarios"
+    description = "Inclavare Containers is well suited for the scenarios, such as blockchain, key management, finance, machine learning, artificial intelligence, federated learning, security analysis, data leasing, genetic computing, edge computing, Internet of Things applications, secure multi-party computing and the other."
+    img = "img/home/stack.jpg"
+    img_width = "530px"
+
+#改版新增
+[[charpter_description_4]]
+	title = "What problems does Inclavare Container solve?"
+    img = "img/home/e1.jpg"
+	img_width = "100%"
+[[description4_table]]
+    name = "Isolate privileged software"
+    description = "Create the hardware-enforced isolation between tenant’s workload and privileged software controlled by CSP."
+[[description4_table]]
+    name = "Remove CSP"
+    description = "Remove CSP from the Trusted Computing Base（TCB） of tenant in untrusted cloud."
+[[description4_table]]
+    name = "Remote attestation"
+    description = "Construct the general attestation infrastructure to convince users to trust the workloads running inside TEE based on hardware assisted enclave technology."
+[[description4_table]]
+    name = "Easy to use"
+    description = "Provide low barrier to the use of confidential computing and the same experience as ordinary container."
+
+[[charpter_description_5]]
+	title = "Current State"
+[[Current_state]]
+    number = "01"
+    description = "rune has been written into the OCI Runtime implementation list."
+[[Current_state]]
+    number = "02"
+    description = "Support to run Enclave containers through K8s and Docker."
+[[Current_state]]
+    number = "03"
+    description = "Implement Enclave container type based on Intel SGX technology."
+[[Current_state]]
+    number = "04"
+    description = "Support Occlum SGX library OS."
+[[Current_state]]
+    number = "05"
+    description = "Ten binary release versions from 0.1.0 to 0.6.1 have released for the community."
+[[Current_state]]
+    number = "06"
+    description = "Provide Web server reference images based on Golang and Java development."   
+
+[[charpter_description_6]]
+    title = "Application Scenario"
+    img = "img/home/e2.jpg"
+	img_width = "100%"
+
+#Epiphany
+[[charpter_description_7]]
+    title = "Origin and History"
+[[charpter_description_7_content]]
+    time = "2019.11.12"
+    title = "Epiphany"
+    description = ""
+    bottom = "-115px"
+    class = "desc-long"
+    triangle = "bottom"
+    triangle_position = "true"
+[[charpter_description_7_content]]
+    time = "2020.02"
+    title = "PoC"
+    description = "Prototype of rune"
+    top = "-50px"
+    class = ""
+    triangle = "top"
+[[charpter_description_7_content]]
+    time = "2020.05"
+    title = "Open Source"
+    description = "0.1.0 release"
+    description_1 = "First supported enclave runtime Occlum"
+    description_2 = "Based on SGX 1 hardware"
+    bottom = "-125px"
+    class = "desc-long"
+    triangle = "bottom"
+    triangle_position = "true"
+[[charpter_description_7_content]]
+    time = "2020.06"
+    title = "0.2.0 release"
+    description = "Open-sourced shim and runectl (later renamed as sgx-tools)"
+    description_1 = "Load pal from host"
+    description_2 = "Update PAL API to v2"
+    class = " desc-longer"
+    top = "-75px"
+    triangle = "top"
+
+[[charpter_description_7_content]]
+    time = "2020.07"
+    title = "0.3.0 release"
+    description = "Support creation of a Confidential Computing K8s Cluster"
+    description_1 = "Adapt to v33 SGX in-tree driver"
+    description_2 = "RPM/DEB binaries"
+    class = "desc-long"
+    bottom = "-165px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+[[charpter_description_7_content]]
+    time = "2020.08"
+    title = "0.4.0 release"
+    description = "RA-TLS PoC"
+    description_1 = "Enclave Pooling Manager framework"
+    description_2 = "Dragonwell 11 (LTS for OpenJDK 11) reference image"
+    description_3 = "Skeleton enclave runtime"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"
+    
+
+[[charpter_description_7_content]]
+    time = "2020.09"
+    title = "0.4.1 release"
+    description = "Stub enclave"
+    description_1 = "RA in shim"
+    description_2 = "w/o launching Occlum SDK container during bundle convertation"
+    description_3 = "PAL API v3"
+    description_4 = "Enhance sgx-tools"
+    class = "desc-long"
+    bottom = "-190px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+[[charpter_description_7_content]]
+    time = "2020.10"
+    title = "0.5.0 release"
+    description = "K8s RA infrastructure with RA-TLS"
+    description_1 = "Enclave pooling"
+    description_2 = "Bundle cache"
+    description_3 = "Graphene enclave runtime"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"
+
+[[charpter_description_7_content]]
+    time = "2020.11"
+    title = "0.5.1 release"
+    description = "Initial enclave runtime support for AWS Nitro Enclaves"
+    description_1 = "Integration with pouch"
+    description_2 = "Improve the performance of enclave instant launch"
+    class = "desc-long"
+    bottom = "-190px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+[[charpter_description_7_content]]
+    time = "2020.12"
+    title = "0.5.2 release"
+    description = "Implement Shelter"
+    description_1 = "Supply full CI/CD workflows"
+    description_2 = "Support Occlum 0.18.1"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"
+
+[[charpter_description_7_content]]
+    time = "2021.02"
+    title = "0.6.0 release"
+    description = "Implement ECDSA-based attestation in ra-tls"
+    description_1 = "Support bundle cache level 2"
+    description_2 = "Provide DCAP utilities in sgx-tools"
+    description_3 = "Support Occlum 0.19.0"
+    class = "desc-long"
+    bottom = "-190px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+[[charpter_description_7_content]]
+    time = "2021.05"
+    title = "0.6.1 release"
+    description = "Implement Enclave Attestation Architecture (EAA)"
+    description_1 = "Implement Inclavared"
+    description_2 = "Support Occlum 0.21.0"
+    description_3 = "Evolved from ra-tls to Enclave-TLS"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"

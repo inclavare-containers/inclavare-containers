@@ -1,0 +1,206 @@
+[slogan]
+	title = "Inclavare Containers"
+	description = "一种面向机密计算场景的开源Enclave容器运行时技术栈和安全架构。"
+	quick_start_text = "快速开始"
+	quick_start_link = "/guides/qucik-start/"
+	github_link = "https://github.com/alibaba/inclavare-containers"
+
+[[feature]]
+	title = "机密性"
+	description = "旨在帮助用户保护数据使用中的安全性、完整性和机密性"
+	img = "img/home/icon-secret.png"
+[[feature]]
+	title = "标准开放"
+	description = "技术栈全面开源共建、 保持社区中立、兼容社区以及兼容开源生态"
+	img = "img/home/icon-open.png"
+[[feature]]
+	title = "云原生"
+	description = "打造可信业务应用二方产品上云的云原生机密计算通用底座"
+	img = "img/home/icon-cloud-native.png"
+
+[[charpter_description]]
+	title = "什么是Inclavare Containers？"
+	description = "Inclavare Containers是由阿里云和蚂蚁集团主导研发，并联合Intel等合作伙伴打造的业界首个面向机密计算场景的开源容器运行时。Inclavare Containers抹平了机密计算的高使用门槛，为用户的工作负载提供多种不同的 Enclave 形态，在安全和成本之间提供更多的选择和灵活性。"
+	#img = "img/home/ArchitrctureFinal.jpg"
+    img = "img/home/Architecture1.jpg"
+	img_width = "100%"
+
+[[charpter_description_1]]
+	title = "应用场景"
+	description = "Inclavare Containers广泛应用于区块链，密钥管理，金融，机器学习，人工智能，联邦学习，安全分析，数据租赁，基因计算，边缘计算，物联网应用，安全多方计算等场景。"
+	img = "img/home/stack.jpg"
+	img_width = "85%"
+
+#改版新增
+[[charpter_description_4]]
+	title = "Inclavare Containers 解决了什么问题?"
+    img = "img/home/Architecture2.jpg"
+	img_width = "100%"
+[[description4_table]]
+    name = "隔离特权软件"
+    description = "基于硬件强制实施的技术手段将租户的工作负载与CSP控制的特权软件隔离开来。"
+[[description4_table]]
+    name = "排除CSP"
+    description = "将Cloud Service Provider（CSP）从租户的TCB中排除出去。"
+[[description4_table]]
+    name = "远程证明"
+    description = "构建通用的远程证明基础设施，向用户证明运行在基于硬件辅助enclave技术的TEE中的工作负载是可信的。"
+[[description4_table]]
+    name = "降低使用门槛"
+    description = "降低机密计算的使用门槛，保持与使用普通容器相同的使用体感。"
+
+[[charpter_description_5]]
+	title = "当前状态"
+[[Current_state]]
+    number = "01"
+    description = "rune作为兼容OCI Runtime规范的enclave容器引擎已写入OCI Runtime实现列表中。"
+[[Current_state]]
+    number = "02"
+    description = "具备通过K8s和Docker运行Enclave容器的能力。"
+[[Current_state]]
+    number = "03"
+    description = "实现了基于Intel SGX技术的Enclave容器形态。"
+[[Current_state]]
+    number = "04"
+    description = "支持Occlum SGX Library OS。"
+[[Current_state]]
+    number = "05"
+    description = "面向社区发布了0.1.0到0.6.1十个binary release版本。"
+[[Current_state]]
+    number = "06"
+    description = "提供了基于Golang、Java开发的web服务器参考镜像。"   
+
+[[charpter_description_6]]
+    title = "应用场景"
+    img = "img/home/Architecture3.jpg"
+	img_width = "100%"
+
+#起源和历史
+[[charpter_description_7]]
+    title = "起源和历史"
+[[charpter_description_7_content]]
+    time = "2019.11.12"
+    title = "顿悟"
+    description = ""
+    bottom = "-115px"
+    class = "desc-long"
+    triangle = "bottom"
+    triangle_position = "true"
+[[charpter_description_7_content]]
+    time = "2020.02"
+    title = "PoC"
+    description = "实现rune原型"
+    top = "-50px"
+    class = ""
+    triangle = "top"
+[[charpter_description_7_content]]
+    time = "2020.05"
+    title = "项目开源"
+    description = "发布0.1.0版本"
+    description_1 = "首先支持Occlum enclave runtime"
+    description_2 = "基于SGX 1硬件"
+    bottom = "-125px"
+    class = "desc-long"
+    triangle = "bottom"
+    triangle_position = "true"
+[[charpter_description_7_content]]
+    time = "2020.06"
+    title = "发布0.2.0版本"
+    description = "开源了shim和runectl(后更名为sgx-tools)"
+    description_1 = "从host侧加载PAL"
+    description_2 = "PAL API更新为v2"
+    class = " desc-longer"
+    top = "-75px"
+    triangle = "top"
+
+[[charpter_description_7_content]]
+    time = "2020.07"
+    title = "发布0.3.0版本"
+    description = "支持创建机密计算K8s集群"
+    description_1 = "适配v33 SGX in-tree驱动"
+    description_2 = "提供RPM/DEB安装包"
+    class = "desc-long"
+    bottom = "-125px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+    [[charpter_description_7_content]]
+    time = "2020.08"
+    title = "发布0.4.0版本"
+    description = "RA-TLS PoC"
+    description_1 = "Enclave Pooling Manager 框架"
+    description_2 = "提供Dragonwell 11 (LTS for OpenJDK 11) 参考镜像"
+    description_3 = "Skeleton enclave runtime"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"
+    
+
+    [[charpter_description_7_content]]
+    time = "2020.09"
+    title = "发布0.4.1版本"
+    description = "Stub enclave"
+    description_1 = "shim支持RA"
+    description_2 = "不再基于Occlum SDK容器进行bundle转换"
+    description_3 = "PAL API更新为v3"
+    description_4 = "增强sgx-tools"
+    class = "desc-long"
+    bottom = "-180px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+    [[charpter_description_7_content]]
+    time = "2020.10"
+    title = "发布0.5.0版本"
+    description = "实现基于RA-TLS的K8s级RA"
+    description_1 = "Enclave池化"
+    description_2 = "Bundle cache"
+    description_3 = "Graphene enclave runtime"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"
+
+    [[charpter_description_7_content]]
+    time = "2020.11"
+    title = "发布0.5.1版本"
+    description = "初步支持 AWS Nitro Enclaves"
+    description_1 = "集成pouch"
+    description_2 = "skeleton支持空指针间接引用保护和enclave虚拟机"
+    description_3 = "优化了enclave 瞬态启动的性能"
+    class = "desc-long"
+    bottom = "-180px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+    [[charpter_description_7_content]]
+    time = "2020.12"
+    title = "发布0.5.2版本"
+    description = "实现远程证明工具Shelter"
+    description_1 = "提供完整的CI / CD工作流程"
+    description_2 = "支持Occlum 0.18.1"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"
+
+    [[charpter_description_7_content]]
+    time = "2021.02"
+    title = "发布0.6.0版本"
+    description = "在ra-tls中实现SGX DCAP（基于ECDSA的证明"
+    description_1 = "支持bundle cache level 2"
+    description_2 = "在sgx-tools中支持DCAP相关功能"
+    description_3 = "支持Occlum 0.19.0"
+    class = "desc-long"
+    bottom = "-180px"
+    triangle = "bottom"
+    triangle_position = "true"
+
+    [[charpter_description_7_content]]
+    time = "2021.05"
+    title = "发布0.6.1版本"
+    description = "实现实验性和演示性的远程证明基础架构EAA"
+    description_1 = "实现Enclave-TLS"
+    description_2 = "实现inclavared"
+    description_3 = "支持Occlum 0.21.0"
+    class = "desc-longer"
+    top = "-80px"
+    triangle = "top"

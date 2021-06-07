@@ -1,0 +1,32 @@
+<div class="ss-card -bg-opacity ss-project-card">
+	<div class="header">
+		<div class="header-first">
+			{{ if isset .Params "icon" }}
+				<img class="project-icon" src="{{ .Params.icon | relURL }}" />
+			{{ end }}
+			<h3 class="card-title">
+				{{ $link := "" }}
+				{{ if isset .Params "link" }}
+					{{ if hasPrefix .Params.link "/" }}
+						{{ $link = path.Join .RelPermalink .Params.link }}
+					{{ else }}
+						{{ $link = .Params.link }}
+					{{ end }}
+				{{ else }}
+					{{ $link = path.Join .RelPermalink "/overview" }}
+				{{ end }}
+				<a href={{ $link }}>
+					{{ .Title }}
+				</a>
+			</h3>
+		</div>
+		<div class="gitstar">
+			<a class="github-button" href={{ .Params.github }} data-icon="octicon-star" data-size="large"
+				data-show-count="true">
+			</a>
+		</div>
+	</div>
+	<p class="card-content">
+		{{ .Description }}
+	</p>
+</div>

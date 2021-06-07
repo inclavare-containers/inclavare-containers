@@ -1,0 +1,110 @@
+.ss-list {
+  .list-title {
+    font-size: 30px;
+    font-weight: 450;
+    color: $text-color;
+  }
+
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+
+    @include mobile {
+      flex-direction: column;
+    }
+  }
+
+  .ss-project-card,
+  .ss-guide-card {
+    width: 31%;
+    margin-bottom: 24px;
+    margin-right: 24px;
+
+    &:nth-child(3n) {
+      margin-right: 0;
+    }
+
+    @include tablet {
+      width: 46%;
+
+      &:nth-child(2n) {
+        margin-right: 0;
+      }
+
+      &:nth-child(3n) {
+        margin-right: 24px;
+      }
+    }
+
+    @include mobile {
+      width: 100%;
+      margin: 0;
+      margin-bottom: 16px;
+    }
+  }
+}
+
+.ss-project-card {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  @include mobile {
+    margin-left: 16px;
+  }
+
+  .header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    >.header-first {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .project-icon {
+    width: 32px;
+    margin-right: 16px;
+  }
+
+  .card-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 450;
+    color: $text-color;
+  }
+
+  .gitstar {
+		margin-left: 16px;
+  }
+
+  .card-content {
+    margin: 0;
+    margin-top: 8px;
+    font-size: 14px;
+    color: $text-color-secondary;
+  }
+}
+
+.ss-guide-card {
+  min-height: 140px;
+
+  .card-title {
+    margin: 0;
+    font-size: 16px;
+    color: $text-color-link;
+    cursor: pointer;
+  }
+
+  .card-content {
+    margin: 0;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+}

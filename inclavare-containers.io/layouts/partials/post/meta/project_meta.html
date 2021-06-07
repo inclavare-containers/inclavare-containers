@@ -1,0 +1,18 @@
+{{ $github := .Site.Params.github }}
+{{ $language := .Site.Language.Lang }}
+
+{{ $path := path.Join "/edit/master/content" $language .File.Dir "index.md" }}
+
+<div class="ss-meta">
+	<div class="container">
+		<h1 class="title">
+			{{ .Title }}
+		</h1>
+		<a class="edit-button -hidden-mobile"
+			href="{{ printf "%s%s" $github $path }}"
+		>{{ i18n "edit" }}</a>
+	</div>
+	<div class="meta">
+		{{ i18n "update_time" }}: {{ .Lastmod.Format "2006-01-02" }}
+	</div>
+</div>

@@ -1,0 +1,6 @@
+/public
+/node_modules
+/resources
+/static/js
+/static/css
+/package-lock.json

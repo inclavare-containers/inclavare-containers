@@ -1,0 +1,86 @@
+<header class="ss-header">
+	<nav class="navbar" role="navigation" aria-label="main navigation">
+		<div class="navbar-brand">
+            <a class="logo-link" href="{{ "/" | relLangURL }}">
+				<img class="logo" id="logo-remove-storage" src="{{ (resources.Get "img/logo.png").RelPermalink }}">
+			</a>
+			<div class="-show-mobile">
+				<a id="mobile-menu-icon">
+					<svg class="icon" aria-hidden="true">
+						<use xlink:href="#icon-menu"></use>
+					</svg>
+				</a>
+				<nav id="mobile-menu">
+						<div id="js-menu-search-mobile" class="navbar-search-mobile">
+							<input class="input" placeholder="{{ i18n "search_placeholder"}}">
+							<svg class="icon" aria-hidden="true">
+								<use xlink:href="#icon-search"></use>
+							</svg>
+						</div>
+					{{ $currentPage := . }}
+          {{ range .Site.Menus.main }}
+            <a
+              class="{{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }} -active{{end}}"
+              href="{{ .URL }}">
+              <span>
+                {{ .Name }}
+              </span>
+              <svg class="icon" aria-hidden="true"><use xlink:href="#icon-ARROW"></use></svg>
+            </a>
+					{{ end }}
+					{{ if .IsTranslated }}
+            {{ range .Translations }}
+              <a href="{{ .URL }}">
+                <span>{{ i18n "translation_mobile" }}</span>
+                <svg class="icon" aria-hidden="true"><use xlink:href="#icon-transfer"></use></svg>
+              </a>
+						{{ end}}
+					{{ end }}
+				</nav>
+			</div>
+		</div>
+
+		<div class="navbar-menu -hidden-mobile">
+			<div class="navbar-start">
+				{{ $currentPage := . }}
+				{{ range .Site.Menus.main }}
+					<a class="navbar-item {{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }} -active{{end}}"
+						href="{{ .URL }}">{{ .Name }}</a>
+				{{ end }}
+			</div>
+			<div class="navbar-end">
+				<div class="navbar-item">
+					<div id="js-menu-search" class="navbar-search">
+						<input class="input" placeholder="{{ i18n "search_placeholder"}}">
+						<svg class="icon" aria-hidden="true">
+							<use xlink:href="#icon-search"></use>
+						</svg>
+					</div>
+				</div>
+				<div class="navbar-item">
+					{{ if .IsTranslated }}
+						{{ range .Translations }}
+							<a class="translation" href="{{ .URL }}"><span id="remove-storage" style="display: inline-block; width: 100%; height: 100%;text-align: center;line-height: 30px;">{{ i18n "translation" }}</span></a>
+						{{ end}}
+					{{ end }}
+				</div>
+			</div>
+		</div>
+	</nav>
+</header>
+
+{{ range .Site.Menus.main }}
+	{{ if or ($currentPage.IsMenuCurrent "main" .) ($currentPage.HasMenuCurrent "main" .) }}
+		<div class="ss-title">{{ .Name }}</div>
+	{{end}}
+{{ end }}
+<script>
+    var removestorage = document.getElementById("remove-storage")
+    removestorage.onclick = function(){
+        localStorage.setItem("isJudgment",1)
+    }
+    var logoremovestorage = document.getElementById("logo-remove-storage")
+    logoremovestorage.onclick = function(){
+        localStorage.setItem("isJudgment",1)
+    }
+</script>

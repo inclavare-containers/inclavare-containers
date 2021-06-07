@@ -1,0 +1,40 @@
+.ss-meta {
+
+  .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .edit-button {
+    display: inline-block;
+    width: 80px;
+    height: 34px;
+    line-height: 34px;
+    text-align: center;
+    color: $text-color-secondary;
+    background-color: $background-color-body;
+    border: 1px solid $button-border-color;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .title {
+    margin: 0;
+    padding: 0;
+    font-size: 34px;
+  }
+
+  .meta {
+    margin: 24px 0 36px;
+    color: $text-color-secondary;
+  }
+
+  .tags {
+    color: $text-color-meta-tag;
+  }
+
+  .tag {
+    margin-right: 8px;
+  }
+}

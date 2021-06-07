@@ -1,0 +1,43 @@
+// breakpoints
+$mobile-width: 568px;
+$desktop-width: 1024px;
+
+// 内容最大宽度
+$content-max-width: 1200px;
+
+// 背景颜色
+$background-color-body: #fff;
+$background-color-card: #fff;
+$background-color-header: #fff;
+$background-color-footer: #353f4c;
+$background-color-tag: #e0e7ef;
+
+// 文本颜色
+$text-color: #000;
+$text-color-secondary: rgba(#000, .65);
+$text-color-secondary-gray: rgba(#000, .45);
+$text-color-hover: #0074DE;
+$text-color-link: #2c9aff;
+$text-color-tag: #878787;
+$text-color-meta-tag: #bfbfbf;
+
+// 文本颜色（暗色）
+$text-color-dark: #fff;
+$text-color-dark-secondary: #b9b9b9;
+$text-color-hover-dark: #fff;
+
+$card-border-color: #e8e8e8;
+
+// button color
+$button-border-color: #d9d9d9;
+$button-border-color-selected: #0074DE;
+$button-background: #fff;
+$button-background-selected: #f0f8ff;
+
+$menu-link-color: #0074de;
+$menu-link-color-bg: #fff;
+
+
+// z-index
+$z-index-overlay: 200;
+$z-index-overlay-gt: 205;

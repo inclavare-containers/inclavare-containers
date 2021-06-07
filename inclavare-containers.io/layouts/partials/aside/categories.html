@@ -1,0 +1,10 @@
+<div class="ss-card -hidden-mobile">
+	<h2 class="card-title">
+		{{ i18n "aside_categories" }}
+	</h2>
+	<ul class="ss-aside-related">
+		{{ range .Site.Taxonomies.categories }}
+		<li><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></li>
+		{{ end }}
+	</ul>
+</div>

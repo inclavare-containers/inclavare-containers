@@ -1,0 +1,23 @@
+{{ define "title" }}
+	{{ .Params.title }} · {{ .Site.Title }}
+{{ end }}
+
+{{ define "main" }}
+
+<div class="ss-layout-container">
+	<main class="ss-layout-main -card">
+		{{ partial "post/meta/blog_meta" . }}
+		{{ partial "post/article" . }}
+		<div class="-show-mobile">
+			{{ partial "pagination/pagination_next" . }}
+		</div>
+	</main>
+
+	<aside class="ss-layout-aside">
+		<!-- {{ partial "aside/categories" . }} -->
+		{{ partial "aside/related" . }}
+		{{ partial "aside/tags" . }}
+	</aside>
+</div>
+
+{{ end }}
