@@ -105,3 +105,30 @@ spec:
     workingDir: /var/run/rune
 EOF
 ```
+
+## Third Party Dependencies
+
+Direct Dependencies
+
+| Name | Repo URL | Licenses |
+| -- | :-------:   | :-------: |
+|toml|github.com/BurntSushi/toml|MIT|
+|cgroups|github.com/containerd/cgroups|Apache-2.0|
+|containerd|github.com/containerd/containerd|Apache-2.0|
+|go-runc|github.com/containerd/go-runc|Apache-2.0|
+|typeurl|github.com/containerd/typeurl|Apache-2.0|
+|gin|github.com/gin-gonic/gin|MIT|
+|protobuf|github.com/gogo/protobuf|BSD-3-Clause|
+|glog|github.com/golang/glog|Apache-2.0|
+|protobuf|github.com/golang/protobuf|BSD-3-Clause|
+|epm|github.com/inclavare-containers/epm|Apache-2.0|
+|rune|github.com/inclavare-containers/rune|Apache-2.0|
+|runtime-spec|github.com/opencontainers/runtime-spec|Apache-2.0|
+|errors|github.com/pkg/errors|BSD-2-Clause|
+|logrus|github.com/sirupsen/logrus|MIT|
+|cobra|github.com/spf13/cobra|Apache-2.0|
+|pflag|github.com/spf13/pflag|BSD 3-Clause|
+|testify|github.com/stretchr/testify|MIT|
+|sys|golang.org/x/sys|BSD-3-Clause|
+|grpc|google.golang.org/grpc|Apache-2.0|
+|apimachinery|k8s.io/apimachinery|Apache-2.0|
