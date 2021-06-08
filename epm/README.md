@@ -42,3 +42,22 @@ db_timeout = 10
 ```bash
 /bin/bash /usr/local/bin/epm --config=/etc/epm/config.toml --stderrthreshold=0
 ```
+
+## Third Party Dependencies
+
+Direct Dependencies
+
+| Name | Repo URL | Licenses |
+| :--: | :-------:   | :-------: |
+| toml | github.com/BurntSushi/toml | MIT |
+| bolt | github.com/boltdb/bolt | MIT |
+| testify | github.com/stretchr/testify | MIT |
+| logrus | github.com/sirupsen/logrus | MIT |
+| glog | github.com/golang/glog | Apache-2.0 |
+| grpc | github.com/grpc-ecosystem/go-grpc-prometheus | Apache-2.0 |
+| cobra | github.com/spf13/cobra | Apache-2.0 |
+| grpc | google.golang.org/grpc | Apache-2.0 |
+| protobuf | google.golang.org/protobuf | BSD-3-Clause |
+| pflag | github.com/spf13/pflag | BSD-3-Clause |
+| protobuf | github.com/golang/protobuf | BSD-3-Clause |
+| sys | golang.org/x/sys | BSD-3-Clause |
