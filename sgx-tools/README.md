@@ -93,3 +93,22 @@ EINITTOKEN:
   MAC:                                      0x135de69cd3bcbaa09264c7a5b985d0bf
 token file test/hello-world.token saved
 ```
+
+## Third Party Dependencies
+
+### Direct dependencies
+
+| Name | Repo URL | Licenses |
+| ---- | -------- | -------- |
+| cli | github.com/urfave/cli | MIT |
+| blackfriday | github.com/russross/blackfriday/v2 | BSD-2-Clause|
+| logrus | github.com/sirupsen/logrus | MIT |
+| libenclave | github.com/inclavare-containers/rune/libenclave | Apache-2.0 |
+| proto | github.com/golang/protobuf/proto | BSD-3-Clause |
+| protobuf | google.golang.org/protobuf | BSD-3-Clause |
+| sys | golang.org/x/sys | BSD-3-Clause |
+| md2man | github.com/cpuguy83/go-md2man/v2/md2man | MIT|
+| sanitized_anchor_name | github.com/shurcooL/sanitized_anchor_name | MIT |
+| restruct | github.com/go-restruct/restruct | ISC |
+| errors | github.com/pkg/errors | BSD-2-Clause |
+| DCAP | https://github.com/intel/SGXDataCenterAttestationPrimitives | BSD |

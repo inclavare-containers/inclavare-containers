@@ -138,3 +138,43 @@ sudo rune run ${Occlum_application_container_name}
 # Credits
 
 Some codes in rune are borrowed from [runc](https://github.com/opencontainers/runc) project. In addition, runc packages including {apparmor, cgroups, configs, devices, intelrdt, keys, logs, nsenter, seccomp, specconv, stacktrace, system, user, utils} have been in the vendor directory of rune.
+
+# Third Party Dependencies
+
+## Direct dependencies
+
+| Name | Repo URL | Licenses |
+| ---- | -------- | -------- |
+| netns | github.com/vishvananda/netns | Apache-2.0 |
+| blackfriday | github.com/russross/blackfriday/v2 | BSD-2-Clause |
+| protobuf | github.com/golang/protobuf | BSD-3-Clause |
+| errors | github.com/pkg/errors | BSD-2-Clause |
+| grpc | google.golang.org/grpc | Apache-2.0 |
+| status | google.golang.org/genproto/googleapis/rpc/status | Apache-2.0 |
+| text | golang.org/x/text | BSD-3-Clause |
+| console | github.com/containerd/console | Apache-2.0 |
+| runc | github.com/opencontainers/runc | Apache-2.0 |
+| sanitized_anchor_name | github.com/shurcooL/sanitized_anchor_name | MIT |
+| specs-go | github.com/opencontainers/runtime-spec/specs-go | Apache-2.0 |
+| capability | github.com/syndtr/gocapability/capability | BSD-2-Clause |
+| netlink | github.com/vishvananda/netlink | Apache-2.0 |
+| fileutils | github.com/mrunalp/fileutils | Apache-2.0 |
+| ebpf | github.com/cilium/ebpf | MIT |
+| rpc | github.com/checkpoint-restore/go-criu/rpc | Apache-2.0 |
+| protobuf | google.golang.org/protobuf | BSD-3-Clause |
+| restruct | github.com/go-restruct/restruct | ISC |
+| epm-api | github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1 | Apache-2.0 |
+| net | golang.org/x/net | BSD-3-Clause |
+| dbus | github.com/godbus/dbus/v5 | BSD-2-Clause |
+| md2man | github.com/cpuguy83/go-md2man/v2/md2man | MIT |
+| sys | golang.org/x/sys | BSD-3-Clause |
+| go-units | github.com/docker/go-units | Apache-2.0 |
+| logrus | github.com/sirupsen/logrus | MIT |
+| procfs | github.com/prometheus/procfs | Apache-2.0 |
+| mountinfo | github.com/moby/sys/mountinfo | Apache-2.0 |
+| xerrors | golang.org/x/xerrors | BSD-3-Clause |
+| go-selinux | github.com/opencontainers/selinux/go-selinux | Apache-2.0 |
+| go-systemd | github.com/coreos/go-systemd/v22 | Apache-2.0 |
+| filepath-securejoin | github.com/cyphar/filepath-securejoin | BSD-3-Clause |
+| cli | github.com/urfave/cli | MIT |
+| DCAP | https://github.com/intel/SGXDataCenterAttestationPrimitives | BSD |
