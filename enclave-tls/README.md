@@ -139,3 +139,14 @@ if the libsgx_urts library is present, it will try to load QvE firstly. If faile
 [load_qve ../sgx_dcap_quoteverify.cpp:209] Error, call sgx_create_enclave for QvE fail [load_qve], SGXError:2006.
 [sgx_qv_get_quote_supplemental_data_size ../sgx_dcap_quoteverify.cpp:527] Error, failed to load QvE.
 ```
+
+# Third Party Dependencies
+
+Direct Dependencies
+
+| Name | Repo URL | Licenses |
+| :--: | :-------:   | :-------: |
+| wolfssl | https://github.com/wolfSSL/wolfssl | GPLv2 |
+| linux-sgx | https://github.com/intel/linux-sgx | BSD |
+| SGXDataCenterAttestationPrimitives | https://github.com/intel/SGXDataCenterAttestationPrimitives | BSD |
+| C library | C library | GNU General Public License version 3 |
