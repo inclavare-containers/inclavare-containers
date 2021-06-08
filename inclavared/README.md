@@ -73,3 +73,18 @@ ${ROOT_DIR}/inclavared/bin/inclavared --listen <sockaddr1> --xfer <sockaddr2> --
 ```bash
 ${ROOT_DIR}/inclavared/bin/inclavared --connect <sockaddr>
 ```
+
+## Third Party Dependencies
+
+Direct Dependencies
+
+| Name | Repo URL | Licenses |
+| :--: | :-------:   | :-------: |
+| libc | https://github.com/rust-lang/libc                    | MIT |
+| log | https://github.com/rust-lang/log                     | MIT |
+| env_logger | https://github.com/env-logger-rs/env_logger          | MIT |
+| clap | https://github.com/clap-rs/clap                      | MIT |
+| json | https://github.com/serde-rs/json                     | MIT |
+| rust-hex | https://github.com/KokaKiwi/rust-hex                 | MIT |
+| foreign-types | https://github.com/sfackler/foreign-types            | MIT |
+| incubator-teaclave-sgx-sdk | https://github.com/apache/incubator-teaclave-sgx-sdk | Apache-2.0 |
