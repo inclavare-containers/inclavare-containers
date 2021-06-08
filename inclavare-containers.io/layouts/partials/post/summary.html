@@ -1,0 +1,36 @@
+<article class="ss-summary ss-card">
+	{{ $coverImgSrc := "" }}
+	{{ if isset .Params "cover" }}
+		{{ if hasPrefix .Params.cover "/" }}
+			{{ $cover :=  slicestr .Params.cover 1 }}
+			{{ $coverImg := .Page.Resources.Match $cover }}
+			{{ if $coverImg }}
+				{{ $coverImgSrc = (index $coverImg 0).RelPermalink }}
+			{{ end }}
+		{{ else }}
+			{{ $coverImgSrc = .Params.cover }}
+		{{ end }}
+	{{ end }}
+
+	<img class="cover" src="{{ $coverImgSrc }}" />
+	<div class="container">
+		<h2 class="title"><a href='{{ .RelPermalink }}'> {{ .Title }}</a></h2>
+		<div class="meta">
+			{{ .Date.Format "2006-01-02" }} · {{ .Params.author }}
+		</div>
+		<div class="summary">
+			{{ if isset .Params "description" }}
+				{{ .Params.description }}
+			{{ else }}
+				{{- .Summary -}}
+			{{ end }}
+		</div>
+		<div class="tags">
+			{{ if isset .Params "tags" }}
+				{{ range .Params.tags }}
+					<a class="tag" href="{{ "tags/" | relLangURL }}{{ . | urlize }}/" rel="tag">#{{- . -}}</a>
+				{{ end }}
+			{{ end }}
+		</div>
+	</div>
+</article>

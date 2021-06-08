@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>
+		{{- block "title" . -}}
+		{{- .Site.Title -}}
+		{{- end -}}
+	</title>
+	{{ partial "head" . }}
+</head>
+
+<body>
+	{{ partial "header" . }}
+
+	{{ block "main" . }}
+	{{ end }}
+
+	{{ partial "footer" . }}
+</body>
+
+</html>

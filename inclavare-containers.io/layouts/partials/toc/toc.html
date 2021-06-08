@@ -1,0 +1,27 @@
+{{ $project := .File.Dir | replaceRE "^(projects/[^/]+).*" "$1" }}
+{{ $page := .Site.GetPage $project }}
+{{ $Site := .Site}}
+
+{{ $currentDir := .File.Dir }}
+
+{{ with $page.Params }}
+	<div id="js-drawer" class="ss-toc">
+		<div id="js-drawer-handle" class="drawer-handle">
+			<svg class="icon icon-menu" aria-hidden="true">
+				<use xlink:href="#icon-menu"></use>
+			</svg>
+			<svg class="icon icon-close" aria-hidden="true">
+				<use xlink:href="#icon-close"></use>
+			</svg>
+		</div>
+		<div class="drawer-body">
+			<div class="header" title="{{ .description }}">
+				{{- .title -}}
+				{{ partial "card/toc_list_card.html" $Site }}
+			</div>
+			<div class="body">
+				{{ partial "toc/toc_leaf.html" (dict "sidebar" .sidebar "project" $project "currentDir" $currentDir) }}
+			</div>
+		</div>
+	</div>
+{{ end }}

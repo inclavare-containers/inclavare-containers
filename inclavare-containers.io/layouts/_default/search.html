@@ -1,0 +1,52 @@
+{{ define "title" }}
+	{{ i18n "search" }} · {{ .Site.Title }}
+{{ end }}
+
+{{ define "main" }}
+
+<div class="home-background -no-max-width">
+	<img src="{{ (resources.Get "/img/cover-light.jpg").RelPermalink }}" />
+</div>
+
+<div class="ss-layout-container">
+	<main class="ss-layout-main -card -noaside">
+		<div class="ss-search">
+			<div class="input-wrapper">
+				<div class="search-icon">
+					<svg class="icon" aria-hidden="true">
+						<use xlink:href="#icon-search"></use>
+					</svg>
+				</div>
+				<input id="js-search-input" class="input" placeholder="{{ i18n "search_placeholder"}}" />
+				<div id="js-search-button" class="button">{{ i18n "search" }}</div>
+			</div>
+			<div id="js-result-type" class="search-type">
+				<label class="item">
+					<input name="type" type="radio" value="all">
+					{{ i18n "all" }}
+				</label>
+				<label class="item">
+					<input name="type" type="radio" value="projects">
+					{{ i18n "title_project" }}
+				</label>
+				<label class="item">
+					<input name="type" type="radio" value="guides">
+					{{ i18n "title_guide" }}
+				</label>
+				<label class="item">
+					<input name="type" type="radio" value="blog">
+					{{ i18n "title_blog" }}
+				</label>
+				<label class="item">
+					<input name="type" type="radio" value="activities">
+					{{ i18n "title_activities" }}
+				</label>
+			</div>
+			<div id="js-result-container" class="search-container">
+				<!-- see js/modules/search.js -->
+			</div>
+		</div>
+	</main>
+</div>
+
+{{ end }}

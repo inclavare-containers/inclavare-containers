@@ -1,0 +1,49 @@
+{{ define "title" }}
+	{{ i18n "title_project" }} · {{ .Site.Title }}
+{{ end }}
+
+{{ define "main" }}
+
+{{ $allPages := (where .Site.Pages "Section" .Section).ByWeight }}
+{{ $parent := .Page }}
+
+{{ $pages := slice }}
+{{ range $allPages }}
+	{{ if eq .Parent $parent }}{{ $pages = $pages | append . }}{{ end }}
+{{ end }}
+
+
+{{ $main_projects := where $pages ".Params.level" "main" }}
+{{ $incubating_projects := where $pages ".Params.level" "incubating" }}
+{{ $tool_projects := where $pages ".Params.level" "tool" }}
+{{ $ecosystem_projects := where $pages ".Params.level" "ecosystem" }}
+
+{{ $title_list := slice "main_project" "incubating_project" "tool_projects" "ecosystem_projects" }}
+{{ $list := slice $main_projects $incubating_projects $tool_projects $ecosystem_projects }}
+
+<div class="home-background -no-max-width">
+	<img src="{{ (resources.Get "/img/cover-light.jpg").RelPermalink }}" />
+</div>
+
+<div class="ss-layout-container">
+	<main class="ss-layout-main -noaside">
+		{{ range $idx, $val := $list }}
+			{{ if ne (len $val) 0 }}
+				<div class="ss-list">
+					<h2 class="list-title">
+						<a>{{ i18n (index $title_list $idx) }}</a>
+					</h2>
+					<div class="list">
+						{{ range $val }}
+							{{ partial "card/project_card" . }}
+						{{ end }}
+					</div>
+				</div>
+			{{ end }}
+		{{ end }}
+	</main>
+</div>
+
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+{{ end }}

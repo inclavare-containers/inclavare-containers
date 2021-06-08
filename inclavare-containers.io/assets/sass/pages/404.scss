@@ -1,0 +1,30 @@
+.ss-404 {
+	.home-background {
+		height: 500px;
+	}
+}
+
+.container-404 {
+	position: relative;
+	height: 600px;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	>img {
+		width: 340px;
+		margin-bottom: 24px;
+	}
+
+	.text {
+		color: $text-color-secondary;
+		text-align: center;
+		margin-bottom: 24px;
+	}
+
+	// .home-button {
+
+	// }
+}

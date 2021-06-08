@@ -1,0 +1,89 @@
+# menu
+[translation]
+other = "En"
+
+[translation_mobile]
+other = "English"
+
+[search]
+other = "搜索"
+
+[search_placeholder]
+other = "请输入要搜索的关键词"
+
+[all]
+other = "全部"
+
+# project
+[main_project]
+other = "主要项目"
+
+[incubating_project]
+other = "孵化项目"
+
+[tool_projects]
+other = "工具项目"
+
+[ecosystem_projects]
+other = "合作项目"
+#other = "生态项目"
+
+# guide
+
+# post
+[update_time]
+other = "更新时间"
+
+[edit]
+other = "编辑"
+
+# pagination
+[prev_article]
+other = "上一篇"
+
+[next_article]
+other = "下一篇"
+
+# aside
+[aside_download]
+other = "下载 ZIP"
+
+[aside_categories]
+other = "分类"
+
+[aside_tags]
+other = "标签"
+
+[aside_toc]
+other = "目录"
+
+[aside_get_the_code]
+other = "获取代码"
+
+[aside_project]
+other = "项目"
+
+[aside_related_recommend]
+other = "相关推荐"
+
+# site title
+[title_project]
+other = "项目"
+
+[title_guide]
+other = "指南"
+
+[title_blog]
+other = "博客"
+
+[title_activities]
+other = "活动"
+
+[title_tags]
+other = "标签"
+
+[title_categories]
+other = "分类"
+
+[back_legacy]
+other = "返回旧版"

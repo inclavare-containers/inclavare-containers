@@ -1,0 +1,13 @@
+{{ define "title" }}
+	{{ .Params.title }} · {{ .Site.Title }}
+{{ end }}
+
+{{ define "main" }}
+
+<div class="ss-layout-container">
+	<main class="ss-layout-main -card -noaside">
+		{{ partial "post/article" . }}
+	</main>
+</div>
+
+{{ end }}

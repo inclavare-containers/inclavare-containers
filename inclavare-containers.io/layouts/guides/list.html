@@ -1,0 +1,31 @@
+{{ define "title" }}
+	{{ i18n "title_guide" }} · {{ .Site.Title }}
+{{ end }}
+
+{{ define "main" }}
+
+<div class="home-background -no-max-width">
+	<img src="{{ (resources.Get "/img/cover-light.jpg").RelPermalink }}" />
+</div>
+
+{{ $Site := .Site }}
+<div class="ss-layout-container">
+	<main class="ss-layout-main -noaside">
+		{{ range .Params.levels }}
+			<div class="ss-list">
+				<h2 class="list-title">
+					<a>{{ .level }}</a>
+				</h2>
+				<div class="list">
+					{{ range .links }}
+						{{ $link := path.Join "guides" . }}
+						{{ $page := $Site.GetPage $link }}
+						{{ partial "card/guide_card" $page }}
+					{{ end }}
+				</div>
+			</div>
+		{{ end }}
+	</main>
+</div>
+
+{{ end }}

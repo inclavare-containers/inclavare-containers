@@ -1,0 +1,49 @@
+{{ $allPages := (where .Pages "Section" "projects").ByWeight }}
+{{ $parent := .GetPage "projects" }}
+
+{{ $pages := slice }}
+{{ range $allPages }}
+	{{ if eq .Parent $parent }}{{ $pages = $pages | append . }}{{ end }}
+{{ end }}
+
+{{ $main_projects := where $pages ".Params.level" "main" }}
+{{ $incubating_projects := where $pages ".Params.level" "incubating" }}
+{{ $tool_projects := where $pages ".Params.level" "tool" }}
+{{ $ecosystem_projects := where $pages ".Params.level" "ecosystem" }}
+
+{{ $title_list := slice "main_project" "incubating_project" "tool_projects" "ecosystem_projects" }}
+{{ $list := slice $main_projects $incubating_projects $tool_projects $ecosystem_projects }}
+
+<div class="ss-toc-list-card -hidden-mobile">
+  <svg class="icon -hidden-mobile" aria-hidden="true">
+    <use xlink:href="#icon-menu1"></use>
+  </svg>
+  <div class="ss-tooltip">
+		{{ range $idx, $val := $list }}
+			{{ if ne (len $val) 0 }}
+				<div class="toc-list">
+					<h4 class="title">{{ i18n (index $title_list $idx) }}</h4>
+					<ul class="list">
+						{{ range $val }}
+							<li class="item">
+								{{ $link := "" }}
+								{{ if isset .Params "link" }}
+									{{ if hasPrefix .Params.link "/" }}
+										{{ $link = path.Join .RelPermalink .Params.link }}
+									{{ else }}
+										{{ $link = .Params.link }}
+									{{ end }}
+								{{ else }}
+									{{ $link = path.Join .RelPermalink "/overview" }}
+								{{ end }}
+								<a href={{ $link }}>
+									{{ .Title }}
+								</a>
+              </li>
+						{{ end }}
+					</ul>
+				</div>
+			{{ end }}
+		{{ end }}
+  </div>
+</div>

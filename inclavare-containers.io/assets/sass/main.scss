@@ -1,0 +1,24 @@
+@import "./utils/variables";
+@import "./utils/mixins";
+
+// global style & reset
+@import "./global";
+
+@import "./partials/header";
+@import "./partials/footer";
+@import "./partials/pagination";
+
+@import "./partials/post/_index";
+
+@import "./partials/aside";
+@import "./partials/toc";
+
+// some specific page
+@import "./pages/home";
+@import "./pages/search";
+@import "./pages/404";
+@import "./pages/dmaku";
+
+@import "./components/layout";
+@import "./components/list";
+@import "./components/overlay";

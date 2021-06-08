@@ -1,0 +1,17 @@
+
+{{ if or .PrevInSection .NextInSection }}
+	<nav class="ss-pagination-next">
+		{{ with .PrevInSection -}}
+		<a class="link-prev" href="{{ .RelPermalink }}">
+			<span class="text">{{ i18n "prev_article" }}: </span>
+			<span class="text">{{ .Title }}</span>
+		</a>
+		{{- end }}
+		{{ with .NextInSection -}}
+		<a class="link-next" href="{{ .RelPermalink }}">
+			<span class="text">{{ i18n "next_article" }}: </span>
+			<span class="text">{{ .Title }}</span>
+		</a>
+		{{- end }}
+	</nav>
+{{ end }}

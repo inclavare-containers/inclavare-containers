@@ -1,0 +1,29 @@
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="{{ .Site.Params.description }}" />
+
+<!-- Site Generator -->
+{{- hugo.Generator -}}
+
+<link rel="shortcut icon" href={{ .Site.Params.favicon }} type="image/png">
+
+<link href="https://unpkg.com/purecss@1.0.0/build/base-min.css" rel="stylesheet">
+<!-- <link href="https://unpkg.com/purecss@1.0.0/build/grids-min.css" rel="stylesheet"> -->
+<!-- <link href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css" rel="stylesheet"> -->
+
+<link href="{{ "/css/main.css" | relURL }}" rel="stylesheet">
+<link href="{{ "/css/zoom-image.css" | relURL }}" rel="stylesheet">
+
+<script src="{{ (resources.Get "js/iconfont.js").RelPermalink }}"></script>
+<script src="{{ (resources.Get "js/highlight.pack.js").RelPermalink }}"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+<script>window.SITE_LANGUAGE = "{{ .Site.Language.Lang }}"</script>
+<script src="{{ "/js/app.js" | relURL }}"></script>
+
+<!-- TODO: meta -->
+<!-- 例如 twitter 的资料卡，https://github.com/servicemesher/website/blob/master/themes/hugo-universal-theme/layouts/partials/head.html -->
+
+{{ template "_internal/google_analytics.html" . }}
