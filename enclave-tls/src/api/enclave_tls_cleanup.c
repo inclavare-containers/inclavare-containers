@@ -4,7 +4,6 @@
  */
 
 #include <stdlib.h>
-#include <dlfcn.h>
 #include <enclave-tls/api.h>
 #include <enclave-tls/log.h>
 
