@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-struct etls_dirent
+struct ocall_dirent
 {
 	u_int64_t d_ino;
 	int64_t d_off; //off_t
@@ -11,5 +11,7 @@ struct etls_dirent
 	u_int8_t d_type;
 	char d_name[256]; // NAME_MAX + 1 = 256
 };
+
+typedef u_int64_t uint64_t;
 
 #endif

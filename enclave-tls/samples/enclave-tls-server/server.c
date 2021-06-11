@@ -41,11 +41,11 @@ static sgx_enclave_id_t load_enclave(bool debug_enclave)
 	int updated = 0;
 	int ret = sgx_create_enclave(ENCLAVE_FILENAME, debug_enclave, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
-		ETLS_ERR("Failed to load enclave %d\n", ret);
+		printf("Failed to load enclave %d\n", ret);
 		return -1;
 	}
 
-	ETLS_DEBUG("Success to load enclave id %ld\n", eid);
+	printf("Success to load enclave id %ld\n", eid);
 
 	return eid;
 }
@@ -95,9 +95,39 @@ static int sgx_create_report(sgx_report_t *report)
 #endif
 // clang-format on
 
-int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, char *attester_type,
-			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			       bool debug_enclave)
+#ifdef SGX
+int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester_type,
+			       char *verifier_type, char *tls_type, char *crypto_type,
+                               bool mutual, bool debug_enclave, char *ip, int port)
+{
+	unsigned long long enclave_id = 0;
+	unsigned long flags = 0;
+	uint32_t s_ip = inet_addr(ip);
+	uint16_t s_port = htons(port);
+
+	enclave_id = load_enclave(debug_enclave);
+	if (enclave_id == -1) {
+		printf("Failed to load sgx stub enclave\n");
+		return -1;
+	}
+
+	flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
+	if (mutual)
+		flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
+
+	int ret = 0;
+	int sgx_status = ecall_etls_server_startup(enclave_id, &ret, enclave_id,
+                                                   log_level, attester_type,
+                                                   verifier_type, tls_type,
+                                                   crypto_type, flags,
+                                                   s_ip, s_port);
+
+	return ret;
+}
+#else
+int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester_type,
+                               char *verifier_type, char *tls_type, char *crypto_type,
+                               bool mutual, bool debug_enclave, char *ip, int port)
 {
 	enclave_tls_conf_t conf;
 
@@ -107,29 +137,45 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
-#ifdef SGX
-	conf.enclave_id = load_enclave(debug_enclave);
-	if (conf.enclave_id == -1) {
-		ETLS_ERR("Failed to load sgx stub enclave\n");
-		return -1;
-	}
-#endif
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		perror("Failed to call socket()");
+		return -1;
+	}
+
+	int reuse = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(int)) < 0) {
+		perror("Failed to call setsockopt()");
+		return -1;
+	}
+
+	struct sockaddr_in s_addr;
+	memset(&s_addr, 0, sizeof(s_addr));
+	s_addr.sin_family = AF_INET;
+	s_addr.sin_addr.s_addr = inet_addr(ip);
+	s_addr.sin_port = htons(port);
+
+	/* Bind the server socket */
+	if (bind(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
+		perror("Failed to call bind()");
+		return -1;
+	}
+
+	/* Listen for a new connection, allow 5 pending connections */
+	if (listen(sockfd, 5) == -1) {
+		perror("Failed to call listen()");
+		return -1;
+	}
+
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret;
-#ifdef SGX
-	int sgx_status;
-	sgx_status = ecall_enclave_tls_init(&ret, &conf, &handle);
-	if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
-		ETLS_ERR("Failed to initialize enclave tls %#x %#x\n", ret, sgx_status);
-#else
 	ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
-#endif
 		return -1;
 	}
 
@@ -145,15 +191,9 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 			return -1;
 		}
 
-#ifdef SGX
-		sgx_status = ecall_enclave_tls_negotiate(&ret, handle, connd);
-		if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
-			ETLS_ERR("Failed to negotiate %#x %#x\n", ret, sgx_status);
-#else
 		ret = enclave_tls_negotiate(handle, connd);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to negotiate %#x\n", ret);
-#endif
 			goto err;
 		}
 
@@ -161,15 +201,9 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 
 		char buf[256];
 		size_t len = sizeof(buf);
-#ifdef SGX
-		sgx_status = ecall_enclave_tls_receive(&ret, handle, buf, &len);
-		if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
-			ETLS_ERR("Failed to receive %#x %#x\n", ret, sgx_status);
-#else
 		ret = enclave_tls_receive(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to receive %#x\n", ret);
-#endif
 			goto err;
 		}
 
@@ -198,15 +232,9 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 #endif
 
 		/* Reply back to the client */
-#ifdef SGX
-		sgx_status = ecall_enclave_tls_transmit(&ret, handle, buf, &len);
-		if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
-			ETLS_ERR("Failed to transmit %#x %#x\n", ret, sgx_status);
-#else
 		ret = enclave_tls_transmit(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to transmit %#x\n", ret);
-#endif
 			goto err;
 		}
 
@@ -217,13 +245,10 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 
 err:
 	/* Ignore the error code of cleanup in order to return the prepositional error */
-#ifdef SGX
-	ecall_enclave_tls_cleanup(&ret, handle);
-#else
 	enclave_tls_cleanup(handle);
-#endif
 	return -1;
 }
+#endif
 
 int main(int argc, char **argv)
 {
@@ -254,7 +279,7 @@ int main(int argc, char **argv)
 	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
 	char *ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
-	bool debug_enclave = false;
+	bool debug_enclave = true;
 	int opt;
 
 	do {
@@ -319,37 +344,6 @@ int main(int argc, char **argv)
 		}
 	} while (opt != -1);
 
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) {
-		perror("Failed to call socket()");
-		return -1;
-	}
-
-	int reuse = 1;
-	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(int));
-	if (ret < 0) {
-		perror("Failed to call setsockopt()");
-		return -1;
-	}
-
-	struct sockaddr_in s_addr;
-	memset(&s_addr, 0, sizeof(s_addr));
-	s_addr.sin_family = AF_INET;
-	s_addr.sin_addr.s_addr = inet_addr(ip);
-	s_addr.sin_port = htons(port);
-
-	/* Bind the server socket */
-	if (bind(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
-		perror("Failed to call bind()");
-		return -1;
-	}
-
-	/* Listen for a new connection, allow 5 pending connections */
-	if (listen(sockfd, 5) == -1) {
-		perror("Failed to call listen()");
-		return -1;
-	}
-
-	return enclave_tls_server_startup(sockfd, log_level, attester_type, verifier_type, tls_type,
-					  crypto_type, mutual, debug_enclave);
+	return enclave_tls_server_startup(log_level, attester_type, verifier_type, tls_type,
+					  crypto_type, mutual, debug_enclave, ip, port);
 }

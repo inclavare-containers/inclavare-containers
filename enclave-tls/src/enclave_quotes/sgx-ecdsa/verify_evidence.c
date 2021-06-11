@@ -102,7 +102,11 @@ enclave_quote_err_t sgx_ecdsa_verify_evidence(enclave_quote_ctx_t *ctx,
 		break;
 	}
 #else
-	ocall_ecdsa_verify_evidence(&err, ctx, evidence, hash, hash_len);	
+	sgx_ecdsa_ctx_t *ecdsa_ctx = (sgx_ecdsa_ctx_t *)ctx->quote_private;
+	sgx_enclave_id_t eid = (sgx_enclave_id_t)ecdsa_ctx->eid;
+	ocall_ecdsa_verify_evidence(&err, ctx, eid, ctx->opts->name,
+                                    evidence, sizeof(attestation_evidence_t),
+                                    hash, hash_len);
 #endif
 
 	return err;

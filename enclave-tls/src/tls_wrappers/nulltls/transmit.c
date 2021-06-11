@@ -15,17 +15,12 @@ tls_wrapper_err_t nulltls_transmit(tls_wrapper_ctx_t *ctx, void *buf, size_t *bu
 	ETLS_DEBUG("ctx %p, buf %p, buf_size %p\n", ctx, buf, buf_size);
 
 	ssize_t rc;
-#ifdef SGX
-	int sgx_status = ocall_write(&rc, ctx->fd, buf, *buf_size);
-	if (SGX_SUCCESS != sgx_status || rc < 0) {
-		ETLS_ERR("failed to transmit data %zu, sgx status 0x%04x\n", rc, sgx_status);
-#else
-	rc = write(ctx->fd, buf, *buf_size);
+	rc = etls_write(ctx->fd, buf, *buf_size);
 	if (rc < 0) {
 		ETLS_ERR("failed to transmit data %zu\n", rc);
-#endif
 		return TLS_WRAPPER_ERR_TRANSMIT;
 	}
+
 	*buf_size = rc;
 
 	return TLS_WRAPPER_ERR_NONE;

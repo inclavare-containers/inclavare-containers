@@ -25,14 +25,24 @@ void ocall_print_string(const char *str)
 	printf("%s", str);
 }
 
-// Copy from openenclave
-u_int64_t ocall_opendir(const char* name)
+size_t ocall_recv(int sockfd, void *buf, size_t len, int flags)
 {
-	return (u_int64_t)opendir(name);
+	return recv(sockfd, buf, len, flags);
+}
+
+size_t ocall_send(int sockfd, const void *buf, size_t len, int flags)
+{
+	return send(sockfd, buf, len, flags);
 }
 
 // Copy from openenclave
-int ocall_readdir(u_int64_t dirp, struct etls_dirent* entry)
+uint64_t ocall_opendir(const char* name)
+{
+	return (uint64_t)opendir(name);
+}
+
+// Copy from openenclave
+int ocall_readdir(uint64_t dirp, struct ocall_dirent* entry)
 {
 	int ret = -1;
 	struct dirent* ent;
@@ -90,7 +100,7 @@ done:
 }
 
 // Copy from openenclave
-int ocall_closedir(u_int64_t dirp)
+int ocall_closedir(uint64_t dirp)
 {
     errno = 0;
 
@@ -107,7 +117,40 @@ ssize_t ocall_write(int fd, const void *buf, size_t count)
 	return write(fd, buf, count);
 }
 
-void ocall_getenv(const char *name, char *value)
+void ocall_getenv(const char *name, char *value, size_t len)
 {
-	value = getenv(name);
+	memset(value, 0, len);
+	char *env_value = getenv(name);
+	if (env_value != NULL)
+		strncpy(value, env_value, strlen(env_value));
+	else
+		strncpy(value, "null", len);
+}
+
+static double current_time()
+{
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+
+	return (double)(1000000 * tv.tv_sec + tv.tv_usec) / 1000000.0;
+}
+
+void ocall_current_time(double *time)
+{
+	if (!time)
+		return;
+
+	*time = current_time();
+
+	return;
+}
+
+void ocall_low_res_time(int *time)
+{
+	if (!time)
+		return;
+
+	struct timeval tv;
+	*time = tv.tv_sec;
 }
