@@ -15,7 +15,9 @@ enclave_quote_err_t sgx_la_verify_evidence(enclave_quote_ctx_t *ctx,
 {
 	enclave_quote_err_t err = -ENCLAVE_QUOTE_ERR_UNKNOWN;
 
-	ocall_la_verify_evidence(&err, ctx, evidence, hash, hash_len);
+	ocall_la_verify_evidence(&err, ctx,
+                                 evidence, sizeof(attestation_evidence_t),
+                                 hash, hash_len);
 
 	return err;
 }

@@ -7,8 +7,9 @@ enclave {
 
 	untrusted {
 		enclave_quote_err_t ocall_la_verify_evidence([user_check] enclave_quote_ctx_t *ctx,
-                                                             [user_check] attestation_evidence_t *evidence,
-                                                             [user_check] uint8_t *hash,
-                                                             unsigned int hash_len);
+                                                             [in, size=evidence_len] attestation_evidence_t *evidence,
+                                                             uint32_t evidence_len,
+                                                             [in, size=hash_len] uint8_t *hash,
+                                                             uint32_t hash_len);
 	};
 };

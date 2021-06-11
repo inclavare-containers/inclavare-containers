@@ -1,21 +1,18 @@
 # Project name
-project(enclave_quote_nullquote)
+project(enclave_quote_sgx_la)
 
 # Set include directory
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/enclave-tls
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/internal
+                 ${CMAKE_CURRENT_SOURCE_DIR}/../../include/edl
+                 ${CMAKE_CURRENT_SOURCE_DIR}
+                 ${CMAKE_BINARY_DIR}/src/sgx/trust
                  )
-if(SGX)
-    list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include/edl
-                             ${CMAKE_BINARY_DIR}/src/sgx/trust
-                             )
-endif()
 include_directories(${INCLUDE_DIRS})
 
-# Set dependency library directory
-set(LIBRARY_DIRS ${CMAKE_BINARY_DIR}/src
-                 ${ENCLAVE_TLS_INSTALL_LIB_PATH}
+set(LIBRARY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../
+                 ${SGXSDK_INSTALL_LIB_PATH}
                  )
 link_directories(${LIBRARY_DIRS})
 
@@ -29,12 +26,7 @@ set(SOURCES cleanup.c
             )
 
 # Generate library
-if(SGX)
-    add_trusted_library(${PROJECT_NAME} SRCS ${SOURCES})
-else()
-    add_library(${PROJECT_NAME} SHARED ${SOURCES})
-    target_link_libraries(${PROJECT_NAME} ${ENCLAVE_TLS_LDFLAGS} ${ETLS_LIB})
-endif()
+add_trusted_library(${PROJECT_NAME} SRCS ${SOURCES})
 
 # Install library
 install(TARGETS ${PROJECT_NAME}

@@ -23,8 +23,4 @@ add_trusted_library(${PROJECT_NAME}
                     SRCS ${SOURCES}
                     EDL ${ETLS_EDL}
                     EDL_SEARCH_PATHS ${EDL_SEARCH_PATHS}
-                    HEADER_ONLY)
-
-# Install library
-install(TARGETS ${PROJECT_NAME}
-	DESTINATION ${ENCLAVE_TLS_INSTALL_LIB_PATH})
+		    )

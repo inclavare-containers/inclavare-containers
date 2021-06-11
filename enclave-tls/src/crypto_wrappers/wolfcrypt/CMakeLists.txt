@@ -5,14 +5,19 @@ project(crypto_wrapper_wolfcrypt)
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/enclave-tls
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/internal
-                 ${ENCLAVE_TLS_INSTALL_INCLUDE_PATH}
-                 ${ENCLAVE_TLS_INSTALL_INCLUDE_PATH}/wolfssl
-                 ${ENCLAVE_TLS_INSTALL_INCLUDE_PATH}/wolfssl/wolfcrypt
+                 ${CMAKE_BINARY_DIR}/src/external/wolfssl/include
+                 ${CMAKE_BINARY_DIR}/src/external/wolfssl/include/wolfssl
+                 ${CMAKE_BINARY_DIR}/src/external/wolfssl/include/wolfssl/wolfcrypt
                  )
+if(SGX)
+    list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include/edl
+                             ${CMAKE_BINARY_DIR}/src/sgx/trust)
+endif()
 include_directories(${INCLUDE_DIRS})
 
 # Set dependency library directory
-set(LIBRARY_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../
+set(LIBRARY_DIRS ${CMAKE_BINARY_DIR}/src
+                 ${CMAKE_BINARY_DIR}/src/external/wolfssl/lib
                  ${ENCLAVE_TLS_INSTALL_LIB_PATH}
                  )
 link_directories(${LIBRARY_DIRS})
@@ -28,8 +33,13 @@ set(SOURCES cleanup.c
             )
 
 # Generate library
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
-target_link_libraries(${PROJECT_NAME} ${ENCLAVE_TLS_LDFLAGS} enclave_tls wolfssl)
+if(SGX)
+    set(DEPEND_TRUSTED_LIBS wolfssl_sgx)
+    add_trusted_library(${PROJECT_NAME} SRCS ${SOURCES} TRUSTED_LIBS ${DEPEND_TRUSTED_LIBS})
+else()
+    add_library(${PROJECT_NAME} SHARED ${SOURCES})
+    target_link_libraries(${PROJECT_NAME} ${ENCLAVE_TLS_LDFLAGS} ${ETLS_LIB} wolfssl)
+endif()
 
 # Install library
 install(TARGETS ${PROJECT_NAME}

@@ -7,6 +7,12 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/cert.h>
 
+#ifdef SGX
+#define PRIORITY 50
+#else
+#define PRIORITY 20
+#endif
+
 extern tls_wrapper_err_t wolfssl_pre_init(void);
 extern tls_wrapper_err_t wolfssl_init(tls_wrapper_ctx_t *);
 extern tls_wrapper_err_t wolfssl_use_privkey(tls_wrapper_ctx_t *ctx, void *privkey_buf,
@@ -20,13 +26,8 @@ extern tls_wrapper_err_t wolfssl_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t wolfssl_opts = {
 	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
-#ifdef SGX
-	.name = "wolfssl_sgx",
-	.priority = 50,
-#else
 	.name = "wolfssl",
-	.priority = 20,
-#endif
+	.priority = PRIORITY,
 	.pre_init = wolfssl_pre_init,
 	.init = wolfssl_init,
 	.use_privkey = wolfssl_use_privkey,

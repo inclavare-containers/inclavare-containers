@@ -52,7 +52,7 @@ enclave_quote_err_t enclave_quote_register(const enclave_quote_opts_t *opts)
 
 	/* Default type equals to name */
 	if (new_opts->type[0] == '\0')
-		strncpy(new_opts->type, new_opts->name, QUOTE_TYPE_NAME_SIZE);
+		strncpy(new_opts->type, new_opts->name, sizeof(new_opts->type));
 
 	enclave_quotes_opts[registerd_enclave_quote_nums++] = new_opts;
 

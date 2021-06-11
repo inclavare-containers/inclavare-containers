@@ -109,13 +109,13 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 	int sgx_status;
 	uint32_t quote_size = 0;
 	sgx_status = ocall_qe_get_quote_size(&qe3_ret, &quote_size);
-	if (SGX_SUCCESS != sgx_status || SGX_QL_SUCCESS != qe3_ret) {
+	if (SGX_SUCCESS != sgx_status || ENCLAVE_QUOTE_ERR_NONE != qe3_ret) {
 		ETLS_ERR("sgx_qe_get_quote_size(): 0x%04x, 0x%04x\n", sgx_status, qe3_ret);
 		return SGX_ECDSA_ERR_CODE((int)qe3_ret);
 	}
 
 	sgx_status = ocall_qe_get_quote(&qe3_ret, &app_report, quote_size, evidence->ecdsa.quote);
-	if (SGX_SUCCESS != sgx_status || SGX_QL_SUCCESS != qe3_ret) {
+	if (SGX_SUCCESS != sgx_status || ENCLAVE_QUOTE_ERR_NONE != qe3_ret) {
 		ETLS_ERR("sgx_qe_get_quote(): 0x%04x, 0x%04x\n", sgx_status, qe3_ret);
 		return SGX_ECDSA_ERR_CODE((int)qe3_ret);
 	}
@@ -126,7 +126,7 @@ enclave_quote_err_t sgx_ecdsa_collect_evidence(enclave_quote_ctx_t *ctx,
 	/* Essentially speaking, sgx_ecdsa_qve verifier generates the same
 	 * format of quote as sgx_ecdsa.
 	 */
-	strncpy(evidence->type, "sgx_ecdsa", QUOTE_TYPE_NAME_SIZE);
+	strncpy(evidence->type, "sgx_ecdsa", sizeof(evidence->type));
 	evidence->ecdsa.quote_len = quote_size;
 
 	return ENCLAVE_QUOTE_ERR_NONE;
