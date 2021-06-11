@@ -1,5 +1,5 @@
 # enclave_tls
-set(ENCLAVE_TLS_INSTALL_PATH "/opt/enclave_tls")
+set(ENCLAVE_TLS_INSTALL_PATH "/opt/enclave-tls")
 
 # encalve_tls/lib
 set(ENCLAVE_TLS_INSTALL_LIB_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib")
@@ -20,7 +20,11 @@ set(ENCLAVE_TLS_INSTALL_BIN_PATH "${ENCLAVE_TLS_INSTALL_PATH}/bin")
 set(ENCLAVE_TLS_INSTALL_INCLUDE_PATH "${ENCLAVE_TLS_INSTALL_PATH}/include")
 
 # sgx sdk
-set(SGXSDK_INSTALL_PATH "/opt/intel/sgxsdk")
+if(EXISTS $ENV{SGX_SDK})
+    set(SGXSDK_INSTALL_PATH "$ENV{SGX_SDK}")
+else()
+    set(SGXSDK_INSTALL_PATH "/opt/intel/sgxsdk")
+endif()
 
 # sgx sdk library
 set(SGXSDK_INSTALL_LIB_PATH "${SGXSDK_INSTALL_PATH}/lib64")

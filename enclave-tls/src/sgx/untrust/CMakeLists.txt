@@ -13,6 +13,7 @@ include_directories(${INCLUDE_DIRS})
 
 # Set source file
 set(SOURCES etls_syscalls_ocall.c
+            etls_socket_ocall.c
             sgx_ecdsa_ocall.c
             sgx_la_ocall.c
             ${CMAKE_CURRENT_SOURCE_DIR}/../../util/sgxutils.c
@@ -25,7 +26,7 @@ add_untrusted_library(${PROJECT_NAME} STATIC
                       SRCS ${SOURCES}
                       EDL ${ETLS_EDL}
                       EDL_SEARCH_PATHS ${EDL_SEARCH_PATHS}
-                      HEADER_ONLY)
+                      )
 
 # Install library
 install(TARGETS ${PROJECT_NAME}

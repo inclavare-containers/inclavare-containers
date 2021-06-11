@@ -11,7 +11,11 @@
 #include "internal/tls_wrapper.h"
 
 #define PATTERN_PREFIX "libtls_wrapper_"
+#ifdef SGX
+#define PATTERN_SUFFIX ".a"
+#else
 #define PATTERN_SUFFIX ".so"
+#endif
 
 enclave_tls_err_t etls_tls_wrapper_load_single(const char *fname)
 {
@@ -28,9 +32,8 @@ enclave_tls_err_t etls_tls_wrapper_load_single(const char *fname)
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	size_t realpath_len = strlen(TLS_WRAPPERS_DIR) + strlen(fname) + 1;
-	char realpath[realpath_len];
-	snprintf(realpath, realpath_len, "%s%s", TLS_WRAPPERS_DIR, fname);
+	char realpath[strlen(TLS_WRAPPERS_DIR) + strlen(fname) + 1];
+	snprintf(realpath, sizeof(realpath), "%s%s", TLS_WRAPPERS_DIR, fname);
 
 	size_t name_len = strlen(fname) - strlen(PATTERN_PREFIX) - strlen(PATTERN_SUFFIX);
 	char name[name_len + 1];
@@ -38,7 +41,7 @@ enclave_tls_err_t etls_tls_wrapper_load_single(const char *fname)
 	name[name_len] = '\0';
 
 	void *handle = NULL;
-	enclave_tls_err_t err = etls_instance_libinit(name, realpath, &handle);
+	enclave_tls_err_t err = etls_instance_init(name, realpath, &handle);
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		return err;
 

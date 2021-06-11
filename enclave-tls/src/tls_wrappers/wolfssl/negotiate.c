@@ -44,7 +44,7 @@ tls_wrapper_err_t wolfssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 
 	if (err != SSL_SUCCESS) {
 		if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
-			ETLS_DEBUG("failed to negotiate %#x\n", err);
+			ETLS_DEBUG("failed to negotiate %#x %d\n", err, err);
 		else
 			ETLS_DEBUG("failed to connect %#x\n", err);
 

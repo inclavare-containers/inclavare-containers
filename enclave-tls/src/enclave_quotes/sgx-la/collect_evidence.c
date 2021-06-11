@@ -23,8 +23,9 @@ extern sgx_status_t sgx_generate_evidence(uint8_t *hash, sgx_report_t *app_repor
  * it presents ISV enclave's local report has been fully verified.
  */
 enclave_quote_err_t sgx_la_collect_evidence(enclave_quote_ctx_t *ctx,
-					    attestation_evidence_t *evidence,
-					    enclave_tls_cert_algo_t algo, uint8_t *hash)
+                                            attestation_evidence_t *evidence,
+                                            enclave_tls_cert_algo_t algo,
+                                            uint8_t *hash)
 {
 	ETLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence, algo, hash);
 
@@ -39,7 +40,7 @@ enclave_quote_err_t sgx_la_collect_evidence(enclave_quote_ctx_t *ctx,
 	memcpy(evidence->la.report, &isv_report, sizeof(isv_report));
 	evidence->la.report_len = sizeof(isv_report);
 
-	strncpy(evidence->type, "sgx_la", QUOTE_TYPE_NAME_SIZE);
+	strncpy(evidence->type, "sgx_la", sizeof(evidence->type));
 
 	return ENCLAVE_QUOTE_ERR_NONE;
 }

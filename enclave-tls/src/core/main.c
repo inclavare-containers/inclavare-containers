@@ -20,15 +20,6 @@ etls_core_context_t global_core_context;
 /* The global log level used by log.h */
 enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
 
-void etls_exit(void)
-{
-#ifndef SGX
-	exit(EXIT_FAILURE);
-#else
-	ocall_exit();
-#endif
-}
-
 #ifdef SGX
 void libenclave_tls_init(void)
 #else
@@ -37,26 +28,7 @@ void __attribute__((constructor)) libenclave_tls_init(void)
 {
 	ETLS_DEBUG("called\n");
 
-	char *log_level_str = NULL;
-#ifdef SGX
-	ocall_getenv("ENCLAVE_TLS_GLOBAL_LOG_LEVEL", log_level_str);
-#else
-	log_level_str = getenv("ENCLAVE_TLS_GLOBAL_LOG_LEVEL");
-#endif
-	if (log_level_str) {
-		if (!strcmp(log_level_str, "debug") || !strcmp(log_level_str, "DEBUG"))
-			global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
-		else if (!strcmp(log_level_str, "info") || !strcmp(log_level_str, "INFO"))
-			global_log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
-		else if (!strcmp(log_level_str, "warn") || !strcmp(log_level_str, "WARN"))
-			global_log_level = ENCLAVE_TLS_LOG_LEVEL_WARN;
-		else if (!strcmp(log_level_str, "error") || !strcmp(log_level_str, "ERROR"))
-			global_log_level = ENCLAVE_TLS_LOG_LEVEL_ERROR;
-		else if (!strcmp(log_level_str, "fatal") || !strcmp(log_level_str, "FATAL"))
-			global_log_level = ENCLAVE_TLS_LOG_LEVEL_FATAL;
-		else if (!strcmp(log_level_str, "off") || !strcmp(log_level_str, "OFF"))
-			global_log_level = ENCLAVE_TLS_LOG_LEVEL_NONE;
-	}
+	global_log_level = etls_loglevel_getenv("ENCLAVE_TLS_GLOBAL_LOG_LEVEL");	
 
 	/* Initialize global configurations. It is intend to leave tls_type,
 	 * attester_type, verifier_type and crypto_type empty to take the

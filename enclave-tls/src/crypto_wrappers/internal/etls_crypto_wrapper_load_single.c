@@ -32,9 +32,8 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *fname)
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	size_t realpath_len = strlen(CRYPTO_WRAPPERS_DIR) + strlen(fname) + 1;
-	char realpath[realpath_len];
-	snprintf(realpath, realpath_len, "%s%s",CRYPTO_WRAPPERS_DIR, fname);
+	char realpath[strlen(CRYPTO_WRAPPERS_DIR) + strlen(fname) + 1];
+	snprintf(realpath, sizeof(realpath), "%s%s",CRYPTO_WRAPPERS_DIR, fname);
 
 	size_t name_len = strlen(fname) - strlen(PATTERN_PREFIX) - strlen(PATTERN_SUFFIX);
 	char name[name_len + 1];
@@ -42,7 +41,7 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *fname)
 	name[name_len] = '\0';
 
 	void *handle = NULL;
-	enclave_tls_err_t err = etls_instance_libinit(name, realpath, &handle);
+	enclave_tls_err_t err = etls_instance_init(name, realpath, &handle);
 	if (err != ENCLAVE_TLS_ERR_NONE)
 		return err;
 
