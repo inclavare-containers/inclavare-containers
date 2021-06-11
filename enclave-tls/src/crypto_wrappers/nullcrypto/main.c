@@ -28,7 +28,11 @@ static crypto_wrapper_opts_t nullcrypto_opts = {
 	.cleanup = nullcrypto_cleanup,
 };
 
+#ifdef SGX
+void libcrypto_wrapper_nullcrypto_init(void)
+#else
 void __attribute__((constructor)) libcrypto_wrapper_nullcrypto_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 

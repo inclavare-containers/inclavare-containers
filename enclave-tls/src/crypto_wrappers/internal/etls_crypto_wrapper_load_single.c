@@ -5,14 +5,17 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
 #include "internal/core.h"
 #include "internal/crypto_wrapper.h"
 
 #define PATTERN_PREFIX "libcrypto_wrapper_"
+#ifdef SGX
+#define PATTERN_SUFFIX ".a"
+#else
 #define PATTERN_SUFFIX ".so"
+#endif
 
 enclave_tls_err_t etls_crypto_wrapper_load_single(const char *fname)
 {
@@ -29,19 +32,19 @@ enclave_tls_err_t etls_crypto_wrapper_load_single(const char *fname)
 		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	char realpath[strlen(CRYPTO_WRAPPERS_DIR) + strlen(fname) + 1];
-	sprintf(realpath, "%s%s", CRYPTO_WRAPPERS_DIR, fname);
-
-	void *handle = dlopen(realpath, RTLD_LAZY);
-	if (!handle) {
-		ETLS_ERR("failed on dlopen(): %s\n", dlerror());
-		return -ENCLAVE_TLS_ERR_DLOPEN;
-	}
+	size_t realpath_len = strlen(CRYPTO_WRAPPERS_DIR) + strlen(fname) + 1;
+	char realpath[realpath_len];
+	snprintf(realpath, realpath_len, "%s%s",CRYPTO_WRAPPERS_DIR, fname);
 
 	size_t name_len = strlen(fname) - strlen(PATTERN_PREFIX) - strlen(PATTERN_SUFFIX);
 	char name[name_len + 1];
 	strncpy(name, fname + strlen(PATTERN_PREFIX), name_len);
 	name[name_len] = '\0';
+
+	void *handle = NULL;
+	enclave_tls_err_t err = etls_instance_libinit(name, realpath, &handle);
+	if (err != ENCLAVE_TLS_ERR_NONE)
+		return err;
 
 	unsigned int i = 0;
 	crypto_wrapper_opts_t *opts = NULL;

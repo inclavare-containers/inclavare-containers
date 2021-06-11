@@ -20,8 +20,13 @@ extern tls_wrapper_err_t wolfssl_cleanup(tls_wrapper_ctx_t *);
 
 static tls_wrapper_opts_t wolfssl_opts = {
 	.api_version = TLS_WRAPPER_API_VERSION_DEFAULT,
+#ifdef SGX
+	.name = "wolfssl_sgx",
+	.priority = 50,
+#else
 	.name = "wolfssl",
 	.priority = 20,
+#endif
 	.pre_init = wolfssl_pre_init,
 	.init = wolfssl_init,
 	.use_privkey = wolfssl_use_privkey,
@@ -32,7 +37,11 @@ static tls_wrapper_opts_t wolfssl_opts = {
 	.cleanup = wolfssl_cleanup,
 };
 
+#ifdef SGX
+void libtls_wrapper_wolfssl_init(void)
+#else
 void __attribute__((constructor)) libtls_wrapper_wolfssl_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 

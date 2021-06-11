@@ -32,7 +32,11 @@ static tls_wrapper_opts_t nulltls_opts = {
 	.cleanup = nulltls_cleanup,
 };
 
+#ifdef SGX
+void libtls_wrapper_nulltls_init(void)
+#else
 void __attribute__((constructor)) libtls_wrapper_nulltls_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 

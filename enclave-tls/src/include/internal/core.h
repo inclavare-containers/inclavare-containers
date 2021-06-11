@@ -24,6 +24,10 @@ extern etls_core_context_t global_core_context;
 
 extern enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *);
 
+extern enclave_tls_err_t etls_instance_libinit(const char *type,
+                                               const char *realpath,
+                                               void **handle);
+
 // Whether the quote instance is initialized
 #define ENCLAVE_TLS_CTX_FLAGS_QUOTING_INITIALIZED (1 << 0)
 // Whether the tls lib is initialized

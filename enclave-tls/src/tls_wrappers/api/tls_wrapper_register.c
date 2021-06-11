@@ -17,6 +17,7 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 
 	ETLS_DEBUG("registering the tls wrapper '%s' ...\n", opts->name);
 
+#ifndef SGX
 	if (opts->flags & TLS_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE) {
 		if (!is_sgx_supported_and_configured()) {
 			// clang-format off
@@ -25,6 +26,7 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 			return -TLS_WRAPPER_ERR_INVALID;
 		}
 	}
+#endif
 
 	tls_wrapper_opts_t *new_opts = (tls_wrapper_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
