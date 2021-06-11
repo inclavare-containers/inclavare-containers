@@ -82,6 +82,7 @@ typedef enum {
 	ENCLAVE_TLS_ERR_DLOPEN,
 	ENCLAVE_TLS_ERR_INIT,
 	ENCLAVE_TLS_ERR_UNSUPPORTED_CERT_ALGO,
+	ENCLAVE_TLS_ERR_NO_NAME,
 } enclave_tls_err_t;
 
 typedef enum {

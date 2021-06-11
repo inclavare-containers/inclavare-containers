@@ -1,0 +1,29 @@
+enclave {
+	include "api.h"
+	include "cert.h"
+	include "enclave_quote.h"
+	include "err.h"
+	include "sgx_report.h"
+	include "sgx_quote_3.h"
+
+	from "sgx_dcap_tvl.edl" import *;
+
+	trusted {
+		public sgx_status_t ecall_get_target_info([out] sgx_target_info_t* target_info);
+	};
+
+	untrusted {
+		void ocall_ratls_get_target_info([out] sgx_target_info_t *qe_target_info);
+
+		quote3_error_t ocall_qe_get_quote_size([out] uint32_t *quote_size);
+
+		quote3_error_t ocall_qe_get_quote([out]sgx_report_t *report, uint32_t quote_size,
+                                                [user_check] uint8_t *quote);
+
+		enclave_quote_err_t ocall_ecdsa_verify_evidence([user_check] enclave_quote_ctx_t *ctx,
+                                                                [user_check] attestation_evidence_t *evidence,
+                                                                [user_check] uint8_t *hash,
+                                                                uint32_t hash_len)
+			allow(ecall_get_target_info, sgx_tvl_verify_qve_report_and_identity);
+	};
+};

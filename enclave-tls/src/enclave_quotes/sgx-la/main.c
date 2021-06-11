@@ -28,7 +28,11 @@ static enclave_quote_opts_t sgx_la_opts = {
 	.cleanup = sgx_la_cleanup,
 };
 
+#ifdef SGX
+void libenclave_quote_sgx_la_init(void)
+#else
 void __attribute__((constructor)) libenclave_quote_sgx_la_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 

@@ -1,3 +1,20 @@
 enclave {
-	from "../../src/sgx/enclave_tls.edl" import *;
+	include "enclave-tls/api.h"
+	include "internal/core.h"
+
+	from "../../src/include/edl/etls.edl" import *;
+
+	trusted {
+		public enclave_tls_err_t ecall_enclave_tls_init([user_check] const enclave_tls_conf_t *conf,
+                                                                [user_check] struct etls_core_context_t **handle);
+		public enclave_tls_err_t ecall_enclave_tls_negotiate([user_check] struct etls_core_context_t *handle,
+                                                                     int fd);
+		public enclave_tls_err_t ecall_enclave_tls_transmit([user_check] struct etls_core_context_t *handle,
+                                                                    [user_check] void *buf,
+                                                                    [in, out] size_t *buf_size);
+		public enclave_tls_err_t ecall_enclave_tls_receive([user_check] struct etls_core_context_t *handle,
+                                                                   [user_check] void *buf,
+                                                                   [in, out] size_t *buf_size);
+		public enclave_tls_err_t ecall_enclave_tls_cleanup([user_check] struct etls_core_context_t *handle);
+        };
 };

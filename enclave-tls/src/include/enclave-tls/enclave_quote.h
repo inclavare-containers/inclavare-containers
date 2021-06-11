@@ -7,7 +7,6 @@
 #define _ENCLAVE_TLS_ENCLAVE_QUOTE_H
 
 #include <stdint.h>
-#include <enclave-tls/compilation.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/api.h>
 #include <enclave-tls/cert.h>

@@ -8,7 +8,9 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "wolfssl.h"
 
-#ifndef WOLFSSL_SGX_WRAPPER
+#ifdef WOLFSSL_SGX_WRAPPER
+extern int verify_certificate(void *ctx, uint8_t *der_cert, uint32_t der_cert_len);
+#else
 extern int verify_certificate(int preverify, WOLFSSL_X509_STORE_CTX *store);
 #endif
 
@@ -65,13 +67,7 @@ tls_wrapper_err_t wolfssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 static int ssl_ctx_set_verify_callback(int mode, WOLFSSL_X509_STORE_CTX *store)
 {
 	(void)mode;
-	int result;
-	int sgxStatus = ocall_verify_certificate(&result, store->userCtx, store->certs->buffer,
-						 store->certs->length);
-	if (sgxStatus != SGX_SUCCESS)
-		return 0;
-
-	return result;
+	return verify_certificate(store->userCtx, store->certs->buffer, store->certs->length); 
 }
 #endif
 

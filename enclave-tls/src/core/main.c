@@ -3,36 +3,58 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
 #include <enclave-tls/log.h>
 #include <enclave-tls/err.h>
 #include "internal/core.h"
 #include "internal/tls_wrapper.h"
 #include "internal/enclave_quote.h"
 #include "internal/crypto_wrapper.h"
+#ifdef SGX
+#include "etls_t.h"
+#endif
 
 /* The global configurations present by /opt/enclave-tls/config.toml */
 etls_core_context_t global_core_context;
 /* The global log level used by log.h */
 enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
 
+void etls_exit(void)
+{
+#ifndef SGX
+	exit(EXIT_FAILURE);
+#else
+	ocall_exit();
+#endif
+}
+
+#ifdef SGX
+void libenclave_tls_init(void)
+#else
 void __attribute__((constructor)) libenclave_tls_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 
-	char *log_level_str = getenv("ENCLAVE_TLS_GLOBAL_LOG_LEVEL");
+	char *log_level_str = NULL;
+#ifdef SGX
+	ocall_getenv("ENCLAVE_TLS_GLOBAL_LOG_LEVEL", log_level_str);
+#else
+	log_level_str = getenv("ENCLAVE_TLS_GLOBAL_LOG_LEVEL");
+#endif
 	if (log_level_str) {
-		if (!strcasecmp(log_level_str, "debug"))
+		if (!strcmp(log_level_str, "debug") || !strcmp(log_level_str, "DEBUG"))
 			global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
-		else if (!strcasecmp(log_level_str, "info"))
+		else if (!strcmp(log_level_str, "info") || !strcmp(log_level_str, "INFO"))
 			global_log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
-		else if (!strcasecmp(log_level_str, "warn"))
+		else if (!strcmp(log_level_str, "warn") || !strcmp(log_level_str, "WARN"))
 			global_log_level = ENCLAVE_TLS_LOG_LEVEL_WARN;
-		else if (!strcasecmp(log_level_str, "error"))
+		else if (!strcmp(log_level_str, "error") || !strcmp(log_level_str, "ERROR"))
 			global_log_level = ENCLAVE_TLS_LOG_LEVEL_ERROR;
-		else if (!strcasecmp(log_level_str, "fatal"))
+		else if (!strcmp(log_level_str, "fatal") || !strcmp(log_level_str, "FATAL"))
 			global_log_level = ENCLAVE_TLS_LOG_LEVEL_FATAL;
-		else if (!strcasecmp(log_level_str, "off"))
+		else if (!strcmp(log_level_str, "off") || !strcmp(log_level_str, "OFF"))
 			global_log_level = ENCLAVE_TLS_LOG_LEVEL_NONE;
 	}
 
@@ -50,16 +72,22 @@ void __attribute__((constructor)) libenclave_tls_init(void)
 
 	/* Load all crypto wrapper instances */
 	enclave_tls_err_t err = etls_crypto_wrapper_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
+	if (err != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_FATAL("failed to load any crypto wrapper %#x\n", err);
+		etls_exit();
+	}
 
 	/* Load all enclave quote instances */
 	err = etls_enclave_quote_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
+	if (err != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_FATAL("failed to load any enclave quote %#x\n", err);
+		etls_exit();
+	}
 
 	/* Load all tls wrapper instances */
 	err = etls_tls_wrapper_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
+	if (err != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_FATAL("failed to load any tls wrapper %#x\n", err);
+		etls_exit();
+	}
 }

@@ -21,6 +21,7 @@
 // clang-format on
 
 // clang-format off
+#ifndef SGX
 #ifdef OCCLUM
   #define FPRINTF(io, fmt, ...)                  \
 	do {                                     \
@@ -33,15 +34,15 @@
 		fprintf(io, fmt, ##__VA_ARGS__); \
 	} while (0)
 #endif
+#endif
 // clang-format on
 
 extern enclave_tls_log_level_t global_log_level;
 
 #define ETLS_FATAL(fmt, ...)                               \
 	do {                                               \
-		__PR__(FATAL, stderr, fmt, ##__VA_ARGS__); \
-		exit(EXIT_FAILURE);                        \
-	} while (0)
+                __PR__(FATAL, stderr, fmt, ##__VA_ARGS__); \
+        } while (0)
 
 #define ETLS_ERR(fmt, ...)                                 \
 	do {                                               \
@@ -64,7 +65,7 @@ extern enclave_tls_log_level_t global_log_level;
 	} while (0)
 
 // clang-format off
-#ifdef WOLFSSL_SGX
+#ifdef SGX
   #define __PR__(level, io, fmt, ...)                                                 \
 	do {                                                                          \
 		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level)                \

@@ -1,0 +1,14 @@
+enclave {
+	include "enclave-tls/err.h"
+	include "enclave-tls/enclave_quote.h"
+	include "enclave-tls/cert.h"
+
+	from "sgx_dummy.edl" import *;
+
+	untrusted {
+		enclave_quote_err_t ocall_la_verify_evidence([user_check] enclave_quote_ctx_t *ctx,
+                                                             [user_check] attestation_evidence_t *evidence,
+                                                             [user_check] uint8_t *hash,
+                                                             unsigned int hash_len);
+	};
+};

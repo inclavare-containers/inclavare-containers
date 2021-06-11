@@ -27,6 +27,7 @@
 #elif defined(SGX)
   #include <sgx_urts.h>
   #include <sgx_quote.h>
+  #include "sgx_stub_u.h"
 
   #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
 
@@ -118,9 +119,17 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
 	enclave_tls_handle handle;
-	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
+	enclave_tls_err_t ret;
+#ifdef SGX
+	int sgx_status;
+	sgx_status = ecall_enclave_tls_init(&ret, &conf, &handle);
+	if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
+		ETLS_ERR("Failed to initialize enclave tls %#x %#x\n", ret, sgx_status);
+#else
+	ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
+#endif
 		return -1;
 	}
 
@@ -136,9 +145,15 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 			return -1;
 		}
 
+#ifdef SGX
+		sgx_status = ecall_enclave_tls_negotiate(&ret, handle, connd);
+		if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
+			ETLS_ERR("Failed to negotiate %#x %#x\n", ret, sgx_status);
+#else
 		ret = enclave_tls_negotiate(handle, connd);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to negotiate %#x\n", ret);
+#endif
 			goto err;
 		}
 
@@ -146,9 +161,15 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 
 		char buf[256];
 		size_t len = sizeof(buf);
+#ifdef SGX
+		sgx_status = ecall_enclave_tls_receive(&ret, handle, buf, &len);
+		if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
+			ETLS_ERR("Failed to receive %#x %#x\n", ret, sgx_status);
+#else
 		ret = enclave_tls_receive(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to receive %#x\n", ret);
+#endif
 			goto err;
 		}
 
@@ -177,9 +198,15 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 #endif
 
 		/* Reply back to the client */
+#ifdef SGX
+		sgx_status = ecall_enclave_tls_transmit(&ret, handle, buf, &len);
+		if (sgx_status != SGX_SUCCESS || ret != ENCLAVE_TLS_ERR_NONE) {
+			ETLS_ERR("Failed to transmit %#x %#x\n", ret, sgx_status);
+#else
 		ret = enclave_tls_transmit(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to transmit %#x\n", ret);
+#endif
 			goto err;
 		}
 
@@ -190,7 +217,11 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 
 err:
 	/* Ignore the error code of cleanup in order to return the prepositional error */
+#ifdef SGX
+	ecall_enclave_tls_cleanup(&ret, handle);
+#else
 	enclave_tls_cleanup(handle);
+#endif
 	return -1;
 }
 
