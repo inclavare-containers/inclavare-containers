@@ -122,10 +122,10 @@ jobs:
       shell: bash
 
     - name: Run enclave tls server for nullattester and nullverifier instances
-      run: docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullattester -v nullverifier -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
+      run: docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullattester -v nullverifier -t openssl -c openssl -i 127.0.0.1 -p ${{ steps.random-port-generator1.outputs.random-port }}' &
 
     - name: Run shelter for nullattester and nullverifier instances
-      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --attester nullattester --verifier nullverifier --addr=tcp://127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --attester nullattester --verifier nullverifier --tls openssl --crypto openssl --addr=tcp://127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}'
         docker restart $inclavare_test;
 
     - id: random-port-generator2
@@ -138,11 +138,11 @@ jobs:
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
-        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_ecdsa -i 127.0.0.1 -p ${{ steps.random-port-generator2.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_ecdsa -t openssl -c openssl -i 127.0.0.1 -p ${{ steps.random-port-generator2.outputs.random-port }}' &
 
     - name: Run shelter for sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --crypto wolfcrypt --verifier sgx_ecdsa --addr=tcp://127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --tls openssl --crypto openssl --verifier sgx_ecdsa --addr=tcp://127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }}'
         docker restart $inclavare_test;
 
     - id: random-port-generator3
@@ -155,11 +155,11 @@ jobs:
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/;
-        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_la -t wolfssl_sgx -c wolfcrypt -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_la -t openssl -c openssl -i 127.0.0.1 -p ${{ steps.random-port-generator3.outputs.random-port }}' &
 
     - name: Run enclave tls server for sgx_la
       if: ${{ contains(matrix.sgx, 'SGX2') }}
-      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --crypto wolfcrypt --verifier sgx_la --addr=tcp://127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }}'
+      run: docker exec $inclavare_test bash -c '/usr/local/bin/shelter remoteattestation --tls openssl --crypto openssl --verifier sgx_la --addr=tcp://127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }}'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
