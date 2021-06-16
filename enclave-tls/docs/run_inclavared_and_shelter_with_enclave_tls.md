@@ -40,7 +40,7 @@ Inclavared will listen the request from the remote attestation client `shelter` 
 ## Run shelter
 
 ```shell
-shelter remoteattestation --addr=tcp://127.0.0.1:1236 --verifier sgx_ecdsa --tls wolfssl  --crypto wolfcrypt
+shelter remoteattestation --addr=tcp://127.0.0.1:1236 --verifier sgx_ecdsa --tls openssl  --crypto openssl
 ```
 
 Shelter, as the attestation verifier on the off-cloud side, records the launch measurements of enclave runtime, and afterward establishes `Enclave-TLS` trusted channel to communicate with inclavared. Eventually, it retrieves the evidence about enclave runtimes for verification.

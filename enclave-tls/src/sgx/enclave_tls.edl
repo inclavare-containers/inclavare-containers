@@ -1,8 +1,6 @@
 enclave {
 	from "../../src/attesters/sgx-la/sgx_la.edl" import *;
 	from "../../src/verifiers/sgx-la/sgx_la.edl" import *;
-	from "../../src/crypto_wrappers/wolfcrypt-sgx/wolfcrypt_sgx.edl" import *;
-	from "../../src/tls_wrappers/wolfssl-sgx/wolfssl_sgx.edl" import *;
 	from "../../src/attesters/sgx-ecdsa/sgx_ecdsa.edl" import *;
 	from "../../src/verifiers/sgx-ecdsa/sgx_ecdsa.edl" import *;
 	from "../../src/verifiers/sgx-ecdsa-qve/sgx_ecdsa_qve.edl" import *;

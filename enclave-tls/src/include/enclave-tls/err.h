@@ -34,14 +34,6 @@
 #define ENCLAVE_VERIFIER_ERR_BASE (3 << ERR_CODE_CLASS_SHIFT)
 #define CRYPTO_WRAPPER_ERR_BASE	  (4 << ERR_CODE_CLASS_SHIFT)
 
-/* The base of error code used by wolfssl */
-#define WOLFSSL_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
-/* The base of error code used by wolfssl-sgx */
-#define WOLFSSL_SGX_ERR_BASE (1 << ERR_CODE_SUBCLASS_SHIFT)
-
-/* The base of error code used by wolfcrypt */
-#define WOLFCRYPT_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
-
 /* The base of error code used by sgx-ecdsa */
 #define SGX_ECDSA_ERR_BASE (0 << ERR_CODE_SUBCLASS_SHIFT)
 
@@ -56,17 +48,11 @@
 	(((TLS_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | ((err)&ERR_CODE_ERROR_MASK) | \
 	 ERR_CODE_NAGATIVE)
 
-#define WOLFSSL_ERR_CODE(err) __TLS_WRAPPER_ERR_CODE(WOLFSSL_ERR_BASE, err)
-
-#define WOLFSSL_SGX_ERR_CODE(err) __TLS_WRAPPER_ERR_CODE(WOLFSSL_SGX_ERR_BASE, err)
-
 #define OPENSSL_ERR_CODE(err) __TLS_WRAPPER_ERR_CODE(OPENSSL_ERR_BASE, err)
 
 #define __CRYPTO_WRAPPER_ERR_CODE(base, err)                          \
 	(((CRYPTO_WRAPPER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \
 	 ((err)&ERR_CODE_ERROR_MASK) | ERR_CODE_NAGATIVE)
-
-#define WOLFCRYPT_ERR_CODE(err) __CRYPTO_WRAPPER_ERR_CODE(WOLFCRYPT_ERR_BASE, err)
 
 #define __ENCLAVE_ATTESTER_ERR_CODE(base, err)                          \
 	(((ENCLAVE_ATTESTER_ERR_BASE + (base)) & ERR_CODE_CLASS_MASK) | \

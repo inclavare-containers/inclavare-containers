@@ -51,7 +51,7 @@ Right now, Enclave TLS running on Occlum Libos supports the following instance t
 | Priority | Tls Wrapper instances |     Attester instances    |     Verifier instances    | Crypto Wrapper Instance |
 | -------- | --------------------- | ------------------------- | ------------------------- | ----------------------- |
 | low      | nulltls               | nullattester              | nullverifier              | nullcrypto              |
-| Medium   | wolfssl               | sgx\_ecdsa                | sgx\_ecdsa\_qve           | wolfcrypt               |
+| Medium   | openssl               | sgx\_ecdsa                | sgx\_ecdsa\_qve           | openssl                 |
 
 
 ## Building Occlum container image
