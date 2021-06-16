@@ -6,19 +6,10 @@
 #ifndef _ENCLAVE_LOG_H_
 #define _ENCLAVE_LOG_H_
 
-// clang-format off
-#ifndef WOLFSSL_SGX
-  #include <time.h>
-#endif
-// clang-format on
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <enclave-tls/api.h>
-// clang-format off
-#ifdef WOLFSSL_SGX
-  #include <enclave-tls/sgx.h>
-#endif
-// clang-format on
 
 // clang-format off
 #ifdef OCCLUM
@@ -64,15 +55,7 @@ extern enclave_tls_log_level_t global_log_level;
 	} while (0)
 
 // clang-format off
-#ifdef WOLFSSL_SGX
-  #define __PR__(level, io, fmt, ...)                                                 \
-	do {                                                                          \
-		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level)                \
-			printf("[" #level "] %s()@L%d: " fmt, __FUNCTION__, __LINE__, \
-			       ##__VA_ARGS__);                                        \
-	} while (0)
-#else
-  #define __PR__(level, io, fmt, ...)                                                   \
+#define __PR__(level, io, fmt, ...)                                                   \
 	do {                                                                            \
 		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level) {                \
 			if (ENCLAVE_TLS_LOG_LEVEL_##level !=                            \
@@ -90,7 +73,6 @@ extern enclave_tls_log_level_t global_log_level;
 			}                                                               \
 		}                                                                       \
 	} while (0)
-#endif
 // clang-format on
 
 #endif

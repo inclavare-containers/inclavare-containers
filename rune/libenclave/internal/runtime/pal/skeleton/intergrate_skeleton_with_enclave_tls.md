@@ -118,7 +118,7 @@ At present, TLS server based on `enclave-tls` is only implemented in skeleton v3
 docker run -i --rm --net=host --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
-  -e ENCLAVE_RUNTIME_ARGS="debug attester=sgx_ecdsa tls=wolfssl_sgx crypto=wolfcrypt_sgx" \
+  -e ENCLAVE_RUNTIME_ARGS="debug attester=sgx_ecdsa tls=openssl crypto=openssl" \
   skeleton-enclave:latest
 ```
 
@@ -128,7 +128,7 @@ docker run -i --rm --net=host --runtime=rune \
 docker run -i --rm --net=host --runtime=rune \
   -e ENCLAVE_TYPE=intelSgx \
   -e ENCLAVE_RUNTIME_PATH=/usr/lib/liberpal-skeleton-v3.so \
-  -e ENCLAVE_RUNTIME_ARGS="debug attester=sgx_la tls=wolfssl_sgx crypto=wolfcrypt_sgx" \
+  -e ENCLAVE_RUNTIME_ARGS="debug attester=sgx_la tls=openssl crypto=openssl" \
   skeleton-enclave:latest
 ```
 
@@ -144,7 +144,7 @@ Assuming you have an OCI bundle according to [previous steps](https://github.com
 "annotations": {
         "enclave.type": "intelSgx",
         "enclave.runtime.path": "/usr/lib/liberpal-skeleton-v3.so",
-        "enclave.runtime.args": "debug attester=sgx_ecdsa tls=wolfssl_sgx crypto=wolfcrypt_sgx"
+        "enclave.runtime.args": "debug attester=sgx_ecdsa tls=openssl crypto=openssl"
 }
 ```
 
@@ -196,9 +196,9 @@ cp /etc/resolv.conf rootfs/etc/
 ```shell
 cd /opt/enclave-tls/bin
 # run sgx_ecdsa remote attestation
-./enclave-tls-client -a sgx_ecdsa -t wolfssl_sgx -c wolfcrypt_sgx
+./enclave-tls-client -a sgx_ecdsa -t openssl -c openssl
 # run sgx_la remote attestation
-./enclave-tls-client -a sgx_la -t wolfssl_sgx -c wolfcrypt_sgx
+./enclave-tls-client -a sgx_la -t openssl -c openssl
 ```
 
 ## Run shelter
@@ -207,8 +207,8 @@ cd /opt/enclave-tls/bin
 
 ```shell
 # run sgx_ecdsa remote attestation
-shelter remoteattestation --tls wolfssl_sgx --verifier sgx_ecdsa --crypto wolfcrypt_sgx
+shelter remoteattestation --tls openssl --verifier sgx_ecdsa --crypto openssl
 
 # run sgx_la remote attestation
-shelter remoteattestation --tls wolfssl_sgx --verifier sgx_la --crypto wolfcrypt_sgx
+shelter remoteattestation --tls openssl --verifier sgx_la --crypto openssl
 ```

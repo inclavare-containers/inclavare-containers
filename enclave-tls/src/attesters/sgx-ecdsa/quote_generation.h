@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 #include <sgx_ql_quote.h>
+#include <sys/fcntl.h>
+#include <sys/ioctl.h>
 
 /** @struct sgxioc_gen_dcap_quote_arg_t
    *  A structure for DCAP quote generation

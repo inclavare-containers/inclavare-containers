@@ -73,8 +73,8 @@ OPTIONS:
    --addr           specify tcp or unix socket address, e.g, '--addr=tcp://ip:port or --addr=unix://path'
    --log-level      set the level of log output(debug, info, warn, error, fatal, off)
    --verifier       set the type of quote verifier(nullquote, sgx_la or sgx_ecdsa)
-   --tls            set the type of tls wrapper(nulltls, wolfssl or wolfssl_sgx)
-   --crypto         set the type of crypto wrapper(nullcrypto, wolfcrypt or wolfcrypt_sgx)
+   --tls            set the type of tls wrapper(nulltls, openssl)
+   --crypto         set the type of crypto wrapper(nullcrypto, openssl)
    --mutual         enable mutual attestation
 ```
 
@@ -84,11 +84,10 @@ For example:
 ```shell
 shelter remoteattestation --addr=tcp://127.0.0.1:1234
 shelter remoteattestation --addr=unix:///run/enclave-tls/tls.sock
-shelter remoteattestation --tls wolfssl
-shelter remoteattestation --tls wolfssl_sgx
+shelter remoteattestation --tls openssl
 shelter remoteattestation --verifier sgx_ecdsa
 shelter remoteattestation --verifier sgx_la
-shelter remoteattestation --crypto wolfcrypt
+shelter remoteattestation --crypto openssl
 shelter remoteattestation --mutual
 ```
 

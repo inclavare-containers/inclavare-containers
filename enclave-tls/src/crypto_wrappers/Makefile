@@ -1,4 +1,4 @@
-dirs := nullcrypto wolfcrypt wolfcrypt-sgx openssl
+dirs := nullcrypto openssl
 all clean install uninstall:
 	for d in $(dirs); do \
 	  make -C $$d $@; \

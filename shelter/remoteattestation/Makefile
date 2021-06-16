@@ -16,7 +16,7 @@ endif
 
 CFLAGS += -std=gnu99 -I$(SGX_SDK)/include -I$(ENCLAVE_TLS)/include -fPIC
 #CFLAGSERRORS := -Wall -Wextra -Wwrite-strings -Wlogical-op -Wshadow -Werror
-CFLAGS += -g -O0 -DWOLFSSL_SGX_ATTESTATION -DWOLFSSL_CERT_EXT # -DDEBUG -DDYNAMIC_RSA
+CFLAGS += -g -O0 # -DDEBUG -DDYNAMIC_RSA
 CFLAGS += -DSGX_GROUP_OUT_OF_DATE
 EXTRA_FLAGS ?=
 

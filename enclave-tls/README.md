@@ -35,7 +35,7 @@ make install
 
 `{enclave-tls-server,enclave-tls-client}` will be installed to `/usr/share/enclave-tls/samples/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
 
-If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_ecdsa\_qve, sgx\_la, wolfcrypt\_sgx), please type the following command.
+If you want to build instances related to sgx(sgx\_ecdsa, sgx\_ecdsa\_qve, sgx\_la), please type the following command.
 
 ```shell
 make SGX=1
@@ -50,8 +50,8 @@ Right now, Enclave TLS supports the following instance types:
 | Priority | Tls Wrapper instances |     Attester instances     |     Verifier instances     | Crypto Wrapper Instance |
 | -------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
 | low      | nulltls               | nullattester               | nullverifier               | nullcrypto              |
-| Medium   | wolfssl               | sgx\_la                    | sgx\_la                    | wolfcrypt               |
-| High     | wolfssl\_sgx          | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve | wolfcrypt\_sgx          |
+| Medium   | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
+| High     |                       | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve |                         |
 
 By default,  Enclave TLS will select the **highest priority** instance to use.
 
@@ -89,12 +89,11 @@ You can set command line parameters to specify different configurations.
 For example:
 
 ```shell
-./enclave-tls-server --tls wolfssl
-./enclave-tls-server --tls wolfssl_sgx
+./enclave-tls-server --tls openssl
 ./enclave-tls-server --attester sgx_ecdsa
 ./enclave-tls-server --attester sgx_ecdsa_qve
 ./enclave-tls-server --attester sgx_la
-./enclave-tls-server --crypto wolfcrypt
+./enclave-tls-server --crypto openssl
 ```
 
 Enclave TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
@@ -146,7 +145,7 @@ Direct Dependencies
 
 | Name | Repo URL | Licenses |
 | :--: | :-------:   | :-------: |
-| wolfssl | https://github.com/wolfSSL/wolfssl | GPLv2 |
+| openssl | https://github.com/openssl/openssl | Apache |
 | linux-sgx | https://github.com/intel/linux-sgx | BSD |
 | SGXDataCenterAttestationPrimitives | https://github.com/intel/SGXDataCenterAttestationPrimitives | BSD |
 | C library | C library | GNU General Public License version 3 |

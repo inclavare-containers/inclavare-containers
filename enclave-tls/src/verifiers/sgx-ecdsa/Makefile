@@ -13,7 +13,6 @@ Enclave_Tls_Instance_Name := sgx-ecdsa
 Enclave_Tls_Instance_Type := verifier
 include $(Topdir)/rules/sgx_env.mk
 
-include $(Topdir)/rules/wolfssl_env.mk
 include $(Topdir)/rules/instance.mk
 include $(Topdir)/rules/sgx_rules.mk
 

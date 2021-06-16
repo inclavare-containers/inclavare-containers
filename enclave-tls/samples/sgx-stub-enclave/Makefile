@@ -6,12 +6,9 @@ Topdir ?= $(shell readlink -f ../..)
 ifneq ($(__Build_Env_Imported),1)
   include $(Topdir)/rules/build_env.mk
 endif
-include $(Topdir)/rules/wolfssl_env.mk
 include $(Topdir)/rules/openssl_env.mk
 
 App_Name := sgx_stub
-Enclave_Extra_Cxxflags += $(Wolfssl_Cflags)
-Enclave_Extra_Ldflags := -L$(Build_Libdir) -l:libwolfssl_sgx.a
 include $(Topdir)/rules/sgx_env.mk
 
 enclave_tls_sgx_enclave := $(Build_Libdir)/libenclave_tls_sgx.a

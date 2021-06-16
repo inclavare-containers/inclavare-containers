@@ -3,7 +3,6 @@
 /usr/share/enclave-tls/samples/sgx_stub_enclave.signed.so
 /opt/enclave-tls/include/*
 /opt/enclave-tls/lib/libenclave_tls.so*
-/opt/enclave-tls/lib/libwolfssl*
 /opt/enclave-tls/lib/tls-wrappers/libtls_wrapper*.so*
 /opt/enclave-tls/lib/crypto-wrappers/libcrypto_wrapper*.so*
 /opt/enclave-tls/lib/attesters/libattester*.so*

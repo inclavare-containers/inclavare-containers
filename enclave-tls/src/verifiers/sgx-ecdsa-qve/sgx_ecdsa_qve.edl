@@ -1,6 +1,9 @@
 enclave {
+        include "sgx_report.h"
+
+        from "sgx_dcap_tvl.edl" import *;
+
         trusted {
-		/* In edl, it must have a root trust function */
-		public void sgx_ecdsa_qve_verifier_dummy(void);
+		public sgx_status_t ecall_get_target_info([out] sgx_target_info_t* target_info);
         };
 };

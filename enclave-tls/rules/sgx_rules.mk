@@ -102,9 +102,6 @@ $(unsigned_enclave): $(App_Name)_t.o $(Enclave_Static_Lib)
 #	$(CXX) $(sgx_common_cxxflags) $(enclave_ldflags) $^ -o $@
 	@echo "LINK =>  $@"
 
-ifeq ($(Tls_Wolfssl),1)
-  Enclave_Cflags += $(Wolfssl_Sgx_Cflags)
-endif
 # Add macro HAVE_TM_TYPE to avoid compiling error about struct tm re-definition
 $(App_Name)_t.o: $(App_Name)_t.c
 	$(CC) $(Enclave_Cflags) -DHAVE_TM_TYPE -c $< -o $@
@@ -113,13 +110,10 @@ $(App_Name)_t.o: $(App_Name)_t.c
 $(App_Name)_t.c: $(App_Name)_t.h
 
 sgx_edger8r := $(SGX_SDK)/bin/$(SGX_ARCH)/sgx_edger8r
-$(App_Name)_t.h: $(app_edl) $(Build_Libdir)/libwolfssl_sgx.a
+$(App_Name)_t.h: $(app_edl)
 	$(sgx_edger8r) --trusted $< --search-path $(SGX_SDK)/include
 	@echo "GEN  =>  $@"
 
-ifeq ($(Tls_Wolfssl),1)
-  Enclave_Cxxflags += $(Wolfssl_Sgx_Cflags)
-endif
 $(enclave_cxx_objs): %.o : %.cpp
 	$(CXX) $(Enclave_Cxxflags) -c $< -o $@
 	@echo "CXX  <=  $<"
@@ -146,7 +140,7 @@ $(App_Name)_u.o: $(App_Name)_u.c
 
 $(App_Name)_u.c: $(App_Name)_u.h
 
-$(App_Name)_u.h: $(app_edl) $(Build_Libdir)/libwolfssl_sgx.a
+$(App_Name)_u.h: $(app_edl)
 	$(sgx_edger8r) --untrusted $< --search-path $(SGX_SDK)/include
 	$(sgx_edger8r) --trusted $< --search-path $(SGX_SDK)/include
 	@echo "GEN  =>  $@"
@@ -158,9 +152,6 @@ $(app_cxx_objs): %.o : %.cpp
 $(app_c_objs): %.o : %.c
 	$(CC) $(App_Cflags) -c $^ -o $@
 	@echo "CC   <=  $<"
-
-$(Build_Libdir)/libwolfssl_sgx.a:
-	make -C $(Topdir)/src/external/wolfssl
 
 Cleans += \
   $(App_Name) $(unsigned_enclave) $(signed_enclave) \

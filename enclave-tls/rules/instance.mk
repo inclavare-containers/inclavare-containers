@@ -46,10 +46,6 @@ ifeq ($(Sgx_Enclave),1)
   # The objects of instance requre the header files from Intel SGX SDK
   instance_cflags += $(App_Cflags)
 endif
-ifeq ($(Tls_Wolfssl),1)
-  # Search wolfssl header files from build directory
-  instance_cflags += $(Wolfssl_Cflags) -I$(Build_Incdir)
-endif
 ifeq ($(Tls_Openssl),1)
   instance_cflags +=
   Enclave_Tls_Extra_Ldflags += $(Openssl_Ldflags)
@@ -82,17 +78,9 @@ mrproper:
 ifeq ($(Sgx_Enclave),1)
   #Dependencies := $(App_Name)_u.o $(Dependencies)
   #Dependencies := $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o $(Dependencies)
-  ifeq ($(Tls_Wolfssl),1)
-    # Provide wolfssl header files for $(App_Name)_u.[ch]
-    #Dependencies := $(Build_Libdir)/libwolfssl_sgx.a $(Dependencies)
-    Build_Instance_Dependencies := $(Build_Libdir)/libwolfssl_sgx.a
-  endif
   ifndef OCCLUM
     Build_Instance_Dependencies += $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o
   endif
-endif
-ifeq ($(Tls_Wolfssl),1)
-  Build_Instance_Dependencies += $(Build_Libdir)/libwolfssl.so
 endif
 # All instances always depend on libenclave_tls.so
 Build_Instance_Dependencies += $(Build_Libdir)/libenclave_tls.so
