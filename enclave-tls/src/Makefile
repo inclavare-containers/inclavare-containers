@@ -22,7 +22,7 @@ endif
 
 libenclave_tls := $(notdir $(Enclave_Tls_Lib))
 crypto_wrappers := $(addsuffix .so,$(addprefix libcrypto_wrapper_,nullcrypto wolfcrypt))
-tls_wrappers := $(addsuffix .so,$(addprefix libtls_wrapper_,nulltls wolfssl))
+tls_wrappers := $(addsuffix .so,$(addprefix libtls_wrapper_,nulltls wolfssl openssl))
 attesters := $(addsuffix .so,$(addprefix libattester_,nullattester))
 verifiers := $(addsuffix .so,$(addprefix libverifier_,nullverifier))
 
