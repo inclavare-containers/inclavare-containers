@@ -104,6 +104,13 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 	/* First verify the hash value */
 	if (memcmp(hash, pquote->report_body.report_data.d, hash_len) != 0) {
 		ETLS_ERR("unmatched hash value in evidence.\n");
+		ETLS_DEBUG("the sha256 of public key   %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
+			   hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+			   hash[28], hash[29], hash[30], hash[31]);
+		hash = pquote->report_body.report_data.d;
+		ETLS_DEBUG("the sha256 in quote report %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
+			   hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+			   hash[28], hash[29], hash[30], hash[31]);
 		err = -ENCLAVE_VERIFIER_ERR_INVALID;
 		goto errout;
 	}
