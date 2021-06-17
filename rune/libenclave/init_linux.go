@@ -19,7 +19,7 @@ import (
 	"github.com/containerd/console"
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx/preload"
-	"github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
+	enclave_runtime_pal "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/system"
