@@ -102,3 +102,16 @@ shelter mrverify
 ## Touble shooting
 
 TODO
+
+## Third Party Dependencies
+
+Direct Dependencies
+
+| Name | Repo URL | Licenses |
+| :--: | :-------:   | :-------: |
+| restruct | https://github.com/go-restruct/restruct                    | ISC |
+| cli | https://github.com/urfave/cli                    | MIT |
+| md2man | https://github.com/cpuguy83/go-md2man/v2/md2man                    | MIT |
+| sanitized_anchor_name | https://github.com/shurcooL/sanitized_anchor_name                    | MIT |
+| errors | https://github.com/pkg/errors                    | BSD-2-Clause |
+| blackfriday | https://github.com/russross/blackfriday/v2                    | BSD-2-Clause |
