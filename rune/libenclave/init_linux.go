@@ -102,8 +102,11 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 		case initSetns:
 			name = "runelet"
 		}
+
+		b := make([]byte, len(name)+1)
+		copy(b, name)
 		/* For debugging. */
-		unix.Prctl(unix.PR_SET_NAME, uintptr(unsafe.Pointer(&name)), 0, 0, 0)
+		unix.Prctl(unix.PR_SET_NAME, uintptr(unsafe.Pointer(&b[0])), 0, 0, 0)
 	}
 
 	switch t {
