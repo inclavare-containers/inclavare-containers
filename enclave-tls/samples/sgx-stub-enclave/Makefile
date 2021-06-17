@@ -7,6 +7,7 @@ ifneq ($(__Build_Env_Imported),1)
   include $(Topdir)/rules/build_env.mk
 endif
 include $(Topdir)/rules/wolfssl_env.mk
+include $(Topdir)/rules/openssl_env.mk
 
 App_Name := sgx_stub
 Enclave_Extra_Cxxflags += $(Wolfssl_Cflags)

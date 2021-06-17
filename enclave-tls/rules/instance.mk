@@ -50,6 +50,10 @@ ifeq ($(Tls_Wolfssl),1)
   # Search wolfssl header files from build directory
   instance_cflags += $(Wolfssl_Cflags) -I$(Build_Incdir)
 endif
+ifeq ($(Tls_Openssl),1)
+  instance_cflags +=
+  Enclave_Tls_Extra_Ldflags += $(Openssl_Ldflags)
+endif
 
 $(Topdir)/samples/sgx-stub-enclave/sgx_stub_u.o:
 	make -C $(Topdir)/samples/sgx-stub-enclave
