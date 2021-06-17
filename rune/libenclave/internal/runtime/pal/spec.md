@@ -8,7 +8,7 @@ Enclave Runtime PAL API defines a common interface to interact between rune and 
 
 Enclave Runtime PAL API Specification currently support [PAL API v1](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/spec_v1.md) and [PAL API v2](https://github.com/alibaba/inclavare-containers/blob/master/rune/libenclave/internal/runtime/pal/spec_v2.md).
 
-If you want to use `rune` to run you enclave runtime, you can choose one of supported PAL API version to achieve. Using higher PAL API is recommended.
+If you want to use `rune` to run your enclave runtime, you can choose one of supported PAL API version to achieve. Using higher PAL API is recommended.
 
 The PAL API will evolve. You can submit proposal for the extension of PAL API. We will take it after careful consideration.
 
