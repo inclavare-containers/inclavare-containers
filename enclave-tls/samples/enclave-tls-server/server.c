@@ -117,23 +117,23 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
-	enclave_tls_handle handle;
-	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
-		return -1;
-	}
-
 	/* Accept client connections */
 	struct sockaddr_in c_addr;
 	socklen_t size = sizeof(c_addr);
 	while (1) {
+		enclave_tls_handle handle;
+		enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
+		if (ret != ENCLAVE_TLS_ERR_NONE) {
+			ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
+			goto err;
+		}
+
 		ETLS_INFO("Waiting for a connection ...\n");
 
 		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
 		if (connd < 0) {
 			perror("Failed to call accept()");
-			return -1;
+			goto err;
 		}
 
 		ret = enclave_tls_negotiate(handle, connd);
@@ -184,13 +184,12 @@ int enclave_tls_server_startup(int sockfd, enclave_tls_log_level_t log_level, ch
 		}
 
 		close(connd);
+		enclave_tls_cleanup(handle);
 	}
 
 	return 0;
 
 err:
-	/* Ignore the error code of cleanup in order to return the prepositional error */
-	enclave_tls_cleanup(handle);
 	return -1;
 }
 
