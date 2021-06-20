@@ -69,7 +69,6 @@ INSTALL ?= install
 Build_Dir ?= $(Topdir)/build
 Build_Bindir := $(Build_Dir)/bin
 Build_Libdir := $(Build_Dir)/lib
-Build_Incdir := $(Build_Dir)/include
 
 Enclave_Tls_Bindir ?= /usr/share/enclave-tls/samples
 ifneq ($(Enclave_Tls_Srcdir),)
@@ -109,7 +108,7 @@ __Build_Env_Imported := 1
 
 export Debug CC CXX INSTALL \
   Major_Version Minor_Version Patch_Version \
-  Build_Dir Build_Bindir Build_Libdir Build_Incdir \
+  Build_Dir Build_Bindir Build_Libdir \
   Enclave_Tls_Root Enclave_Tls_Srcdir Enclave_Tls_Bindir Enclave_Tls_Libdir \
   Enclave_Tls_Incdir Enclave_Tls_Lib \
   CFLAGS CXXFLAGS LDFLAGS Enclave_Tls_Ldflags
