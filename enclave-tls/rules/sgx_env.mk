@@ -124,7 +124,7 @@ sgx_common_flags += \
   -Wcast-align -Wcast-qual -Wconversion -Wredundant-decls
   #-Wwrite-strings -Wlogical-op
 # Add any possible header files, e.g, openssl, enclave-tls and so on.
-sgx_common_flags += $(addprefix -I,$(Build_Incdir) $(Enclave_Tls_Incdir))
+sgx_common_flags += $(addprefix -I,$(Enclave_Tls_Incdir))
 # Define the CFLAGS for both enclave and application
 sgx_common_cflags := \
   $(sgx_common_flags) \

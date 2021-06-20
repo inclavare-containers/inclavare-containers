@@ -9,10 +9,6 @@
 #include "sgx_trts.h"
 #include "sgx_utils.h"
 
-void sgx_ecdsa_qve_verifier_dummy()
-{
-}
-
 sgx_status_t ecall_get_target_info(sgx_target_info_t *target_info)
 {
 	return sgx_self_target(target_info);
