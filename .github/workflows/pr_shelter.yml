@@ -76,36 +76,48 @@ jobs:
 
     - name: Install ubuntu dependency
       if: ${{ contains(matrix.tag, 'ubuntu') }}
-      run: |
-        docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget gnupg;
-        echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
-        apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service'
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget gnupg;
+          echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
+          apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-dev libsgx-uae-service'
+        on_retry_command: echo "retry to install ubuntu dependency!!"
 
     - name: Install centos dependency
       if: ${{ contains(matrix.tag, 'centos') }}
-      run: |
-        docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-        yum -y install yum-utils wget iptables;
-        wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
-        tar xzf sgx_rpm_local_repo.tgz;
-        yum-config-manager --add-repo sgx_rpm_local_repo;
-        yum makecache;
-        yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
-        rm -f sgx_rpm_local_repo.tgz'
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+          yum -y install yum-utils wget iptables;
+          wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
+          tar xzf sgx_rpm_local_repo.tgz;
+          yum-config-manager --add-repo sgx_rpm_local_repo;
+          yum makecache;
+          yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service;
+          rm -f sgx_rpm_local_repo.tgz'
+        on_retry_command: echo "retry to install centos dependency!!"
 
     - name: Install alinux dependency
       if: ${{ contains(matrix.tag, 'alinux') }}
-      run: |
-        docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-        yum -y install yum-utils wget tar procps alinux-release-experimentals  protobuf-c-devel-${{ env.ALINUX2_PROTOBUF_C_VERSION }};
-        yum-config-manager --add-repo https://enclave-cn-beijing.oss-cn-beijing.aliyuncs.com/repo/alinux/enclave-expr.repo;
-        yum makecache;
-        yum install --nogpgcheck -y libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \
-          libsgx-aesm-ecdsa-plugin libsgx-aesm-launch-plugin libsgx-aesm-pce-plugin libsgx-aesm-quote-ex-plugin \
-          libsgx-dcap-default-qpl libsgx-dcap-ql libsgx-dcap-quote-verify \
-          libsgx-enclave-common libsgx-launch libsgx-pce-logic libsgx-qe3-logic libsgx-quote-ex \
-          libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
-          sgx-aesm-service'
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+          yum -y install yum-utils wget tar procps alinux-release-experimentals  protobuf-c-devel-${{ env.ALINUX2_PROTOBUF_C_VERSION }};
+          yum-config-manager --add-repo https://enclave-cn-beijing.oss-cn-beijing.aliyuncs.com/repo/alinux/enclave-expr.repo;
+          yum makecache;
+          yum install --nogpgcheck -y libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \
+            libsgx-aesm-ecdsa-plugin libsgx-aesm-launch-plugin libsgx-aesm-pce-plugin libsgx-aesm-quote-ex-plugin \
+            libsgx-dcap-default-qpl libsgx-dcap-ql libsgx-dcap-quote-verify \
+            libsgx-enclave-common libsgx-launch libsgx-pce-logic libsgx-qe3-logic libsgx-quote-ex \
+            libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
+            sgx-aesm-service'
+        on_retry_command: echo "retry to install alinux2 dependency!!"
 
     - name: Install enclave-tls and shelter
       run: |
