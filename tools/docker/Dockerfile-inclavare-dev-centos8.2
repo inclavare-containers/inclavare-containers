@@ -5,7 +5,7 @@ LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y wget make libseccomp-devel \
     gcc git openssl-devel glibc-static binutils-devel protobuf-c-devel \
-    rpm-build yum-utils protobuf-c autoconf libtool gcc-c++ file clang
+    rpm-build yum-utils protobuf-c autoconf libtool gcc-c++ file clang which
 
 WORKDIR /root
 
