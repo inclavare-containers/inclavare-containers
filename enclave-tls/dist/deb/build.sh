@@ -20,13 +20,12 @@ tar zxfP $DEBBUILD_DIR/v$VERSION.tar.gz -C $DEBBUILD_DIR
 mv $DEBBUILD_DIR/$PROJECT-$VERSION $DEBBUILD_DIR/$PACKAGE-$VERSION
 cd $DEBBUILD_DIR && tar zcfP $TARBALL_NAME $PACKAGE-$VERSION
 
-# If the SGX SDK is not prepared well in build environment, stop the build
 if [ -z "$SGX_SDK" ]; then
-        echo 'Error: Please install SGX SDK firstly'
-        exit 1
+        SGX_SDK="/opt/intel/sgxsdk"
 fi
 
-if [ "$SGX_SDK" != "/opt/intel/sgxsdk" ]; then
+# If the SGX SDK is not prepared well in build environment, stop the build
+if [ ! -d "$SGX_SDK" ]; then
         echo 'Error: The SGX_SDK environment variable value is not correct'
         exit 1
 fi
