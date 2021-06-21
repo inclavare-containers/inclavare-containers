@@ -28,8 +28,8 @@ ENV PATH         /root/.cargo/bin:$PATH
 
 # install docker
 RUN dnf --enablerepo=PowerTools install -y iptables && \
-    wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz && \
-    tar -zxvf docker-18.09.7.tgz && mv docker/* /usr/bin && rm -rf docker && rm docker-18.09.7.tgz
+    wget https://download.docker.com/linux/static/stable/x86_64/docker-19.03.8.tgz && \
+    tar -zxvf docker-19.03.8.tgz && mv docker/* /usr/bin && rm -rf docker && rm docker-19.03.8.tgz
 
 # configure the rune runtime of docker
 RUN mkdir -p /etc/docker && \
@@ -47,4 +47,4 @@ RUN [ ! -f sgx_rpm_local_repo.tgz ] && \
     yum-config-manager --add-repo sgx_rpm_local_repo && \
     yum makecache && rm sgx_rpm_local_repo.tgz
 
-RUN yum install --nogpgcheck -y libsgx-dcap-quote-verify-devel libsgx-dcap-ql-devel libsgx-uae-service
+RUN yum install --nogpgcheck -y libsgx-dcap-quote-verify-devel libsgx-dcap-ql-devel libsgx-uae-service libsgx-dcap-default-qpl
