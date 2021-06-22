@@ -44,7 +44,6 @@ tls_wrapper_err_t openssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 
 	X509_STORE *cert_store = SSL_CTX_get_cert_store(ssl_ctx->sctx);
 	X509_STORE_set_ex_data(cert_store, 0, ctx);
-	ETLS_DEBUG("openssl_internal_negothiate 's tls_ctx is %x\n", ctx);
 
 	/* Attach openssl to the socket */
 	int ret = SSL_set_fd(ssl, fd);

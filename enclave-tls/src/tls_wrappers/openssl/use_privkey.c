@@ -18,7 +18,7 @@ tls_wrapper_err_t openssl_tls_use_privkey(tls_wrapper_ctx_t *ctx, void *privkey_
 
 	openssl_ctx_t *ssl_ctx = (openssl_ctx_t *)ctx->tls_private;
 
-	int ret = SSL_CTX_use_RSAPrivateKey_ASN1(ssl_ctx->sctx, privkey_buf,
+	int ret = SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA, ssl_ctx->sctx, privkey_buf,
 					      (long)privkey_len);
 	if (ret != SSL_SUCCESS) {
 		ETLS_ERR("failed to use private key %d\n", ret);
