@@ -81,7 +81,7 @@ OPTIONS:
    --log-level/-l        set the log level
    --ip/-i               set the listening ip address
    --port/-p             set the listening tcp port
-   --debug-enclave/-D    set to enable enclave debugging
+   --product-enclave/-P  set to enable product enclave
 ```
 
 You can set command line parameters to specify different configurations.

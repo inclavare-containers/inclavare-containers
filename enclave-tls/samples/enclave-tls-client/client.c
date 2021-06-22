@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 {
 	printf("    - Welcome to Enclave-TLS sample client program\n");
 
-	char *const short_options = "a:v:t:c:ml:i:p:D:h";
+	char *const short_options = "a:v:t:c:ml:i:p:P:h";
 	// clang-format off
 	struct option long_options[] = {
 		{ "attester", required_argument, NULL, 'a' },
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 		{ "log-level", required_argument, NULL, 'l' },
 		{ "ip", required_argument, NULL, 'i' },
 		{ "port", required_argument, NULL, 'p' },
-		{ "debug-enclave", no_argument, NULL, 'D' },
+		{ "product-enclave", no_argument, NULL, 'P' },
 		{ "help", no_argument, NULL, 'h' },
 		{ 0, 0, 0, 0 }
 	};
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
 	char *srv_ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
-	bool debug_enclave = false;
+	bool debug_enclave = true;
 	int opt;
 
 	do {
@@ -217,8 +217,8 @@ int main(int argc, char **argv)
 		case 'p':
 			port = atoi(optarg);
 			break;
-		case 'D':
-			debug_enclave = true;
+		case 'P':
+			debug_enclave = false;
 			break;
 		case -1:
 			break;
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 			     "        --log-level/-l        set the log level\n"
 			     "        --ip/-i               set the listening ip address\n"
 			     "        --port/-p             set the listening tcp port\n"
-			     "        --debug-enclave/-D    set to enable enclave debugging\n"
+			     "        --product-enclave/-P  set to enable product enclave\n"
 			     "        --help/-h             show the usage\n");
 		default:
 			exit(1);
