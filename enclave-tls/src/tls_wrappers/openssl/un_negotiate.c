@@ -12,7 +12,7 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "openssl.h"
 
-static int etls_memcpy_s(void *dst, size_t dst_size, const void *src, size_t num_bytes)
+static int etls_memcpy_s(void *dst, uint32_t dst_size, const void *src, uint32_t num_bytes)
 {
 	int result = 0;
 
@@ -61,8 +61,7 @@ static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, enclave_tls_cert_al
 	if (algo != ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256)
 		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
 
-	RSA *rsa;
-	rsa = EVP_PKEY_get1_RSA(pkey);
+	RSA *rsa = EVP_PKEY_get1_RSA(pkey);
 
 	crypto_wrapper_err_t err = sha256_rsa_pubkey(hash, rsa);
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
@@ -80,7 +79,7 @@ static int find_oid(X509 *crt, const unsigned char *oid)
 
 	/* Set a pointer to the stack of extensions (possibly NULL) */
 	if (!(extensions = X509_get0_extensions(crt))) {
-		ETLS_DEBUG("failed to extensions from X509\n");
+		ETLS_DEBUG("there are no extensions in X509 cert\n");
 		return 0;
 	}
 
@@ -118,7 +117,7 @@ static int find_oid(X509 *crt, const unsigned char *oid)
 	return 0;
 }
 
-static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, size_t *size)
+static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, uint32_t *size)
 {
 	int result = SSL_SUCCESS;
 	const STACK_OF(X509_EXTENSION) * extensions;
@@ -166,15 +165,15 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 				return 0;
 			}
 
-			if ((size_t)str->length > *size) {
-				*size = (size_t)str->length;
+			if ((uint32_t)str->length > *size) {
+				*size = (uint32_t)str->length;
 
 				if (data)
 					ETLS_DEBUG("buffer is too small\n");
 			}
 			if (data) {
-				etls_memcpy_s(data, *size, str->data, (size_t)str->length);
-				*size = (size_t)str->length;
+				etls_memcpy_s(data, *size, str->data, (uint32_t)str->length);
+				*size = (uint32_t)str->length;
 				result = SSL_SUCCESS;
 				goto done;
 			}
@@ -231,7 +230,6 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 {
 	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
 	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, 0);
-	ETLS_DEBUG("verify_certification's tls_ctx is %x\n", tls_ctx);
 #endif
 
 	X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
