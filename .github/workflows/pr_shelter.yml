@@ -51,7 +51,9 @@ jobs:
         cp -rf ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}/enclave-tls'
 
     - name: Build shelter
-      run: docker exec $inclavare_dev bash -c 'cd /root && source /root/.bashrc;source /etc/profile;
+      run: docker exec $inclavare_dev bash -c 'trap "error_handler $?" ERR;
+        error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
+        cd /root && source /root/.bashrc; source /etc/profile;
         cd inclavare-containers-$RUNE_VERSION/shelter;
         make;
         cd ..;
