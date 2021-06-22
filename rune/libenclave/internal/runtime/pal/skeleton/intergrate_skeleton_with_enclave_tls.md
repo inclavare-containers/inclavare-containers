@@ -191,7 +191,7 @@ Please type the following code to solve the problem
 cp /etc/resolv.conf rootfs/etc/
 ```
 
-## Run Enclave TLS client
+## Run Enclave TLS client on sgx platform
 
 ```shell
 cd /opt/enclave-tls/bin
@@ -201,14 +201,12 @@ cd /opt/enclave-tls/bin
 ./enclave-tls-client -a sgx_la -t openssl -c openssl
 ```
 
-## Run shelter
+## Run Enclave TLS client on non-sgx platform
 
-[shelter](https://github.com/alibaba/inclavare-containers/blob/master/shelter/README.md) can also be used as an Enclave TLS client. After building and installing shelter, you can type the following commands to run shelter as an Enclave TLS client:
+Only support run remote attestation based on ecdsa.
 
 ```shell
+cd /opt/enclave-tls/bin
 # run sgx_ecdsa remote attestation
-shelter remoteattestation --tls openssl --verifier sgx_ecdsa --crypto openssl
-
-# run sgx_la remote attestation
-shelter remoteattestation --tls openssl --verifier sgx_la --crypto openssl
+./enclave-tls-client -v sgx_ecdsa -t openssl -c openssl
 ```
