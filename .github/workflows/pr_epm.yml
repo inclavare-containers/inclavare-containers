@@ -140,7 +140,9 @@ jobs:
           echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -; 
           apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
           cd /root/inclavare-containers/${{ matrix.tag }};
-          dpkg -i *.deb'
+          dpkg -i rune*.deb;
+          dpkg -i shim*.deb;
+          dpkg -i epm*.deb'
         on_retry_command: echo "retry to install ubuntu dependency!!"
 
     # dnf-makecache.timer service is running by default which periodically runs dnf makecache --timer with
@@ -162,7 +164,9 @@ jobs:
           yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
           rm -f sgx_rpm_local_repo.tgz;
           cd /root/inclavare-containers/${{ matrix.tag }};
-          rpm -ivh *.rpm'
+          rpm -ivh rune*.rpm;
+          rpm -ivh shim*.rpm;
+          rpm -ivh epm*.rpm'
         on_retry_command: echo "retry to install centos dependency!!"
 
     - name: Install alinux dependency
@@ -186,7 +190,9 @@ jobs:
             libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
             sgx-aesm-service;
           cd /root/inclavare-containers/${{ matrix.tag }};
-          rpm -ivh *.rpm'
+          rpm -ivh rune*.rpm;
+          rpm -ivh shim*.rpm;
+          rpm -ivh epm*.rpm'
         on_retry_command: echo "retry to install alinux2 dependency!!"
 
     - name: Install runtime dependency
