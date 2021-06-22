@@ -44,7 +44,7 @@ jobs:
         sed -i "s/shelter//g" Makefile;
         sed -i "s/inclavared//g" Makefile;
         sed -i "s/enclave-tls//g" Makefile;
-        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v${{ env.RUNE_VERSION }}.tar.gz RELEASE_TARBALL_EXIST=y -j${{ env.CPU_NUM }};
+        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v${{ env.RUNE_VERSION }}.tar.gz RELEASE_TARBALL_EXIST=y;
         rpm -ivh rune-${{ env.RUNE_VERSION }}-1.el8.x86_64.rpm;
         rpm -ivh shim-rune-${{ env.RUNE_VERSION }}-1.el8.x86_64.rpm'
 
