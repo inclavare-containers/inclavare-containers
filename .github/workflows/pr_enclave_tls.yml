@@ -13,11 +13,16 @@ env:
 jobs:
   rune_enclave_tls:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+    # Openssl 1.1 default installation path in alinux2 is different with ubunut and centos and it is nonstandard path, it will cause encalve-tls building error.
+    # It is not a general soltuion to adapt openssl 1.1 default installation path in alinux2 to fix building issue.
+    # A long term solution for compatible with openssl 1.0 in alinux2, ubunut, centos is under going.
+    # Disable cicd test on alinux2 is a short term workaround. Once overall solution for openssl 1.0 is ready, test based on alinux2 will be enabled.
     runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
         sgx: [[self-hosted, SGX1], [self-hosted, SGX2, vsgx]]
-        tag: [ubuntu18.04, centos8.2, alinux2]
+       #tag: [ubuntu18.04, centos8.2, alinux2]
+        tag: [ubuntu18.04, centos8.2]
     steps:
     - uses: actions/checkout@v2
       with:
