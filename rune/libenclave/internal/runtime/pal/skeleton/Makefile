@@ -85,10 +85,10 @@ $(OUTPUT)/liberpal-skeleton-v3.o: liberpal-skeleton-v3.c liberpal-skeleton.c
 $(OUTPUT)/tls-server.o: tls-server.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
-$(OUTPUT)/aesm.o: aesm.c
+$(OUTPUT)/aesm.o: aesm.c $(OUTPUT)/aesm.pb-c.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
-$(OUTPUT)/aesm.pb-c.o: aesm.pb-c.c
+$(OUTPUT)/aesm.pb-c.o: $(OUTPUT)/aesm.pb-c.c
 	$(CC) $(HOST_CFLAGS) -c $< -o $@
 
 $(OUTPUT)/aesm.pb-c.c: aesm.proto2 aesm.proto3
@@ -99,7 +99,6 @@ else ifeq ($(PROTOBUF_VERSION),3)
 else
 	@echo "Unsupported protobuf version"
 endif
-
 	@protoc-c --c_out=. aesm.proto
 	@rm aesm.proto
 
@@ -139,14 +138,13 @@ EXTRA_CLEAN := \
 	$(OUTPUT)/encl.ss \
 	$(OUTPUT)/sgx_call.o \
 	$(OUTPUT)/aesm.o \
-	$(OUTPUT)/aesm.pb-c.o \
+	$(OUTPUT)/aesm.pb-c* \
 	$(OUTPUT)/sgxutils.o \
 	$(OUTPUT)/sgxsign \
 	$(OUTPUT)/liberpal-skeleton*.o \
 	$(OUTPUT)/tls-server.o \
 	$(OUTPUT)/liberpal-skeleton*.so \
-	$(OUTPUT)/signing_key.pem \
-   	$(OUTPUT)/aesm.pb-c*     
+	$(OUTPUT)/signing_key.pem
 
 DIRS_TO_CLEAN := ../kvmtool
 ifdef TLS_SERVER
