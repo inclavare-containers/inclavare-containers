@@ -29,8 +29,8 @@ git clone https://github.com/alibaba/inclavare-containers
 
 ```shell
 cd inclavare-containers/enclave-tls
-make
-make install
+cmake -DBUILD_SAMPLES=on -H. -Bbuild
+make -C build install
 ```
 
 `{enclave-tls-server,enclave-tls-client}` will be installed to `/usr/share/enclave-tls/samples/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
@@ -38,7 +38,8 @@ make install
 If you want to build instances related to sgx(wolfssl\_sgx, sgx\_ecdsa, sgx\_ecdsa\_qve, sgx\_la, wolfcrypt\_sgx), please type the following command.
 
 ```shell
-make SGX=1
+cmake -DENCLAVE_TLS_BUILD_MODE="sgx" -DBUILD_SAMPLES=on -H. -Bbuild
+make -C build install
 ```
 
 Note that [SGX LVI mitigation](https://software.intel.com/security-software-guidance/advisory-guidance/load-value-injection) is enabled by default. You can set macro `SGX_LVI_MITIGATION` to `0` to disable SGX LVI mitigation.
@@ -58,13 +59,33 @@ By default,  Enclave TLS will select the **highest priority** instance to use.
 ## Run enclave tls server
 ```
 cd /usr/share/enclave-tls/samples
+
+# host mode
 ./enclave-tls-server
+./enclave-tls-server -p 12345 -m -l debug
+./enclave-tls-server -a nullquote -v nullquote -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+
+# sgx mode
+./enclave-tls-server -a nullquote -v nullquote -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+./enclave-tls-server -a sgx_la -v sgx_la -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+./enclave-tls-server -a sgx_ecdsa -v sgx_ecdsa -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+./enclave-tls-server -a sgx_ecdsa_qve -v sgx_ecdsa_qve -t wolfssl -c wolfcrypt -p 12345 -m -l debug
 ```
 
 ## Run enclave tls client
 ```
 cd /usr/share/enclave-tls/samples
+
+# host mode
 ./enclave-tls-client
+./enclave-tls-client -p 12345 -m -l debug
+./enclave-tls-client -a nullquote -v nullquote -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+
+# sgx mode
+./enclave-tls-client -a nullquote -v nullquote -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+./enclave-tls-client -a sgx_la -v sgx_la -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+./enclave-tls-client -a sgx_ecdsa -v sgx_ecdsa -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+./enclave-tls-client -a sgx_ecdsa_qve -v sgx_ecdsa_qve -t wolfssl -c wolfcrypt -p 12345 -m -l debug
 ```
 
 ## Specify the instance type
