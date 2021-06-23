@@ -66,7 +66,7 @@ LD ?= ld
 AR ?= ar
 INSTALL ?= install
 
-Build_Dir ?= $(Topdir)/build
+Build_Dir := $(Topdir)/build
 Build_Bindir := $(Build_Dir)/bin
 Build_Libdir := $(Build_Dir)/lib
 

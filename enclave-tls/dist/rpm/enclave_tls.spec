@@ -1,4 +1,5 @@
 %define centos_base_release 1
+%define _debugsource_template %{nil}
 
 %define __enclave_tls_install_post \
     cp %{_builddir}/%{PROJECT}-%{version}/%{name}/build/bin/sgx_stub_enclave.signed.so %{?buildroot}%{ENCLAVE_TLS_BINDIR} \
@@ -18,6 +19,8 @@
 
 %global ENCLAVE_TLS_ROOTDIR /opt/enclave-tls
 %global ENCLAVE_TLS_BINDIR /usr/share/enclave-tls/samples
+%global ENCLAVE_TLS_LIBDIR /opt/enclave-tls/lib
+%global ENCLAVE_TLS_INCDIR /opt/enclave-tls/include
 
 Name: enclave-tls
 Version: 0.6.1
@@ -28,7 +31,6 @@ Group: Development/Tools
 License: Apache License 2.0
 URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
-Source10: enclave_tls.filelist
 
 BuildRequires: git
 BuildRequires: make
@@ -70,7 +72,16 @@ popd
 %postun
 rm -rf %{ENCLAVE_TLS_ROOTDIR} $(dirname %{ENCLAVE_TLS_BINDIR})
 
-%files -f %{SOURCE10}
+%files
+%{ENCLAVE_TLS_BINDIR}/enclave-tls-server
+%{ENCLAVE_TLS_BINDIR}/enclave-tls-client
+%{ENCLAVE_TLS_BINDIR}/sgx_stub_enclave.signed.so
+%{ENCLAVE_TLS_INCDIR}/*
+%{ENCLAVE_TLS_LIBDIR}/libenclave_tls.so*
+%{ENCLAVE_TLS_LIBDIR}/tls-wrappers/libtls_wrapper*.so*
+%{ENCLAVE_TLS_LIBDIR}/crypto-wrappers/libcrypto_wrapper*.so*
+%{ENCLAVE_TLS_LIBDIR}/attesters/libattester*.so*
+%{ENCLAVE_TLS_LIBDIR}/verifiers/libverifier*.so*
 
 %changelog
 * Thu Apr 22 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.1
