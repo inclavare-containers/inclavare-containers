@@ -63,9 +63,10 @@ jobs:
         make package -j${CPU_NUM};
         mv *.deb /root/inclavare-containers/${{ matrix.tag }}"
 
-    - name: Start docker daemon
-      run: |
-        docker exec -d $inclavare_dev bash -c "dockerd -b docker0 --storage-driver=vfs &"
+    - uses: ./.github/actions/start-docker-daemon
+      with:
+        container-id: $inclavare_dev
+      timeout-minutes: 2
 
     - name: Build skeleton docker image
       run: |
@@ -134,7 +135,9 @@ jobs:
           yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
           rm -f sgx_rpm_local_repo.tgz;
           cd /root/inclavare-containers/${{ matrix.tag }};
-          rpm -ivh *.rpm'
+          rpm -ivh rune*.rpm;
+          rpm -ivh shim*.rpm;
+          rpm -ivh sgx-tools*.rpm'
         on_retry_command: echo "retry to install centos dependency!!"
 
     - name: Install alinux dependency
@@ -161,7 +164,9 @@ jobs:
             libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
             sgx-aesm-service;
           cd /root/inclavare-containers/${{ matrix.tag }};
-          rpm -ivh *.rpm'
+          rpm -ivh rune*.rpm;
+          rpm -ivh shim*.rpm;
+          rpm -ivh sgx-tools*.rpm'
         on_retry_command: echo "retry to install alinux dependency!!"
 
     - name: Install sgx1 extra ubuntu dependency
@@ -190,9 +195,10 @@ jobs:
         mkdir -p /etc/docker;
         mv daemon.json /etc/docker'
 
-    - name: Start docker daemon
-      run: |
-        docker exec -d $inclavare_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+    - uses: ./.github/actions/start-docker-daemon
+      with:
+        container-id: $inclavare_test
+      timeout-minutes: 2
 
     - name: Load docker image
       run: |
