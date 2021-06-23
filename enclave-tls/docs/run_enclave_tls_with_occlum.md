@@ -73,6 +73,10 @@ cp -rf /opt/enclave-tls/lib image/opt/enclave-tls
 
 occlum build
 occlum run /bin/enclave-tls-server -m -l debug
+
+# 3. Others
+occlum run /bin/enclave-tls-server -a nullquote -v nullquote -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+occlum run /bin/enclave-tls-server -a sgx_ecdsa -v sgx_ecdsa -t wolfssl -c wolfcrypt -p 12345 -m -l debug
 ```
 
 Type the following commands to generate a minimal, self-contained package (.tar.gz) for the Occlum instance.
@@ -154,6 +158,10 @@ cp -rf /opt/enclave-tls/lib image/opt/enclave-tls
 
 occlum build
 occlum run /bin/enclave-tls-client -l debug -m
+
+# 3. Others
+occlum run /bin/enclave-tls-client -a nullquote -v nullquote -t wolfssl -c wolfcrypt -p 12345 -m -l debug
+occlum run /bin/enclave-tls-client -a sgx_ecdsa -v sgx_ecdsa -t wolfssl -c wolfcrypt -p 12345 -m -l debug
 ```
 
 ## Run client based on sgxsdk
