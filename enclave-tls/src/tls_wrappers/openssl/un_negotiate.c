@@ -10,6 +10,7 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/tls_wrapper.h>
+#include "per_thread.h"
 #include "openssl.h"
 
 static int etls_memcpy_s(void *dst, uint32_t dst_size, const void *src, uint32_t num_bytes)
@@ -48,9 +49,12 @@ static crypto_wrapper_err_t sha256_rsa_pubkey(unsigned char hash[SHA256_HASH_SIZ
 	len = i2d_RSAPublicKey(key, &p);
 
 	SHA256(buf, len, hash);
+	// clang-format off
 	ETLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
 		len, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
-		hash[SHA256_HASH_SIZE - 4], hash[SHA256_HASH_SIZE - 3], hash[SHA256_HASH_SIZE - 2], hash[SHA256_HASH_SIZE - 1]);
+		hash[SHA256_HASH_SIZE - 4], hash[SHA256_HASH_SIZE - 3], hash[SHA256_HASH_SIZE - 2],
+		hash[SHA256_HASH_SIZE - 1]);
+	// clang-format on
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
@@ -74,7 +78,9 @@ static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, enclave_tls_cert_al
 
 static int find_oid(X509 *crt, const unsigned char *oid)
 {
+	// clang-format off
 	const STACK_OF(X509_EXTENSION) *extensions;
+	// clang-format on
 	unsigned char oid_buf[128];
 
 	/* Set a pointer to the stack of extensions (possibly NULL) */
@@ -229,7 +235,17 @@ int verify_certificate(void *ctx, uint8_t *der_cert, uint32_t der_cert_len)
 int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 {
 	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
-	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, 0);
+	int *ex_data = per_thread_getspecific();
+	if (!ex_data) {
+		ETLS_ERR("failed to get ex_data\n");
+		return 0;
+	}
+
+	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, *ex_data);
+	if (!tls_ctx) {
+		ETLS_ERR("failed to get tls_wrapper_ctx pointer\n");
+		return 0;
+	}
 #endif
 
 	X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
