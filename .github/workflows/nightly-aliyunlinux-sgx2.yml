@@ -16,7 +16,7 @@ env:
 
 jobs:
   k8s_aliyunlinux:
-    runs-on: [self-hosted, aliyunlinux]
+    runs-on: [self-hosted, SGX2, nightly, aliyunlinux]
     steps:
       - uses: actions/checkout@v1
 

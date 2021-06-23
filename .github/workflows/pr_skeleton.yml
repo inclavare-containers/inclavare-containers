@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
-        sgx: [[self-hosted, SGX1], [self-hosted, SGX2]]
+        sgx: [[self-hosted, SGX1, commit], [self-hosted, SGX2, commit]]
         tag: [ubuntu18.04, centos8.2, alinux2]
     steps:
     - uses: actions/checkout@v2

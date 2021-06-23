@@ -18,7 +18,7 @@ env:
 
 jobs:
   k8s_ubuntu:
-    runs-on: [self-hosted, nightly]
+    runs-on: [self-hosted, SGX1, nightly, ubuntu]
     steps:
       - name: Prepare the execution enviorment
         run: |
