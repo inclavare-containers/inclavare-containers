@@ -14,7 +14,6 @@ License: Apache License 2.0
 URL: https://github.com/alibaba/%{PROJECT}
 Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
 
-BuildRequires: enclave-tls == %{version}
 ExclusiveArch: x86_64
 
 %description

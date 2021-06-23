@@ -2,6 +2,7 @@ SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
 
+PROJDIR := $(shell readlink -f ..)
 TOP_DIR := .
 include $(TOP_DIR)/buildenv.mk
 
@@ -113,7 +114,10 @@ app/Enclave_u.o: $(RUST_SDK) $(Enclave_EDL_Files)
 $(App_Enclave_u_Object): app/Enclave_u.o
 	$(AR) rcsD $@ $^
 
-$(App_Name): $(RUST_SDK) $(App_Enclave_u_Object) $(App_SRC_Files)
+enclave-tls:
+	$(MAKE) -C $(PROJDIR)/enclave-tls SGX=1 install
+
+$(App_Name): enclave-tls $(RUST_SDK) $(App_Enclave_u_Object) $(App_SRC_Files)
 	@cd app && SGX_SDK=$(SGX_SDK) RUSTFLAGS="-C link-args=-Wl,-rpath=/opt/enclave-tls/lib,--enable-new-dtags" cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p bin
