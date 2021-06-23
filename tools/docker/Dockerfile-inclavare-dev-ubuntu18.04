@@ -4,7 +4,7 @@ LABEL maintainer="YiLin Li <YiLin.Li@linux.alibaba.com>"
 
 RUN apt-get update && apt-get install -y make wget git \
     libseccomp-dev gnupg gcc pkg-config libssl-dev binutils-dev debhelper \
-    libprotoc-dev protobuf-compiler libbinutils file curl
+    libprotoc-dev protobuf-compiler libbinutils file curl cmake
 
 WORKDIR /root
 
