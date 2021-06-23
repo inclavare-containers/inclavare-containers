@@ -30,8 +30,7 @@
 ## Dependency
 
 - golang 1.14 or above.
-- [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the rpm(centos) or deb(ubuntu) from "https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro"
-	- libsgx-dcap-quote-verify-dev(ubuntu) or libsgx-dcap-quote-verify-devel(centos)
+- libsgx-dcap-quote-verify-devel (CentOS) / libsgx-dcap-quote-verify-dev (Ubuntu) from [official Intel SGX DCAP release page](https://01.org/intel-software-guard-extensions/downloads).
 
 ## Build
 
