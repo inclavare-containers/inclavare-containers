@@ -45,8 +45,17 @@ jobs:
         cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
         mkdir -p /root/inclavare-containers/${{ matrix.tag }};
         cd inclavare-containers-$RUNE_VERSION/enclave-tls;
-        make SGX=1 && make install;
-        cp -rf ${{ env.ENCLAVE_TLS_ROOTDIR }} ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}'
+        cmake -DENCLAVE_TLS_BUILD_MODE="sgx"  -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }}/sgx;
+        cp -rf ${{ env.ENCLAVE_TLS_ROOTDIR }} ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}/sgx;
+        make uninstall && make -C build clean;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }}/occlum;
+        cmake -DENCLAVE_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install;
+        cp -rf ${{ env.ENCLAVE_TLS_ROOTDIR }} ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}/occlum;
+        make uninstall && make -C build clean;
+        mkdir -p /root/inclavare-containers/${{ matrix.tag }}/host;
+        cmake -DENCLAVE_TLS_BUILD_MODE="host" -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install;
+        cp -rf ${{ env.ENCLAVE_TLS_ROOTDIR }} ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}/host'
 
     - name: Kill the dev container
       run: docker stop $inclavare_dev
@@ -96,16 +105,16 @@ jobs:
           libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
           sgx-aesm-service'
 
-    - name: install enclave-tls
-      run: docker exec $inclavare_test bash -c 'mv /root/inclavare-containers/${{ matrix.tag }}/enclave-tls /opt;
+    - name: install enclave-tls-sgx
+      run: docker exec $inclavare_test bash -c 'mv /root/inclavare-containers/${{ matrix.tag }}/sgx/enclave-tls /opt;
         mkdir -p ${{ env.ENCLAVE_TLS_BINDIR }};
-        mv /root/inclavare-containers/${{ matrix.tag }}/samples/* ${{ env.ENCLAVE_TLS_BINDIR }};
+        mv /root/inclavare-containers/${{ matrix.tag }}/sgx/samples/* ${{ env.ENCLAVE_TLS_BINDIR }};
         cp ${{ env.ENCLAVE_TLS_BINDIR }}/sgx_stub_enclave.signed.so ./'
 
     - id: random-port-generator1
       uses: ./.github/actions/generate-random-port
 
-    - name: Test enclave tls server for mutual sgx_la
+    - name: Test enclave tls sgx server for mutual sgx_la
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         echo random-port1 ${{ steps.random-port-generator1.outputs.random-port }}
@@ -117,7 +126,7 @@ jobs:
     - id: random-port-generator2
       uses: ./.github/actions/generate-random-port
 
-    - name: Test enclave tls server for mutual sgx_ecdsa
+    - name: Test enclave tls sgx server for mutual sgx_ecdsa
       if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         echo random-port2 ${{ steps.random-port-generator2.outputs.random-port }}
@@ -129,11 +138,40 @@ jobs:
     - id: random-port-generator3
       uses: ./.github/actions/generate-random-port
 
-    - name: Test enclave tls server for mutual nullquote
+    - name: Test enclave tls sgx server for mutual sgx_ecdsa_qve
+      if: ${{ contains(matrix.sgx, 'SGX2') }}
       run: |
         echo random-port3 ${{ steps.random-port-generator3.outputs.random-port }}
+        docker cp /etc/sgx_default_qcnl.conf  $inclavare_test:/etc/
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -l debug -a sgx_ecdsa_qve -v sgx_ecdsa_qve -m -p ${{ steps.random-port-generator2.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a sgx_ecdsa_qve -v sgx_ecdsa_qve -m -p ${{ steps.random-port-generator2.outputs.random-port }}'
+        docker restart $inclavare_test
+
+    - id: random-port-generator4
+      uses: ./.github/actions/generate-random-port
+
+    - name: Test enclave tls sgx server for mutual nullquote
+      run: |
+        echo random-port4 ${{ steps.random-port-generator4.outputs.random-port }}
         docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -v nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}' &
         docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a nullquote -v nullquote -m -p ${{ steps.random-port-generator3.outputs.random-port }}'
+
+    - name: install enclave-tls-host
+      run: docker exec $inclavare_test bash -c 'rm -rf ${{ env.ENCLAVE_TLS_BINDIR }};
+        rm -rf /opt/enclave-tls;
+        mv /root/inclavare-containers/${{ matrix.tag }}/host/enclave-tls /opt;
+        mkdir -p ${{ env.ENCLAVE_TLS_BINDIR }};
+        mv /root/inclavare-containers/${{ matrix.tag }}/host/samples/* ${{ env.ENCLAVE_TLS_BINDIR }};
+        cp ${{ env.ENCLAVE_TLS_BINDIR }}/sgx_stub_enclave.signed.so ./'
+
+    - id: random-port-generator5
+      uses: ./.github/actions/generate-random-port
+
+    - name: Test enclave tls host server for mutual
+      run: |
+        echo random-port4 ${{ steps.random-port-generator5.outputs.random-port }}
+        docker exec $inclavare_test bash -c '${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-server -a nullquote -v nullquote -t wolfssl -c wolfcrypt -m -p ${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'sleep 10 && ${{ env.ENCLAVE_TLS_BINDIR }}/enclave-tls-client -l debug -a nullquote -v nullquote -t wolfssl -c wolfcrypt -m -p ${{ steps.random-port-generator3.outputs.random-port }}'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
