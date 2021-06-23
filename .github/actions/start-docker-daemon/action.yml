@@ -1,0 +1,17 @@
+name: 'start_docker_daemon'
+description: 'start_docker_daemon'
+inputs:
+  container-id:  # id of input
+    description: 'The running container id'
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - id: start-docker-daemon
+    run: |
+      docker exec ${{ inputs.container-id }} bash -c '
+      (dockerd -b docker0 --storage-driver=vfs &);
+      while [ ! -S /var/run/docker.sock ]; do
+        sleep 10;
+      done'
+    shell: bash
