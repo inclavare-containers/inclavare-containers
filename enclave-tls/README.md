@@ -146,6 +146,6 @@ Direct Dependencies
 | Name | Repo URL | Licenses |
 | :--: | :-------:   | :-------: |
 | openssl | https://github.com/openssl/openssl | Apache |
-| linux-sgx | https://github.com/intel/linux-sgx | BSD |
-| SGXDataCenterAttestationPrimitives | https://github.com/intel/SGXDataCenterAttestationPrimitives | BSD |
-| C library | C library | GNU General Public License version 3 |
+| linux-sgx | https://github.com/intel/linux-sgx | BSD-3-clause |
+| SGXDataCenterAttestationPrimitives | https://github.com/intel/SGXDataCenterAttestationPrimitives | BSD-3-clause |
+| GNU C library | C library | GNU General Public License version 3 |
