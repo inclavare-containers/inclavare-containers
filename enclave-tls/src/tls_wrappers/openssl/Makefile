@@ -11,7 +11,7 @@ include $(Topdir)/rules/openssl_env.mk
 
 Enclave_Tls_Instance_Name := openssl
 Enclave_Tls_Instance_Type := tls-wrapper
-Enclave_Tls_Instance_Extra_Files := un_negotiate.c
+Enclave_Tls_Instance_Extra_Files := un_negotiate.c per_thread.c
 include $(Topdir)/rules/instance.mk
 
 include $(Topdir)/rules/openssl_rules.mk

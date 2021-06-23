@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <string.h>
 #include <enclave-tls/log.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/tls_wrapper.h>
+#include "per_thread.h"
 #include "openssl.h"
 
 #ifndef SSL_SGX_WRAPPER
@@ -43,13 +45,26 @@ tls_wrapper_err_t openssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 		return -TLS_WRAPPER_ERR_NO_MEM;
 
 	X509_STORE *cert_store = SSL_CTX_get_cert_store(ssl_ctx->sctx);
-	X509_STORE_set_ex_data(cert_store, 0, ctx);
+	int ex_data_idx = X509_STORE_get_ex_new_index(0, "ex_data", NULL, NULL, NULL);
+	X509_STORE_set_ex_data(cert_store, ex_data_idx, ctx);
+
+	int *ex_data = calloc(1, sizeof(*ex_data));
+	if (!ex_data) {
+		ETLS_ERR("failed to calloc ex_data\n");
+		return -TLS_WRAPPER_ERR_NO_MEM;
+	}
+
+	*ex_data = ex_data_idx;
+	if (!per_thread_setspecific((void *)ex_data)) {
+		ETLS_ERR("failed to store ex_data\n");
+		return -TLS_WRAPPER_ERR_INVALID;
+	}
 
 	/* Attach openssl to the socket */
 	int ret = SSL_set_fd(ssl, fd);
 	if (ret != SSL_SUCCESS) {
 		ETLS_ERR("failed to attach SSL with fd, ret is %x\n", ret);
-		return ret;
+		return -TLS_WRAPPER_ERR_INVALID;
 	}
 
 	int err;

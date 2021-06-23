@@ -6,6 +6,7 @@
 
 #include <enclave-tls/log.h>
 #include <enclave-tls/tls_wrapper.h>
+#include "per_thread.h"
 #include "openssl.h"
 
 tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
@@ -39,6 +40,8 @@ tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 	}
 
 	ctx->tls_private = ssl_ctx;
+
+	per_thread_key_init();
 
 	return TLS_WRAPPER_ERR_NONE;
 }
