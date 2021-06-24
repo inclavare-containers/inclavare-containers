@@ -60,7 +60,7 @@ endif
 libenclave_tls_objs := $(libenclave_tls_files:.c=.o)
 $(Build_Libdir)/$(libenclave_tls): $(Build_Dependencies) $(libenclave_tls_objs)
 	@$(INSTALL) -d -m 0755 $(dir $@)
-	$(LD) $(Enclave_Tls_Ldflags) -soname=$(notdir $@).$(Major_Version) -o $@ $(libenclave_tls_objs) -ldl $(Enclave_Tls_Extra_Ldflags)
+	$(LD) $(Enclave_Tls_Ldflags) -soname=$(notdir $@).$(Major_Version) -o $@ $(libenclave_tls_objs) -ldl -lc $(Enclave_Tls_Extra_Ldflags)
 
 $(libenclave_tls_objs): %.o: %.c
 	$(CC) -c $(Enclave_Tls_Cflags) -o $@ $<
