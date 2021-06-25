@@ -33,34 +33,12 @@ jobs:
         inclavare_dev=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
         echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
 
-    - name: Build rpm packages
-      if: ${{ contains(matrix.tag, 'centos') || contains(matrix.tag, 'alinux') }}
-      run: docker exec $inclavare_dev bash -c "cd /root && source /etc/profile;
-        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
-        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
-        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
-        cd inclavare-containers-$RUNE_VERSION;
-        mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
-        cp -f /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES;
-        find ./ -path '*dist/Makefile' | xargs -I files sed -i '16 d' files;
-        sed -i 's/shelter//g' Makefile;
-        sed -i 's/inclavared//g' Makefile;
-        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM};
-        mv *.rpm /root/inclavare-containers/${{ matrix.tag }}"
-
-    - name: Build deb packages
-      if: ${{ contains(matrix.tag, 'ubuntu') }}
-      run: docker exec $inclavare_dev bash -c "cd /root;
-        cp -r inclavare-containers inclavare-containers-$RUNE_VERSION;
-        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
-        tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION;
-        cd inclavare-containers-$RUNE_VERSION;
-        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
-        find ./ -path "*deb/build.sh" | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
-        sed -i 's/shelter//g' Makefile;
-        sed -i 's/inclavared//g' Makefile;
-        make package -j${CPU_NUM};
-        mv *.deb /root/inclavare-containers/${{ matrix.tag }}"
+    - uses: ./.github/actions/make-packages
+      with:
+        container-id: ${{ env.inclavare_dev }}
+        os: ${{ matrix.tag }}
+        version: ${{ env.RUNE_VERSION }}
+        cpu_num: ${{ env.CPU_NUM }}
 
     - name: Start docker daemon
       run: |
