@@ -43,7 +43,7 @@ shelter: enclave-tls $(CURRENTDIR)/verification/verification.a  $(CURRENTDIR)/ut
 	$(GO_BUILD) -o $@ .
 
 enclave-tls:
-	$(MAKE) -C $(TOPDIR)/enclave-tls install
+	$(MAKE) -C $(TOPDIR)/enclave-tls SGX=1 install
 
 $(CURRENTDIR)/utils/utils.a:
 	$(MAKE) -C utils
@@ -70,6 +70,7 @@ install:$(APP)
 
 uninstall:
 	@rm -f $(BINDIR)/$(APP)
+	$(MAKE) -C $(TOPDIR)/enclave-tls uninstall
 
 package:
 	$(MAKE) -C dist package
@@ -79,5 +80,6 @@ clean:
 	$(MAKE) -C verification clean
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
+	$(MAKE) -C $(TOPDIR)/enclave-tls clean
 
 .PHONY: clean install uninstall package
