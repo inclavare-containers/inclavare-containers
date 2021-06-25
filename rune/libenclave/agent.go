@@ -8,7 +8,6 @@ import (
 	"golang.org/x/sys/unix"
 	"net"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -75,8 +74,18 @@ func CreateParentAgentPipe(root string, uid, gid int) (lnFile *os.File, err erro
 }
 
 func CreateChildAgentPipe(root string) (*os.File, error) {
-	path := filepath.Join(root, "agent.sock")
-	conn, err := net.Dial("unix", path)
+	// Linux kernel only supports unix domain socket path with 108 characters,
+	// and thus we have to use relative path with the assist of chdir().
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	if err = os.Chdir(root); err != nil {
+		return nil, err
+	}
+	defer os.Chdir(cwd)
+
+	conn, err := net.Dial("unix", agentServicePath)
 	if err != nil {
 		return nil, err
 	}
