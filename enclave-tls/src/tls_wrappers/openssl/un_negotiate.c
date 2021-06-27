@@ -10,6 +10,7 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/err.h>
 #include <enclave-tls/tls_wrapper.h>
+#include <enclave-tls/oid.h>
 #include "per_thread.h"
 #include "openssl.h"
 
