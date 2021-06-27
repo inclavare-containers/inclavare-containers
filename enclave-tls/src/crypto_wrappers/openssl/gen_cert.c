@@ -7,12 +7,12 @@
 #include <string.h>
 #include <enclave-tls/log.h>
 #include <enclave-tls/crypto_wrapper.h>
+#include <enclave-tls/oid.h>
 #include "openssl.h"
 
 #define CERT_SERIAL_NUMBER 9527
 
-static int x509_extension_add(X509 *cert, const char *oid,
-			      const void *data, size_t data_len)
+static int x509_extension_add(X509 *cert, const char *oid, const void *data, size_t data_len)
 {
 	int nid;
 	ASN1_OCTET_STRING *octet = NULL;
@@ -57,8 +57,7 @@ err:
 	return ret;
 }
 
-crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx,
- 			       enclave_tls_cert_info_t *cert_info)
+crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_info_t *cert_info)
 {
 	struct openssl_ctx *octx;
 	cert_subject_t *subject;
@@ -106,12 +105,9 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx,
 		goto err;
 
 	subject = &cert_info->subject;
-	X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC,
-			subject->organization, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC,
-			subject->organization_unit, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
-			subject->common_name, -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, subject->organization, -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC, subject->organization_unit, -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, subject->common_name, -1, -1, 0);
 	if (!X509_set_issuer_name(cert, name))
 		goto err;
 
@@ -122,32 +118,30 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx,
 	if (!strcmp(cert_info->evidence.type, "sgx_epid")) {
 		attestation_verification_report_t *epid = &cert_info->evidence.epid;
 
-		if (!x509_extension_add(cert, "1.2.840.113741.1337.2",
-				epid->ias_report, epid->ias_report_len))
+		if (!x509_extension_add(cert, ias_response_body_oid, epid->ias_report,
+					epid->ias_report_len))
 			goto err;
 
-		if (!x509_extension_add(cert, "1.2.840.113741.1337.3",
-				epid->ias_sign_ca_cert, epid->ias_sign_ca_cert_len))
+		if (!x509_extension_add(cert, ias_root_cert_oid, epid->ias_sign_ca_cert,
+					epid->ias_sign_ca_cert_len))
 			goto err;
 
-		if (!x509_extension_add(cert, "1.2.840.113741.1337.4",
-				epid->ias_sign_cert, epid->ias_sign_cert_len))
+		if (!x509_extension_add(cert, ias_leaf_cert_oid, epid->ias_sign_cert,
+					epid->ias_sign_cert_len))
 			goto err;
 
-		if (!x509_extension_add(cert, "1.2.840.113741.1337.5",
-				epid->ias_report_signature, epid->ias_report_signature_len))
+		if (!x509_extension_add(cert, ias_report_signature_oid, epid->ias_report_signature,
+					epid->ias_report_signature_len))
 			goto err;
 	} else if (!strcmp(cert_info->evidence.type, "sgx_ecdsa")) {
 		ecdsa_attestation_evidence_t *ecdsa = &cert_info->evidence.ecdsa;
 
-		if (!x509_extension_add(cert, "1.2.840.113741.1337.6",
-				ecdsa->quote, ecdsa->quote_len))
+		if (!x509_extension_add(cert, ecdsa_quote_oid, ecdsa->quote, ecdsa->quote_len))
 			goto err;
 	} else if (!strcmp(cert_info->evidence.type, "sgx_la")) {
 		la_attestation_evidence_t *la = &cert_info->evidence.la;
 
-		if (!x509_extension_add(cert, "1.2.840.113741.1337.14",
-				la->report, la->report_len))
+		if (!x509_extension_add(cert, la_report_oid, la->report, la->report_len))
 			goto err;
 	}
 
