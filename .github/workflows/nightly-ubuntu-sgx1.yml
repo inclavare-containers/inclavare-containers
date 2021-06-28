@@ -11,8 +11,9 @@ env:
   WORK_DIR: /root/pkgs
   HOME: /root
   OCCLUM_VERSION: 0.21.0
-  SGX_VERSION: 2.13.100.4-bionic1
-  DCAP_VERSION: 1.10.100.4-bionic1
+  SGX_DRIVER_VERSION: 2.11.0_0373e2e
+  SGX_SDK_VERSION: 2.13.100.4
+  DCAP_VERSION: 1.10.100.4
   kubernetes_version: 1.18.8
   nap_time: 60
 
@@ -45,55 +46,9 @@ jobs:
 
       - uses: actions/checkout@v1
 
-      - name: Clear the environment
-        run: |
-          sudo kubectl delete pod --all 2>/dev/null || true
-          sudo kubeadm reset -f 2>/dev/null || true
-          for service in kubelet containerd epm
-          do
-            sudo systemctl stop $service || true
-            sudo systemctl disable $service || true
-          done
-          sudo pkill -9 kube-apiserver || true
-          sudo pkill -9 kube-controller-manager || true
-          sudo pkill -9 kube-proxy || true
-          sudo pkill -9 kube-scheduler || true
-          sudo pkill -9 signatureserver || true
-          sudo apt-get remove -y occlum || true
-          sudo apt-get remove -y occlum-pal || true
-          sudo apt-get remove -y occlum-runtime || true
-          sudo apt-get remove -y occlum-sgx-tools || true
-          sudo apt-get remove -y occlum-toolchains-gcc || true
-          sudo apt-get remove -y shim-rune || true
-          sudo apt-get remove -y shim || true
-          sudo apt-get remove -y epm || true
-          sudo apt-get remove -y kubelet kubeadm kubectl || true
-          sudo apt-get remove -y libsgx-ae-epid libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 \
-            libsgx-aesm-launch-plugin libsgx-enclave-common sgx-aesm-service libsgx-urts \
-            libsgx-launch libsgx-epid libsgx-quote-ex libsgx-enclave-common-dbgsym \
-            libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev || true
-          sudo apt-get remove -y *sgx* || true
-          sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
-          sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
-          sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh || true
-          sudo apt -y autoremove
-          sudo rm -fr /etc/containerd
-          sudo rm -fr /etc/inclavare-containers/
-          sudo rm -rf ~/.kube/
-          sudo rm -rf /etc/kubernetes
-          sudo rm -fr /var/lib/etcd
-          sudo rm -fr /usr/bin/go
-          sudo rm -fr /etc/epm
-          sudo rm -fr /var/run/epm
-          sudo rm -fr /var/local/epm
-          sudo ip link set cni0 down || true
-          sudo ip link delete cni0 || true
-          sudo ip link set flannel.1 down || true
-          sudo ip link delete flannel.1 || true
-          sudo ip -all netns del || true
-          sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
-          sudo rm -rf  $WORK_DIR
-          sudo mkdir -p $WORK_DIR
+      - uses: ./.github/actions/clean-nightly-env/ubuntu
+        with:
+          work-dir: ${WORK_DIR}
 
       # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
       - name: Get version
@@ -105,21 +60,21 @@ jobs:
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libprotobuf-dev
           sudo apt-get install -y build-essential python
           pushd ${WORK_DIR}
-          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_driver_2.11.0_0373e2e.bin -O sgx_linux_x64_driver_2.11.0_0373e2e.bin
-          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.13.100.4.bin -O sgx_linux_x64_sdk_2.13.100.4.bin
+          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -O sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
+          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin -O sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
           echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
           wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
           sudo apt-get update
-          sudo apt-get install -y libsgx-launch=${{ env.SGX_VERSION }} libsgx-urts=${{ env.SGX_VERSION }}
-          sudo apt-get install -y libsgx-epid=${{ env.SGX_VERSION }} libsgx-urts=${{ env.SGX_VERSION }}
-          sudo apt-get install -y libsgx-quote-ex=${{ env.SGX_VERSION }} libsgx-urts=${{ env.SGX_VERSION }}
-          sudo apt-get install -y libsgx-ae-qve=${{ env.DCAP_VERSION }} libsgx-dcap-ql=${{ env.DCAP_VERSION }} libsgx-dcap-quote-verify=${{ env.DCAP_VERSION }}\
-            libsgx-dcap-quote-verify-dev=${{ env.DCAP_VERSION }}
+          sudo apt-get install -y libsgx-launch=${{ env.SGX_SDK_VERSION }}-bionic1 libsgx-urts=${{ env.SGX_SDK_VERSION }}-bionic1
+          sudo apt-get install -y libsgx-epid=${{ env.SGX_SDK_VERSION }}-bionic1 libsgx-urts=${{ env.SGX_SDK_VERSION }}-bionic1
+          sudo apt-get install -y libsgx-quote-ex=${{ env.SGX_SDK_VERSION }}-bionic1 libsgx-urts=${{ env.SGX_SDK_VERSION }}-bionic1
+          sudo apt-get install -y libsgx-ae-qve=${{ env.DCAP_VERSION }}-bionic1 libsgx-dcap-ql=${{ env.DCAP_VERSION }}-bionic1 libsgx-dcap-quote-verify=${{ env.DCAP_VERSION }}-bionic1\
+            libsgx-dcap-quote-verify-dev=${{ env.DCAP_VERSION }}-bionic1
           sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh
           sudo /bin/bash /opt/intel/sgx-aesm-service/startup.sh
-          chmod +x sgx_linux_x64_driver_2.11.0_0373e2e.bin sgx_linux_x64_sdk_2.13.100.4.bin
-          ./sgx_linux_x64_driver_2.11.0_0373e2e.bin
-          echo -e "no\n/opt/intel\n" |  ./sgx_linux_x64_sdk_2.13.100.4.bin
+          chmod +x sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
+          ./sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
+          echo -e "no\n/opt/intel\n" |  ./sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
           popd
 
       - name: Install Occlum stack
@@ -254,7 +209,8 @@ jobs:
             kubeadm reset -f
           fi
           sudo systemctl enable kubelet.service
-          kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+          kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} \
+            --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"  --cri-socket=/run/containerd/containerd.sock
 
           mkdir -p $HOME/.kube
           sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -498,53 +454,6 @@ jobs:
           done
           timeout 3 kubectl logs -f helloworld-offcloud  | grep "Hello World" || true
 
-      - name: Clear the environment
-        run: |
-          sudo kubectl delete pod --all || true
-          sudo kubeadm reset -f || true
-          for service in kubelet containerd epm
-          do
-            sudo systemctl stop $service || true
-            sudo systemctl disable $service || true
-          done
-          sudo pkill -9 kube-apiserver || true
-          sudo pkill -9 kube-controller-manager || true
-          sudo pkill -9 kube-proxy || true
-          sudo pkill -9 kube-scheduler || true
-          sudo pkill -9 signatureserver || true
-          sudo apt-get remove -y occlum || true
-          sudo apt-get remove -y occlum-pal || true
-          sudo apt-get remove -y occlum-runtime || true
-          sudo apt-get remove -y occlum-sgx-tools || true
-          sudo apt-get remove -y occlum-toolchains-gcc || true
-          sudo apt-get remove -y shim-rune || true
-          sudo apt-get remove -y shim || true
-          sudo apt-get remove -y epm || true
-          sudo apt-get remove -y kubelet kubeadm kubectl || true
-          sudo apt-get remove -y libsgx-ae-epid libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 \
-            libsgx-aesm-launch-plugin libsgx-enclave-common sgx-aesm-service libsgx-urts \
-            libsgx-launch libsgx-epid libsgx-quote-ex libsgx-enclave-common-dbgsym \
-            libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev || true
-          sudo apt-get remove -y *sgx* || true
-          sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
-          sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
-          sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh || true
-          sudo apt -y autoremove
-          sudo rm -fr /etc/containerd
-          sudo rm -fr /etc/inclavare-containers/
-          sudo rm -rf ~/.kube/
-          sudo rm -rf /etc/kubernetes
-          sudo rm -fr /var/lib/etcd
-          sudo rm -fr /usr/bin/go
-          sudo rm -fr /etc/epm
-          sudo rm -fr /var/run/epm
-          sudo rm -fr /var/local/epm
-          sudo ip link set cni0 down || true
-          sudo ip link delete cni0 || true
-          sudo ip link set flannel.1 down || true
-          sudo ip link delete flannel.1 || true
-          sudo ip -all netns del || true
-          sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
-          sudo rm -f /etc/apt/sources.list.d/kubernetes.list
-          sudo rm -rf  $WORK_DIR
-          sudo mkdir -p $WORK_DIR
+      - uses: ./.github/actions/clean-nightly-env/ubuntu
+        with:
+          work-dir: ${WORK_DIR}
