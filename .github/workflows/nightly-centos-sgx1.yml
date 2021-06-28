@@ -56,7 +56,6 @@ jobs:
         sudo ip link delete flannel.1 || true
         sudo ip -all netns del || true
         sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
-        sudo systemctl restart docker
 
     # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
     - name: Get version
@@ -81,6 +80,15 @@ jobs:
         yum install -y occlum-runtime-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
         yum install -y occlum-sgx-tools-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
         yum install -y occlum-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
+
+        pushd ${WORK_DIR}
+        if [ ! $(lsmod | grep enable_rdfsbase) ]; then
+          wget https://github.com/occlum/enable_rdfsbase/archive/master.zip -O enable_rdfsbase.zip && unzip enable_rdfsbase.zip
+          pushd enable_rdfsbase-master
+          make && make install
+          popd
+        fi
+        popd
 
     - name: Install rune shim and epm
       run: |
@@ -200,9 +208,12 @@ jobs:
         sudo chown $(id -u):$(id -g) $HOME/.kube/config
         kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
         kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
-        wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
-          -P $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
-        kubectl apply -f $WORK_DIR/kube-flannel.yml
+        if [ ! -f /tmp/kube-flannel.yml ]; then
+          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
+              $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml\
+              -O /tmp/kube-flannel.yml
+        fi
+        kubectl apply -f /tmp/kube-flannel.yml
 
     - name: Install runtimeclass
       run: |

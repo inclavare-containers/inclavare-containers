@@ -104,7 +104,15 @@ jobs:
       # occlum-pal should be installed manually
       - name: Install Occlum stack
         run: |
+          pushd ${WORK_DIR}
+          if [ ! $(lsmod | grep enable_rdfsbase) ]; then
+            wget https://github.com/occlum/enable_rdfsbase/archive/master.zip -O enable_rdfsbase.zip && unzip enable_rdfsbase.zip
+            pushd enable_rdfsbase-master
+            make && make install
+            popd
+          fi
           yum install -y occlum-rdfsbase-dkms
+          popd
 
       - name: Install rune and shim
         run: |
@@ -235,9 +243,12 @@ jobs:
           sudo chown $(id -u):$(id -g) $HOME/.kube/config
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node.cloudprovider.kubernetes.io/uninitialized-
           kubectl taint nodes $(hostname | tr 'A-Z' 'a-z') node-role.kubernetes.io/master-
-          wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
-            -P $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml
-          kubectl apply -f $WORK_DIR/kube-flannel.yml
+          if [ ! -f /tmp/kube-flannel.yml ]; then
+            wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries=0\
+                $WORK_DIR https://raw.githubusercontent.com/coreos/flannel/2140ac876ef134e0ed5af15c65e414cf26827915/Documentation/kube-flannel.yml\
+                -O /tmp/kube-flannel.yml
+          fi
+          kubectl apply -f /tmp/kube-flannel.yml
 
       - name: Install runtimeclass
         run: |
