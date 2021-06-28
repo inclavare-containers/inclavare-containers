@@ -22,7 +22,7 @@ runs:
       docker exec ${{ inputs.container-id }} bash -c 'cd /root && source /etc/profile;
           cp -r inclavare-containers inclavare-containers-${{ inputs.version }};
           tar zcf v${{ inputs.version }}.tar.gz inclavare-containers-${{ inputs.version }};
-          mkdir -p /root/inclavare-containers/${{ matrix.tag }};
+          mkdir -p /root/inclavare-containers/${{ inputs.os }};
           cd inclavare-containers-${{ inputs.version }};
           sed -i 's/shelter//g' Makefile;
           sed -i 's/inclavared//g' Makefile;
