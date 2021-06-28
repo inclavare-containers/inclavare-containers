@@ -18,6 +18,18 @@ jobs:
       with:
         ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
+    - name: Install enable_rdfsbase
+      run: |
+        if [ ! $(lsmod | grep enable_rdfsbase) ]; then
+          pushd /tmp
+          rm -rf enable_rdfsbase.zip enable_rdfsbase*
+          wget https://github.com/occlum/enable_rdfsbase/archive/master.zip -O enable_rdfsbase.zip && unzip enable_rdfsbase.zip
+          pushd enable_rdfsbase-master
+          make && make install
+          popd
+          popd
+        fi
+
     - name: Prepare work
       run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
