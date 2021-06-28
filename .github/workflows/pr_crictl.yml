@@ -30,23 +30,16 @@ jobs:
         fi;
         echo "rune_test=$rune_test" >> $GITHUB_ENV
 
-    # FIXME: Don't run make package to build shelter, inclavared and enclave-tls due to bug
-    - name: Build and install packages
-      run: docker exec $rune_test bash -c 'trap "error_handler $?" ERR;
-        error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
-        cp -r /root/inclavare-containers /root/inclavare-containers-${{ env.RUNE_VERSION }};
-        tar zcf v${{ env.RUNE_VERSION }}.tar.gz inclavare-containers-${{ env.RUNE_VERSION }};
-        cd /root/inclavare-containers-${{ env.RUNE_VERSION }};
-        mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
-        cp /root/v${{ env.RUNE_VERSION }}.tar.gz /root/rpmbuild/SOURCES/;
-        echo "${{ env.RUNE_VERSION }}" > VERSION;
-        find ./ -path "*dist/Makefile" | xargs -I files sed -i "16 d" files;
-        sed -i "s/shelter//g" Makefile;
-        sed -i "s/inclavared//g" Makefile;
-        sed -i "s/enclave-tls//g" Makefile;
-        make package RPMBUILD_DIR=/root/rpmbuild RELEASE_TARBALL_FILE=/root/rpmbuild/SOURCES/v${{ env.RUNE_VERSION }}.tar.gz RELEASE_TARBALL_EXIST=y;
-        rpm -ivh rune-${{ env.RUNE_VERSION }}-1.el8.x86_64.rpm;
-        rpm -ivh shim-rune-${{ env.RUNE_VERSION }}-1.el8.x86_64.rpm'
+    - uses: ./.github/actions/make-packages
+      with:
+        container-id: ${{ env.rune_test }}
+        os: centos8.2
+        version: ${{ env.RUNE_VERSION }}
+        cpu_num: ${{ env.CPU_NUM }}
+    - run: |
+        docker exec $rune_test bash -c 'cd /root/inclavare-containers/centos8.2;
+          rpm -ivh rune*.rpm;
+          rpm -ivh shim-rune*.rpm'
 
     - name: Start containerd
       run: docker exec $rune_test bash -c "containerd" &
