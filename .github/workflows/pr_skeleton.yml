@@ -28,9 +28,8 @@ jobs:
 
     - name: Create inclavare development container
       run: |
-        docker tag inclavarecontainers/dev:$RUNE_VERSION-centos8.2 inclavare-dev:centos8.2;
-        docker tag inclavarecontainers/dev:$RUNE_VERSION-ubuntu18.04 inclavare-dev:ubuntu18.04;
-        docker tag inclavarecontainers/dev:$RUNE_VERSION-alinux2 inclavare-dev:alinux2;
+        docker pull inclavarecontainers/dev:${{ env.RUNE_VERSION }}-${{ matrix.tag }};
+        docker tag inclavarecontainers/dev:${{ env.RUNE_VERSION }}-${{ matrix.tag }} inclavare-dev:${{ matrix.tag }};
         inclavare_dev=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v $GITHUB_WORKSPACE:/root/inclavare-containers inclavare-dev:${{ matrix.tag }});
         echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
 
@@ -48,9 +47,8 @@ jobs:
 
     - name: Build skeleton docker image
       run: |
-        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
-        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /root/inclavare-containers/${{ matrix.tag }};
-        mv /etc/docker/daemon.json /root/inclavare-containers/${{ matrix.tag }}"
+        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-${{ env.RUNE_VERSION }}/rune/libenclave/internal/runtime/pal/skeleton;
+        make -j${CPU_NUM} && cp liberpal-skeleton-v*.so /root/inclavare-containers/${{ matrix.tag }}"
         
         docker exec $inclavare_dev bash -c "cat >Dockerfile <<-EOF
         FROM scratch
@@ -61,7 +59,7 @@ jobs:
         ENTRYPOINT [\"dummy\"]
         EOF"
        
-        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-$RUNE_VERSION/rune/libenclave/internal/runtime/pal/skeleton;
+        docker exec $inclavare_dev bash -c "cd /root/inclavare-containers-${{ env.RUNE_VERSION }}/rune/libenclave/internal/runtime/pal/skeleton;
         docker build . -t skeleton-enclave -f /root/Dockerfile;
         cd /root/inclavare-containers/${{ matrix.tag }};
         docker save -o skeleton-enclave.tar skeleton-enclave"
@@ -71,9 +69,8 @@ jobs:
 
     - name: Create runtime testing container
       run: |
-        docker tag ubuntu:18.04 inclavare-test:ubuntu18.04;
-        docker tag centos:8.2.2004 inclavare-test:centos8.2;
-        docker tag registry.cn-hangzhou.aliyuncs.com/alinux/aliyunlinux inclavare-test:alinux2;
+        docker pull runetest/skeleton-runtime-testing:${{ env.RUNE_VERSION }}-${{ matrix.tag }};
+        docker tag runetest/skeleton-runtime-testing:${{ env.RUNE_VERSION }}-${{ matrix.tag }} inclavare-test:${{ matrix.tag }};
         if [ '${{ matrix.sgx }}' = '[self-hosted, SGX1]' ]; then
             inclavare_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-test:${{ matrix.tag }});
         else
@@ -81,97 +78,18 @@ jobs:
         fi;
         echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
 
-    - name: Install ubuntu dependency
-      if: ${{ contains(matrix.tag, 'ubuntu') }}
-      uses: nick-invision/retry@v2
-      with:
-        timeout_minutes: 20
-        max_attempts: 5
-        command: docker exec $inclavare_test bash -c 'apt-get update -y && apt-get install -y wget iptables gnupg libbinutils;
-          apt-get install -y libseccomp-dev libprotoc-dev binutils-dev autoconf libtool g++ pkg-config protobuf-compiler;
-          wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz && tar -zxvf v1.3.1.tar.gz && cd protobuf-c-1.3.1 && ./autogen.sh && ./configure && make && make install;
-          echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -;
-          apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
-          cd /root/inclavare-containers/${{ matrix.tag }};
-          dpkg -i rune*.deb;
-          dpkg -i shim*.deb;
-          dpkg -i sgx-tools*.deb'
-        on_retry_command: echo "retry to install ubuntu dependency!!"
-
-    - name: Install centos dependency
-      if: ${{ contains(matrix.tag, 'centos') }}
-      uses: nick-invision/retry@v2
-      with:
-        timeout_minutes: 20
-        max_attempts: 5
-        command: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-          yum -y install yum-utils wget iptables protobuf-c;
-          wget  -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
-          tar xzf sgx_rpm_local_repo.tgz;
-          yum-config-manager --add-repo sgx_rpm_local_repo;
-          yum makecache;
-          yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
-          rm -f sgx_rpm_local_repo.tgz;
-          cd /root/inclavare-containers/${{ matrix.tag }};
-          rpm -ivh rune*.rpm;
-          rpm -ivh shim*.rpm;
-          rpm -ivh sgx-tools*.rpm'
-        on_retry_command: echo "retry to install centos dependency!!"
-
-    - name: Install alinux dependency
-      if: ${{ contains(matrix.tag, 'alinux') }}
-      uses: nick-invision/retry@v2
-      with:
-        timeout_minutes: 20
-        max_attempts: 5
-        command: docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-          yum install -y alinux-release-experimentals;
-          yum install -y yum-utils wget tar gcc iptables libseccomp-devel make;
-          yum install -y libprotoc-devel binutils-devel autoconf libtool gcc-c++ pkg-config;
-          yum install -y protobuf-compiler-${{ env.ALINUX2_PROTOBUF_VERSION }} protobuf-devel-${{ env.ALINUX2_PROTOBUF_VERSION }};
-          yum install -y protobuf-c-${{ env.ALINUX2_PROTOBUF_C_VERSION }} protobuf-c-devel-${{ env.ALINUX2_PROTOBUF_C_VERSION }};
-          yum-config-manager --add-repo https://enclave-cn-beijing.oss-cn-beijing.aliyuncs.com/repo/alinux/enclave-expr.repo;
-          yum makecache;
-          rm -f /var/lib/rpm/__db.*;
-          rpm --rebuilddb;
-          yum clean all;
-          yum install --nogpgcheck -y libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \
-            libsgx-aesm-ecdsa-plugin libsgx-aesm-launch-plugin libsgx-aesm-pce-plugin libsgx-aesm-quote-ex-plugin \
-            libsgx-dcap-default-qpl libsgx-dcap-ql libsgx-dcap-quote-verify \
-            libsgx-enclave-common libsgx-launch libsgx-pce-logic libsgx-qe3-logic libsgx-quote-ex \
-            libsgx-ra-network libsgx-ra-uefi libsgx-uae-service libsgx-urts sgx-ra-service \
-            sgx-aesm-service;
-          cd /root/inclavare-containers/${{ matrix.tag }};
-          rpm -ivh rune*.rpm;
-          rpm -ivh shim*.rpm;
-          rpm -ivh sgx-tools*.rpm'
-        on_retry_command: echo "retry to install alinux dependency!!"
-
-    - name: Install sgx1 extra ubuntu dependency
-      if: ${{ contains(matrix.sgx, 'SGX1') && contains(matrix.tag, 'ubuntu') }}
-      run: |
-        docker exec $inclavare_test bash -c "apt-get install -y libsgx-epid"
-
-    - name: Install sgx1 extra centos dependency
-      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'centos')) }}
-      run: |
-        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
-
-    - name: Install sgx1 extra alinux dependency
-      if: ${{ contains(matrix.sgx, 'SGX1') && (contains(matrix.tag, 'alinux2')) }}
-      run: |
-        docker exec $inclavare_test bash -c "yum install --nogpgcheck -y libsgx-epid"
-
-    - name: Install runtime dependency
+    - name: Install runtime packages
       if: always()
-      run : docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
-        mv liberpal-skeleton-v*.so /usr/lib;
-        wget https://download.docker.com/linux/static/stable/x86_64/docker-19.03.8.tgz;
-        tar -zxvf docker-19.03.8.tgz;
-        mv docker/* /usr/bin;
-        rm -rf docker docker-19.03.8.tgz;
-        mkdir -p /etc/docker;
-        mv daemon.json /etc/docker'
+      run : |
+        if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
+          docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+            dpkg -i rune*.deb shim-rune*deb sgx-tools*.deb;
+            mv liberpal-skeleton-v*.so /usr/lib'
+        else
+          docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+            rpm -ivh rune*.rpm shim-rune*rpm sgx-tools*.rpm;
+            mv liberpal-skeleton-v*.so /usr/lib'
+        fi
 
     - uses: ./.github/actions/start-docker-daemon
       with:
