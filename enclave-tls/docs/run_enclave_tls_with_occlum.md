@@ -68,6 +68,8 @@ occlum init
 # 2. Copy files into Occlum Workspace and Build
 cp ../enclave-tls-server image/bin
 cp /lib/x86_64-linux-gnu/libdl.so.2 image/opt/occlum/glibc/lib
+cp /usr/lib/x86_64-linux-gnu/libssl.so.1.1 image/opt/occlum/glibc/lib
+cp /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1 image/opt/occlum/glibc/lib
 mkdir -p image/opt/enclave-tls
 cp -rf /opt/enclave-tls/lib image/opt/enclave-tls
 
@@ -149,6 +151,8 @@ occlum init
 # 2. Copy files into Occlum Workspace and Build
 cp ../enclave-tls-client image/bin
 cp /lib/x86_64-linux-gnu/libdl.so.2 image/opt/occlum/glibc/lib
+cp /usr/lib/x86_64-linux-gnu/libssl.so.1.1 image/opt/occlum/glibc/lib
+cp /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1 image/opt/occlum/glibc/lib
 mkdir -p image/opt/enclave-tls
 cp -rf /opt/enclave-tls/lib image/opt/enclave-tls
 
