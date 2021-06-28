@@ -8,6 +8,9 @@ export GO111MODULE := on
 %:
 	dh $@
 
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
 override_dh_auto_clean:
 
 override_dh_auto_build:
