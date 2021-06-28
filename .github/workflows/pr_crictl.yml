@@ -48,27 +48,44 @@ jobs:
         rpm -ivh rune-${{ env.RUNE_VERSION }}-1.el8.x86_64.rpm;
         rpm -ivh shim-rune-${{ env.RUNE_VERSION }}-1.el8.x86_64.rpm'
 
-    - name: Run occlum-hello pod
-      if: always()
+    - name: Start containerd
       run: docker exec $rune_test bash -c "containerd" &
 
-        docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 30s hello.yaml pod.yaml && ./show.sh"
+    - name: Run occlum-hello pod
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+          crictl run --timeout 90s hello.yaml pod.yaml && ./show.sh"
+        on_retry_command: echo "******************[RETRY]******************"
 
     - name: Run dragonwell-web pod
-      if: always()
-      run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 30s dragonwell.yaml pod.yaml && ./show.sh"
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+          crictl run --timeout 90s dragonwell.yaml pod.yaml && ./show.sh"
+        on_retry_command: echo "******************[RETRY]******************"
 
     - name: Run openjdk-web pod
-      if: always()
-      run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 30s jdk.yaml pod.yaml && ./show.sh"
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+          crictl run --timeout 90s jdk.yaml pod.yaml && ./show.sh"
+        on_retry_command: echo "******************[RETRY]******************"
 
     - name: Run golang-web pod
-      if: always()
-      run: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
-        crictl run --timeout 30s golang.yaml pod.yaml && ./show.sh"
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 20
+        max_attempts: 5
+        command: docker exec $rune_test bash -c "cd /root/samples && ./clean.sh;
+          crictl run --timeout 90s golang.yaml pod.yaml && ./show.sh"
+        on_retry_command: echo "******************[RETRY]******************"
 
     - name: Kill the container
       run: docker stop $rune_test
