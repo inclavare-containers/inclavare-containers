@@ -41,8 +41,10 @@ jobs:
           rpm -ivh rune*.rpm;
           rpm -ivh shim-rune*.rpm'
 
-    - name: Start containerd
-      run: docker exec $rune_test bash -c "containerd" &
+    - uses: ./.github/actions/start-containerd-daemon
+      with:
+        container-id: $rune_test
+      timeout-minutes: 2
 
     - name: Run occlum-hello pod
       uses: nick-invision/retry@v2
