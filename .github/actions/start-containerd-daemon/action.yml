@@ -1,0 +1,17 @@
+name: 'start_containerd_daemon'
+description: 'start_containerd_daemon'
+inputs:
+  container-id:  # id of input
+    description: 'The running container id'
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - id: start-containerd-daemon
+    run: |
+      docker exec ${{ inputs.container-id }} bash -c '
+      (containerd &);
+      while [ ! -S /run/containerd/containerd.sock ]; do
+        sleep 10;
+      done'
+    shell: bash
