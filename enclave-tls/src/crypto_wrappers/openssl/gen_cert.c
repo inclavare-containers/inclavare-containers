@@ -19,10 +19,13 @@ static int x509_extension_add(X509 *cert, const char *oid, const void *data, siz
 	X509_EXTENSION *ext = NULL;
 	int ret = 0;
 
-	nid = OBJ_create(oid, NULL, NULL);
+	nid = OBJ_txt2nid(oid);
 	if (nid == NID_undef) {
-		ETLS_DEBUG("failed to create the object, %s\n", oid);
-		return ret;
+		nid = OBJ_create(oid, NULL, NULL);
+		if (nid == NID_undef) {
+			ETLS_DEBUG("failed to create the object %s\n", oid);
+			return ret;
+		}
 	}
 
 	octet = ASN1_OCTET_STRING_new();
