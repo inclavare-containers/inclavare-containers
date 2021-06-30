@@ -1,0 +1,59 @@
+name: 'clean_nightly_env'
+description: 'clean_nightly_env'
+inputs:
+  work-dir:  # id of input
+    description: 'The work directory'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - id: clean-nightly-env
+      run: |
+        sudo kubectl delete pod -A || true
+        sudo kubeadm reset -f 2>/dev/null || true
+        for service in kubelet containerd epm
+        do
+          sudo systemctl stop $service || true
+          sudo systemctl disable $service || true
+        done
+        sudo pkill -9 kube-apiserver || true
+        sudo pkill -9 kube-controller-manager || true
+        sudo pkill -9 kube-proxy || true
+        sudo pkill -9 kube-scheduler || true
+        sudo pkill -9 signatureserver || true
+        sudo apt-get remove -y occlum || true
+        sudo apt-get remove -y occlum-pal || true
+        sudo apt-get remove -y occlum-runtime || true
+        sudo apt-get remove -y occlum-sgx-tools || true
+        sudo apt-get remove -y occlum-toolchains-gcc || true
+        sudo apt-get remove -y shim-rune || true
+        sudo apt-get remove -y shim || true
+        sudo apt-get remove -y epm || true
+        sudo apt-get remove -y kubelet kubeadm kubectl || true
+        sudo apt-get remove -y libsgx-ae-epid libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 \
+          libsgx-aesm-launch-plugin libsgx-enclave-common sgx-aesm-service libsgx-urts \
+          libsgx-launch libsgx-epid libsgx-quote-ex libsgx-enclave-common-dbgsym \
+          libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-quote-verify libsgx-dcap-quote-verify-dev || true
+        sudo apt-get remove -y *sgx* || true
+        sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh || true
+        sudo apt -y autoremove
+        sudo rm -fr /etc/containerd
+        sudo rm -fr /etc/inclavare-containers/
+        sudo rm -rf ~/.kube/
+        sudo rm -rf /etc/kubernetes
+        sudo rm -fr /var/lib/etcd
+        sudo rm -fr /usr/bin/go
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/run/epm
+        sudo rm -fr /var/local/epm
+        sudo ip link set cni0 down || true
+        sudo ip link delete cni0 || true
+        sudo ip link set flannel.1 down || true
+        sudo ip link delete flannel.1 || true
+        sudo ip -all netns del || true
+        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
+        sudo rm -rf  ${{ inputs.work-dir }}
+        sudo mkdir -p ${{ inputs.work-dir }}
+      shell: bash

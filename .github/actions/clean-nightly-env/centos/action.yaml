@@ -1,0 +1,51 @@
+name: 'clean_nightly_env'
+description: 'clean_nightly_env'
+inputs:
+  work-dir:  # id of input
+    description: 'The work directory'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - id: clean-nightly-env
+      run: |
+        sudo kubectl delete pod -A || true
+        sudo kubeadm reset -f || true
+        for service in kubectl kubelet containerd epm
+        do
+          sudo systemctl stop $service || true
+          sudo systemctl disable $service || true
+        done
+        sudo pkill -9 kube-apiserver || true
+        sudo pkill -9 kube-controller-manager || true
+        sudo pkill -9 kube-proxy || true
+        sudo pkill -9 kube-scheduler || true
+        sudo pkill -9 signatureserver || true
+        sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
+        sudo rpm -qa | grep sgx | xargs rpm -e --nodeps || true
+        sudo /bin/bash /opt/intel/sgxdriver/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgxsdk/uninstall.sh || true
+        sudo /bin/bash /opt/intel/sgx-aesm-service/cleanup.sh || true
+        sudo rpm -e shim-rune || true
+        sudo rpm -e rune || true
+        sudo rpm -e epm || true
+        sudo yum remove -y kube* || true
+        sudo rm -fr /etc/containerd
+        sudo rm -fr /etc/inclavare-containers/
+        sudo rm -rf ~/.kube/
+        sudo rm -rf /etc/kubernetes
+        sudo rm -fr /var/lib/etcd
+        sudo rm -f /etc/yum.repos.d/occlum.repo
+        sudo rm -f /etc/yum.repos.d/kubernetes.repo
+        sudo rm -fr /etc/epm
+        sudo rm -fr /var/run/epm
+        sudo rm -fr /var/local/epm
+        sudo ip link set cni0 down || true
+        sudo ip link delete cni0 || true
+        sudo ip link set flannel.1 down || true
+        sudo ip link delete flannel.1 || true
+        sudo ip -all netns del || true
+        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
+        sudo rm -rf  ${{ inputs.work-dir }}
+        sudo mkdir -p ${{ inputs.work-dir }}
+      shell: bash

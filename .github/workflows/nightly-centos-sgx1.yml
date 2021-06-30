@@ -11,6 +11,8 @@ env:
     WORK_DIR: /root/pkgs
     HOME: /root
     OCCLUM_VERSION: 0.21.0
+    SGX_DRIVER_VERSION: 2.11.0_0373e2e
+    SGX_SDK_VERSION: 2.13.100.4
     kubernetes_version: 1.18.8
     nap_time: 60
 
@@ -20,47 +22,37 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
-    - name: Clear the environment
-      run: |
-        sudo kubectl delete pod --all 2>/dev/null || true
-        sudo kubeadm reset -f 2>/dev/null || true
-        for service in kubectl kubelet containerd epm
-        do
-          sudo systemctl stop $service || true
-          sudo systemctl disable $service || true
-        done
-        sudo pkill -9 kube-apiserver || true
-        sudo pkill -9 kube-controller-manager || true
-        sudo pkill -9 kube-proxy || true
-        sudo pkill -9 kube-scheduler || true
-        sudo pkill -9 signatureserver || true
-        sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
-        sudo rpm -e shim-rune || true
-        sudo rpm -e rune || true
-        sudo rpm -e epm || true
-        sudo yum remove -y kube* || true
-        sudo rm -rf  $WORK_DIR
-        sudo rm -fr /etc/containerd
-        sudo rm -fr /etc/inclavare-containers/
-        sudo rm -rf ~/.kube/
-        sudo rm -rf /etc/kubernetes
-        sudo rm -fr /var/lib/etcd
-        sudo rm -f /etc/yum.repos.d/occlum.repo
-        sudo rm -f /etc/yum.repos.d/kubernetes.repo
-        sudo rm -fr /etc/epm
-        sudo rm -fr /var/run/epm
-        sudo rm -fr /var/local/epm
-        sudo ip link set cni0 down || true
-        sudo ip link delete cni0 || true
-        sudo ip link set flannel.1 down || true
-        sudo ip link delete flannel.1 || true
-        sudo ip -all netns del || true
-        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
+    - uses: ./.github/actions/clean-nightly-env/centos
+      with:
+        work-dir: ${WORK_DIR}
 
     # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
     - name: Get version
       run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
         echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+
+    - name: Install Intel SGX stack
+      run: |
+        sudo dnf --enablerepo=PowerTools install -y openssl-devel libcurl-devel protobuf-devel yum-utils
+        sudo yum -y groupinstall 'Development Tools'
+        sudo yum -y install python2
+        sudo alternatives --set python /usr/bin/python2
+        pushd ${WORK_DIR}
+        wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -O sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
+        wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin -O sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
+        wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz -O sgx_rpm_local_repo.tgz
+        rm -fr /usr/local/sgx_rpm_local_repo
+        tar -xzvf sgx_rpm_local_repo.tgz -C /usr/local
+        sudo yum-config-manager --add-repo file:///usr/local/sgx_rpm_local_repo
+        sudo yum -y --nogpgcheck install libsgx-launch-${SGX_SDK_VERSION} libsgx-urts-${SGX_SDK_VERSION}
+        sudo yum -y --nogpgcheck install libsgx-epid-${SGX_SDK_VERSION} libsgx-urts-${SGX_SDK_VERSION}
+        sudo yum -y --nogpgcheck install libsgx-quote-ex-${SGX_SDK_VERSION} libsgx-urts-${SGX_SDK_VERSION}
+        sudo yum -y --nogpgcheck install elfutils-libelf-devel
+        sudo yum -y --nogpgcheck install libsgx-dcap-quote-verify-devel
+        chmod +x sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
+        ./sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
+        echo -e "no\n/opt/intel\n" |  ./sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
+        popd
 
     - name: Install Occlum stack
       run: |
@@ -76,10 +68,10 @@ jobs:
         gpgcakey=http://occlum.io/occlum-package-repos/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
         EOF
 
-        yum install -y occlum-pal-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
-        yum install -y occlum-runtime-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
-        yum install -y occlum-sgx-tools-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
-        yum install -y occlum-${{ env.OCCLUM_VERSION }}-1.el8.x86_64
+        yum install -y occlum-pal-${{ env.OCCLUM_VERSION }}-1.el8.x86_64 --nogpgcheck
+        yum install -y occlum-runtime-${{ env.OCCLUM_VERSION }}-1.el8.x86_64 --nogpgcheck
+        yum install -y occlum-sgx-tools-${{ env.OCCLUM_VERSION }}-1.el8.x86_64 --nogpgcheck
+        yum install -y occlum-${{ env.OCCLUM_VERSION }}-1.el8.x86_64 --nogpgcheck
 
         pushd ${WORK_DIR}
         if [ ! $(lsmod | grep enable_rdfsbase) ]; then
@@ -201,7 +193,8 @@ jobs:
           echo y | kubeadm reset
         fi
         sudo systemctl enable kubelet.service
-        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20"
+        kubeadm init --image-repository=registry.cn-hangzhou.aliyuncs.com/google_containers --kubernetes-version=v${kubernetes_version} \
+          --pod-network-cidr="172.21.0.0/20" --service-cidr="172.20.0.0/20" --cri-socket=/var/run/containerd/containerd.sock
 
         mkdir -p $HOME/.kube
         sudo /bin/cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -469,40 +462,6 @@ jobs:
         done
         timeout 3 kubectl logs -f helloworld-offcloud  | grep "Hello World" || true
 
-    - name: Clear the environment
-      run: |
-        sudo kubectl delete pod --all || true
-        sudo kubeadm reset -f || true
-        for service in kubectl kubelet containerd epm
-        do
-          sudo systemctl stop $service || true
-          sudo systemctl disable $service || true
-        done
-        sudo pkill -9 kube-apiserver || true
-        sudo pkill -9 kube-controller-manager || true
-        sudo pkill -9 kube-proxy || true
-        sudo pkill -9 kube-scheduler || true
-        sudo pkill -9 signatureserver || true
-        sudo yum remove -y occlum occlum-runtime occlum-pal occlum-sgx-tools || true
-        sudo rpm -e shim-rune || true
-        sudo rpm -e rune || true
-        sudo rpm -e epm || true
-        sudo yum remove -y kube* || true
-        sudo rm -rf  $WORK_DIR
-        sudo rm -fr /etc/containerd
-        sudo rm -fr /etc/inclavare-containers/
-        sudo rm -rf ~/.kube/
-        sudo rm -rf /etc/kubernetes
-        sudo rm -fr /var/lib/etcd
-        sudo rm -f /etc/yum.repos.d/occlum.repo
-        sudo rm -f /etc/yum.repos.d/kubernetes.repo
-        sudo rm -fr /etc/epm
-        sudo rm -fr /var/run/epm
-        sudo rm -fr /var/local/epm
-        sudo ip link set cni0 down || true
-        sudo ip link delete cni0 || true
-        sudo ip link set flannel.1 down || true
-        sudo ip link delete flannel.1 || true
-        sudo ip -all netns del || true
-        sudo ps -ef | grep containerd-shim-rune-v2 | awk '{print $2}' | xargs kill -9 || true
-        sudo systemctl restart docker
+    - uses: ./.github/actions/clean-nightly-env/centos
+      with:
+        work-dir: ${WORK_DIR}
