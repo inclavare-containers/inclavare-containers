@@ -1,3 +1,9 @@
+inclavared (0.6.2-1) unstable; urgency=low
+
+  * Update to version 0.6.2.
+
+ -- Zhou Liang <liang.a.zhou@linux.alibaba.com>  Wed, 30 Jun 2021 14:27:16 +0000
+
 inclavared (0.6.1-1) unstable; urgency=low
 
   * Initial release.
