@@ -18,8 +18,10 @@ tls_wrapper_err_t openssl_tls_cleanup(tls_wrapper_ctx_t *ctx)
 	openssl_ctx_t *ssl_ctx = (openssl_ctx_t *)ctx->tls_private;
 
 	if (ssl_ctx != NULL) {
-		if (ssl_ctx->ssl != NULL)
+		if (ssl_ctx->ssl != NULL) {
+			SSL_shutdown(ssl_ctx->ssl);
 			SSL_free(ssl_ctx->ssl);
+		}
 		if (ssl_ctx->sctx != NULL)
 			SSL_CTX_free(ssl_ctx->sctx);
 	}
