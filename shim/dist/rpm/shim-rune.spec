@@ -8,7 +8,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name: shim-rune
-Version: 0.6.1
+Version: 0.6.2
 Release: %{centos_base_release}%{?dist}
 Summary: shim for Inclavare Containers(runE)
 Group: Development/Tools
@@ -81,6 +81,9 @@ rm -f %{SHIM_CONFIG_DIR}/config.toml
 %{SHIM_BIN_DIR}/containerd-shim-rune-v2
 
 %changelog
+* Wed Jun 30 2021 Zhiguang Jia <Zhiguang.Jia@linux.alibaba.com> - 0.6.2
+- Update to version 0.6.2
+
 * Mon May 24 2021 Liang Yang <Liang3.Yang@intel.com> - 0.6.1
 - Update to version 0.6.1
 
