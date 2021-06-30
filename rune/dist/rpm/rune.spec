@@ -5,7 +5,7 @@
 %global BIN_DIR /usr/local/bin
 
 Name: rune
-Version: 0.6.1
+Version: 0.6.2
 Release: %{centos_base_release}%{?dist}
 Summary: CLI tool for spawning and running enclaves in containers according to the OCI specification.
 
@@ -57,6 +57,9 @@ install -p -m 644 %{name}/LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{ve
 %{BIN_DIR}/%{name}
 
 %changelog
+* Wed Jun 30 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.2
+- Update to version 0.6.2
+
 * Mon May 24 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.1
 - Update to version 0.6.1
 
