@@ -1,3 +1,9 @@
+enclave-tls (0.6.2-1) unstable; urgency=low
+
+  * update to version 0.6.2.
+
+ -- Liang Yang <liang3.yang@intel.com>  Wed, 30 Jun 2021 14:30:55 +0000
+
 enclave-tls (0.6.1-1) unstable; urgency=low
 
   * Package Init.

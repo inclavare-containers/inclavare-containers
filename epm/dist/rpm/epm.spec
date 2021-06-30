@@ -8,7 +8,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name: epm
-Version: 0.6.1
+Version: 0.6.2
 Release: %{centos_base_release}%{?dist}
 Summary: epm for Inclavare Containers(runE)
 Group: Development/Tools
@@ -99,6 +99,9 @@ systemctl stop epm
 %{EPM_BIN_DIR}/epm
 
 %changelog
+* Wed Jun 30 2021 Liang Yang <liang3.yang@intel.com> - 0.6.2
+- Update to version 0.6.2
+
 * Mon May 24 2021 Liang Yang <liang3.yang@intel.com> - 0.6.1
 - Update to version 0.6.1
 
