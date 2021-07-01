@@ -4,8 +4,8 @@ LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
 RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y \
-      make gcc rpm-build protobuf-c autoconf libtool gcc-c++ \
-      wget git yum-utils file clang which \
+      make gcc rpm-build protobuf-c autoconf libtool gcc-c++ cmake libarchive \
+      wget git yum-utils file clang which vim \
       glibc-static \
       libseccomp-devel openssl-devel binutils-devel protobuf-c-devel
 
