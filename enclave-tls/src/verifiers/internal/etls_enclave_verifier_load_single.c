@@ -54,7 +54,7 @@ enclave_tls_err_t etls_enclave_verifier_load_single(const char *fname)
 	}
 
 	if (i == registerd_enclave_verifier_nums) {
-		ETLS_ERR("the enclave verifier '%s' failed to be registered\n", name);
+		ETLS_DEBUG("the enclave verifier '%s' failed to be registered\n", name);
 		return -ENCLAVE_TLS_ERR_NOT_REGISTERED;
 	}
 
