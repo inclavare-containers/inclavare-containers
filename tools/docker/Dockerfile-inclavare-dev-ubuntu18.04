@@ -3,7 +3,7 @@ FROM ubuntu:18.04
 LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
 RUN apt-get update && apt-get install -y \
-    make git vim clang-format-9 gcc pkg-config protobuf-compiler debhelper \
+    make git vim clang-format-9 gcc pkg-config protobuf-compiler debhelper cmake \
     wget net-tools curl file gnupg tree \
     libbinutils \
     libseccomp-dev libssl-dev binutils-dev libprotoc-dev
