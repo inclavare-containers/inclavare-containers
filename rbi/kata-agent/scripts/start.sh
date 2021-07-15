@@ -28,11 +28,10 @@ main() {
     make clean && make
     if [ "$?" != 0 ]; then
         echo "$ERROR Build failed."
-        exit
+        exit -1
     fi
     analyze $ARTIFEST $ARTIFEST_HASH $REPORT_FILE
     mv $ARTIFEST $OUTPUT_DIR
 }
-
 
 main "$@"
