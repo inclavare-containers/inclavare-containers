@@ -11,12 +11,15 @@ INFO=[INFO]
 ERROR=[ERROR]
 
 usage() {
-    echo "This script aims to run the kata-agent's RBCI(Reproducible Build Container Image)"
-    echo "to check whether the source code proveded can be built into the correct artifest"
-    echo "Parameters"
-    echo "- <path/to/source_code_dir> source_code_dir means dir \'kata-containers\'"
-    echo "- <path/to/output_dir>"
-    echo "- <RBCI name>"
+    cat << EOT
+    
+    This script aims to run the kata-agent's RBCI(Reproducible Build Container Image)
+    to check whether the source code proveded can be built into the correct artifest
+    Parameters:
+        - <path/to/source_code_dir> source_code_dir means dir 'kata-containers'
+        - <path/to/output_dir>
+        - <RBCI name>
+EOT
     exit
 }
 
@@ -38,17 +41,21 @@ run_build() {
     local abs_source_code_dir=$(cd "$source_code_dir";pwd)
     local abs_output_dir=$(cd "$output_dir";pwd)
     sudo docker run -it --rm -v $abs_source_code_dir:/root/input -v $abs_output_dir:/root/output $image_name
-    if [ "$?" != 0 ] ; then
+    if [ "$?" != "0" ] ; then
         echo "$ERROR docker run failed"
-        exit
+        exit -1
+    else 
+        end_notify
     fi
+
+    
 }
 
 end_notify() {
     cat <<EOT
-    $INFO Build Done. Artifests and a report will be in $output_dir.
-    You can check for details. 
-    Thank you :P
+$INFO Build Done. Artifests and a report will be in $output_dir.
+You can check for details. 
+Thank you :P
 EOT
 }
 
@@ -64,10 +71,6 @@ main() {
     fi
 
     run_build
-
-    # end_notify
 }
 
 main "$@"
-
-

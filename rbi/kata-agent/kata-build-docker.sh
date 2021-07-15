@@ -1,8 +1,13 @@
 #! /bin/bash
+
 usage() {
-    echo "This script aims to build kata-agent's RBCI(Reproducible Build Container Image)"
-    echo "Parameters"
-    echo "- <RBCI name>"
+    cat << EOT
+
+    This script aims to build kata-agent's RBCI(Reproducible Build Container Image)
+    Parameters:
+        - <RBCI name>
+
+EOT
     exit
 }
 

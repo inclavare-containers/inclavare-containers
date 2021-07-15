@@ -12,9 +12,12 @@ INFO="[INFO]"
 ERROR="[ERROR]"
 
 usage() {
-    echo "This script aims to download kata-agent's source code from github.com"
-    echo "Parameters"
-    echo "- <path/to/save/code>"
+    cat << EOT
+
+    This script aims to download kata-agent's source code from github.com
+    Parameters
+        - <path/to/save/code>
+EOT
     exit
 }
 
@@ -45,5 +48,3 @@ main() {
 }
 
 main "$@"
-
-

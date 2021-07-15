@@ -2,17 +2,17 @@
 
 KATA=kata-agent
 KATA_DIR=kata-containers
-KATA_SOURCE_CODE_GETTER=${KATA}/kata-source-code.sh
-KATA_AGENT_TEST_SCRIPT=${KATA}/kata-test.sh
+KATA_SOURCE_CODE_GETTER=$KATA/kata-source-code.sh
+KATA_AGENT_TEST_SCRIPT=$KATA/kata-test.sh
 KATA_AGENT_RBCI_NAME=kata-agent-rbci
 
-KATA_AGENT_PATCH=${KATA}/patch
-KATA_AGENT_SCRIPT=${KATA}/scripts
-KATA_AGENT_BUILD_SCRIPT=${KATA}/kata-build-docker.sh
-KATA_AGENT_TESTER=${KATA}/kata-test.sh
+KATA_AGENT_PATCH=$KATA/patch
+KATA_AGENT_SCRIPT=$KATA/scripts
+KATA_AGENT_BUILD_SCRIPT=$KATA/kata-build-docker.sh
+KATA_AGENT_TESTER=$KATA/kata-test.sh
 
 RESULT_DIR=result
-KATA_AGENT_ARTIFEST=${RESULT_DIR}/${KATA}
+KATA_AGENT_ARTIFEST=$RESULT_DIR/$KATA
 
 ERROR="[ERROR]"
 INFO="[INFO]"
@@ -37,18 +37,18 @@ Options:
   agent-rmi         Remove agent RBCI.
 
 EOT
-exit "${error}"
+exit "$error"
 }
 
 test_agent_git() {
     echo "$INFO Get kata source code from github.com"
-    ./${KATA_SOURCE_CODE_GETTER} ${KATA}
+    ./$KATA_SOURCE_CODE_GETTER $KATA
     if [ "$?" != 0 ]; then
         echo "$ERROR Can not get source code."
         exit -1
     fi
     echo "$INFO Run reproducible test for kata agent"
-    ./${KATA_AGENT_TESTER} ${KATA}/${KATA_DIR} ${KATA_AGENT_ARTIFEST} ${KATA_AGENT_RBCI_NAME}
+    ./$KATA_AGENT_TESTER $KATA/$KATA_DIR $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
 }
 
 test_agent_local() {
@@ -58,7 +58,7 @@ test_agent_local() {
         exit -1
     fi
     echo "$INFO Run reproducible test for kata agent locally"
-    ./${KATA_AGENT_TESTER} $local_dir ${KATA_AGENT_ARTIFEST} ${KATA_AGENT_RBCI_NAME}
+    ./$KATA_AGENT_TESTER $local_dir $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
 }
 
 build_agent_image() {
@@ -68,7 +68,7 @@ build_agent_image() {
         rm_agent_image
     fi
     echo "$INFO Build docker image for kata-agent rbc"
-    ./${KATA_AGENT_BUILD_SCRIPT} $KATA_AGENT_RBCI_NAME
+    ./$KATA_AGENT_BUILD_SCRIPT $KATA_AGENT_RBCI_NAME
 }
 
 rm_agent_image() {
@@ -77,8 +77,8 @@ rm_agent_image() {
 
 clean() {
     echo "$INFO Cleaning all the temp files.." 
-    rm -rf ${KATA}/${KATA_DIR}
-    rm -rf ${RESULT_DIR}
+    rm -rf $KATA/$KATA_DIR
+    rm -rf $RESULT_DIR
     echo "$INFO Done." 
 }
 
