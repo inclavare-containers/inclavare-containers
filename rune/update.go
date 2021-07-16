@@ -6,11 +6,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/sirupsen/logrus"
 
 	"github.com/docker/go-units"
 	"github.com/opencontainers/runc/libcontainer/configs"
@@ -39,9 +41,7 @@ The accepted format is as follow (unchanged values can be omitted):
   "memory": {
     "limit": 0,
     "reservation": 0,
-    "swap": 0,
-    "kernel": 0,
-    "kernelTCP": 0
+    "swap": 0
   },
   "cpu": {
     "shares": 0,
@@ -96,11 +96,11 @@ other options are ignored.
 		},
 		cli.StringFlag{
 			Name:  "kernel-memory",
-			Usage: "Kernel memory limit (in bytes)",
+			Usage: "(obsoleted; do not use)",
 		},
 		cli.StringFlag{
 			Name:  "kernel-memory-tcp",
-			Usage: "Kernel memory limit (in bytes) for tcp buffer",
+			Usage: "(obsoleted; do not use)",
 		},
 		cli.StringFlag{
 			Name:  "memory",
@@ -249,38 +249,66 @@ other options are ignored.
 					*pair.dest = v
 				}
 			}
+
 			r.Pids.Limit = int64(context.Int("pids-limit"))
 		}
 
-		// Update the value
+		if *r.Memory.Kernel != 0 || *r.Memory.KernelTCP != 0 {
+			logrus.Warn("Kernel memory settings are ignored and will be removed")
+		}
+
+		// Update the values
 		config.Cgroups.Resources.BlkioWeight = *r.BlockIO.Weight
-		config.Cgroups.Resources.CpuPeriod = *r.CPU.Period
-		config.Cgroups.Resources.CpuQuota = *r.CPU.Quota
+
+		// Seting CPU quota and period independently does not make much sense,
+		// but historically runc allowed it and this needs to be supported
+		// to not break compatibility.
+		//
+		// For systemd cgroup drivers to set CPU quota/period correctly,
+		// it needs to know both values. For fs2 cgroup driver to be compatible
+		// with the fs driver, it also needs to know both values.
+		//
+		// Here in update, previously set values are available from config.
+		// If only one of {quota,period} is set and the other is not, leave
+		// the unset parameter at the old value (don't overwrite config).
+		p, q := *r.CPU.Period, *r.CPU.Quota
+		if (p == 0 && q == 0) || (p != 0 && q != 0) {
+			// both values are either set or unset (0)
+			config.Cgroups.Resources.CpuPeriod = p
+			config.Cgroups.Resources.CpuQuota = q
+		} else {
+			// one is set and the other is not
+			if p != 0 {
+				// set new period, leave quota at old value
+				config.Cgroups.Resources.CpuPeriod = p
+			} else if q != 0 {
+				// set new quota, leave period at old value
+				config.Cgroups.Resources.CpuQuota = q
+			}
+		}
+
 		config.Cgroups.Resources.CpuShares = *r.CPU.Shares
-		//CpuWeight is used for cgroupv2 and should be converted
+		// CpuWeight is used for cgroupv2 and should be converted
 		config.Cgroups.Resources.CpuWeight = cgroups.ConvertCPUSharesToCgroupV2Value(*r.CPU.Shares)
-		//CpuMax is used for cgroupv2 and should be converted
-		config.Cgroups.Resources.CpuMax = cgroups.ConvertCPUQuotaCPUPeriodToCgroupV2Value(*r.CPU.Quota, *r.CPU.Period)
 		config.Cgroups.Resources.CpuRtPeriod = *r.CPU.RealtimePeriod
 		config.Cgroups.Resources.CpuRtRuntime = *r.CPU.RealtimeRuntime
 		config.Cgroups.Resources.CpusetCpus = r.CPU.Cpus
 		config.Cgroups.Resources.CpusetMems = r.CPU.Mems
-		config.Cgroups.Resources.KernelMemory = *r.Memory.Kernel
-		config.Cgroups.Resources.KernelMemoryTCP = *r.Memory.KernelTCP
 		config.Cgroups.Resources.Memory = *r.Memory.Limit
 		config.Cgroups.Resources.MemoryReservation = *r.Memory.Reservation
 		config.Cgroups.Resources.MemorySwap = *r.Memory.Swap
 		config.Cgroups.Resources.PidsLimit = r.Pids.Limit
+		config.Cgroups.Resources.Unified = r.Unified
 
 		// Update Intel RDT
 		l3CacheSchema := context.String("l3-cache-schema")
 		memBwSchema := context.String("mem-bw-schema")
-		if l3CacheSchema != "" && !intelrdt.IsCatEnabled() {
-			return fmt.Errorf("Intel RDT/CAT: l3 cache schema is not enabled")
+		if l3CacheSchema != "" && !intelrdt.IsCATEnabled() {
+			return errors.New("Intel RDT/CAT: l3 cache schema is not enabled")
 		}
 
-		if memBwSchema != "" && !intelrdt.IsMbaEnabled() {
-			return fmt.Errorf("Intel RDT/MBA: memory bandwidth schema is not enabled")
+		if memBwSchema != "" && !intelrdt.IsMBAEnabled() {
+			return errors.New("Intel RDT/MBA: memory bandwidth schema is not enabled")
 		}
 
 		if l3CacheSchema != "" || memBwSchema != "" {
@@ -294,11 +322,7 @@ other options are ignored.
 					return err
 				}
 				config.IntelRdt = &configs.IntelRdt{}
-				intelRdtManager := intelrdt.IntelRdtManager{
-					Config: &config,
-					Id:     container.ID(),
-					Path:   state.IntelRdtPath,
-				}
+				intelRdtManager := intelrdt.NewManager(&config, container.ID(), state.IntelRdtPath)
 				if err := intelRdtManager.Apply(state.InitProcessPid); err != nil {
 					return err
 				}
@@ -306,6 +330,13 @@ other options are ignored.
 			config.IntelRdt.L3CacheSchema = l3CacheSchema
 			config.IntelRdt.MemBwSchema = memBwSchema
 		}
+
+		// XXX(kolyshkin@): currently "runc update" is unable to change
+		// device configuration, so add this to skip device update.
+		// This helps in case an extra plugin (nvidia GPU) applies some
+		// configuration on top of what runc does.
+		// Note this field is not saved into container's state.json.
+		config.Cgroups.SkipDevices = true
 
 		return container.Set(config)
 	},

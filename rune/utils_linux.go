@@ -17,7 +17,6 @@ import (
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/cgroups/systemd"
 	"github.com/opencontainers/runc/libcontainer/configs"
-	"github.com/opencontainers/runc/libcontainer/intelrdt"
 	"github.com/opencontainers/runc/libcontainer/specconv"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -51,17 +50,16 @@ func loadFactory(context *cli.Context, enclaveConfig *enclaveConfigs.EnclaveConf
 		cgroupManager = libenclave.RootlessCgroupfs
 	}
 	if context.GlobalBool("systemd-cgroup") {
-		if systemd.IsRunningSystemd() {
-			cgroupManager = libenclave.SystemdCgroups
-		} else {
-			return nil, fmt.Errorf("systemd cgroup flag passed, but systemd support for managing cgroups is not available")
+		if !systemd.IsRunningSystemd() {
+			return nil, errors.New("systemd cgroup flag passed, but systemd support for managing cgroups is not available")
+		}
+		cgroupManager = libenclave.SystemdCgroups
+		if rootlessCg {
+			cgroupManager = libenclave.RootlessSystemdCgroups
 		}
 	}
 
 	intelRdtManager := libenclave.IntelRdtFs
-	if !intelrdt.IsCatEnabled() && !intelrdt.IsMbaEnabled() {
-		intelRdtManager = nil
-	}
 
 	// We resolve the paths for {newuidmap,newgidmap} from the context of rune,
 	// to avoid doing a path lookup in the nsexec context. TODO: The binary
@@ -93,10 +91,6 @@ func getContainer(context *cli.Context) (libcontainer.Container, error) {
 		return nil, err
 	}
 	return factory.Load(id)
-}
-
-func fatalf(t string, v ...interface{}) {
-	fatal(fmt.Errorf(t, v...))
 }
 
 func getDefaultImagePath(context *cli.Context) string {
@@ -163,6 +157,9 @@ func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, det
 		process.Stderr = nil
 		t := &tty{}
 		if !detach {
+			if err := t.initHostConsole(); err != nil {
+				return nil, err
+			}
 			parent, child, err := utils.NewSockPair("console")
 			if err != nil {
 				return nil, err
@@ -171,10 +168,7 @@ func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, det
 			t.postStart = append(t.postStart, parent, child)
 			t.consoleC = make(chan error, 1)
 			go func() {
-				if err := t.recvtty(process, parent); err != nil {
-					t.consoleC <- err
-				}
-				t.consoleC <- nil
+				t.consoleC <- t.recvtty(process, parent)
 			}()
 		} else {
 			// the caller of rune will handle receiving the console master
@@ -184,7 +178,7 @@ func setupIO(process *libcontainer.Process, rootuid, rootgid int, createTTY, det
 			}
 			uc, ok := conn.(*net.UnixConn)
 			if !ok {
-				return nil, fmt.Errorf("casting to UnixConn failed")
+				return nil, errors.New("casting to UnixConn failed")
 			}
 			t.postStart = append(t.postStart, uc)
 			socket, err := uc.File()
@@ -217,13 +211,13 @@ func createPidFile(path string, process *libcontainer.Process) error {
 	}
 	var (
 		tmpDir  = filepath.Dir(path)
-		tmpName = filepath.Join(tmpDir, fmt.Sprintf(".%s", filepath.Base(path)))
+		tmpName = filepath.Join(tmpDir, "."+filepath.Base(path))
 	)
-	f, err := os.OpenFile(tmpName, os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
+	f, err := os.OpenFile(tmpName, os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0o666)
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(f, "%d", pid)
+	_, err = f.WriteString(strconv.Itoa(pid))
 	f.Close()
 	if err != nil {
 		return err
@@ -259,13 +253,11 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec, action C
 		if err != nil {
 			return nil, err
 		}
-		c := config.Cgroups
 
 		libenclave.CreateLibenclaveMount(cwd, config, enclaveConfig.Enclave.Type)
 		libenclave.CreateLibenclaveEPMMount(cwd, config, enclaveConfig.Enclave.Type)
 		libenclave.CreateEnclaveDeviceConfig(&config.Devices, enclaveConfig.Enclave.Type)
-		libenclave.CreateEnclaveCgroupConfig(&c.Resources.Devices, enclaveConfig.Enclave.Type)
-
+		libenclave.CreateEnclaveCgroupConfig(&config.Cgroups.Resources.Devices, config.Devices)
 		if err := libenclave.ValidateEnclave(enclaveConfig); err != nil {
 			return nil, err
 		}
@@ -276,7 +268,6 @@ func createContainer(context *cli.Context, id string, spec *specs.Spec, action C
 	if err != nil {
 		return nil, err
 	}
-
 	return factory.Create(id, config)
 }
 
@@ -311,12 +302,12 @@ func (r *runner) run(config *specs.Process) (int, error) {
 		return -1, err
 	}
 	if len(r.listenFDs) > 0 {
-		process.Env = append(process.Env, fmt.Sprintf("LISTEN_FDS=%d", len(r.listenFDs)), "LISTEN_PID=1")
+		process.Env = append(process.Env, "LISTEN_FDS="+strconv.Itoa(len(r.listenFDs)), "LISTEN_PID=1")
 		process.ExtraFiles = append(process.ExtraFiles, r.listenFDs...)
 	}
 	baseFd := 3 + len(process.ExtraFiles)
 	for i := baseFd; i < baseFd+r.preserveFDs; i++ {
-		_, err = os.Stat(fmt.Sprintf("/proc/self/fd/%d", i))
+		_, err = os.Stat("/proc/self/fd/" + strconv.Itoa(i))
 		if err != nil {
 			return -1, errors.Wrapf(err, "please check that preserved-fd %d (of %d) is present", i-baseFd, r.preserveFDs)
 		}
@@ -330,10 +321,7 @@ func (r *runner) run(config *specs.Process) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	var (
-		detach = r.detach || (r.action == CT_ACT_CREATE)
-	)
-
+	detach := r.detach || (r.action == CT_ACT_CREATE)
 	// Setting up IO is a two stage process. We need to modify process to deal
 	// with detaching containers, and then we get a tty after the container has
 	// started.
@@ -399,26 +387,29 @@ func (r *runner) checkTerminal(config *specs.Process) error {
 	detach := r.detach || (r.action == CT_ACT_CREATE)
 	// Check command-line for sanity.
 	if detach && config.Terminal && r.consoleSocket == "" {
-		return fmt.Errorf("cannot allocate tty if rune will detach without setting console socket")
+		return errors.New("cannot allocate tty if rune will detach without setting console socket")
 	}
 	if (!detach || !config.Terminal) && r.consoleSocket != "" {
-		return fmt.Errorf("cannot use console socket if rune will not detach or allocate tty")
+		return errors.New("cannot use console socket if rune will not detach or allocate tty")
 	}
 	return nil
 }
 
 func validateProcessSpec(spec *specs.Process) error {
+	if spec == nil {
+		return errors.New("process property must not be empty")
+	}
 	if spec.Cwd == "" {
-		return fmt.Errorf("Cwd property must not be empty")
+		return errors.New("Cwd property must not be empty")
 	}
 	if !filepath.IsAbs(spec.Cwd) {
-		return fmt.Errorf("Cwd must be an absolute path")
+		return errors.New("Cwd must be an absolute path")
 	}
 	if len(spec.Args) == 0 {
-		return fmt.Errorf("args must not be empty")
+		return errors.New("args must not be empty")
 	}
 	if spec.SelinuxLabel != "" && !selinux.GetEnabled() {
-		return fmt.Errorf("selinux label is specified in config, but selinux is disabled or not supported")
+		return errors.New("selinux label is specified in config, but selinux is disabled or not supported")
 	}
 	return nil
 }
@@ -463,13 +454,11 @@ func startContainer(context *cli.Context, spec *specs.Spec, action CtAct, criuOp
 	}
 
 	if notifySocket != nil {
-		err := notifySocket.setupSocketDirectory()
-		if err != nil {
+		if err := notifySocket.setupSocketDirectory(); err != nil {
 			return -1, err
 		}
 		if action == CT_ACT_RUN {
-			err := notifySocket.bindSocket()
-			if err != nil {
+			if err := notifySocket.bindSocket(); err != nil {
 				return -1, err
 			}
 		}

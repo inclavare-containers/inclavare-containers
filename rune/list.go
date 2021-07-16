@@ -5,6 +5,8 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,8 +14,6 @@ import (
 	"syscall"
 	"text/tabwriter"
 	"time"
-
-	"encoding/json"
 
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runc/libcontainer/user"
@@ -109,7 +109,7 @@ To list containers created using a non-default value for "--root":
 				return err
 			}
 		default:
-			return fmt.Errorf("invalid format option")
+			return errors.New("invalid format option")
 		}
 		return nil
 	},

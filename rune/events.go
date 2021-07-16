@@ -6,6 +6,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -42,7 +43,7 @@ information is displayed once every 5 seconds.`,
 		}
 		duration := context.Duration("interval")
 		if duration <= 0 {
-			return fmt.Errorf("duration interval must be greater than 0")
+			return errors.New("duration interval must be greater than 0")
 		}
 		status, err := container.Status()
 		if err != nil {
@@ -71,7 +72,7 @@ information is displayed once every 5 seconds.`,
 			if err != nil {
 				return err
 			}
-			events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertlibcontainerStats(s)}
+			events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertLibcontainerStats(s)}
 			close(events)
 			group.Wait()
 			return nil
@@ -102,7 +103,7 @@ information is displayed once every 5 seconds.`,
 					n = nil
 				}
 			case s := <-stats:
-				events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertlibcontainerStats(s)}
+				events <- &types.Event{Type: "stats", ID: container.ID(), Data: convertLibcontainerStats(s)}
 			}
 			if n == nil {
 				close(events)
@@ -114,7 +115,7 @@ information is displayed once every 5 seconds.`,
 	},
 }
 
-func convertlibcontainerStats(ls *libcontainer.Stats) *types.Stats {
+func convertLibcontainerStats(ls *libcontainer.Stats) *types.Stats {
 	cg := ls.CgroupStats
 	if cg == nil {
 		return nil
@@ -127,9 +128,13 @@ func convertlibcontainerStats(ls *libcontainer.Stats) *types.Stats {
 	s.CPU.Usage.User = cg.CpuStats.CpuUsage.UsageInUsermode
 	s.CPU.Usage.Total = cg.CpuStats.CpuUsage.TotalUsage
 	s.CPU.Usage.Percpu = cg.CpuStats.CpuUsage.PercpuUsage
+	s.CPU.Usage.PercpuKernel = cg.CpuStats.CpuUsage.PercpuUsageInKernelmode
+	s.CPU.Usage.PercpuUser = cg.CpuStats.CpuUsage.PercpuUsageInUsermode
 	s.CPU.Throttling.Periods = cg.CpuStats.ThrottlingData.Periods
 	s.CPU.Throttling.ThrottledPeriods = cg.CpuStats.ThrottlingData.ThrottledPeriods
 	s.CPU.Throttling.ThrottledTime = cg.CpuStats.ThrottlingData.ThrottledTime
+
+	s.CPUSet = types.CPUSet(cg.CPUSetStats)
 
 	s.Memory.Cache = cg.MemoryStats.Cache
 	s.Memory.Kernel = convertMemoryEntry(cg.MemoryStats.KernelUsage)
@@ -153,15 +158,21 @@ func convertlibcontainerStats(ls *libcontainer.Stats) *types.Stats {
 	}
 
 	if is := ls.IntelRdtStats; is != nil {
-		if intelrdt.IsCatEnabled() {
+		if intelrdt.IsCATEnabled() {
 			s.IntelRdt.L3CacheInfo = convertL3CacheInfo(is.L3CacheInfo)
 			s.IntelRdt.L3CacheSchemaRoot = is.L3CacheSchemaRoot
 			s.IntelRdt.L3CacheSchema = is.L3CacheSchema
 		}
-		if intelrdt.IsMbaEnabled() {
+		if intelrdt.IsMBAEnabled() {
 			s.IntelRdt.MemBwInfo = convertMemBwInfo(is.MemBwInfo)
 			s.IntelRdt.MemBwSchemaRoot = is.MemBwSchemaRoot
 			s.IntelRdt.MemBwSchema = is.MemBwSchema
+		}
+		if intelrdt.IsMBMEnabled() {
+			s.IntelRdt.MBMStats = is.MBMStats
+		}
+		if intelrdt.IsCMTEnabled() {
+			s.IntelRdt.CMTStats = is.CMTStats
 		}
 	}
 
@@ -189,29 +200,17 @@ func convertMemoryEntry(c cgroups.MemoryData) types.MemoryEntry {
 func convertBlkioEntry(c []cgroups.BlkioStatEntry) []types.BlkioEntry {
 	var out []types.BlkioEntry
 	for _, e := range c {
-		out = append(out, types.BlkioEntry{
-			Major: e.Major,
-			Minor: e.Minor,
-			Op:    e.Op,
-			Value: e.Value,
-		})
+		out = append(out, types.BlkioEntry(e))
 	}
 	return out
 }
 
 func convertL3CacheInfo(i *intelrdt.L3CacheInfo) *types.L3CacheInfo {
-	return &types.L3CacheInfo{
-		CbmMask:    i.CbmMask,
-		MinCbmBits: i.MinCbmBits,
-		NumClosids: i.NumClosids,
-	}
+	ci := types.L3CacheInfo(*i)
+	return &ci
 }
 
 func convertMemBwInfo(i *intelrdt.MemBwInfo) *types.MemBwInfo {
-	return &types.MemBwInfo{
-		BandwidthGran: i.BandwidthGran,
-		DelayLinear:   i.DelayLinear,
-		MinBandwidth:  i.MinBandwidth,
-		NumClosids:    i.NumClosids,
-	}
+	mi := types.MemBwInfo(*i)
+	return &mi
 }

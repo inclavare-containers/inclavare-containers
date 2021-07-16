@@ -4,6 +4,7 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -66,7 +67,7 @@ func readSync(pipe io.Reader, expected syncType) error {
 	var procSync syncT
 	if err := json.NewDecoder(pipe).Decode(&procSync); err != nil {
 		if err == io.EOF {
-			return fmt.Errorf("parent closed synchronisation channel")
+			return errors.New("parent closed synchronisation channel")
 		}
 		return fmt.Errorf("failed reading error from parent: %v", err)
 	}
@@ -82,7 +83,7 @@ func readSync(pipe io.Reader, expected syncType) error {
 	}
 
 	if procSync.Type != expected {
-		return fmt.Errorf("invalid synchronisation flag from parent")
+		return errors.New("invalid synchronisation flag from parent")
 	}
 	return nil
 }
