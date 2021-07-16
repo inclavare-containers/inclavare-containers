@@ -1,22 +1,29 @@
+# github.com/bits-and-blooms/bitset v1.2.0
+github.com/bits-and-blooms/bitset
 # github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5
 ## explicit
-github.com/checkpoint-restore/go-criu/rpc
-# github.com/cilium/ebpf v0.0.0-20200319110858-a7172c01168f
+# github.com/checkpoint-restore/go-criu/v5 v5.0.0
+## explicit
+github.com/checkpoint-restore/go-criu/v5
+github.com/checkpoint-restore/go-criu/v5/rpc
+# github.com/cilium/ebpf v0.6.2
+## explicit
 github.com/cilium/ebpf
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/internal
 github.com/cilium/ebpf/internal/btf
 github.com/cilium/ebpf/internal/unix
-# github.com/containerd/console v1.0.0
+github.com/cilium/ebpf/link
+# github.com/containerd/console v1.0.2
 ## explicit
 github.com/containerd/console
-# github.com/coreos/go-systemd/v22 v22.0.0
+# github.com/coreos/go-systemd/v22 v22.3.2
 ## explicit
 github.com/coreos/go-systemd/v22/activation
 github.com/coreos/go-systemd/v22/dbus
 # github.com/cpuguy83/go-md2man/v2 v2.0.0
 github.com/cpuguy83/go-md2man/v2/md2man
-# github.com/cyphar/filepath-securejoin v0.2.2
+# github.com/cyphar/filepath-securejoin v0.2.3
 ## explicit
 github.com/cyphar/filepath-securejoin
 # github.com/docker/go-units v0.4.0
@@ -26,31 +33,31 @@ github.com/docker/go-units
 ## explicit
 github.com/go-restruct/restruct
 github.com/go-restruct/restruct/expr
-# github.com/godbus/dbus/v5 v5.0.3
+# github.com/godbus/dbus/v5 v5.0.4
 github.com/godbus/dbus/v5
-# github.com/golang/protobuf v1.4.2
+# github.com/golang/protobuf v1.5.0
 ## explicit
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
-# github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000 => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
+# github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000 => github.com/alibaba/inclavare-containers/epm v0.0.0-20210702020106-e5fad0ed1646
 ## explicit
 github.com/inclavare-containers/epm/pkg/epm-api/v1alpha1
-# github.com/konsorten/go-windows-terminal-sequences v1.0.1
-github.com/konsorten/go-windows-terminal-sequences
-# github.com/moby/sys/mountinfo v0.1.3
+# github.com/moby/sys/mountinfo v0.4.1
 ## explicit
 github.com/moby/sys/mountinfo
-# github.com/mrunalp/fileutils v0.0.0-20171103030105-7d4729fb3618
+# github.com/mrunalp/fileutils v0.5.0
 ## explicit
 github.com/mrunalp/fileutils
-# github.com/opencontainers/runc v0.0.0-20200429033603-85c44b190e42
+# github.com/opencontainers/runc v1.0.1
 ## explicit
 github.com/opencontainers/runc/libcontainer
 github.com/opencontainers/runc/libcontainer/apparmor
+github.com/opencontainers/runc/libcontainer/capabilities
 github.com/opencontainers/runc/libcontainer/cgroups
+github.com/opencontainers/runc/libcontainer/cgroups/devices
 github.com/opencontainers/runc/libcontainer/cgroups/ebpf
 github.com/opencontainers/runc/libcontainer/cgroups/ebpf/devicefilter
 github.com/opencontainers/runc/libcontainer/cgroups/fs
@@ -65,16 +72,18 @@ github.com/opencontainers/runc/libcontainer/keys
 github.com/opencontainers/runc/libcontainer/logs
 github.com/opencontainers/runc/libcontainer/nsenter
 github.com/opencontainers/runc/libcontainer/seccomp
+github.com/opencontainers/runc/libcontainer/seccomp/patchbpf
 github.com/opencontainers/runc/libcontainer/specconv
 github.com/opencontainers/runc/libcontainer/stacktrace
 github.com/opencontainers/runc/libcontainer/system
 github.com/opencontainers/runc/libcontainer/user
+github.com/opencontainers/runc/libcontainer/userns
 github.com/opencontainers/runc/libcontainer/utils
 github.com/opencontainers/runc/types
-# github.com/opencontainers/runtime-spec v1.0.2
+# github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 ## explicit
 github.com/opencontainers/runtime-spec/specs-go
-# github.com/opencontainers/selinux v1.4.0
+# github.com/opencontainers/selinux v1.8.2
 ## explicit
 github.com/opencontainers/selinux/go-selinux
 github.com/opencontainers/selinux/go-selinux/label
@@ -93,10 +102,10 @@ github.com/russross/blackfriday/v2
 github.com/seccomp/libseccomp-golang
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
-# github.com/sirupsen/logrus v1.5.0
+# github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
-# github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2
+# github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
 ## explicit
 github.com/syndtr/gocapability/capability
 # github.com/urfave/cli v1.22.1
@@ -108,8 +117,9 @@ github.com/vishvananda/netlink
 github.com/vishvananda/netlink/nl
 # github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df
 github.com/vishvananda/netns
-# golang.org/x/net v0.0.0-20201027133719-8eef5233e2a1
+# golang.org/x/net v0.0.0-20201224014010-6772e930b67b
 ## explicit
+golang.org/x/net/bpf
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -117,7 +127,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+# golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
 ## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
@@ -127,10 +137,7 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
-golang.org/x/xerrors
-golang.org/x/xerrors/internal
-# google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+# google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.33.1
 ## explicit
@@ -174,7 +181,8 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.23.0
+# google.golang.org/protobuf v1.27.1
+## explicit
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -185,24 +193,24 @@ google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
 google.golang.org/protobuf/internal/errors
-google.golang.org/protobuf/internal/fieldnum
-google.golang.org/protobuf/internal/fieldsort
 google.golang.org/protobuf/internal/filedesc
 google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
-google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
-google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/order
 google.golang.org/protobuf/internal/pragma
 google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/timestamppb
-# github.com/inclavare-containers/epm => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
+# github.com/inclavare-containers/epm => github.com/alibaba/inclavare-containers/epm v0.0.0-20210702020106-e5fad0ed1646

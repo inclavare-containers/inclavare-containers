@@ -13,10 +13,9 @@ import (
 	"github.com/opencontainers/runc/libcontainer/keys"
 	"github.com/opencontainers/runc/libcontainer/seccomp"
 	"github.com/opencontainers/runc/libcontainer/system"
-	"github.com/opencontainers/selinux/go-selinux/label"
+	"github.com/opencontainers/selinux/go-selinux"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-
 	"golang.org/x/sys/unix"
 )
 
@@ -26,14 +25,14 @@ type linuxSetnsInit struct {
 	pipe          *os.File
 	consoleSocket *os.File
 	config        *initConfig
-	logPipe       *os.File
+	logFd         int
 	logLevel      string
 	agentPipe     *os.File
 	detached      bool
 }
 
 func (l *linuxSetnsInit) getSessionRingName() string {
-	return fmt.Sprintf("_ses.%s", l.config.ContainerId)
+	return "_ses." + l.config.ContainerId
 }
 
 func (l *linuxSetnsInit) Init() error {
@@ -41,10 +40,10 @@ func (l *linuxSetnsInit) Init() error {
 	defer runtime.UnlockOSThread()
 
 	if !l.config.Config.NoNewKeyring {
-		if err := label.SetKeyLabel(l.config.ProcessLabel); err != nil {
+		if err := selinux.SetKeyLabel(l.config.ProcessLabel); err != nil {
 			return err
 		}
-		defer label.SetKeyLabel("")
+		defer selinux.SetKeyLabel("") //nolint: errcheck
 		// Do not inherit the parent's session keyring.
 		if _, err := keys.JoinSessionKeyring(l.getSessionRingName()); err != nil {
 			// Same justification as in standart_init_linux.go as to why we
@@ -69,10 +68,10 @@ func (l *linuxSetnsInit) Init() error {
 			return err
 		}
 	}
-	if err := label.SetProcessLabel(l.config.ProcessLabel); err != nil {
+	if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
 		return err
 	}
-	defer label.SetProcessLabel("")
+	defer selinux.SetExecLabel("") //nolint: errcheck
 	// Without NoNewPrivileges seccomp is a privileged operation, so we need to
 	// do this before dropping capabilities; otherwise do it as late as possible
 	// just before execve so as few syscalls take place after it as possible.
@@ -95,10 +94,12 @@ func (l *linuxSetnsInit) Init() error {
 			return newSystemErrorWithCause(err, "init seccomp")
 		}
 	}
+	logrus.Debugf("setns_init: about to exec")
+
 	if l.config.EnclaveConfig != nil {
 		cfg := &RuneletConfig{
 			InitPipe:  l.pipe,
-			LogPipe:   l.logPipe,
+			LogFd:     l.logFd,
 			LogLevel:  l.logLevel,
 			FifoFd:    -1,
 			AgentPipe: l.agentPipe,

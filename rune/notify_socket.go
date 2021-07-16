@@ -6,7 +6,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"os"
 	"path"
@@ -56,7 +55,7 @@ func (s *notifySocket) setupSpec(context *cli.Context, spec *specs.Spec) error {
 		Options:     []string{"bind", "nosuid", "noexec", "nodev", "ro"},
 	}
 	spec.Mounts = append(spec.Mounts, mount)
-	spec.Process.Env = append(spec.Process.Env, fmt.Sprintf("NOTIFY_SOCKET=%s", pathInContainer))
+	spec.Process.Env = append(spec.Process.Env, "NOTIFY_SOCKET="+pathInContainer)
 	return nil
 }
 
@@ -71,7 +70,7 @@ func (s *notifySocket) bindSocket() error {
 		return err
 	}
 
-	err = os.Chmod(s.socketPath, 0777)
+	err = os.Chmod(s.socketPath, 0o777)
 	if err != nil {
 		socket.Close()
 		return err
@@ -82,7 +81,7 @@ func (s *notifySocket) bindSocket() error {
 }
 
 func (s *notifySocket) setupSocketDirectory() error {
-	return os.Mkdir(path.Dir(s.socketPath), 0755)
+	return os.Mkdir(path.Dir(s.socketPath), 0o755)
 }
 
 func notifySocketStart(context *cli.Context, notifySocketHost, id string) (*notifySocket, error) {
@@ -164,8 +163,11 @@ func (n *notifySocket) run(pid1 int) error {
 			}
 
 			// now we can inform systemd to use pid1 as the pid to monitor
-			newPid := fmt.Sprintf("MAINPID=%d\n", pid1)
-			client.Write([]byte(newPid))
+			newPid := "MAINPID=" + strconv.Itoa(pid1)
+			_, err := client.Write([]byte(newPid + "\n"))
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 	}

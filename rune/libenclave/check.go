@@ -75,16 +75,20 @@ func CreateLibenclaveEPMMount(cwd string, config *configs.Config, etype string) 
 	config.Mounts = append(config.Mounts, createLibenclaveEPMMount(cwd))
 }
 
-func CreateEnclaveCgroupConfig(devices *[]*configs.Device, etype string) {
-	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
-		dev.Permissions = "rwm"
-		dev.Allow = true
-		*devices = append(*devices, dev)
-	})
+func CreateEnclaveCgroupConfig(rules *[]*devices.Rule, devices []*devices.Device) {
+	for _, d := range devices {
+		dev, err := enclaveMiscDev(d)
+		if err != nil {
+			continue
+		}
+		dev.Rule.Permissions = "rwm"
+		dev.Rule.Allow = true
+		*rules = append(*rules, &dev.Rule)
+	}
 }
 
 // Determine whether the device is a Intel SGX enclave or AWS Nitro Enclaves device
-func enclaveMiscDev(device *configs.Device) (*configs.Device, error) {
+func enclaveMiscDev(device *devices.Device) (*devices.Device, error) {
 	var path string
 	var err error
 	if device.Type == 'l' {
@@ -116,7 +120,7 @@ func enclaveMiscDev(device *configs.Device) (*configs.Device, error) {
 	return nil, fmt.Errorf("%s is not a SGX enclave device", dev.Path)
 }
 
-func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *configs.Device)) {
+func createEnclaveDevices(devs []*devices.Device, etype string, fn func(dev *devices.Device)) {
 	var configuredDevs []string
 	// Retrieve the configured enclave devices
 	onMatchEnclaveDevice(devs, genEnclavePathTemplate(etype), etype, func(n string, i int) {
@@ -154,7 +158,7 @@ func createEnclaveDevices(devs []*configs.Device, etype string, fn func(dev *con
 	}
 }
 
-func onMatchEnclaveDevice(devices []*configs.Device, names []string, etype string, fn func(n string, i int)) {
+func onMatchEnclaveDevice(devices []*devices.Device, names []string, etype string, fn func(n string, i int)) {
 	for _, n := range names {
 		for i, dev := range devices {
 			if dev.Path == n {
@@ -164,65 +168,85 @@ func onMatchEnclaveDevice(devices []*configs.Device, names []string, etype strin
 	}
 }
 
-func genEnclaveDeviceTemplate(etype string) []*configs.Device {
+func genEnclaveDeviceTemplate(etype string) []*devices.Device {
 	switch etype {
 	case enclaveConfigs.EnclaveTypeIntelSgx:
-		return []*configs.Device{
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/sgx_enclave",
-				Major: 10,
+		return []*devices.Device{
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/sgx_enclave",
 			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/sgx/enclave",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/sgx/enclave",
 			},
-			&configs.Device{
-				Type:  'l',
-				Path:  "/dev/sgx/enclave",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'l',
+					Major: 10,
+				},
+				Path: "/dev/sgx/enclave",
 			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/sgx_provision",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/sgx_provision",
 			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/sgx/provision",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/sgx/provision",
 			},
-			&configs.Device{
-				Type:  'l',
-				Path:  "/dev/sgx/provision",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'l',
+					Major: 10,
+				},
+				Path: "/dev/sgx/provision",
 			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/isgx",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/isgx",
 			},
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/gsgx",
-				Major: 10,
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/gsgx",
 			},
 		}
 	case enclaveConfigs.EnclaveTypeAwsNitroEnclaves:
-		return []*configs.Device{
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/nitro_enclaves",
-				Major: 10,
+		return []*devices.Device{
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/nitro_enclaves",
 			},
 		}
 	case enclaveConfigs.EnclaveTypeJailHouse:
-		return []*configs.Device{
-			&configs.Device{
-				Type:  'c',
-				Path:  "/dev/jailhouse",
-				Major: 10,
+		return []*devices.Device{
+			&devices.Device{
+				Rule: devices.Rule{
+					Type:  'c',
+					Major: 10,
+				},
+				Path: "/dev/jailhouse",
 			},
 		}
 	default:
@@ -230,7 +254,7 @@ func genEnclaveDeviceTemplate(etype string) []*configs.Device {
 	}
 }
 
-func containEnclaveDevice(devices []*configs.Device, s string) bool {
+func containEnclaveDevice(devices []*devices.Device, s string) bool {
 	for _, c := range devices {
 		if c.Path == s {
 			return true
@@ -252,11 +276,11 @@ func genEnclavePathTemplate(etype string) []string {
 	}
 }
 
-func CreateEnclaveDeviceConfig(devices *[]*configs.Device, etype string) {
-	createEnclaveDevices(*devices, etype, func(dev *configs.Device) {
+func CreateEnclaveDeviceConfig(device *[]*devices.Device, etype string) {
+	createEnclaveDevices(*device, etype, func(dev *devices.Device) {
 		dev.Uid = 0
 		dev.Gid = 0
-		*devices = append(*devices, dev)
+		*device = append(*device, dev)
 	})
 }
 

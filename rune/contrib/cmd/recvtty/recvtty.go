@@ -17,12 +17,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/containerd/console"
 	"github.com/opencontainers/runc/libcontainer/utils"
@@ -65,7 +67,7 @@ func bail(err error) {
 	os.Exit(1)
 }
 
-func handleSingle(path string) error {
+func handleSingle(path string, noStdin bool) error {
 	// Open a socket.
 	ln, err := net.Listen("unix", path)
 	if err != nil {
@@ -87,7 +89,7 @@ func handleSingle(path string) error {
 	// Get the fd of the connection.
 	unixconn, ok := conn.(*net.UnixConn)
 	if !ok {
-		return fmt.Errorf("failed to cast to unixconn")
+		return errors.New("failed to cast to unixconn")
 	}
 
 	socket, err := unixconn.File()
@@ -105,23 +107,37 @@ func handleSingle(path string) error {
 	if err != nil {
 		return err
 	}
-	console.ClearONLCR(c.Fd())
+	if err := console.ClearONLCR(c.Fd()); err != nil {
+		return err
+	}
 
 	// Copy from our stdio to the master fd.
-	quitChan := make(chan struct{})
+	var (
+		wg            sync.WaitGroup
+		inErr, outErr error
+	)
+	wg.Add(1)
 	go func() {
-		io.Copy(os.Stdout, c)
-		quitChan <- struct{}{}
+		_, outErr = io.Copy(os.Stdout, c)
+		wg.Done()
 	}()
-	go func() {
-		io.Copy(c, os.Stdin)
-		quitChan <- struct{}{}
-	}()
+	if !noStdin {
+		wg.Add(1)
+		go func() {
+			_, inErr = io.Copy(c, os.Stdin)
+			wg.Done()
+		}()
+	}
 
 	// Only close the master fd once we've stopped copying.
-	<-quitChan
+	wg.Wait()
 	c.Close()
-	return nil
+
+	if outErr != nil {
+		return outErr
+	}
+
+	return inErr
 }
 
 func handleNull(path string) error {
@@ -161,15 +177,7 @@ func handleNull(path string) error {
 				return
 			}
 
-			// Just do a dumb copy to /dev/null.
-			devnull, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
-			if err != nil {
-				// TODO: Handle this nicely.
-				return
-			}
-
-			io.Copy(devnull, master)
-			devnull.Close()
+			_, _ = io.Copy(ioutil.Discard, master)
 		}(conn)
 	}
 }
@@ -185,7 +193,7 @@ func main() {
 		v = append(v, version)
 	}
 	if gitCommit != "" {
-		v = append(v, fmt.Sprintf("commit: %s", gitCommit))
+		v = append(v, "commit: "+gitCommit)
 	}
 	app.Version = strings.Join(v, "\n")
 
@@ -201,26 +209,31 @@ func main() {
 			Value: "",
 			Usage: "Path to write daemon process ID to",
 		},
+		cli.BoolFlag{
+			Name:  "no-stdin",
+			Usage: "Disable stdin handling (no-op for null mode)",
+		},
 	}
 
 	app.Action = func(ctx *cli.Context) error {
 		args := ctx.Args()
 		if len(args) != 1 {
-			return fmt.Errorf("need to specify a single socket path")
+			return errors.New("need to specify a single socket path")
 		}
 		path := ctx.Args()[0]
 
 		pidPath := ctx.String("pid-file")
 		if pidPath != "" {
 			pid := fmt.Sprintf("%d\n", os.Getpid())
-			if err := ioutil.WriteFile(pidPath, []byte(pid), 0644); err != nil {
+			if err := ioutil.WriteFile(pidPath, []byte(pid), 0o644); err != nil {
 				return err
 			}
 		}
 
+		noStdin := ctx.Bool("no-stdin")
 		switch ctx.String("mode") {
 		case "single":
-			if err := handleSingle(path); err != nil {
+			if err := handleSingle(path, noStdin); err != nil {
 				return err
 			}
 		case "null":
