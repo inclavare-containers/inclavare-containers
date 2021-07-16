@@ -5,6 +5,7 @@
 package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,20 +15,21 @@ import (
 	"strings"
 	"unsafe"
 
-	"golang.org/x/sys/unix"
-
 	"github.com/containerd/console"
 	enclaveConfigs "github.com/inclavare-containers/rune/libenclave/configs"
 	"github.com/inclavare-containers/rune/libenclave/intelsgx/preload"
 	enclave_runtime_pal "github.com/inclavare-containers/rune/libenclave/internal/runtime/pal"
+	"github.com/opencontainers/runc/libcontainer/capabilities"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"github.com/opencontainers/runc/libcontainer/configs"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/user"
 	"github.com/opencontainers/runc/libcontainer/utils"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 )
 
 type initType string
@@ -38,8 +40,8 @@ const (
 )
 
 type pid struct {
-	Pid           int `json:"pid"`
-	PidFirstChild int `json:"pid_first"`
+	Pid           int `json:"stage2_pid"`
+	PidFirstChild int `json:"stage1_pid"`
 }
 
 // network is an internal struct used to setup container networks.
@@ -72,6 +74,8 @@ type initConfig struct {
 	ConsoleHeight    uint16                        `json:"console_height"`
 	RootlessEUID     bool                          `json:"rootless_euid,omitempty"`
 	RootlessCgroups  bool                          `json:"rootless_cgroups,omitempty"`
+	SpecState        *specs.State                  `json:"spec_state,omitempty"`
+	Cgroup2Path      string                        `json:"cgroup2_path,omitempty"`
 	EnclaveConfig    *enclaveConfigs.EnclaveConfig `json:"enclaveConfig"`
 	Detached         bool                          `json:"Detached,omitempty"`
 }
@@ -80,7 +84,7 @@ type initer interface {
 	Init() error
 }
 
-func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd int, logPipe *os.File, logLevel string, agentPipe *os.File) (initer, error) {
+func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd, logFd int, logLevel string, agentPipe *os.File) (initer, error) {
 	var config *initConfig
 	if err := json.NewDecoder(pipe).Decode(&config); err != nil {
 		return nil, err
@@ -115,7 +119,7 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 			pipe:          pipe,
 			consoleSocket: consoleSocket,
 			config:        config,
-			logPipe:       logPipe,
+			logFd:         logFd,
 			logLevel:      logLevel,
 			agentPipe:     agentPipe,
 			detached:      config.Detached,
@@ -127,7 +131,7 @@ func newContainerInit(t initType, pipe *os.File, consoleSocket *os.File, fifoFd 
 			parentPid:     unix.Getppid(),
 			config:        config,
 			fifoFd:        fifoFd,
-			logPipe:       logPipe,
+			logFd:         logFd,
 			logLevel:      logLevel,
 			agentPipe:     agentPipe,
 			detached:      config.Detached,
@@ -142,9 +146,19 @@ func populateProcessEnvironment(env []string) error {
 	for _, pair := range env {
 		p := strings.SplitN(pair, "=", 2)
 		if len(p) < 2 {
-			return fmt.Errorf("invalid environment '%v'", pair)
+			return fmt.Errorf("invalid environment variable: %q", pair)
 		}
-		if err := os.Setenv(p[0], p[1]); err != nil {
+		name, val := p[0], p[1]
+		if name == "" {
+			return fmt.Errorf("environment variable name can't be empty: %q", pair)
+		}
+		if strings.IndexByte(name, 0) >= 0 {
+			return fmt.Errorf("environment variable name can't contain null(\\x00): %q", pair)
+		}
+		if strings.IndexByte(val, 0) >= 0 {
+			return fmt.Errorf("environment variable value can't contain null(\\x00): %q", pair)
+		}
+		if err := os.Setenv(name, val); err != nil {
 			return err
 		}
 	}
@@ -162,19 +176,33 @@ func finalizeNamespace(config *initConfig) error {
 		return errors.Wrap(err, "close exec fds")
 	}
 
-	if config.Cwd != "" {
-		if err := unix.Chdir(config.Cwd); err != nil {
+	// we only do chdir if it's specified
+	doChdir := config.Cwd != ""
+	if doChdir {
+		// First, attempt the chdir before setting up the user.
+		// This could allow us to access a directory that the user running runc can access
+		// but the container user cannot.
+		err := unix.Chdir(config.Cwd)
+		switch {
+		case err == nil:
+			doChdir = false
+		case os.IsPermission(err):
+			// If we hit an EPERM, we should attempt again after setting up user.
+			// This will allow us to successfully chdir if the container user has access
+			// to the directory, but the user running runc does not.
+			// This is useful in cases where the cwd is also a volume that's been chowned to the container user.
+		default:
 			return fmt.Errorf("chdir to cwd (%q) set in config.json failed: %v", config.Cwd, err)
 		}
 	}
 
-	capabilities := &configs.Capabilities{}
+	caps := &configs.Capabilities{}
 	if config.Capabilities != nil {
-		capabilities = config.Capabilities
+		caps = config.Capabilities
 	} else if config.Config.Capabilities != nil {
-		capabilities = config.Config.Capabilities
+		caps = config.Config.Capabilities
 	}
-	w, err := newContainerCapList(capabilities)
+	w, err := capabilities.New(caps)
 	if err != nil {
 		return err
 	}
@@ -188,6 +216,12 @@ func finalizeNamespace(config *initConfig) error {
 	}
 	if err := setupUser(config); err != nil {
 		return errors.Wrap(err, "setup user")
+	}
+	// Change working directory AFTER the user has been set up, if we haven't done it yet.
+	if doChdir {
+		if err := unix.Chdir(config.Cwd); err != nil {
+			return fmt.Errorf("chdir to cwd (%q) set in config.json failed: %v", config.Cwd, err)
+		}
 	}
 	if err := system.ClearKeepCaps(); err != nil {
 		return errors.Wrap(err, "clear keep caps")
@@ -218,6 +252,9 @@ func setupConsole(socket *os.File, config *initConfig, mount bool) error {
 		return err
 	}
 
+	// After we return from here, we don't need the console anymore.
+	defer pty.Close()
+
 	if config.ConsoleHeight != 0 && config.ConsoleWidth != 0 {
 		err = pty.Resize(console.WinSize{
 			Height: config.ConsoleHeight,
@@ -228,9 +265,6 @@ func setupConsole(socket *os.File, config *initConfig, mount bool) error {
 			return err
 		}
 	}
-
-	// After we return from here, we don't need the console anymore.
-	defer pty.Close()
 
 	// Mount the console inside our rootfs.
 	if mount {
@@ -307,10 +341,10 @@ func setupUser(config *initConfig) error {
 	// Rather than just erroring out later in setuid(2) and setgid(2), check
 	// that the user is mapped here.
 	if _, err := config.Config.HostUID(execUser.Uid); err != nil {
-		return fmt.Errorf("cannot set uid to unmapped user in user namespace")
+		return errors.New("cannot set uid to unmapped user in user namespace")
 	}
 	if _, err := config.Config.HostGID(execUser.Gid); err != nil {
-		return fmt.Errorf("cannot set gid to unmapped user in user namespace")
+		return errors.New("cannot set gid to unmapped user in user namespace")
 	}
 
 	if config.RootlessEUID {
@@ -319,7 +353,7 @@ func setupUser(config *initConfig) error {
 		// this check earlier, but if libenclave.Process.User was typesafe
 		// this might work.
 		if len(addGroups) > 0 {
-			return fmt.Errorf("cannot set any additional groups in a rootless container")
+			return errors.New("cannot set any additional groups in a rootless container")
 		}
 	}
 
@@ -338,7 +372,7 @@ func setupUser(config *initConfig) error {
 	// There's nothing we can do about /etc/group entries, so we silently
 	// ignore setting groups here (since the user didn't explicitly ask us to
 	// set the group).
-	allowSupGroups := !config.RootlessEUID && strings.TrimSpace(string(setgroups)) != "deny"
+	allowSupGroups := !config.RootlessEUID && string(bytes.TrimSpace(setgroups)) != "deny"
 
 	if allowSupGroups {
 		suppGroups := append(execUser.Sgids, addGroups...)
@@ -465,6 +499,7 @@ func setupRlimits(limits []configs.Rlimit, pid int) error {
 
 const _P_PID = 1
 
+//nolint:structcheck,unused
 type siginfo struct {
 	si_signo int32
 	si_errno int32
@@ -514,7 +549,9 @@ func signalAllProcesses(m cgroups.Manager, s os.Signal) error {
 	}
 	pids, err := m.GetAllPids()
 	if err != nil {
-		m.Freeze(configs.Thawed)
+		if err := m.Freeze(configs.Thawed); err != nil {
+			logrus.Warn(err)
+		}
 		return err
 	}
 	for _, pid := range pids {

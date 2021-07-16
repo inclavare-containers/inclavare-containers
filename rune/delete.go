@@ -5,6 +5,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,7 +26,7 @@ func killContainer(container libcontainer.Container) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("container init still running")
+	return errors.New("container init still running")
 }
 
 var deleteCommand = cli.Command{
@@ -40,7 +41,7 @@ For example, if the container id is "ubuntu01" and rune list currently shows the
 status of "ubuntu01" as "stopped" the following will delete resources held for
 "ubuntu01" removing "ubuntu01" from the rune list of containers:
 
-       # rune delete ubuntu01`,
+	# rune delete ubuntu01`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "force, f",

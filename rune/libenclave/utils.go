@@ -5,6 +5,7 @@ package libenclave // import "github.com/inclavare-containers/rune/libenclave"
 import (
 	"bytes"
 	"encoding/binary"
+
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	pb "github.com/inclavare-containers/rune/libenclave/proto"
@@ -87,7 +88,7 @@ func (e *genericError) Error() string {
 		return e.Message
 	}
 	frame := e.Stack.Frames[0]
-	return fmt.Sprintf("%s:%d: %s caused %q", frame.File, frame.Line, e.Cause, e.Message)
+	return fmt.Sprintf("%s:%d: %s caused: %s", frame.File, frame.Line, e.Cause, e.Message)
 }
 
 func (e *genericError) Code() libcontainer.ErrorCode {

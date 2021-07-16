@@ -25,7 +25,7 @@ var enclaveRuntime *runtime.EnclaveRuntimeWrapper
 
 type RuneletConfig struct {
 	InitPipe  *os.File
-	LogPipe   *os.File
+	LogFd     int
 	LogLevel  string
 	FifoFd    int
 	AgentPipe *os.File

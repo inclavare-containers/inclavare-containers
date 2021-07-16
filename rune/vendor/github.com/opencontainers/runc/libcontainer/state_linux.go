@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/opencontainers/runc/libcontainer/configs"
-
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
@@ -38,7 +38,8 @@ type containerState interface {
 }
 
 func destroy(c *linuxContainer) error {
-	if !c.config.Namespaces.Contains(configs.NEWPID) {
+	if !c.config.Namespaces.Contains(configs.NEWPID) ||
+		c.config.Namespaces.PathOf(configs.NEWPID) != "" {
 		if err := signalAllProcesses(c.cgroupManager, unix.SIGKILL); err != nil {
 			logrus.Warn(err)
 		}
@@ -61,17 +62,21 @@ func destroy(c *linuxContainer) error {
 }
 
 func runPoststopHooks(c *linuxContainer) error {
-	if c.config.Hooks != nil {
-		s, err := c.currentOCIState()
-		if err != nil {
-			return err
-		}
-		for _, hook := range c.config.Hooks.Poststop {
-			if err := hook.Run(s); err != nil {
-				return err
-			}
-		}
+	hooks := c.config.Hooks
+	if hooks == nil {
+		return nil
 	}
+
+	s, err := c.currentOCIState()
+	if err != nil {
+		return err
+	}
+	s.Status = specs.StateStopped
+
+	if err := hooks[configs.Poststop].RunHooks(s); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -152,7 +157,7 @@ func (i *createdState) transition(s containerState) error {
 }
 
 func (i *createdState) destroy() error {
-	i.c.initProcess.signal(unix.SIGKILL)
+	_ = i.c.initProcess.signal(unix.SIGKILL)
 	return destroy(i.c)
 }
 

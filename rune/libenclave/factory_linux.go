@@ -93,13 +93,22 @@ func SystemdCgroups(l *LinuxEnclaveFactory) error {
 	}
 
 	l.NewCgroupsManager = func(config *configs.Cgroup, paths map[string]string) cgroups.Manager {
-		return &systemd.LegacyManager{
-			Cgroups: config,
-			Paths:   paths,
-		}
+		return systemd.NewLegacyManager(config, paths)
 	}
 
 	return nil
+}
+
+// RootlessSystemdCgroups is rootless version of SystemdCgroups.
+func RootlessSystemdCgroups(l *LinuxEnclaveFactory) error {
+	if !systemd.IsRunningSystemd() {
+		return fmt.Errorf("systemd not running on this host, can't use systemd as cgroups manager")
+	}
+
+	if !cgroups.IsCgroup2UnifiedMode() {
+		return fmt.Errorf("cgroup v2 not enabled on this host, can't use systemd (rootless) as cgroups manager")
+	}
+	return systemdCgroupV2(l, true)
 }
 
 func cgroupfs2(l *LinuxEnclaveFactory, rootless bool) error {
@@ -113,20 +122,21 @@ func cgroupfs2(l *LinuxEnclaveFactory, rootless bool) error {
 	return nil
 }
 
+func cgroupfs(l *LinuxEnclaveFactory, rootless bool) error {
+	if cgroups.IsCgroup2UnifiedMode() {
+		return cgroupfs2(l, rootless)
+	}
+	l.NewCgroupsManager = func(config *configs.Cgroup, paths map[string]string) cgroups.Manager {
+		return fs.NewManager(config, paths, rootless)
+	}
+	return nil
+}
+
 // Cgroupfs is an options func to configure a LinuxEnclaveFactory to return containers
 // that use the native cgroups filesystem implementation to create and manage
 // cgroups.
 func Cgroupfs(l *LinuxEnclaveFactory) error {
-	if cgroups.IsCgroup2UnifiedMode() {
-		return cgroupfs2(l, false)
-	}
-	l.NewCgroupsManager = func(config *configs.Cgroup, paths map[string]string) cgroups.Manager {
-		return &fs.Manager{
-			Cgroups: config,
-			Paths:   paths,
-		}
-	}
-	return nil
+	return cgroupfs(l, false)
 }
 
 // RootlessCgroupfs is an options func to configure a LinuxEnclaveFactory to return
@@ -136,28 +146,18 @@ func Cgroupfs(l *LinuxEnclaveFactory) error {
 // during rootless container (including euid=0 in userns) setup (while still allowing cgroup usage if
 // they've been set up properly).
 func RootlessCgroupfs(l *LinuxEnclaveFactory) error {
-	if cgroups.IsCgroup2UnifiedMode() {
-		return cgroupfs2(l, true)
-	}
-	l.NewCgroupsManager = func(config *configs.Cgroup, paths map[string]string) cgroups.Manager {
-		return &fs.Manager{
-			Cgroups:  config,
-			Rootless: true,
-			Paths:    paths,
-		}
-	}
-	return nil
+	return cgroupfs(l, true)
 }
 
 // IntelRdtfs is an options func to configure a LinuxEnclaveFactory to return
 // containers that use the Intel RDT "resource control" filesystem to
 // create and manage Intel RDT resources (e.g., L3 cache, memory bandwidth).
 func IntelRdtFs(l *LinuxEnclaveFactory) error {
-	l.NewIntelRdtManager = func(config *configs.Config, id string, path string) intelrdt.Manager {
-		return &intelrdt.IntelRdtManager{
-			Config: config,
-			Id:     id,
-			Path:   path,
+	if !intelrdt.IsCATEnabled() && !intelrdt.IsMBAEnabled() {
+		l.NewIntelRdtManager = nil
+	} else {
+		l.NewIntelRdtManager = func(config *configs.Config, id string, path string) intelrdt.Manager {
+			return intelrdt.NewManager(config, id, path)
 		}
 	}
 	return nil
@@ -190,11 +190,10 @@ func CriuPath(criupath string) func(*LinuxEnclaveFactory) error {
 // configures the factory with the provided option funcs.
 func New(root string, enclaveConfig *enclaveConfigs.EnclaveConfig, detached bool, options ...func(*LinuxEnclaveFactory) error) (libcontainer.Factory, error) {
 	if root != "" {
-		if err := os.MkdirAll(root, 0700); err != nil {
+		if err := os.MkdirAll(root, 0o700); err != nil {
 			return nil, newGenericError(err, libcontainer.SystemError)
 		}
 	}
-
 	l := &LinuxEnclaveFactory{
 		LinuxFactory: libcontainer.LinuxFactory{
 			Root:      root,
@@ -206,7 +205,11 @@ func New(root string, enclaveConfig *enclaveConfigs.EnclaveConfig, detached bool
 		enclaveConfig: enclaveConfig,
 		detached:      detached,
 	}
-	Cgroupfs(l)
+
+	if err := Cgroupfs(l); err != nil {
+		return nil, err
+	}
+
 	for _, opt := range options {
 		if opt == nil {
 			continue
@@ -226,6 +229,12 @@ type LinuxEnclaveFactory struct {
 }
 
 func (l *LinuxEnclaveFactory) Create(id string, config *configs.Config) (libcontainer.Container, error) {
+	if l.Root == "" {
+		return nil, newGenericError(fmt.Errorf("invalid root"), libcontainer.ConfigInvalid)
+	}
+	if err := l.validateID(id); err != nil {
+		return nil, err
+	}
 	lf := (*libcontainer.LinuxFactory)(unsafe.Pointer(l))
 	lc, err := lf.Create(id, config)
 	if err != nil {
@@ -249,7 +258,7 @@ func (l *LinuxEnclaveFactory) Create(id string, config *configs.Config) (libcont
 		newgidmapPath: l.NewgidmapPath,
 		cgroupManager: l.NewCgroupsManager(config.Cgroups, nil),
 	}
-	if intelrdt.IsCatEnabled() || intelrdt.IsMbaEnabled() {
+	if l.NewIntelRdtManager != nil {
 		c.intelRdtManager = l.NewIntelRdtManager(config, id, "")
 	}
 	c.state = &stoppedState{c: c}
@@ -260,7 +269,7 @@ func (l *LinuxEnclaveFactory) Load(id string) (libcontainer.Container, error) {
 	if l.Root == "" {
 		return nil, newGenericError(fmt.Errorf("invalid root"), libcontainer.ConfigInvalid)
 	}
-	//when load, we need to check id is valid or not.
+	// when load, we need to check id is valid or not.
 	if err := l.validateID(id); err != nil {
 		return nil, err
 	}
@@ -291,6 +300,9 @@ func (l *LinuxEnclaveFactory) Load(id string) (libcontainer.Container, error) {
 		root:                 containerRoot,
 		created:              state.Created,
 	}
+	if l.NewIntelRdtManager != nil {
+		c.intelRdtManager = l.NewIntelRdtManager(&state.Config, id, state.IntelRdtPath)
+	}
 	if state.EnclaveConfig.Enclave != nil {
 		c.enclaveConfig = &state.EnclaveConfig
 	}
@@ -298,9 +310,6 @@ func (l *LinuxEnclaveFactory) Load(id string) (libcontainer.Container, error) {
 	c.state = &loadedState{c: c}
 	if err := c.refreshState(); err != nil {
 		return nil, err
-	}
-	if intelrdt.IsCatEnabled() || intelrdt.IsMbaEnabled() {
-		c.intelRdtManager = l.NewIntelRdtManager(&state.Config, id, state.IntelRdtPath)
 	}
 	return c, nil
 }
@@ -313,39 +322,33 @@ func (l *LinuxEnclaveFactory) Type() string {
 // This is a low level implementation detail of the reexec and should not be consumed externally
 func (l *LinuxEnclaveFactory) StartInitialization() (err error) {
 	var (
-		pipefd, fifofd int
-		consoleSocket  *os.File
-		logPipe        *os.File
-		agentPipe      *os.File
-		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
-		envFifoFd      = os.Getenv("_LIBCONTAINER_FIFOFD")
-		envConsole     = os.Getenv("_LIBCONTAINER_CONSOLE")
-		envLogPipe     = os.Getenv("_LIBCONTAINER_LOGPIPE")
-		envLogLevel    = os.Getenv("_LIBCONTAINER_LOGLEVEL")
-		envAgentPipe   = os.Getenv("_LIBENCLAVE_AGENTPIPE")
+		agentPipe    *os.File
+		envLogLevel  = os.Getenv("_LIBCONTAINER_LOGLEVEL")
+		envAgentPipe = os.Getenv("_LIBENCLAVE_AGENTPIPE")
 	)
 
 	// Get the INITPIPE.
-	pipefd, err = strconv.Atoi(envInitPipe)
+	envInitPipe := os.Getenv("_LIBCONTAINER_INITPIPE")
+	pipefd, err := strconv.Atoi(envInitPipe)
 	if err != nil {
 		return fmt.Errorf("unable to convert _LIBCONTAINER_INITPIPE=%s to int: %s", envInitPipe, err)
 	}
-
-	var (
-		pipe = os.NewFile(uintptr(pipefd), "pipe")
-		it   = initType(os.Getenv("_LIBCONTAINER_INITTYPE"))
-	)
+	pipe := os.NewFile(uintptr(pipefd), "pipe")
 	defer pipe.Close()
 
 	// Only init processes have FIFOFD.
-	fifofd = -1
+	fifofd := -1
+	envInitType := os.Getenv("_LIBCONTAINER_INITTYPE")
+	it := initType(envInitType)
 	if it == initStandard {
+		envFifoFd := os.Getenv("_LIBCONTAINER_FIFOFD")
 		if fifofd, err = strconv.Atoi(envFifoFd); err != nil {
 			return fmt.Errorf("unable to convert _LIBCONTAINER_FIFOFD=%s to int: %s", envFifoFd, err)
 		}
 	}
 
-	if envConsole != "" {
+	var consoleSocket *os.File
+	if envConsole := os.Getenv("_LIBCONTAINER_CONSOLE"); envConsole != "" {
 		console, err := strconv.Atoi(envConsole)
 		if err != nil {
 			return fmt.Errorf("unable to convert _LIBCONTAINER_CONSOLE=%s to int: %s", envConsole, err)
@@ -354,13 +357,10 @@ func (l *LinuxEnclaveFactory) StartInitialization() (err error) {
 		defer consoleSocket.Close()
 	}
 
-	if envLogPipe != "" {
-		log, err := strconv.Atoi(envLogPipe)
-		if err != nil {
-			return fmt.Errorf("unable to convert _LIBCONTAINER_LOGPIPE=%s to int: %s", envLogPipe, err)
-		}
-		logPipe = os.NewFile(uintptr(log), "log-pipe")
-		defer logPipe.Close()
+	logPipeFdStr := os.Getenv("_LIBCONTAINER_LOGPIPE")
+	logPipeFd, err := strconv.Atoi(logPipeFdStr)
+	if err != nil {
+		return fmt.Errorf("unable to convert _LIBCONTAINER_LOGPIPE=%s to int: %s", logPipeFdStr, err)
 	}
 
 	if envAgentPipe != "" {
@@ -394,7 +394,7 @@ func (l *LinuxEnclaveFactory) StartInitialization() (err error) {
 		}
 	}()
 
-	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipe, envLogLevel, agentPipe)
+	i, err := newContainerInit(it, pipe, consoleSocket, fifofd, logPipeFd, envLogLevel, agentPipe)
 	if err != nil {
 		return err
 	}
