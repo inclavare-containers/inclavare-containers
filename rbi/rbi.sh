@@ -38,6 +38,34 @@ Usage: ${script_name} [options]
 
 Build RBCI, run RB tests for different components.
 
+Tips:
+  [[ kata-agent build & test ]]
+  1. agent-image - Generate kata-agent RBCI to build source code 
+    into binary. The image is named 'kata-agent-rbci'.
+  2. agent-git/agent-local - Build a binary using RBCI in 1, and
+    calculate the artifest's sha256 hash value to compare with 
+    the reference value. Finally, output a report in the path 
+    'result/kata-agent/report', together with the binary 
+    'result/kata-agent/kata-agent'.
+  (Optional) 3. Delete RBCI if need.
+
+  [[ rootfs raw disk image build & test ]]
+  1. rootfs - Generate a root file system locally, then the rootfs
+    will be used to build a raw disk image.
+    The rootfs will be in 'result/rootfs/rootfs'
+  2. rootfs-image-build - Build a raw disk image using the rootfs
+    generated in 1. The img file will be 'result/kata-containers.img'
+    Up to now, a rootfs's raw disk image is generated. Then, we need
+    to check whether the content is the same as expected.
+  3. rootfs-checker - Build a docker image which we use as a base
+    environment to check the contents of a specific image file.
+    The image name is 'rootfs-rdi-check'.
+  4. rootfs-check - Check the content of the disk image generated
+    in 2. Compare them with the expected files using their hash 
+    values, and output a report in report/rootfs/check-report
+  (Optional) 5. rootfs-rmi - Delete image generated in 3, s.t.
+    'rootfs-rdi-check'.
+
 Options:
   help              Show this help message.
   agent-git         Do kata-agent reproducible build test, pull source code
