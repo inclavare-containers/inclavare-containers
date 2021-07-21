@@ -7,6 +7,7 @@ on:
 
 env:
     ALINUX2_PROTOBUF_C_VERSION: 1.0.2
+    DCAP_VERSION: 1.10.100.4
 
 jobs:
   rune_skeleton:
@@ -118,7 +119,7 @@ jobs:
           error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
           apt-get update -y && apt-get install -y wget iptables gnupg libprotobuf-c1 libbinutils;
           echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/intel-sgx.list && wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | apt-key add -; 
-          apt-get update -y && apt-get install -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl;
+          apt-get update -y && apt-get install -y libsgx-dcap-quote-verify=${{ env.DCAP_VERSION }}-bionic1 libsgx-dcap-default-qpl=${{ env.DCAP_VERSION }}-bionic1;
           cd /root/inclavare-containers/${{ matrix.tag }};
           dpkg -i rune*.deb;
           dpkg -i shim*.deb;
@@ -140,7 +141,7 @@ jobs:
           sleep 20 && systemctl stop dnf-makecache.timer;
           cd /root/inclavare-containers/${{ matrix.tag }};
           yum -y install yum-utils wget iptables protobuf-c;
-          wget -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
+          wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
           tar xzf sgx_rpm_local_repo.tgz;
           yum-config-manager --add-repo sgx_rpm_local_repo;
           yum makecache;
