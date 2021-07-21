@@ -95,7 +95,7 @@ main() {
 
     [ -f $kata_agent_bin ] || no_kata_agent
 
-    [ -d $output_dir ] && exist_output_dir
+    [ -d $output_dir ] && exist_output_dir || mkdir $(dirname $output_dir)
     
     [ -d $source_code_dir ] || no_exist_input_dir
     
