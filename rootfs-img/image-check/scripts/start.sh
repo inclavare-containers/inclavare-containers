@@ -19,8 +19,11 @@ check_files() {
     
     [ -f $REPORT_FILE ] && info "$REPORT_FILE exists, delete." \
         && rm -f $REPORT_FILE
+        
+    date=`TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"`
 
     echo "==FILE COMPARE REPORT==" > $REPORT_FILE
+    echo "[Time] $date" >> $REPORT_FILE
 
     local file_numbers=$(cat $REFERENCE_VALUE_FILE | wc -l)
 
