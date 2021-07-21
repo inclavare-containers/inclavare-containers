@@ -266,7 +266,8 @@ RUN tar -C /usr/ -xzf /tmp/go1.14.4.linux-amd64.tar.gz
 ENV GOROOT=/usr/go
 ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
+ENV https_proxy=$https_proxy
 # rust
-RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSLf --output /tmp/rust-init;     chmod a+x /tmp/rust-init; 	export http_proxy=; 	export https_proxy=; 	/tmp/rust-init -y --default-toolchain 1.47.0
-RUN . /root/.cargo/env;     export http_proxy=; 	export https_proxy=; 	cargo install cargo-when; 	rustup target install x86_64-unknown-linux-musl
+RUN curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSLf --output /tmp/rust-init;     chmod a+x /tmp/rust-init; 	/tmp/rust-init -y --default-toolchain 1.47.0
+RUN . /root/.cargo/env; 	cargo install cargo-when; 	rustup target install x86_64-unknown-linux-musl
 RUN ln -sf /usr/bin/g++ /bin/musl-g++
