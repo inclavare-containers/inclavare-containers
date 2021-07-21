@@ -5,7 +5,7 @@ rootfs_dir=
 output_dir=
 abs_pwd=
 
-ARTIFEST=kata-container.img
+ARTIFEST=kata-containers.img
 REPORT_FILE=report
 
 BUILD_DIR=tools/osbuilder/image-builder
@@ -45,11 +45,11 @@ no_exist_output_dir() {
 }
 
 patch() {
-    local abs_pwd=$2
+    local abs_pwd=$1
     local abs_source_code_dir=$2
 
     echo "$INFO Apply patch from $abs_pwd/patch --> $abs_source_code_dir/$BUILD_DIR"
-    cp -rf patch/* $abs_source_code_dir/$BUILD_DIR
+    cp -rf $abs_pwd/patch/* $abs_source_code_dir/$BUILD_DIR
     echo "$INFO Apply patch done."
 }
 
@@ -79,6 +79,7 @@ main() {
         usage
     fi
 
+    abs_pwd=$(cd $(dirname $0); pwd)
     source_code_dir=$1
     rootfs_dir=$2
     output_dir=$3
@@ -88,7 +89,7 @@ main() {
     local abs_source_code_dir=$(cd "$source_code_dir";pwd)
     local abs_output_dir=$(cd "$output_dir";pwd)
     local abs_rootfs_dir=$(cd "$rootfs_dir";pwd)
-    abs_pwd=$(pwd)
+    
 
     patch $abs_pwd $abs_source_code_dir
 
