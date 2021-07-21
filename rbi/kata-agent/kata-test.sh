@@ -40,7 +40,9 @@ run_build() {
     echo "$INFO Will launch a docker container to build $source_code_dir --> $output_dir"
     local abs_source_code_dir=$(cd "$source_code_dir";pwd)
     local abs_output_dir=$(cd "$output_dir";pwd)
-    sudo docker run -it --rm -v $abs_source_code_dir:/root/input -v $abs_output_dir:/root/output $image_name
+    sudo docker run -it --rm \
+                --env HTTPS_PROXY=$https_proxy \
+                -v $abs_source_code_dir:/root/input -v $abs_output_dir:/root/output $image_name
     if [ "$?" != "0" ] ; then
         echo "$ERROR docker run failed"
         exit -1
