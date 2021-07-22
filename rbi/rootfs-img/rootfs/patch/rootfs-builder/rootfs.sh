@@ -524,7 +524,6 @@ EOT
 	popd  >> /dev/null
 
 	[ -n "${KERNEL_MODULES_DIR}" ] && copy_kernel_modules ${KERNEL_MODULES_DIR} ${ROOTFS_DIR}
-
 	info "Create ${ROOTFS_DIR}/etc"
 	mkdir -p "${ROOTFS_DIR}/etc"
 
