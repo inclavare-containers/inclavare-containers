@@ -57,7 +57,7 @@ run_build() {
     kata_agent_abs=$(cd $(dirname $kata_agent); pwd)/kata-agent
     
     echo "$INFO Will run script $source_code_dir/$ROOTFS_BUILDER_SCRIPT"
-    USE_DOCKER=true AGENT_SOURCE_BIN=$kata_agent_abs $source_code_dir/$ROOTFS_BUILDER_SCRIPT $DISTRO
+    sudo USE_DOCKER=true AGENT_SOURCE_BIN=$kata_agent_abs $source_code_dir/$ROOTFS_BUILDER_SCRIPT $DISTRO
     [ "$?" != "0" ] && echo "$ERROR rootfs build failed." && exit -1
 
     mv $source_code_dir/$ROOTFS_DIR $output_dir

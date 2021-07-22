@@ -25,8 +25,9 @@ check_files() {
     echo "==FILE COMPARE REPORT==" > $REPORT_FILE
     echo "[Time] $date" >> $REPORT_FILE
 
+    info "Check for required files..."
     local file_numbers=$(cat $REFERENCE_VALUE_FILE | wc -l)
-
+    
     while read line
     do
         filetype=$(echo $line | awk {'print $1'})
@@ -54,6 +55,30 @@ check_files() {
             fi
         }
     done < $REFERENCE_VALUE_FILE
+
+    [ "$file_numbers" == "$(find | wc -l)" ] && info "Check done." && \
+                    info "Check done." && exit
+    
+    info "Check new files..."
+    for file in $(find)
+    do
+        local found=0
+        local find_file_type=
+        [ -f $file ] && find_file_type=file || find_file_type=dir
+
+        while read line
+        do
+            path=$(echo $line | awk {'print $2'})
+            filetype=$(echo $line | awk {'print $1'})
+            [ "$path" == "$file" ] && \
+                [ "$filetype" == "$find_file_type" ] && {
+                found=1
+                break
+            }
+        done < $REFERENCE_VALUE_FILE
+
+        [ "$found" == "1" ] || echo "New file $file" >> $REPORT_FILE
+    done
     info "Check done." 
 }
 
