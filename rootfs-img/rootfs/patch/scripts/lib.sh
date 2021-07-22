@@ -205,7 +205,6 @@ create_summary_file()
 	osbuilder:
 	  url: "${osbuilder_url}"
 	  version: "${OSBUILDER_VERSION}"
-	rootfs-creation-time: "${now}"
 	description: "osbuilder rootfs"
 	file-format-version: "${format_version}"
 	architecture: "${ARCH}"
