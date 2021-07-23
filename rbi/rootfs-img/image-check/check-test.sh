@@ -1,5 +1,7 @@
 #! /bin/bash
 
+MBR_CFILE=mbr-checker.c
+
 info() {
     echo "[INFO]" $1
 }
@@ -23,25 +25,43 @@ EOT
     exit
 }
 
-exist_output_dir() {
+exist_report() {
     local file_name=$1
 
-    info "$file_name exists, cleaning contents..."
+    info "$file_name exists, cleaning..."
     rm -f $file_name
     info "$Clean done."
+}
+
+compare_mbr() {
+    local disk_image=$1
+    local script_dir=$2
+    local checker=$script_dir/mbr-checker
+    info "Compare MBR..."
+    gcc $script_dir/$MBR_CFILE -O2 -o $checker
+
+    $checker $disk_image
+    [ "$?" != 0 ] && {
+        rm -f $checker
+        exit -1
+    }
+    rm -f $checker
 }
 
 run_build() {
     local raw_disk=$1
     local output_file=$2
     local image_name=$3
+    local script_dir=$4
 
     local raw_disk_path=$(cd $(dirname $raw_disk);pwd)
     local raw_disk_name=${raw_disk##*/}
     local output_file_path=$(cd $(dirname $output_file);pwd)
     local output_file_name=${output_file##*/}
 
-    info "Will launch a docker container to compare \
+    compare_mbr $raw_disk_path/$raw_disk_name $script_dir
+
+    info "Will launch a docker container to compare data\
         $raw_disk_path/$raw_disk_name"
     info "Results will be redirected to \
         $output_file_path/$output_file_name"
@@ -83,10 +103,11 @@ main() {
     local raw_disk_image=$1
     local report_file=$2
     local rbci_name=$3
+    local script_dir=$(cd $(dirname $0); pwd)
 
     [ -f $report_file ] && exist_report $report_file
 
-    run_build $raw_disk_image $report_file $rbci_name
+    run_build $raw_disk_image $report_file $rbci_name $script_dir
 }
 
 main "$@"

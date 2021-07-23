@@ -59,26 +59,29 @@ check_files() {
     [ "$file_numbers" == "$(find | wc -l)" ] && info "Check done." && \
                     info "Check done." && exit
     
-    info "Check new files..."
-    for file in $(find)
-    do
-        local found=0
-        local find_file_type=
-        [ -f $file ] && find_file_type=file || find_file_type=dir
+    # info "Check new files..."
+    # cd $rootfs_dir
+    # for file in $(find .)
+    # do
+    #     echo $file
+    #     sleep 1
+    #     local found=0
+    #     local find_file_type=
+    #     [ -f $file ] && find_file_type=file || find_file_type=dir
 
-        while read line
-        do
-            path=$(echo $line | awk {'print $2'})
-            filetype=$(echo $line | awk {'print $1'})
-            [ "$path" == "$file" ] && \
-                [ "$filetype" == "$find_file_type" ] && {
-                found=1
-                break
-            }
-        done < $REFERENCE_VALUE_FILE
+    #     while read line
+    #     do
+    #         path=$(echo $line | awk {'print $2'})
+    #         filetype=$(echo $line | awk {'print $1'})
+    #         [ "$path" == "$file" ] && \
+    #             [ "$filetype" == "$find_file_type" ] && {
+    #             found=1
+    #             break
+    #         }
+    #     done < $REFERENCE_VALUE_FILE
 
-        [ "$found" == "1" ] || echo "New file $file" >> $REPORT_FILE
-    done
+    #     [ "$found" == "1" ] || echo "New file $file" >> $REPORT_FILE
+    # done
     info "Check done." 
 }
 
