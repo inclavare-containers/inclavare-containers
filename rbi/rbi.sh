@@ -29,6 +29,14 @@ ROOTFS_OUTPUT_DIR=$ROOTFS_OUTPUT/rootfs
 ROOTFS_OUTPUT_REPORT=$ROOTFS_OUTPUT/rootfs-report
 RAW_DISK_IMAGE=$ROOTFS_OUTPUT/kata-containers.img
 RAW_DISK_CHECK_REPORT=$ROOTFS_OUTPUT/check-report
+
+KERNEL_IMAGE=kernel-rbci
+KERNEL_IMAGE_BUILDER=kernel/build-docker-image.sh
+KERNEL_BUILDER=kernel/build-kernel.sh
+KERNEL_SOURCE_CODE_SCRIPT=kernel/get-source-code.sh
+KERNEL_SOURCE_DIR=$RESULT_DIR/kernel/linux
+KERNEL_OUTPUT_DIR=$RESULT_DIR/kernel
+
 usage()
 {
 	error="${1:-0}"
@@ -165,6 +173,27 @@ check_rootfs_img() {
                         $ROOTFS_RRDCI_NAME
 }
 
+kernel-rbi() {
+    image_already=`sudo docker images| grep $KERNEL_IMAGE | awk {'print $1'}`
+    if [ "$image_already" = "$KERNEL_IMAGE" ]; then
+        info "Detected image already exists."
+        exit
+    fi
+    info "Build docker image for kernel RBC"
+    ./$KERNEL_IMAGE_BUILDER $KERNEL_IMAGE
+}
+
+kernel_code() {
+    info "Get kernel code"
+    ./$KERNEL_SOURCE_CODE_SCRIPT $KERNEL_SOURCE_DIR
+    info "Got."
+}
+
+kernel_build() {
+    info "Build kernel..."
+    ./$KERNEL_BUILDER $KERNEL_SOURCE_DIR $KERNEL_OUTPUT_DIR
+}
+
 clean() {
     info "Cleaning all the temp files.." 
     rm -rf $RESULT_DIR
@@ -206,6 +235,15 @@ main() {
         ;;
     rootfs-check)
         check_rootfs_img
+        ;;
+    kernel-rbi)
+        kernel_rbi
+        ;;
+    kernel-code)
+        kernel_code
+        ;;
+    kernel-build)
+        kernel_build
         ;;
     clean)
         clean

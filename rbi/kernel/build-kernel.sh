@@ -22,24 +22,35 @@ EOT
     exit
 }
 
+info() {
+    echo "[INFO] $1"
+}
+
+error() {
+    echo "[ERROR] $1"
+    exit
+}
+
 exist_output_dir() {
-    echo "$INFO $output_dir exists, cleaning contents..."
-    rm -f $output_dir/$REPORT_FILE
-    rm -f $output_dir/$ARTIFEST
-    echo "$INFO Clean done."
+    local abs_output_dir=$1
+    info "$INFO $abs_output_dir exists, cleaning contents..."
+    rm -f $abs_output_dir/$REPORT_FILE
+    rm -f $abs_output_dir/$ARTIFEST
+    info "$INFO Clean done."
 }
 
 no_exist_output_dir() {
-    echo "$INFO $output_dir doesn't exist, creating.."
-    mkdir -p $output_dir
-    echo "$INFO $output_dir created."
+    local abs_output_dir=$1
+    info "$abs_output_dir doesn't exist, creating.."
+    mkdir -p $abs_output_dir
+    info "$abs_output_dir created."
 }
 
 run_build() {
     local abs_source_code_dir=$1
     local abs_output_dir=$2 
 
-    echo "$INFO Will began to build $abs_source_code_dir --> $abs_output_dir/$ARTIFEST"
+    info "Will began to build $abs_source_code_dir --> $abs_output_dir/$ARTIFEST"
     sudo docker run --rm -it -v $abs_source_code_dir:/root/kernel \
                     -v $abs_output_dir:/root/output \
                     --env KERNEL_DIR=/root/kernel \
@@ -88,7 +99,8 @@ main() {
     local abs_output_dir=$(cd "$output_dir";pwd)
     local abs_rootfs_dir=$(cd "$rootfs_dir";pwd)
 
-    [ -d $abs_output_dir ] && exist_output_dir || no_exist_output_dir
+    [ -d $abs_output_dir ] && exist_output_dir $abs_output_dir \
+            || no_exist_output_dir $abs_output_dir
 
     run_build $abs_source_code_dir $abs_output_dir
 

@@ -3,6 +3,8 @@ For convenience, some scripts are collected for automatically building.
 ## Files
 *   `rbi.sh` main script. Use `./rbi.sh help` to see details.
 *   `kata-agent/` scripts related to RB of kata-agent.
+*   `rootfs-img` scripts and patches related to RB of rootfs raw disk image
+*   `kernel` scripts related to RB of kernel
 
 ## Instructions
 ### RB for kata-agent
@@ -27,5 +29,58 @@ Delete RBCI for kata-agent
 
 Clean all tempfiles
 ```bash
-./rbi clean
+./rbi.sh clean
+```
+
+### RB for kata-containers.img
+Firstly, need to generate a root file system locally, then the rootfs
+will be used to build a raw disk image.
+```bash
+./rbi.sh rootfs
+```
+
+And the rootfs will be in `result/rootfs/rootfs`.
+Then, need a raw disk image using the rootfs
+just generated. The img file will be `result/kata-containers.img`
+```bash
+./rbi.sh rootfs-image-build
+```
+
+Up to now, a rootfs's raw disk image is generated. Then, we need
+to check whether the content is the same as expected.
+Build a docker image which we use as a base environment to check 
+the contents of a specific image file.
+The image name is `rootfs-rdi-check`.
+```bash
+./rbi.sh rootfs-checker
+```
+
+Finally, check the content of the disk image generated
+in 2. Compare them with the expected files using their hash 
+values, and output a report in `report/rootfs/check-report`
+```bash
+./rbi.sh rootfs-check
+```
+(Optional) Also, the image `rootfs-rdi-check`  can be removed
+```bash
+./rbi.sh rootfs-rmi
+```
+
+### RB for kernel
+
+```bash
+./build-docker-image.sh kernel-rbi
+```
+builds a docker image named`kernel-rbi`
+
+`./get-source-code.sh ./linux` get source code of Linux to `./linux`
+
+`./build-kernel.sh ./linux ./report` rb kernel and generate report
+
+If correctly, you can get report as
+```plaintext
+$cat report/kernel_report 
+===KERNEL RB REPORT===
+[Time] 2021-07-23 17:58:59
+[SUCCESSFUL] Same hash
 ```
