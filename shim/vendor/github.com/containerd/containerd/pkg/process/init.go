@@ -27,7 +27,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/containerd/console"
@@ -39,6 +38,7 @@ import (
 	google_protobuf "github.com/gogo/protobuf/types"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
 // Init represents an initial process for a container
@@ -87,7 +87,7 @@ func NewRunc(root, path, namespace, runtime, criu string, systemd bool) *runc.Ru
 		Command:       runtime,
 		Log:           filepath.Join(path, "log.json"),
 		LogFormat:     runc.JSON,
-		PdeathSignal:  syscall.SIGKILL,
+		PdeathSignal:  unix.SIGKILL,
 		Root:          filepath.Join(root, namespace),
 		Criu:          criu,
 		SystemdCgroup: systemd,
@@ -157,7 +157,7 @@ func (p *Init) Create(ctx context.Context, r *CreateConfig) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to retrieve console master")
 		}
-		console, err = p.Platform.CopyConsole(ctx, console, r.Stdin, r.Stdout, r.Stderr, &p.wg)
+		console, err = p.Platform.CopyConsole(ctx, console, p.id, r.Stdin, r.Stdout, r.Stderr, &p.wg)
 		if err != nil {
 			return errors.Wrap(err, "failed to start console copy")
 		}
@@ -176,7 +176,7 @@ func (p *Init) Create(ctx context.Context, r *CreateConfig) error {
 }
 
 func (p *Init) openStdin(path string) error {
-	sc, err := fifo.OpenFifo(context.Background(), path, syscall.O_WRONLY|syscall.O_NONBLOCK, 0)
+	sc, err := fifo.OpenFifo(context.Background(), path, unix.O_WRONLY|unix.O_NONBLOCK, 0)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open stdin fifo %s", path)
 	}
@@ -193,11 +193,15 @@ func (p *Init) createCheckpointedState(r *CreateConfig, pidFile *pidFile) error 
 			ParentPath: r.ParentCheckpoint,
 		},
 		PidFile:     pidFile.Path(),
-		IO:          p.io.IO(),
 		NoPivot:     p.NoPivotRoot,
 		Detach:      true,
 		NoSubreaper: true,
 	}
+
+	if p.io != nil {
+		opts.IO = p.io.IO()
+	}
+
 	p.initState = &createdCheckpointState{
 		p:    p,
 		opts: opts,
@@ -361,7 +365,7 @@ func (p *Init) KillAll(ctx context.Context) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	err := p.runtime.Kill(ctx, p.id, int(syscall.SIGKILL), &runc.KillOpts{
+	err := p.runtime.Kill(ctx, p.id, int(unix.SIGKILL), &runc.KillOpts{
 		All: true,
 	})
 	return p.runtimeError(err, "OCI runtime killall failed")
@@ -441,7 +445,7 @@ func (p *Init) checkpoint(ctx context.Context, r *CheckpointConfig) error {
 	}, actions...); err != nil {
 		dumpLog := filepath.Join(p.Bundle, "criu-dump.log")
 		if cerr := copyFile(dumpLog, filepath.Join(work, "dump.log")); cerr != nil {
-			log.G(ctx).Error(err)
+			log.G(ctx).WithError(cerr).Error("failed to copy dump.log to criu-dump.log")
 		}
 		return fmt.Errorf("%s path= %s", criuError(err), dumpLog)
 	}

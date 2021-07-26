@@ -137,6 +137,8 @@ func checkKillError(err error) error {
 		strings.Contains(strings.ToLower(err.Error()), "no such process") ||
 		err == unix.ESRCH {
 		return errors.Wrapf(errdefs.ErrNotFound, "process already finished")
+	} else if strings.Contains(err.Error(), "does not exist") {
+		return errors.Wrapf(errdefs.ErrNotFound, "no such container")
 	}
 	return errors.Wrapf(err, "unknown error after kill")
 }
@@ -170,7 +172,7 @@ func (p *pidFile) Read() (int, error) {
 func waitTimeout(ctx context.Context, wg *sync.WaitGroup, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	done := make(chan struct{}, 1)
+	done := make(chan struct{})
 	go func() {
 		wg.Wait()
 		close(done)
