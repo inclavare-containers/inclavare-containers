@@ -1,4 +1,4 @@
-module src
+module opa.go
 
 go 1.16
 

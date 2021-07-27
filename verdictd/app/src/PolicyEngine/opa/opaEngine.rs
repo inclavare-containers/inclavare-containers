@@ -12,7 +12,7 @@ extern "C" {
     pub fn makeDecisionGo(policy: GoString, message: GoString) -> *mut c_char;
 }
 
-const POLICY_PATH: &str = "src/policy/";
+const POLICY_PATH: &str = "src/policyEngine/opa/policy/";
 
 /// String structure passed into cgo
 #[derive(Debug)]
