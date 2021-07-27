@@ -43,7 +43,7 @@ check_files() {
             
             hashv=$(sha256sum $target_file | awk {'print $1'})
             if [ $hashv != $ref_hashv ]; then 
-                echo "Different file $path" >> $REPORT_FILE
+                echo "Different file $path, need $ref_hashv but provide $hashv" >> $REPORT_FILE
                 continue
             fi
         }
@@ -59,29 +59,7 @@ check_files() {
     [ "$file_numbers" == "$(find | wc -l)" ] && info "Check done." && \
                     info "Check done." && exit
     
-    # info "Check new files..."
-    # cd $rootfs_dir
-    # for file in $(find .)
-    # do
-    #     echo $file
-    #     sleep 1
-    #     local found=0
-    #     local find_file_type=
-    #     [ -f $file ] && find_file_type=file || find_file_type=dir
-
-    #     while read line
-    #     do
-    #         path=$(echo $line | awk {'print $2'})
-    #         filetype=$(echo $line | awk {'print $1'})
-    #         [ "$path" == "$file" ] && \
-    #             [ "$filetype" == "$find_file_type" ] && {
-    #             found=1
-    #             break
-    #         }
-    #     done < $REFERENCE_VALUE_FILE
-
-    #     [ "$found" == "1" ] || echo "New file $file" >> $REPORT_FILE
-    # done
+    # TODO: check whether there is more files in the image
     info "Check done." 
 }
 
