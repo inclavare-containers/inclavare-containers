@@ -11,6 +11,7 @@ use serde_json::Value;
 
 mod key_manager;
 mod enclave_tls;
+mod policyEngine;
 
 fn parse_aa_request_and_generate_response(request: &[u8]) -> Result<String, String> {
     let parsed_request: Value = match serde_json::from_slice(request) {
