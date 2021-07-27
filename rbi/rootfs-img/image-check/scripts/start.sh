@@ -1,8 +1,8 @@
 #! /bin/bash
 
-IMAGE_FILE=${IMAGE_FILE-/root/kata-container.img}
-REFERENCE_VALUE_FILE=${REFERENCE_VALUE_FILE-/root/reference}
-REPORT_FILE=${REPORT_FILE-/root/report}
+IMAGE_FILE=${IMAGE_FILE:-/root/kata-container.img}
+REFERENCE_VALUE_FILE=${REFERENCE_VALUE_FILE:-/root/reference}
+REPORT_FILE=${REPORT_FILE:-/root/report}
 IMG_PATH=$(dirname $IMAGE_FILE)
 
 info() {
