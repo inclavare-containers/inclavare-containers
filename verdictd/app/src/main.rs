@@ -10,6 +10,7 @@ use serde_json::json;
 use serde_json::Value;
 
 mod key_manager;
+mod crypto;
 mod enclave_tls;
 mod policyEngine;
 
