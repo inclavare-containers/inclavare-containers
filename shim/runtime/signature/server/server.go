@@ -7,8 +7,8 @@ import (
 
 	"github.com/inclavare-containers/shim/runtime/signature/server/conf"
 
-	"github.com/golang/glog"
 	"github.com/inclavare-containers/shim/runtime/signature/server/api"
+	"k8s.io/klog/v2"
 )
 
 type Server struct {
@@ -20,7 +20,7 @@ type Server struct {
 func NewServer(conf *conf.Config) (*Server, error) {
 	apiSvr, err := api.NewApiServer(":9080", conf)
 	if err != nil {
-		glog.Errorf("Failed to create ApiServer.err:%s", err.Error())
+		klog.Errorf("Failed to create ApiServer.err:%s", err.Error())
 	}
 	svr := &Server{
 		config:    conf,
@@ -34,7 +34,7 @@ func NewServer(conf *conf.Config) (*Server, error) {
 
 func (svr *Server) Start(stopChan <-chan struct{}) {
 
-	glog.Info("Starting HttpServer ...")
+	klog.Info("Starting HttpServer ...")
 	go func() {
 		if err := svr.apiServer.RunForeground(); err != nil {
 			panic(err)

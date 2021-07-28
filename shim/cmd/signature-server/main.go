@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/golang/glog"
+	"k8s.io/klog/v2"
 
 	"github.com/inclavare-containers/shim/cmd/signature-server/app"
 )
@@ -44,12 +44,12 @@ func main() {
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 
 	if err := cmd.Execute(); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 
 	flag.CommandLine.Parse([]string{})
 
 	if err := cmd.Execute(); err != nil {
-		glog.Fatal(err)
+		klog.Fatal(err)
 	}
 }
