@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/golang/glog"
+	"k8s.io/klog/v2"
 
 	"github.com/inclavare-containers/shim/cmd/signature-server/app/options"
 	"github.com/inclavare-containers/shim/runtime/signature/server"
@@ -18,7 +18,7 @@ func runServer(opts *options.SignatureServerOptions, stopCh <-chan struct{}) err
 
 	svr, err := server.NewServer(&cnf)
 	if err != nil {
-		glog.Fatalf("failed to init toolkit server, err:%s", err.Error())
+		klog.Fatalf("failed to init toolkit server, err:%s", err.Error())
 		return err
 	}
 	svr.Start(stopCh)

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/inclavare-containers/shim/runtime/signature/types"
+	"k8s.io/klog/v2"
 )
 
 type SignStandard string
@@ -76,23 +76,23 @@ func (c *pkcs1Client) Sign(data []byte) (signature []byte, publicKey []byte, err
 	}
 	resp, err := client.Post(url, "text/plain", bytes.NewBuffer(data))
 	if err != nil || resp.StatusCode != 200 {
-		glog.Errorf("request sign error,%v", err)
+		klog.Errorf("request sign error,%v", err)
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
 	signedBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		glog.Errorf("failed to read sign response,%v", err)
+		klog.Errorf("failed to read sign response,%v", err)
 		return nil, nil, err
 	}
 	payload := &types.SignaturePayload{}
 	if err := json.Unmarshal(signedBytes, payload); err != nil {
-		glog.Errorf("failed to unmarshal sign response,%v", err)
+		klog.Errorf("failed to unmarshal sign response,%v", err)
 		return nil, nil, err
 	}
 	decode, err := base64.StdEncoding.DecodeString(payload.Signature)
 	if err != nil {
-		glog.Errorf("failed to decode signature,%v", err)
+		klog.Errorf("failed to decode signature,%v", err)
 		return nil, nil, err
 	}
 	return decode, []byte(payload.PublicKey), nil
@@ -113,7 +113,7 @@ func (c *pkcs1Client) GetPublicKey() (publicKey []byte, err error) {
 	defer resp.Body.Close()
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		glog.Errorf("failed to read public key response,%v", err)
+		klog.Errorf("failed to read public key response,%v", err)
 		return nil, err
 	}
 	return bytes, nil
