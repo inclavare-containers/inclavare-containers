@@ -9,6 +9,7 @@ use serde::{Serialize, Deserialize};
 use serde_json::json;
 use serde_json::Value;
 
+mod key_manager;
 mod enclave_tls;
 
 fn parse_aa_request_and_generate_response(request: &[u8]) -> Result<String, String> {
