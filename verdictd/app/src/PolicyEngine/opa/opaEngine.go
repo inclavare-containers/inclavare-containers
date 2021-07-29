@@ -24,7 +24,7 @@ func makeDecisionGo(policy string, message string) *C.char {
 
 	// Construct a Rego object that can be prepared or evaluated.
 	r := rego.New(
-		rego.Query("input;data.demo"),
+		rego.Query("input;data.policy"),
 		rego.Module("demo.rego", policy),
 	)
 
