@@ -186,7 +186,6 @@ kernel-rbi() {
 kernel_code() {
     info "Get kernel code"
     ./$KERNEL_SOURCE_CODE_SCRIPT $KERNEL_SOURCE_DIR
-    info "Got."
 }
 
 kernel_build() {
