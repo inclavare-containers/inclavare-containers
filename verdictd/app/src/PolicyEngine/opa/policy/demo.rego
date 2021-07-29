@@ -1,4 +1,4 @@
-package demo
+package policy
 
 mrEnclave = "123"
 mrSigner = "456"

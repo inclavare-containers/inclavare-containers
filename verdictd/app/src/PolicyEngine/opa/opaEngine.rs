@@ -1,9 +1,10 @@
+use lazy_static::lazy_static;
+use parking_lot::RwLock;
 use serde_json::Value;
 use std::ffi::CStr;
-use std::fs::{remove_file, File};
+use std::fs::{remove_file, File, OpenOptions};
 use std::io::prelude::*;
 use std::os::raw::c_char;
-use std::path::Path;
 use std::process::Command;
 
 /// Link import cgo function
@@ -13,6 +14,33 @@ extern "C" {
 }
 
 const POLICY_PATH: &str = "src/policyEngine/opa/policy/";
+
+/// Global file lock struct
+pub struct FileLock {
+    pub file: Option<File>,
+}
+
+impl FileLock {
+    // Set the "file" field
+    pub fn set_file(path: &str) {
+        let mut w = FILELOCK.write();
+        *w = FileLock {
+            file: Some(
+                OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .read(true)
+                    .open(path)
+                    .unwrap(),
+            ),
+        };
+    }
+}
+
+lazy_static! {
+    // Global file lock
+    pub static ref FILELOCK: RwLock<FileLock> = RwLock::new(FileLock { file: None });
+}
 
 /// String structure passed into cgo
 #[derive(Debug)]
@@ -44,7 +72,7 @@ pub fn set_reference(policy_name: &str, references: &str) -> bool {
     let mrEnclave: String = String::from("mrEnclave = ") + &references["mrEnclave"].to_string();
     let mrSigner: String = String::from("mrSigner = ") + &references["mrSigner"].to_string();
     let productId: String = String::from("productId = ") + &references["productId"].to_string();
-    let policy = "package demo\n\n".to_string()
+    let policy = "package policy\n\n".to_string()
         + &mrEnclave
         + "\n"
         + &mrSigner
@@ -103,17 +131,26 @@ pub fn export_policy(policy_name: &str) -> String {
     let path = String::from(POLICY_PATH) + policy_name;
     let mut contents = String::new();
 
-    // Open the file named policy_name
-    let mut file = match File::open(path) {
+    FileLock::set_file(&path);
+    let reader = FILELOCK.read();
+    let reader = &reader.file;
+    let mut file_reader: &File;
+
+    match reader {
+        Some(s) => file_reader = s,
+        None => return contents,
+    };
+
+    match file_reader.seek(std::io::SeekFrom::Start(0)) {
         Err(_) => {
-            println!("Failed to open the policy");
+            println!("Failed to move the read position to the beginning");
             return contents;
         }
-        Ok(res) => res,
+        Ok(_) => (),
     };
 
     // Read the content of the policy to content
-    match file.read_to_string(&mut contents) {
+    match file_reader.read_to_string(&mut contents) {
         Err(_) => {
             println!("Failed to read the policy");
             return contents;
@@ -177,20 +214,27 @@ pub fn make_decision(policy_name: &str, message: &str) -> String {
 fn write_to_file(policy_name: &str, policy: &str) -> bool {
     // Store the policy in the src/policy directory
     let path = String::from(POLICY_PATH) + policy_name;
-    let path = Path::new(&path);
 
-    // Open the file in write-only mode
-    // If a policy with the same name already exists, it will be overwritten
-    let mut file = match File::create(&path) {
+    FileLock::set_file(&path);
+    let writer = FILELOCK.write();
+    let writer = &writer.file;
+    let mut file_writer: &File;
+
+    match writer {
+        Some(s) => file_writer = s,
+        None => return false,
+    };
+
+    match file_writer.seek(std::io::SeekFrom::Start(0)) {
         Err(_) => {
-            println!("Couldn't create file");
+            println!("Failed to move the write position to the beginning");
             return false;
         }
-        Ok(file) => file,
+        Ok(_) => (),
     };
 
     // Write the policy into file
-    match file.write_all(policy.as_bytes()) {
+    match file_writer.write_all(policy.as_bytes()) {
         Err(_) => {
             println!("Couldn't write to file");
             return false;
@@ -225,7 +269,7 @@ mod tests {
         let policy_name = "demo1.rego";
 
         // Right case
-        let policy = "package demo\n\n".to_string()
+        let policy = "package policy\n\n".to_string()
             + "\
                     default allow = false\n\n\
                     allow = true {\n\
@@ -236,7 +280,7 @@ mod tests {
         assert!(result == true);
 
         // Wrong case, because of the syntax error of the policy file
-        let policy = "package demo\n\n".to_string()
+        let policy = "package policy\n\n".to_string()
             + "\
                     default allow = false\n\n\
                     allow = true {\n\
@@ -253,7 +297,7 @@ mod tests {
         let policy_name = "demo.rego";
 
         let result = export_policy(policy_name);
-        let policy = "package demo\n\n\
+        let policy = "package policy\n\n\
         mrEnclave = \"123\"\n\
         mrSigner = \"456\"\n\
         productId = \"1\"\n\n\
@@ -271,8 +315,7 @@ mod tests {
 
     #[test]
     fn test_make_decision() {
-        let message =
-            "{\"mrEnclave\":\"123\",\"mrSigner\":\"456\",\"productId\":\"1\"}";
+        let message = "{\"mrEnclave\":\"123\",\"mrSigner\":\"456\",\"productId\":\"1\"}";
         let result_str = make_decision("demo.rego", message);
 
         let result: Value = match serde_json::from_str(&result_str) {
