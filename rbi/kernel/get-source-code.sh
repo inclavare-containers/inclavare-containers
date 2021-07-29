@@ -26,10 +26,10 @@ error() {
 }
 
 download_code() {
-    abs_source_code_dir=$1 
+    tar_store_dir=$1 
     source_code_dirname=$2
 
-    cd $abs_source_code_dir
+    cd $tar_store_dir
     [ ! -f "$KERNEL_TARBALL" ] && {
         info "download kernel..."
         curl --fail -OL $KERNEL_TARBALL_URL
@@ -43,16 +43,20 @@ download_code() {
 
 main() {
     [ -z "$1" ] && usage && exit
-    source_code_dir=$1
+    local source_code_dir=$(dirname $1)
+    local source_code_dirname=${1##*/}
 
-    local abs_source_code_dir=$(cd $(dirname $1); pwd)
-    local source_code_dirname=${source_code_dir##*/}
+    local abs_target_dir=$source_code_dir/$source_code_dirname
+    mkdir -p $source_code_dir
 
-    [ -d "$abs_source_code_dir/$source_code_dirname" ] && \
-        error "$abs_source_code_dir/$source_code_dirname exists"
+    [ -d "$abs_target_dir" ] && {
+        [ "`cd $abs_target_dir; ls`" != "" ] && \
+        error "$abs_target_dir is not empty" ||
+        rmdir $abs_target_dir
+    }
 
-    download_code $abs_source_code_dir $source_code_dirname
-    info "Source code downloaded in $abs_source_code_dir/$source_code_dirname"
+    download_code $source_code_dir $source_code_dirname
+    info "Source code downloaded in $source_code_dir/$source_code_dirname"
 }
 
 main "$@"
