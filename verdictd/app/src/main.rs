@@ -1,6 +1,10 @@
 
-use std::error::Error;
-use std::{thread, usize};
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+
+use std::thread;
 use std::os::unix::io::{RawFd, AsRawFd};
 use std::net::{SocketAddr, TcpStream, TcpListener};
 use parking_lot::RwLock;
@@ -10,6 +14,7 @@ use serde_json::json;
 use serde_json::Value;
 
 mod key_manager;
+mod key_provider;
 mod crypto;
 mod enclave_tls;
 mod policyEngine;
@@ -103,5 +108,14 @@ fn run_server(sockaddr: &str) {
 async fn main() {
     println!("Verdictd Server Started ...");
 
-    run_server("127.0.0.1:1122");
+    thread::spawn(move || {
+        println!("Launch server with port 1122");
+        run_server("127.0.0.1:1122");
+    });
+
+    // Launch gRPC server
+    println!("Launch gRPC server");
+    let addr = "[::1]:50000";
+    let key_provider_server = key_provider::key_provider_grpc::key_provider_server(&addr);
+    key_provider_server.await;
 }
