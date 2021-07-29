@@ -22,7 +22,10 @@ pub fn encrypt(data: &[u8], key: &[u8], iv: &[u8])->Result<Vec<u8>, symmetriccip
     let mut write_buffer=buffer::RefWriteBuffer::new(&mut buffer);
 
     loop{
-        let result=encryptor.encrypt(&mut read_buffer,&mut write_buffer,true)?;
+        let result= match encryptor.encrypt(&mut read_buffer,&mut write_buffer,true) {
+            Ok(result) => result,
+            Err(e) => return Err(e),
+        };
 
         final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
 
@@ -49,7 +52,11 @@ pub fn decrypt(encrypted_data: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, 
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
 
     loop {
-        let result = decryptor.decrypt(&mut read_buffer, &mut write_buffer, true).unwrap();
+        let result = match decryptor.decrypt(&mut read_buffer, &mut write_buffer, true) {
+            Ok(result) => result,
+            Err(e) => return Err(e),
+        };
+
         final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
         match result {
             BufferResult::BufferUnderflow => break,

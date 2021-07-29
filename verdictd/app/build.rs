@@ -24,4 +24,6 @@ fn main() {
         ])
         .status()
         .unwrap();
+
+    tonic_build::compile_protos("proto/keyprovider.proto");
 }
