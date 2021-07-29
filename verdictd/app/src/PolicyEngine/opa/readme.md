@@ -2,7 +2,7 @@
 
 ## Start
 
-To ensure it can run, please install the OPA executable file.
+To ensure it can run, please install the OPA executable file. The steps are below.
 
 ### On Linux (64-bit)
 
@@ -20,9 +20,11 @@ chmod 755 ./opa
 mv opa /usr/local/bin/opa
 ```
 
-After installing opa, you can use `cargo test -- --test-threads=1` to perform tests.
+Before running, install the relevant Golang package: `go get github.com/open-policy-agent/opa/rego`
 
-**Note:** The files under the path `src/policy/` are the `.rego` policy files.
+After that, you can use `cargo test -- --test-threads=1` to perform tests.
+
+**Note:** The files under the path `/opt/verdictd/opa/policy/` are the `.rego` policy files.
 
 ## Upper API (Rust)
 
