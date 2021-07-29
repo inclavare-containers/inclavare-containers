@@ -12,12 +12,12 @@
 #include <stddef.h>
 #include <enclave-tls/err.h>
 
-#define TLS_TYPE_NAME_SIZE	        32
+#define TLS_TYPE_NAME_SIZE		32
 #define ENCLAVE_ATTESTER_TYPE_NAME_SIZE 32
 #define ENCLAVE_VERIFIER_TYPE_NAME_SIZE 32
-#define CRYPTO_TYPE_NAME_SIZE	        32
-#define ENCLAVE_SGX_SPID_LENGTH         16
-#define SHA256_HASH_SIZE	        32
+#define CRYPTO_TYPE_NAME_SIZE		32
+#define ENCLAVE_SGX_SPID_LENGTH		16
+#define SHA256_HASH_SIZE		32
 
 typedef enum {
 	ENCLAVE_TLS_LOG_LEVEL_DEBUG,
@@ -34,8 +34,9 @@ typedef struct etls_core_context_t *enclave_tls_handle;
 
 typedef enum {
 	ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256,
+	ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256,
 	ENCLAVE_TLS_CERT_ALGO_MAX,
-	ENCLAVE_TLS_CERT_ALGO_DEFAULT = ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256
+	ENCLAVE_TLS_CERT_ALGO_DEFAULT = ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256
 } enclave_tls_cert_algo_t;
 
 typedef struct {

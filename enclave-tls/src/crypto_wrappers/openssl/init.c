@@ -11,7 +11,7 @@
 
 crypto_wrapper_err_t openssl_init(crypto_wrapper_ctx_t *ctx)
 {
-	struct openssl_ctx *octx;
+	openssl_ctx *octx = NULL;
 
 	ETLS_DEBUG("ctx %p\n", ctx);
 

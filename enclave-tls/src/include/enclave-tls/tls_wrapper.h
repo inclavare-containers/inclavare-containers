@@ -32,8 +32,8 @@ typedef struct {
 	/* Optional */
 	tls_wrapper_err_t (*pre_init)(void);
 	tls_wrapper_err_t (*init)(tls_wrapper_ctx_t *ctx);
-	tls_wrapper_err_t (*use_privkey)(tls_wrapper_ctx_t *ctx, void *privkey_buf,
-					 size_t privkey_len);
+	tls_wrapper_err_t (*use_privkey)(tls_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
+					 void *privkey_buf, size_t privkey_len);
 	tls_wrapper_err_t (*use_cert)(tls_wrapper_ctx_t *ctx, enclave_tls_cert_info_t *cert_info);
 	tls_wrapper_err_t (*negotiate)(tls_wrapper_ctx_t *ctx, int fd);
 	tls_wrapper_err_t (*transmit)(tls_wrapper_ctx_t *ctx, void *buf, size_t *buf_size);
@@ -56,7 +56,6 @@ struct tls_wrapper_ctx {
 extern tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *);
 extern tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tls_ctx,
 								  attestation_evidence_t *evidence,
-								  uint8_t *hash,
-								  uint32_t hash_len);
+								  uint8_t *hash, uint32_t hash_len);
 
 #endif

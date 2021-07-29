@@ -30,9 +30,13 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	 * wrapper instance to address the requesting algorithm.
 	 */
 	unsigned int hash_size;
-	if (ctx->config.cert_algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256)
+
+	switch (ctx->config.cert_algo) {
+	case ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256:
+	case ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256:
 		hash_size = SHA256_HASH_SIZE;
-	else {
+		break;
+	default:
 		ETLS_DEBUG("unknown algorithm %d\n", ctx->config.cert_algo);
 		return -ENCLAVE_TLS_ERR_UNSUPPORTED_CERT_ALGO;
 	}
@@ -68,7 +72,8 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 		return c_err;
 
 	/* Generate the TLS certificate */
-	c_err = ctx->crypto_wrapper->opts->gen_cert(ctx->crypto_wrapper, &cert_info);
+	c_err = ctx->crypto_wrapper->opts->gen_cert(ctx->crypto_wrapper, ctx->config.cert_algo,
+						    &cert_info);
 	if (c_err != CRYPTO_WRAPPER_ERR_NONE)
 		return c_err;
 
@@ -76,8 +81,8 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	if (privkey_len) {
 		tls_wrapper_err_t t_err;
 
-		t_err = ctx->tls_wrapper->opts->use_privkey(ctx->tls_wrapper, privkey_buf,
-							    privkey_len);
+		t_err = ctx->tls_wrapper->opts->use_privkey(ctx->tls_wrapper, ctx->config.cert_algo,
+							    privkey_buf, privkey_len);
 		if (t_err != TLS_WRAPPER_ERR_NONE)
 			return t_err;
 

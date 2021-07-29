@@ -10,7 +10,8 @@
 
 extern tls_wrapper_err_t openssl_tls_pre_init(void);
 extern tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *);
-extern tls_wrapper_err_t openssl_tls_use_privkey(tls_wrapper_ctx_t *ctx, void *privkey_buf,
+extern tls_wrapper_err_t openssl_tls_use_privkey(tls_wrapper_ctx_t *ctx,
+						 enclave_tls_cert_algo_t algo, void *privkey_buf,
 						 size_t privkey_len);
 extern tls_wrapper_err_t openssl_tls_use_cert(tls_wrapper_ctx_t *ctx,
 					      enclave_tls_cert_info_t *cert_info);
