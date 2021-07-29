@@ -2,9 +2,10 @@ use lazy_static::lazy_static;
 use parking_lot::RwLock;
 use serde_json::Value;
 use std::ffi::CStr;
-use std::fs::{remove_file, File, OpenOptions};
+use std::fs::{remove_file, File};
 use std::io::prelude::*;
 use std::os::raw::c_char;
+use std::path::Path;
 use std::process::Command;
 
 /// Link import cgo function
@@ -13,34 +14,12 @@ extern "C" {
     pub fn makeDecisionGo(policy: GoString, message: GoString) -> *mut c_char;
 }
 
-const POLICY_PATH: &str = "src/policyEngine/opa/policy/";
-
-/// Global file lock struct
-pub struct FileLock {
-    pub file: Option<File>,
-}
-
-impl FileLock {
-    // Set the "file" field
-    pub fn set_file(path: &str) {
-        let mut w = FILELOCK.write();
-        *w = FileLock {
-            file: Some(
-                OpenOptions::new()
-                    .create(true)
-                    .write(true)
-                    .read(true)
-                    .open(path)
-                    .unwrap(),
-            ),
-        };
-    }
-}
-
 lazy_static! {
     // Global file lock
-    pub static ref FILELOCK: RwLock<FileLock> = RwLock::new(FileLock { file: None });
+    pub static ref FILE_LOCK: RwLock<u32> = RwLock::new(0);
 }
+
+const POLICY_PATH: &str = "/opt/verdictd/opa/policy/";
 
 /// String structure passed into cgo
 #[derive(Debug)]
@@ -131,33 +110,26 @@ pub fn export_policy(policy_name: &str) -> String {
     let path = String::from(POLICY_PATH) + policy_name;
     let mut contents = String::new();
 
-    FileLock::set_file(&path);
-    let reader = FILELOCK.read();
-    let reader = &reader.file;
-    let mut file_reader: &File;
+    let lock = FILE_LOCK.read();
+    assert_eq!(*lock, 0);
 
-    match reader {
-        Some(s) => file_reader = s,
-        None => return contents,
-    };
-
-    match file_reader.seek(std::io::SeekFrom::Start(0)) {
+    // Open the file named policy_name
+    let mut file = match File::open(path) {
         Err(_) => {
-            println!("Failed to move the read position to the beginning");
+            println!("Failed to open the policy");
             return contents;
         }
-        Ok(_) => (),
+        Ok(res) => res,
     };
 
     // Read the content of the policy to content
-    match file_reader.read_to_string(&mut contents) {
+    match file.read_to_string(&mut contents) {
         Err(_) => {
             println!("Failed to read the policy");
             return contents;
         }
         Ok(res) => res,
     };
-
     contents
 }
 
@@ -214,27 +186,23 @@ pub fn make_decision(policy_name: &str, message: &str) -> String {
 fn write_to_file(policy_name: &str, policy: &str) -> bool {
     // Store the policy in the src/policy directory
     let path = String::from(POLICY_PATH) + policy_name;
+    let path = Path::new(&path);
 
-    FileLock::set_file(&path);
-    let writer = FILELOCK.write();
-    let writer = &writer.file;
-    let mut file_writer: &File;
+    let lock = FILE_LOCK.write();
+    assert_eq!(*lock, 0);
 
-    match writer {
-        Some(s) => file_writer = s,
-        None => return false,
-    };
-
-    match file_writer.seek(std::io::SeekFrom::Start(0)) {
+    // Open the file in write-only mode
+    // If a policy with the same name already exists, it will be overwritten
+    let mut file = match File::create(&path) {
         Err(_) => {
-            println!("Failed to move the write position to the beginning");
+            println!("Couldn't create file");
             return false;
         }
-        Ok(_) => (),
+        Ok(file) => file,
     };
 
     // Write the policy into file
-    match file_writer.write_all(policy.as_bytes()) {
+    match file.write_all(policy.as_bytes()) {
         Err(_) => {
             println!("Couldn't write to file");
             return false;
