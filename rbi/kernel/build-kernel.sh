@@ -93,8 +93,8 @@ main() {
 
     abs_pwd=$(cd $(dirname $0); pwd)
     source_code_dir=$1
-    output_dir=$3
-
+    output_dir=$2
+    [ ! -d "$source_code_dir" ] && error "$source_code_dir doesn't exist"
     local abs_source_code_dir=$(cd "$source_code_dir";pwd)
     local abs_output_dir=$(cd "$output_dir";pwd)
     local abs_rootfs_dir=$(cd "$rootfs_dir";pwd)
