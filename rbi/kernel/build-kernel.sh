@@ -4,19 +4,22 @@ source_code_dir=
 output_dir=
 abs_pwd=
 
-ARTIFEST=bzImage
+ARTIFEST=vmlinux
 REPORT_FILE=kernel_report
+BUILD_DIR=tools/packaging/kernel
+IMAGE=kernel-rbci
 
-SHA256_KERNEL=dc27076f459308ced130956fc2ed078ade0fd1ac2a377c1b9b4ebfce990fcfae
+SHA256_KERNEL=b503732c24e53960bafa17bb7dfc3cea0ab2cd241ce8b2235341d3b14db3ec2a
 
 usage() {
     cat << EOT
     
     This script aims to build a kernel of linux 5.10.25 for
-    kata-containers, using RBI.
+    kata-containers.
     
     Parameters:
-        - <path/to/kernel_source> 
+        - <path/to/source_code_dir> source_code_dir means dir 
+            'kata-containers'
         - <path/to/output_dir> 
 EOT
     exit
@@ -46,15 +49,28 @@ no_exist_output_dir() {
     info "$abs_output_dir created."
 }
 
+patch() {
+    local abs_pwd=$1
+    local abs_source_code_dir=$2
+
+    echo "$INFO Apply patch from $abs_pwd/patch --> $abs_source_code_dir/$BUILD_DIR"
+    cp -rf $abs_pwd/patch/* $abs_source_code_dir/$BUILD_DIR
+    echo "$INFO Apply patch done."
+}
+
 run_build() {
     local abs_source_code_dir=$1
     local abs_output_dir=$2 
 
     info "Will began to build $abs_source_code_dir --> $abs_output_dir/$ARTIFEST"
-    sudo docker run --rm -it -v $abs_source_code_dir:/root/kernel \
+    sudo docker run --rm -it \
+                    -v $abs_source_code_dir:/root/kata-containers \
                     -v $abs_output_dir:/root/output \
-                    --env KERNEL_DIR=/root/kernel \
-                    kernel-rbi
+                    --env KATA_REPO=/root/kata-containers \
+                    --env OUTPUT_DIR=/root/output \
+                    --env https_proxy=$https_proxy \
+                    --network host \
+                    $IMAGE
     
     [ "$?" != "0" ] && echo "$ERROR docker run failed" && exit -1
 }
@@ -94,13 +110,13 @@ main() {
     abs_pwd=$(cd $(dirname $0); pwd)
     source_code_dir=$1
     output_dir=$2
-    [ ! -d "$source_code_dir" ] && error "$source_code_dir doesn't exist"
+
+    [ -d $output_dir ] && exist_output_dir || no_exist_output_dir
+
     local abs_source_code_dir=$(cd "$source_code_dir";pwd)
     local abs_output_dir=$(cd "$output_dir";pwd)
-    local abs_rootfs_dir=$(cd "$rootfs_dir";pwd)
-
-    [ -d $abs_output_dir ] && exist_output_dir $abs_output_dir \
-            || no_exist_output_dir $abs_output_dir
+    
+    patch $abs_pwd $abs_source_code_dir
 
     run_build $abs_source_code_dir $abs_output_dir
 
