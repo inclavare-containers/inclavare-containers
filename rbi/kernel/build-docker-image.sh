@@ -1,21 +1,22 @@
 #! /bin/bash
 
+IMAGE_NAME=kernel-rbci
+
 usage() {
     cat << EOT
     This script aims to build kernel's RBCI(Reproducible Build Container Image)
-    Parameters:
-        - <RBCI name>
+    Which will be named 'kernel-rbci'
 EOT
     exit
 }
 
 main() {
     local dir=$(cd "$(dirname "$0")";pwd)
-    if [ -z $1 ]; then 
+    if [ ! -n $1 ]; then 
         usage
     fi
 
-    sudo docker build -t $1 $dir
+    sudo docker build -t $IMAGE_NAME $dir
     if [ "$?" = "0" ] ;then
         echo "[SUCCEED] Docker build succeed."
     else 
