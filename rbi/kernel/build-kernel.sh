@@ -88,7 +88,7 @@ checksum() {
     sha256v=$(sha256sum $artifest | awk {'printf $1'})
     [ "$sha256v" == "$SHA256_KERNEL" ] && \
         echo "[SUCCESSFUL] Same hash" >> $report || \
-        echo "[FAILED] Different hash" >> $report
+        echo "[FAILED] Different hash, get $sha256v" >> $report
 }
 
 end_notify() {
@@ -111,7 +111,8 @@ main() {
     source_code_dir=$1
     output_dir=$2
 
-    [ -d $output_dir ] && exist_output_dir || no_exist_output_dir
+    [ -d $output_dir ] && exist_output_dir $output_dir || \
+        no_exist_output_dir $output_dir
 
     local abs_source_code_dir=$(cd "$source_code_dir";pwd)
     local abs_output_dir=$(cd "$output_dir";pwd)

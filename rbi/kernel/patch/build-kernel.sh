@@ -366,7 +366,7 @@ build_kernel() {
 
 	# for rb
 	export INSTALL_MOD_STRIP=-s
-	export KBUILD_BUILD_TIMESTAMP=0
+	export KBUILD_BUILD_TIMESTAMP="1970-01-01 00:00:00 UTC"
 	export KBUILD_BUILD_USER=root
 	export KBUILD_BUILD_HOST=localhost
 	export SOURCE_DATE_EPOCH=0
