@@ -7,12 +7,12 @@
 ## Steps
 Build RBCI for kernel.
 ```
-./build-docker-image.sh kernel-rbci
+./build-docker-image.sh
 ```
 
 rb kernel and generate report
 ```
-./build-kernel.sh ../kata-agent/kata-containers ./result/kernel
+./build-kernel.sh ../kata-agent/kata-containers ../result/kernel
 ``` 
 
 If correctly, you can get report as
