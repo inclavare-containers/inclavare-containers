@@ -84,3 +84,16 @@ $cat report/kernel_report
 [Time] 2021-07-23 17:58:59
 [SUCCESSFUL] Same hash
 ```
+
+### RB for bios-256k.bin
+Firstly, build the RBCI of bios-256k.bin, named `bios-256k-rbci`.
+```bash
+./rbi.sh bios-rbi
+```
+
+Then, build bios-256k.bin, the artifest will be 
+`result/bios/bios-256k.bin` and the report `result/bios/report`
+
+```bash
+./rbi.sh bios-build
+```
