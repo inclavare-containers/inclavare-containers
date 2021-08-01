@@ -16,6 +16,9 @@ info() {
 info "Build kernel in $PACKING_DIR"
 cd $PACKING_DIR
 
+info "Reset time.."
+rm -f /etc/localtime
+date
 info "Setting up..."
 bash $BUILD_SCRIPT setup
 
