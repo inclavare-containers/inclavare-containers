@@ -34,7 +34,7 @@ KERNEL_IMAGE=kernel-rbci
 KERNEL_IMAGE_BUILDER=kernel/build-docker-image.sh
 KERNEL_BUILDER=kernel/build-kernel.sh
 KERNEL_SOURCE_CODE_SCRIPT=kernel/get-source-code.sh
-KERNEL_SOURCE_DIR=$RESULT_DIR/kernel/linux
+KERNEL_SOURCE_DIR=$KATA/$KATA_DIR
 KERNEL_OUTPUT_DIR=$RESULT_DIR/kernel
 
 usage()
