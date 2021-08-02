@@ -5,7 +5,7 @@
 
 usage() {
     cat << EOT
-    
+
     This script use to generate dir structure of a dir,
     together with every file in it with its sha256 value.
     
@@ -16,12 +16,12 @@ usage() {
     Extra Informations:
 
         output format will be like 
-        ```
+        \`\`\`
         ...
         dir <some/dir/name>
         file <some/file/name> <sha256>
         ...
-        ```
+        \`\`\`
 EOT
     exit
 }
@@ -32,7 +32,7 @@ check_and_sum() {
     abs_output_file=$(cd $(dirname $output_file); pwd)/${output_file##*/}
     cd $input_dir
 
-    for file in $(find .) 
+    for file in $(find . | sort) 
     do
         # echo $file
         [ -d $file ] && echo "dir $file" >> $abs_output_file && continue
