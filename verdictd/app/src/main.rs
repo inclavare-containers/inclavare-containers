@@ -18,29 +18,7 @@ mod key_provider;
 mod crypto;
 mod enclave_tls;
 mod policyEngine;
-
-fn parse_aa_request_and_generate_response(request: &[u8]) -> Result<String, String> {
-    let parsed_request: Value = match serde_json::from_slice(request) {
-        Ok(r) => r,
-        Err(e) => {
-            println!("Error: json::from_slice() failed, {}", e);
-            return Err("parse request failed".to_string());
-        }
-    };
-
-    match parsed_request["command"].as_str().unwrap() {
-        "version" => {
-            let response = json!({
-                "status": "OK",
-                "version": "v1",
-            });
-            return Ok(response.to_string());
-        }
-        _ => println!("Error: command not found")
-    }
-
-    Err("command error".to_string())
-}
+mod protocol;
 
 fn handle_client(sockfd: RawFd,
     tls_type: &Option<String>, crypto: &Option<String>,
@@ -56,16 +34,14 @@ fn handle_client(sockfd: RawFd,
 
     /* accept */
     if tls.negotiate(sockfd).is_err() {
-        println!("tls_negotiate() failed, sockfd = {}", sockfd);
+        print!("tls_negotiate() failed, sockfd = {}", sockfd);
         return;
     }
 
     /* get client request */
-    let mut buffer = [0u8; 512];
+    let mut buffer = [0u8; 4096];
     let n = tls.receive(&mut buffer).unwrap();
-    println!("Request: {}", String::from_utf8((&buffer[..n]).to_vec()).unwrap());
-
-    let response = match parse_aa_request_and_generate_response(&buffer[..n]) {
+    let response = match protocol::handle_aa_request(&buffer[..n]) {
         Ok(response) => response,
         Err(e) => {
             let response = json!({
@@ -75,9 +51,8 @@ fn handle_client(sockfd: RawFd,
             response.to_string()
         }
     };
-    println!("response: {}", response);
 
-    let n = tls.transmit(&buffer[..n]).unwrap();
+    let n = tls.transmit(response.as_bytes()).unwrap();
     assert!(n > 0);
 }
 
