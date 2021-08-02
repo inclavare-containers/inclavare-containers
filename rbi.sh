@@ -65,6 +65,9 @@ Options:
   rootfs-rmi        Remove rootfs raw disk checker image(RRDCI)' RBI.
   rootfs-check      Check a rootfs raw disk image's content.
   
+  kernel-rbi        Make linux kernel's RBCI.
+  kernel-build      Build linux kernel and check artifest's sha256 hash.
+
   clean-all         Clean all temp files, including kata-containers repo.
   clean             Clean temp files, except kata-containers repo.
 
@@ -183,11 +186,6 @@ kernel-rbi() {
     ./$KERNEL_IMAGE_BUILDER $KERNEL_IMAGE
 }
 
-kernel_code() {
-    info "Get kernel code"
-    ./$KERNEL_SOURCE_CODE_SCRIPT $KERNEL_SOURCE_DIR
-}
-
 kernel_build() {
     info "Build kernel..."
     ./$KERNEL_BUILDER $KERNEL_SOURCE_DIR $KERNEL_OUTPUT_DIR
@@ -237,9 +235,6 @@ main() {
         ;;
     kernel-rbi)
         kernel_rbi
-        ;;
-    kernel-code)
-        kernel_code
         ;;
     kernel-build)
         kernel_build
