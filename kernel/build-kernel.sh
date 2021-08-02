@@ -9,7 +9,7 @@ REPORT_FILE=kernel_report
 BUILD_DIR=tools/packaging/kernel
 IMAGE=kernel-rbci
 
-SHA256_KERNEL=b503732c24e53960bafa17bb7dfc3cea0ab2cd241ce8b2235341d3b14db3ec2a
+SHA256_KERNEL=f5c16c540d89b96b9a9040991d1646b46f90ec1a25fea42bd637dd978a41824b
 
 usage() {
     cat << EOT
