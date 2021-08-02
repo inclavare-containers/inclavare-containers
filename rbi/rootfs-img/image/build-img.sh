@@ -59,7 +59,7 @@ run_build() {
     local abs_rootfs_dir=$3
     
     echo "$INFO Will began to build $abs_rootfs_dir --> $abs_output_dir"
-    USE_DOCKER=true IMAGE=$abs_output_dir/$ARTIFEST $abs_source_code_dir/$BUILD_SCRIPT $abs_rootfs_dir
+    sudo USE_DOCKER=true IMAGE=$abs_output_dir/$ARTIFEST AGENT_INIT=yes "$abs_source_code_dir/$BUILD_SCRIPT" $abs_rootfs_dir
 
     [ "$?" != "0" ] && echo "$ERROR docker run failed" && exit -1 || end_notify $abs_output_dir
 }
