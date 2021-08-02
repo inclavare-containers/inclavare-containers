@@ -67,7 +67,7 @@ machine_id() {
 clean_java_ca_cache() {
     local cachefile=$1
     info "Clean java CA cache..."
-    rm -f cachefile
+    rm -f $cachefile
 }
 
 run_build() {
