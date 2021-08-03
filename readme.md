@@ -69,13 +69,16 @@ values, and output a report in `report/rootfs/check-report`
 ### RB for kernel
 
 ```bash
-./build-docker-image.sh kernel-rbi
+./rbi.sh kernel-rbi
 ```
-builds a docker image named`kernel-rbi`
+builds RBCI of kernel, named`kernel-rbci`
 
-`./get-source-code.sh ./linux` get source code of Linux to `./linux`
-
-`./build-kernel.sh ./linux ./report` rb kernel and generate report
+```
+./rbi.sh kernel-build
+```
+rb kernel and generate report in `result/kernel`. 
+Here, `result/kernel/vmlinux` is the kernel and 
+`result/kernel/kernel_report` is the check report.
 
 If correctly, you can get report as
 ```plaintext
