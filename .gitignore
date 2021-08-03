@@ -1,3 +1,6 @@
+# SeaBIOS for firmware
+bios-256k/seabios
+
 # Kata source code
 kata-agent/kata-containers
 
