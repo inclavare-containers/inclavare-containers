@@ -1,2 +1,8 @@
-result
+# Kata source code
 kata-agent/kata-containers
+
+# Output directory
+result
+
+# Mbr checker
+rootfs-img/image-check/mbr-checker
