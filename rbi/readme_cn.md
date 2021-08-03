@@ -1,11 +1,14 @@
 # 可重复构建测试平台
+
 为了方便，做RBI测试，镜像构建等的脚本集合
+
 ## 文件说明
 *   `rbi.sh` 脚本主入口了，具体的功能可以执行`./rbi.sh help`查看
 *   `kata-agent/` 和kata-agent相关的镜像构建、执行测试、拉代码仓库等脚本  
 
 ## 操作说明
 ### kata-agent可重复构建
+
 先构建RBCI
 ```bash
 ./rbi.sh agent-image
@@ -29,6 +32,7 @@
 ```
 
 ### kata-containers.img的可重复构建
+
 首先，在本地生成一个rootfs，这个rootfs根文件系统用来创建裸磁盘镜像。
 ```bash
 ./rbi.sh rootfs
@@ -77,6 +81,7 @@ $cat report/kernel/kernel_report
 ```
 
 ### Kata VM使用BIOS的可重复构建
+
 首先，构建bios-256k.bin的RBCI，通常这个名字叫做`bios-256k-rbci`
 ```bash
 ./rbi.sh bios-rbi

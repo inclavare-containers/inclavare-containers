@@ -1,10 +1,12 @@
 # RB for bios-256k.bin
 
 ## files
+
 `build-docker-image.sh` To build RBCI for bios
 `build-bios.sh` To build bios and check artifest
 
 ## Steps
+
 Build RBCI for bios.
 ```
 ./build-docker-image.sh
