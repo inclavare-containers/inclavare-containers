@@ -1,5 +1,7 @@
 # Reproducible Build Infrastructure
+
 For convenience, some scripts are collected for automatically building.
+
 ## Files
 *   `rbi.sh` main script. Use `./rbi.sh help` to see details.
 *   `kata-agent/` scripts related to RB of kata-agent.
@@ -7,34 +9,44 @@ For convenience, some scripts are collected for automatically building.
 *   `kernel` scripts related to RB of kernel
 
 ## Instructions
+
 ### RB for kata-agent
 Firstly, build RBCI(Reproducible Build Container Image) for kata-agent
+
 ```bash
 ./rbi.sh agent-image
 ```
+
 Check the reproducibility of source code in `/path/to/kata-containers`.
+
 ```
 ./rbi.sh agent-local /path/to/kata-containers
 ```
+
 Or, check the reproducibility of source code from github.com.
+
 ```bash
 ./rbi.sh agent-git
 ```
 Above 2 operations can both produce a report and an artifest in `report/`.
 
 Delete RBCI for kata-agent
+
 ```bash
 ./rbi.sh agent-image
 ```
 
 Clean all tempfiles
+
 ```bash
 ./rbi.sh clean
 ```
 
 ### RB for kata-containers.img
+
 Firstly, need to generate a root file system locally, then the rootfs
 will be used to build a raw disk image.
+
 ```bash
 ./rbi.sh rootfs
 ```
@@ -42,6 +54,7 @@ will be used to build a raw disk image.
 And the rootfs will be in `result/rootfs/rootfs`.
 Then, need a raw disk image using the rootfs
 just generated. The img file will be `result/kata-containers.img`
+
 ```bash
 ./rbi.sh rootfs-image-build
 ```
@@ -51,6 +64,7 @@ to check whether the content is the same as expected.
 Build a docker image which we use as a base environment to check 
 the contents of a specific image file.
 The image name is `rootfs-rdi-check`.
+
 ```bash
 ./rbi.sh rootfs-checker
 ```
@@ -58,10 +72,13 @@ The image name is `rootfs-rdi-check`.
 Finally, check the content of the disk image generated
 in 2. Compare them with the expected files using their hash 
 values, and output a report in `report/rootfs/check-report`
+
 ```bash
 ./rbi.sh rootfs-check
 ```
+
 (Optional) Also, the image `rootfs-rdi-check`  can be removed
+
 ```bash
 ./rbi.sh rootfs-rmi
 ```
@@ -89,6 +106,7 @@ $cat report/kernel_report
 ```
 
 ### RB for bios-256k.bin
+
 Firstly, build the RBCI of bios-256k.bin, named `bios-256k-rbci`.
 ```bash
 ./rbi.sh bios-rbi
