@@ -1,4 +1,5 @@
 #! /bin/bash
+
 VERSION=5.10.25
 KATA_REPO=${KATA_REPO:-"/root/kata-containers"}
 OUTPUT_DIR=${OUTPUT_DIR:-"/root/output"}
