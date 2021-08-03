@@ -90,7 +90,6 @@ main() {
     local abs_output_dir=$(cd "$output_dir";pwd)
     local abs_rootfs_dir=$(cd "$rootfs_dir";pwd)
     
-
     patch $abs_pwd $abs_source_code_dir
 
     run_build $abs_source_code_dir $abs_output_dir $abs_rootfs_dir

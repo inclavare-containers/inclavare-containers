@@ -80,8 +80,6 @@ run_build() {
     else 
         end_notify $output_file_path/$output_file_name
     fi
-
-    
 }
 
 end_notify() {
