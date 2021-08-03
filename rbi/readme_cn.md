@@ -60,12 +60,9 @@
 ./rbi.sh kernel-rbi
 ```
 
-在`./result/linux`目录下下载kernel的源码
-```
-./rbi.sh kernel-code
-```
-
-然后，构建内核二进制文件，并且对齐完整性检查，生成报告在`./result/linux/kernel_report`，二进制文件为`./result/linux/bzImage`。
+然后，下载kernel的代码，构建内核二进制文件，并且对齐完整性检查，
+生成报告在`./result/linux/kernel_report`，二进制文件为`./result/linux/bzImage`，
+这一系列操作将在下面这个脚本命令中一次性实现
 
 ```
 ./rbi.sh kernel-build
