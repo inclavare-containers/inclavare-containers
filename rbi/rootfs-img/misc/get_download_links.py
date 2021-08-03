@@ -5,7 +5,6 @@ PREFIX = "https://rpmfind.net"
 
 packages = [['xfsprogs','5.10.0-2.fc34'],['inih','49-3.fc34'],['libedit','3.1-37.20210522cvs.fc34']]
 
-
 for p in packages:
     software = p[0]
     version = p[1]
