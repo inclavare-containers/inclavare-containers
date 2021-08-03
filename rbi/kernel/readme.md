@@ -1,5 +1,4 @@
 # RB for linux kernel
-
 ## files
 `build-docker-image.sh` To build RBCI for kernel
 `build-kernel.sh` To build kernel and check artifest
