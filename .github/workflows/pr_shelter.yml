@@ -50,7 +50,11 @@ jobs:
         cp -r inclavare-containers inclavare-containers-${{ env.RUNE_VERSION }};
         mkdir -p /root/inclavare-containers/${{ matrix.tag }};
         cd inclavare-containers-${{ env.RUNE_VERSION }}/enclave-tls;
-        make SGX=1 && make install;
+        wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/as.ld.objdump.gold.r3.tar.gz;
+        tar -xf as.ld.objdump.gold.r3.tar.gz;
+        cp -rf external/toolset/${{ matrix.tag }}/* /usr/local/bin/;
+        cmake -DENCLAVE_TLS_BUILD_MODE="sgx" -DBUILD_SAMPLES=on -H. -Bbuild;
+        make -C build install;
         cp -rf ${{ env.ENCLAVE_TLS_ROOTDIR }} /root/inclavare-containers/${{ matrix.tag }};
         cp -rf ${{ env.ENCLAVE_TLS_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}/enclave-tls'
 
