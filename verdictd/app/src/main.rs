@@ -6,12 +6,11 @@
 
 use std::thread;
 use std::os::unix::io::{RawFd, AsRawFd};
-use std::net::{SocketAddr, TcpStream, TcpListener};
-use parking_lot::RwLock;
+use std::net::TcpListener;
 use std::{sync::Arc, u64};
-use serde::{Serialize, Deserialize};
 use serde_json::json;
-use serde_json::Value;
+use shadow_rs::shadow;
+use clap::{Arg, App};
 
 mod key_manager;
 mod key_provider;
@@ -19,6 +18,8 @@ mod crypto;
 mod enclave_tls;
 mod policyEngine;
 mod protocol;
+
+shadow!(build);
 
 fn handle_client(sockfd: RawFd,
     tls_type: &Option<String>, crypto: &Option<String>,
@@ -56,12 +57,11 @@ fn handle_client(sockfd: RawFd,
     assert!(n > 0);
 }
 
-fn run_server(sockaddr: &str) {
-    let tls_type = Arc::new(Some("openssl".to_string()));
-    let crypto = Arc::new(Some("openssl".to_string()));
-    let attester = Arc::new(Some("nullattester".to_string()));
-    let verifier = Arc::new(Some("sgx_ecdsa".to_string()));
-    let addr = sockaddr.parse::<SocketAddr>();
+fn run_server(sockaddr: &str, tls_type: String, crypto: String, attester: String, verifier: String, mutual: bool) {
+    let tls_type = Arc::new(Some(tls_type));
+    let crypto = Arc::new(Some(crypto));
+    let attester = Arc::new(Some(attester));
+    let verifier = Arc::new(Some(verifier));
 
     /* tcp */
     let listener = TcpListener::bind(sockaddr).unwrap();
@@ -74,23 +74,101 @@ fn run_server(sockaddr: &str) {
         let verifier = verifier.clone();
         thread::spawn(move || {
             handle_client(socket.as_raw_fd(), &tls_type,
-                &crypto, &attester, &verifier, true, 0);
+                &crypto, &attester, &verifier, mutual, 0);
         });
     }
 }
 
 #[tokio::main]
 async fn main() {
-    println!("Verdictd Server Started ...");
+    let version = format!("v{}\ncommit: {}\nbuildtime: {}",
+                    build::PKG_VERSION, build::COMMIT_HASH, build::BUILD_TIME);
+    println!("Verdictd info: {}", version);
 
+    let matches = 
+        App::new("verdictd")
+            .version(version.as_str())
+                .long_version(version.as_str())
+                .author("Inclavare-Containers Team")
+                .arg(Arg::with_name("listen")
+                    .short("l")
+                    .long("listen")
+                    .value_name("sockaddr")
+                    .help("Work in listen mode")
+                    .takes_value(true)
+                )
+                .arg(Arg::with_name("tls")
+                    .long("tls")
+                    .value_name("tls_type")
+                    .help("Specify the TLS type")
+                    .takes_value(true)
+                )
+                .arg(Arg::with_name("crypto")
+                    .long("crypto")
+                    .value_name("crypto_type")
+                    .help("Specify the crypto type")
+                    .takes_value(true)
+                )   
+                .arg(Arg::with_name("attester")
+                    .long("attester")
+                    .value_name("attester_type")
+                    .help("Specify the attester type")
+                    .takes_value(true)
+                )
+                .arg(Arg::with_name("verifier")
+                    .long("verifier")
+                    .value_name("verifier_type")
+                    .help("Specify the verifier type")
+                    .takes_value(true)
+                )
+                .arg(Arg::with_name("mutual")
+                    .short("m")
+                    .long("mutual")
+                    .help("Work in mutual mode")
+                )                
+                .arg(Arg::with_name("gRPC")
+                    .long("gRPC")
+                    .value_name("gRPC_addr")
+                    .help("Specify the gRPC listen addr")
+                    .takes_value(true)
+                )                                  
+                .get_matches();
+
+    let sockaddr = match matches.is_present("listen") {
+        true => matches.value_of("listen").unwrap().to_string(),
+        false => "127.0.0.1:1234".to_string(),
+    };
+    let tls_type = match matches.is_present("tls") {
+        true => matches.value_of("tls").unwrap().to_string(),
+        false => "openssl".to_string(),
+    };   
+    let crypto = match matches.is_present("crypto") {
+        true => matches.value_of("crypto").unwrap().to_string(),
+        false => "openssl".to_string(),
+    };   
+    let attester = match matches.is_present("attester") {
+        true => matches.value_of("attester").unwrap().to_string(),
+        false => "nullattester".to_string(),
+    }; 
+    let verifier = match matches.is_present("verifier") {
+        true => matches.value_of("verifier").unwrap().to_string(),
+        false => "sgx_ecdsa".to_string(),
+    };
+    let mutual = matches.is_present("mutual");   
     thread::spawn(move || {
-        println!("Launch server with port 1122");
-        run_server("127.0.0.1:1122");
+        println!("Listen addr: {}", sockaddr);
+        run_server(&sockaddr, tls_type, crypto, attester, verifier, mutual);
     });
 
     // Launch gRPC server
-    println!("Launch gRPC server");
-    let addr = "[::1]:50000";
-    let key_provider_server = key_provider::key_provider_grpc::key_provider_server(&addr);
-    key_provider_server.await;
+    let gRPC_addr = match matches.is_present("gRPC") {
+        true => matches.value_of("gRPC").unwrap().to_string(),
+        false => "[::1]:50000".to_string(),
+    };      
+    println!("Listen gRPC server addr: {}", gRPC_addr);
+    let key_provider_server = key_provider::key_provider_grpc::key_provider_server(&gRPC_addr);
+    match key_provider_server.await{
+        Ok(_) => {},
+        Err(_) => println!("key_provider_server launch failed."),
+    }
 }
