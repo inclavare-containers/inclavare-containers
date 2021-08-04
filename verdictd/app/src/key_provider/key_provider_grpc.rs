@@ -31,7 +31,7 @@ impl KeyProviderService for keyProviderSrv {
 
         let wrap_command = match wrap_command {
             Ok(wrap_command) => wrap_command,
-            Err(e) => {
+            Err(_) => {
                 let reply = KeyProviderKeyWrapProtocolOutput {
                     key_provider_key_wrap_protocol_output: b"Parser failure".to_vec(),
                 };
@@ -42,13 +42,13 @@ impl KeyProviderService for keyProviderSrv {
         let mut kid = Uuid::new_v4().to_string();
         let ec = wrap_command.keywrapparams.ec.unwrap();
         let optsdata = wrap_command.keywrapparams.optsdata.unwrap();
-        if(ec.Parameters.contains_key("attestation-agent")) {
+        if ec.Parameters.contains_key("attestation-agent") {
             kid = ec.Parameters["attestation-agent"][0].to_string();
         } else {
             // generate a new key file with a new random key
             let mut key:[u8;32]=[0;32];
             rand::rngs::OsRng.fill_bytes(&mut key);
-            directory_key_manager::set_key(&kid, &key);
+            directory_key_manager::set_key(&kid, &key)?;
         }
         let mut iv:[u8;16]=[0;16];
         rand::rngs::OsRng.fill_bytes(&mut iv);
@@ -63,7 +63,7 @@ impl KeyProviderService for keyProviderSrv {
                         .unwrap_or_else(|_|vec![0]);
                 Ok(encrypted_data)
             })
-            .unwrap();
+            .unwrap_or_else(|_|vec![0]);
 
         let annotation = annotation::AnnotationPacket {
             url: String::from("https://key-provider"),

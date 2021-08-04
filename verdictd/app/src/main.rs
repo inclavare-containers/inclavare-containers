@@ -21,6 +21,44 @@ mod protocol;
 
 shadow!(build);
 
+const POLICY_PATH: &str = "/opt/verdictd/opa/policy/";
+
+fn set_default_policy() -> Result<(), String>{
+    let res = match std::path::Path::new(&POLICY_PATH.to_string()).exists() {
+        false => {
+            std::fs::create_dir_all(POLICY_PATH)
+                .map_err(|_| format!("create {:?} failed", POLICY_PATH))
+        },
+        true => Ok(()),
+    };
+    match res {
+        Err(e) => return Err(e),
+        Ok(_) => {},
+    }
+
+    let res = match std::path::Path::new(&(POLICY_PATH.to_string() + "attestation.rego")).exists() {
+        false => {
+            println!("attestation.rego isn't exist");
+            let reference = json!({
+                "mrEnclave": "123",
+                "mrSigner": "4569",
+                "productId": "1",
+            });  
+            match policyEngine::opa::opaEngine::set_reference("attestation.rego", &reference.to_string()){
+                true => Ok(()),
+                false => Err("Set attestation.rego policy failed".to_string()),
+            }                    
+        },
+        true => Ok(()),
+    };
+    match res {
+        Err(e) => return Err(e),
+        Ok(_) => {},
+    }    
+
+    Ok(())
+}
+
 fn handle_client(sockfd: RawFd,
     tls_type: &Option<String>, crypto: &Option<String>,
     attester: &Option<String>, verifier: &Option<String>,
@@ -84,6 +122,14 @@ async fn main() {
     let version = format!("v{}\ncommit: {}\nbuildtime: {}",
                     build::PKG_VERSION, build::COMMIT_HASH, build::BUILD_TIME);
     println!("Verdictd info: {}", version);
+
+    match set_default_policy() {
+        Ok(_) => {},
+        Err(e) => {
+            println!("error: {}", e);
+            return;
+        }
+    }
 
     let matches = 
         App::new("verdictd")
