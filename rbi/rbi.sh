@@ -227,7 +227,7 @@ check_rootfs_img() {
                         $ROOTFS_RRDCI_NAME
 }
 
-kernel-rbi() {
+kernel_rbi() {
     image_already=`sudo docker images| grep $KERNEL_IMAGE | awk {'print $1'}`
     if [ "$image_already" = "$KERNEL_IMAGE" ]; then
         info "Detected image already exists."
