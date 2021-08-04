@@ -41,9 +41,10 @@ jobs:
         version: ${{ env.RUNE_VERSION }}
         cpu_num: ${{ env.CPU_NUM }}
 
-    - name: Start docker daemon
-      run: |
-        docker exec -d $inclavare_dev bash -c "dockerd -b docker0 --storage-driver=vfs &"
+    - uses: ./.github/actions/start-docker-daemon
+      with:
+        container-id: $inclavare_dev
+      timeout-minutes: 2
 
     - name: Build skeleton docker image
       run: |
@@ -191,10 +192,11 @@ jobs:
          rm -rf docker docker-19.03.8.tgz;
          mkdir -p /etc/docker;
          mv daemon.json /etc/docker'
-        
-    - name: Start docker daemon
-      run: |
-        docker exec -d $inclavare_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
+
+    - uses: ./.github/actions/start-docker-daemon
+      with:
+        container-id: $inclavare_test
+      timeout-minutes: 2
 
     - name: Load docker image
       run: |
