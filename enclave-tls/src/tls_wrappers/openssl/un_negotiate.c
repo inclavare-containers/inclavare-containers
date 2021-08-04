@@ -11,6 +11,7 @@
 #include <enclave-tls/err.h>
 #include <enclave-tls/tls_wrapper.h>
 #include <enclave-tls/oid.h>
+#include <internal/core.h>
 #include "per_thread.h"
 #include "openssl.h"
 
@@ -41,6 +42,26 @@ done:
 	return result;
 }
 
+static crypto_wrapper_err_t sha256_ecc_pubkey(unsigned char hash[SHA256_HASH_SIZE], EC_KEY *key)
+{
+	int len = i2d_EC_PUBKEY(key, NULL);
+	unsigned char buf[len];
+	unsigned char *p = buf;
+
+	len = i2d_EC_PUBKEY(key, &p);
+
+	SHA256(buf, len, hash);
+
+	// clang-format off
+	ETLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
+		len, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+		hash[SHA256_HASH_SIZE - 4], hash[SHA256_HASH_SIZE - 3], hash[SHA256_HASH_SIZE - 2],
+		hash[SHA256_HASH_SIZE - 1]);
+	// clang-format on
+
+	return CRYPTO_WRAPPER_ERR_NONE;
+}
+
 static crypto_wrapper_err_t sha256_rsa_pubkey(unsigned char hash[SHA256_HASH_SIZE], RSA *key)
 {
 	int len = i2d_RSAPublicKey(key, NULL);
@@ -50,6 +71,7 @@ static crypto_wrapper_err_t sha256_rsa_pubkey(unsigned char hash[SHA256_HASH_SIZ
 	len = i2d_RSAPublicKey(key, &p);
 
 	SHA256(buf, len, hash);
+
 	// clang-format off
 	ETLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
 		len, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
@@ -63,12 +85,18 @@ static crypto_wrapper_err_t sha256_rsa_pubkey(unsigned char hash[SHA256_HASH_SIZ
 static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, enclave_tls_cert_algo_t algo,
 					     uint8_t *hash)
 {
-	if (algo != ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256)
+	crypto_wrapper_err_t err;
+
+	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
+		EC_KEY *ecc = EVP_PKEY_get1_EC_KEY(pkey);
+		err = sha256_ecc_pubkey(hash, ecc);
+	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
+		RSA *rsa = EVP_PKEY_get1_RSA(pkey);
+		err = sha256_rsa_pubkey(hash, rsa);
+	} else {
 		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
+	}
 
-	RSA *rsa = EVP_PKEY_get1_RSA(pkey);
-
-	crypto_wrapper_err_t err = sha256_rsa_pubkey(hash, rsa);
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
 		return err;
 
@@ -264,14 +292,18 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 	}
 
 	EVP_PKEY *publickey = X509_get_pubkey(cert);
-
-	/* FIXME: add the ability to define different hash_size acording to cert_algo */
-	enclave_tls_cert_algo_t cert_algo = ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256;
+	enclave_tls_cert_algo_t cert_algo = tls_ctx->etls_handle->config.cert_algo;
 	uint32_t hash_size;
-	if (cert_algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256)
+
+	switch (cert_algo) {
+	case ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256:
+	case ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256:
 		hash_size = SHA256_HASH_SIZE;
-	else
+		break;
+
+	default:
 		return 0;
+	}
 
 	uint8_t hash[hash_size];
 	calc_pubkey_hash(publickey, cert_algo, hash);

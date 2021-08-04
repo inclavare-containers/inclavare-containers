@@ -18,6 +18,11 @@
 #include <openssl/asn1.h>
 #include <openssl/ossl_typ.h>
 
+#include <openssl/bn.h>
+#include <openssl/rand.h>
+#include <openssl/objects.h>
+#include <openssl/ec.h>
+
 #define SSL_SUCCESS 1
 
 extern int openssl_extract_x509_extensions(X509 *crt, attestation_evidence_t *evidence);

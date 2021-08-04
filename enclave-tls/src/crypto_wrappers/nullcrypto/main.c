@@ -14,7 +14,9 @@ extern crypto_wrapper_err_t nullcrypto_gen_privkey(crypto_wrapper_ctx_t *ctx,
 						   uint8_t *privkey_buf, unsigned int *privkey_len);
 extern crypto_wrapper_err_t nullcrypto_gen_pubkey_hash(crypto_wrapper_ctx_t *,
 						       enclave_tls_cert_algo_t, uint8_t *);
-extern crypto_wrapper_err_t nullcrypto_gen_cert(crypto_wrapper_ctx_t *, enclave_tls_cert_info_t *);
+extern crypto_wrapper_err_t nullcrypto_gen_cert(crypto_wrapper_ctx_t *,
+						enclave_tls_cert_algo_t algo,
+						enclave_tls_cert_info_t *);
 extern crypto_wrapper_err_t nullcrypto_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t nullcrypto_opts = {

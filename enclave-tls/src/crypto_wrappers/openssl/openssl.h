@@ -13,8 +13,16 @@
 #include <openssl/x509v3.h>
 #include <openssl/asn1.h>
 
-struct openssl_ctx {
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include <openssl/err.h>
+#include <openssl/objects.h>
+#include <openssl/ec.h>
+#include <openssl/pem.h>
+
+typedef union {
 	RSA *key;
-};
+	EC_KEY *eckey;
+} openssl_ctx;
 
 #endif

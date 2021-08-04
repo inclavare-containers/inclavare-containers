@@ -60,9 +60,10 @@ err:
 	return ret;
 }
 
-crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_info_t *cert_info)
+crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
+				      enclave_tls_cert_info_t *cert_info)
 {
-	struct openssl_ctx *octx;
+	openssl_ctx *octx = NULL;
 	cert_subject_t *subject;
 	X509 *cert = NULL;
 	X509_NAME *name;
@@ -83,8 +84,16 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cer
 		return -CRYPTO_WRAPPER_ERR_NO_MEM;
 
 	ret = -CRYPTO_WRAPPER_ERR_PRIV_KEY_LEN;
-	if (!EVP_PKEY_assign_RSA(pkey, octx->key))
-		goto err;
+
+	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
+		if (!EVP_PKEY_assign_EC_KEY(pkey, octx->eckey))
+			goto err;
+	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
+		if (!EVP_PKEY_assign_RSA(pkey, octx->key))
+			goto err;
+	} else {
+		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
+	}
 
 	ret = -CRYPTO_WRAPPER_ERR_NO_MEM;
 	cert = X509_new();
