@@ -14,11 +14,13 @@ tokio = { version = "0.2", features = ["macros"] }
 tonic = "0.3"
 prost = "0.6"
 foreign-types = "0.5.0"
-libc = "0.2"
 lazy_static = "1.4.0"
 rand = "0.8.0"
 rust-crypto = "^0.2"
 uuid = { version = "0.8", features = ["serde", "v4"] }
+shadow-rs = "0.5.25"
+clap = "2.33.3"
 
 [build-dependencies]
 tonic-build = "0.3"
+shadow-rs = "0.5.25"

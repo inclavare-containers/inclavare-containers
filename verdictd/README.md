@@ -35,22 +35,31 @@ yum install -y clang-libs clang-devel
 apt-get install llvm-dev libclang-dev clang
 ```
 
-### Based On Enclave-TLS [enclave-tls](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)
+### Based On [Enclave-tls](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)
 
 #### Build
-
-* verdictd
 
 ```bash
 cd ${ROOT_DIR}/verdictd/
 make
+make install
 ```
 
 #### Run
 
-verdictd supports tcp socket, and sockaddr can be an address form similar to `127.0.0.1:1122`.
-
+verdictd relies on enclave-tls to listen on tcp socket, the default sockaddr is `127.0.0.1:1234`.
+User can use `--listen` option to specify a listen address.
 ```bash
-cd ${ROOT_DIR}/verdictd/
-./bin/verdictd
+./bin/verdictd --listen 127.0.0.1:1111
+```
+User can use `--attester`, `--verifier`, `--tls`, `--crypto` and `--mutual` options to specific enclave-tls uses instances's type. See details: [Enclave-tls](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)
+
+User can use `--gRPC` option to specify grpc server's listen address.
+```bash
+./bin/verdictd --gRPC [::1]:10000
+```
+##### Default
+These options all exist default values. If user execute `./bin/verdictd` directly, it will execute with following configurations.
+```bash
+./bin/verdictd --listen 127.0.0.1:1234 --tls openssl --crypto openssl --attester nullattester --verifier sgx_ecdsa --gRPC [::1]:50000
 ```
