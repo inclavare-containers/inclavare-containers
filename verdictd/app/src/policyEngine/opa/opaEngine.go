@@ -64,8 +64,8 @@ func makeDecisionGo(policy string, message string) *C.char {
 		return C.CString("")
 	}
 	decision_str := string(decision)
-	res := strings.Replace(decision_str, "\\u003e=", ">=", -1)
-	res = strings.Replace(res, "\\u003c=", "<=", -1)
+	res := strings.Replace(decision_str, "\\u003e", ">", -1)
+	res = strings.Replace(res, "\\u003c", "<", -1)
 	
 	return C.CString(res)
 }
