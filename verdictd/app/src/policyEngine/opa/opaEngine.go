@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/open-policy-agent/opa/rego"
 )
@@ -15,7 +16,7 @@ import (
 func makeDecisionGo(policy string, message string) *C.char {
 
 	// Deserialize the message in json format
-	message_map := make(map[string]string)
+	message_map := make(map[string]interface{})
 	err := json.Unmarshal([]byte(message), &message_map)
 	if err != nil {
 		log.Fatal(err)
@@ -62,8 +63,11 @@ func makeDecisionGo(policy string, message string) *C.char {
 		fmt.Println("json.Marshal failed: ", err)
 		return C.CString("")
 	}
-
-	return C.CString(string(decision))
+	decision_str := string(decision)
+	res := strings.Replace(decision_str, "\\u003e=", ">=", -1)
+	res = strings.Replace(res, "\\u003c=", "<=", -1)
+	
+	return C.CString(res)
 }
 
 func main() {}
