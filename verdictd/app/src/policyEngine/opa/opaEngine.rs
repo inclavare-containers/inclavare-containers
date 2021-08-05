@@ -1,6 +1,7 @@
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
-use serde_json::Value;
+use serde_json::{Map, Value};
+use std::collections::HashMap;
 use std::ffi::CStr;
 use std::fs::{remove_file, File};
 use std::io::prelude::*;
@@ -47,22 +48,76 @@ pub fn set_reference(policy_name: &str, references: &str) -> bool {
         }
     };
 
+    // Handle the "mrEnclave" field
+    let mut mr_enclave: Vec<String> = Vec::new();
+    if let Some(res) = references["mrEnclave"].as_array() {
+        for i in res {
+            if let Value::String(num) = i {
+                mr_enclave.push(num.to_string());
+            }
+        }
+    };
+
+    // Handle the "mrSigner" field
+    let mut mr_signer: Vec<i64> = Vec::new();
+    if let Some(res) = references["mrSigner"].as_array() {
+        for i in res {
+            if let Value::Number(num) = i {
+                if let Some(i) = num.as_i64() {
+                    mr_signer.push(i);
+                }
+            }
+        }
+    };
+
+    // Handle the "productId" field
+    let mut product_id: HashMap<String, i64> = HashMap::new();
+    if let Some(res) = references["productId"].as_object() {
+        for (key, value) in res.iter() {
+            if let Value::Number(num) = value {
+                if let Some(i) = num.as_i64() {
+                    product_id.insert(key.to_string(), i);
+                }
+            }
+        }
+    }
+
+    // Handle the "svn" field
+    let mut svn: HashMap<String, i64> = HashMap::new();
+    if let Some(res) = references["svn"].as_object() {
+        for (key, value) in res.iter() {
+            if let Value::Number(num) = value {
+                if let Some(i) = num.as_i64() {
+                    svn.insert(key.to_string(), i);
+                }
+            }
+        }
+    }
+
     // Generate policy file from reference value
-    let mrEnclave: String = String::from("mrEnclave = ") + &references["mrEnclave"].to_string();
-    let mrSigner: String = String::from("mrSigner = ") + &references["mrSigner"].to_string();
-    let productId: String = String::from("productId = ") + &references["productId"].to_string();
+    let mr_enclave_str = format!("{}{:?}", "mrEnclave = ", mr_enclave);
+    let mr_signer_str = format!("{}{:?}", "mrSigner = ", mr_signer);
+    let mut product_id_str = String::new();
+    for (key, value) in &product_id {
+        let s = format!("\t{} {} {}\n", "input.productId", key, value);
+        product_id_str = product_id_str + &s;
+    }
+    let mut svn_str = String::new();
+    for (key, value) in &svn {
+        let s = format!("\t{} {} {}\n", "input.svn", key, value);
+        svn_str = svn_str + &s;
+    }
     let policy = "package policy\n\n".to_string()
-        + &mrEnclave
+        + &mr_enclave_str
         + "\n"
-        + &mrSigner
-        + "\n"
-        + &productId
+        + &mr_signer_str
         + "\n\n\
                 default allow = false\n\n\
-                allow = true {\n\
-                \tmrEnclave == input.mrEnclave\n\
-                \tmrSigner == input.mrSigner\n\
-                \tproductId == input.productId\n\
+                allow = true {\n"
+        + &product_id_str
+        + &svn_str
+        + "\tinput.mrEnclave == mrEnclave[_]\n\
+                \tinput.mrSigner == mrSigner[_]\n\
                 }";
 
     // Store the policy in the src/policy directory
@@ -220,12 +275,26 @@ mod tests {
     fn test_set_reference() {
         let policy_name = "demo.rego";
         let references = r#"
-                {
-                    "mrEnclave" : "123",
-                    "mrSigner" : "456",
-                    "productId" : "1"
-                }
-                "#;
+        {
+            "mrEnclave" : [
+                "2343545",
+                "5465767",
+                "79gfgfvf"
+            ],
+            "mrSigner" : [
+                323232,
+                903232,
+                1212
+            ],
+            "productId" : {
+                ">=": 0,
+                "<=": 10
+            },
+            "svn" : {
+                ">=": 0
+            }
+        }
+        "#;
         let result = set_reference(policy_name, references);
 
         assert!(result == true);
