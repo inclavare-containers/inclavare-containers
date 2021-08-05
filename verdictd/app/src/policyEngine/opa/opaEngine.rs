@@ -33,10 +33,23 @@ pub struct GoString {
 /// Introduce reference values, update or create new opa's policy files
 /// references (JSON)
 /// {
-///     "mrEnclave" : xxx
-///     "mrSigner" : xxx
-///     "productId" : xxx
-///     ...
+///     "mrEnclave" : [
+///         "2343545",
+///         "5465767",
+///         ... 
+///     ],
+///     "mrSigner" : [
+///         323232,
+///         903232,
+///         ...
+///     ],
+///     "productId" : {
+///         ">=": 0,
+///         "<=": 10
+///     },
+///     "svn" : {
+///         ">=": 0
+///     }
 /// }
 pub fn set_reference(policy_name: &str, references: &str) -> bool {
     // Deserialize the references in json format
@@ -102,15 +115,21 @@ pub fn set_reference(policy_name: &str, references: &str) -> bool {
         let s = format!("\t{} {} {}\n", "input.productId", key, value);
         product_id_str = product_id_str + &s;
     }
+    let product_id = &format!("{}{:?}", "productId = ", product_id);
     let mut svn_str = String::new();
     for (key, value) in &svn {
         let s = format!("\t{} {} {}\n", "input.svn", key, value);
         svn_str = svn_str + &s;
     }
+    let svn = &format!("{}{:?}", "svn = ", svn);
     let policy = "package policy\n\n".to_string()
         + &mr_enclave_str
         + "\n"
         + &mr_signer_str
+        + "\n"
+        + &product_id
+        + "\n"
+        + &svn
         + "\n\n\
                 default allow = false\n\n\
                 allow = true {\n"
@@ -194,6 +213,7 @@ pub fn export_policy(policy_name: &str) -> String {
 ///     "mrEnclave" : "xxx"
 ///     "mrSigner" : "xxx"
 ///     "productId" : "xxx"
+///     "svn" : "xxx"
 ///     ...
 /// }
 ///
@@ -202,12 +222,12 @@ pub fn export_policy(policy_name: &str) -> String {
 ///     "allow": true   
 ///     "parserInfo": {
 ///         "inputValue1": [
-///             "xxxxx",
-///             "xxxxx",
+///             input1,
+///             reference1,
 ///         ],
 ///         "inputValue2": [
-///             "xxxxx",
-///             "xxxxx", ],
+///             input2,
+///             reference2, ],
 ///     }
 /// }
 pub fn make_decision(policy_name: &str, message: &str) -> String {
@@ -352,7 +372,7 @@ mod tests {
 
     #[test]
     fn test_make_decision() {
-        let message = "{\"mrEnclave\":\"123\",\"mrSigner\":\"456\",\"productId\":\"1\"}";
+        let message = "{\"mrEnclave\":\"2343545\",\"mrSigner\":323232,\"productId\":8,\"svn\":1}";
         let result_str = make_decision("demo.rego", message);
 
         let result: Value = match serde_json::from_str(&result_str) {
