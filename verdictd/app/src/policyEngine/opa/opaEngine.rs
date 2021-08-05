@@ -179,8 +179,8 @@ pub fn set_raw_policy(policy_name: &str, policy: &str) -> bool {
 }
 
 /// Export existing policy from verdictd
-/// If the policy does not exist, an empty string will be returned
-pub fn export_policy(policy_name: &str) -> String {
+/// If the policy does not exist, a None will be returned
+pub fn export_policy(policy_name: &str) -> Option<String> {
     let path = String::from(POLICY_PATH) + policy_name;
     let mut contents = String::new();
 
@@ -191,7 +191,7 @@ pub fn export_policy(policy_name: &str) -> String {
     let mut file = match File::open(path) {
         Err(_) => {
             println!("Failed to open the policy");
-            return contents;
+            return None;
         }
         Ok(res) => res,
     };
@@ -200,11 +200,11 @@ pub fn export_policy(policy_name: &str) -> String {
     match file.read_to_string(&mut contents) {
         Err(_) => {
             println!("Failed to read the policy");
-            return contents;
+            return None;
         }
         Ok(res) => res,
     };
-    contents
+    Some(contents)
 }
 
 /// According to message and policy, the decision is made by opa
@@ -230,9 +230,13 @@ pub fn export_policy(policy_name: &str) -> String {
 ///             reference2, ],
 ///     }
 /// }
-pub fn make_decision(policy_name: &str, message: &str) -> String {
+pub fn make_decision(policy_name: &str, message: &str) -> Option<String> {
     // Get the content of policy from policy_name
-    let policy = export_policy(policy_name);
+    let policy = match export_policy(policy_name){
+        Some(res) => res,
+        None => return None,
+    };
+
     let policy_go = GoString {
         p: policy.as_ptr() as *const i8,
         n: policy.len() as isize,
@@ -249,12 +253,12 @@ pub fn make_decision(policy_name: &str, message: &str) -> String {
     let decision_slice: &str = match decision_str.to_str() {
         Err(_) => {
             println!("Failed to get the decision");
-            return String::new();
+            return None;
         }
         Ok(res) => res,
     };
 
-    decision_slice.to_string()
+    Some(decision_slice.to_string())
 }
 
 /// Write the string with the content of policy to the file named policy_name
@@ -353,7 +357,10 @@ mod tests {
     fn test_export_policy() {
         let policy_name = "demo.rego";
 
-        let result = export_policy(policy_name);
+        let result = match export_policy(policy_name){
+            Some(res) => res,
+            None => String::new(),
+        };
         let policy = "package policy\n\n\
         mrEnclave = \"123\"\n\
         mrSigner = \"456\"\n\
@@ -373,7 +380,10 @@ mod tests {
     #[test]
     fn test_make_decision() {
         let message = "{\"mrEnclave\":\"2343545\",\"mrSigner\":323232,\"productId\":8,\"svn\":1}";
-        let result_str = make_decision("demo.rego", message);
+        let result_str = match make_decision("demo.rego", message){
+            Some(res) => res,
+            None => String::new(),
+        };
 
         let result: Value = match serde_json::from_str(&result_str) {
             Ok(res) => res,
