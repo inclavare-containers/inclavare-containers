@@ -1,12 +1,8 @@
 //! AES256 CBC、CTR mode encrypt decrypt demo
 extern crate crypto;
 
-use std::str;
 use crypto::{symmetriccipher,buffer,aes,blockmodes};
 use crypto::buffer::{ReadBuffer,WriteBuffer,BufferResult};
-use crypto::aessafe::*;
-use crypto::blockmodes::*;
-use crypto::symmetriccipher::*;
 
 // Encrypt a buffer with the given key and iv using AES-256/CBC/Pkcs encryption.
 pub fn encrypt(data: &[u8], key: &[u8], iv: &[u8])->Result<Vec<u8>, symmetriccipher::SymmetricCipherError> {

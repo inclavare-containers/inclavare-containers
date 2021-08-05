@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-use std::os::unix::io::{RawFd, AsRawFd};
+use std::os::unix::io::RawFd;
 use std::ops::{Deref, DerefMut};
 use std::ptr::NonNull;
 use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
