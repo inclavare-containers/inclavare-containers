@@ -37,10 +37,23 @@ fn set_reference(policy_name: &str, references: &str) -> bool
 
 references (JSON)
 {
-  "mrEnclave" : xxx
-  "mrSigner" : xxx
-  "productId" : xxx
-  ...
+    "mrEnclave" : [
+        "2343545",
+        "5465767",
+        ... 
+    ],
+    "mrSigner" : [
+        323232,
+        903232,
+        ...
+    ],
+    "productId" : {
+        ">=": 0,
+        "<=": 10
+    },
+    "svn" : {
+        ">=": 0
+    }
 }
 ```
 
@@ -54,10 +67,10 @@ fn set_raw_policy(policy_name: &str, policy: &str) -> bool
 
 ### export_policy
 
-Export existing policy from verdictd. If the policy named `policy_name`  does not exist, an empty string will be returned.
+Export existing policy from verdictd. If the policy named `policy_name`  does not exist, a None will be returned.
 
 ```rust
-fn export_policy(policy_name: &str) -> String
+fn export_policy(policy_name: &str) -> Option<String>
 ```
 
 ### make_decision
@@ -65,14 +78,15 @@ fn export_policy(policy_name: &str) -> String
 According to the message and the policy,  return the decision made by opa.
 
 ```rust
-fn make_decision(policy_name: &str, message: &str) -> String
+fn make_decision(policy_name: &str, message: &str) -> Option<String>
 
 message (JSON)
 {
-  "mrEnclave" : "xxx"
-  "mrSigner" : "xxx"
-  "productId" : "xxx"
-  ...
+    "mrEnclave" : "xxx"
+    "mrSigner" : "xxx"
+    "productId" : "xxx"
+    "svn" : "xxx"
+    ...
 }
 
 returnValue(JSON)
@@ -80,12 +94,12 @@ returnValue(JSON)
   "allow": true
   "parserInfo": {
       "inputValue1": [
-          "xxxxx",
-          "xxxxx",
+          input1,
+          reference1,
       ],
       "inputValue2": [
-          "xxxxx",
-          "xxxxx", 
+          input2,
+          reference2, 
       ],
   }
 }
