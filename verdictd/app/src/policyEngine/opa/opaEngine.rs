@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
-use serde_json::{Map, Value};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::fs::{remove_file, File};
@@ -36,7 +36,7 @@ pub struct GoString {
 ///     "mrEnclave" : [
 ///         "2343545",
 ///         "5465767",
-///         ... 
+///         ...
 ///     ],
 ///     "mrSigner" : [
 ///         323232,
@@ -70,6 +70,12 @@ pub fn set_reference(policy_name: &str, references: &str) -> bool {
             }
         }
     };
+    let mut mr_enclave_str1 = String::new();
+    let mut mr_enclave_str2 = String::new();
+    if !mr_enclave.is_empty() {
+        mr_enclave_str1 = format!("{}{:?}\n", "mrEnclave = ", mr_enclave);
+        mr_enclave_str2 = "\tinput.mrEnclave == mrEnclave[_]\n".to_string();
+    }
 
     // Handle the "mrSigner" field
     let mut mr_signer: Vec<i64> = Vec::new();
@@ -82,62 +88,79 @@ pub fn set_reference(policy_name: &str, references: &str) -> bool {
             }
         }
     };
+    let mut mr_signer_str1 = String::new();
+    let mut mr_signer_str2 = String::new();
+    if !mr_signer.is_empty() {
+        mr_signer_str1 = format!("{}{:?}\n", "mrSigner = ", mr_signer);
+        mr_signer_str2 = "\tinput.mrSigner == mrSigner[_]\n".to_string();
+    }
 
     // Handle the "productId" field
+    let mut product_id_str1 = String::new();
+    let mut product_id_str2 = String::new();
     let mut product_id: HashMap<String, i64> = HashMap::new();
-    if let Some(res) = references["productId"].as_object() {
-        for (key, value) in res.iter() {
-            if let Value::Number(num) = value {
-                if let Some(i) = num.as_i64() {
-                    product_id.insert(key.to_string(), i);
+    match &references["productId"] {
+        Value::Number(res) => {
+            product_id_str1 = format!("{}{}\n", "productId = ", res);
+            product_id_str2 = format!("\t{}{}\n", "input.productId == ", res)
+        }
+        Value::Object(res) => {
+            for (key, value) in res.iter() {
+                if let Value::Number(num) = value {
+                    if let Some(i) = num.as_i64() {
+                        product_id.insert(key.to_string(), i);
+                    }
                 }
             }
+            for (key, value) in &product_id {
+                let s = format!("\t{} {} {}\n", "input.productId", key, value);
+                product_id_str2 = product_id_str2 + &s;
+            }
+            product_id_str1 = format!("{}{:?}\n", "productId = ", product_id);
         }
+        _ => (),
     }
 
     // Handle the "svn" field
+    let mut svn_str1 = String::new();
+    let mut svn_str2 = String::new();
     let mut svn: HashMap<String, i64> = HashMap::new();
-    if let Some(res) = references["svn"].as_object() {
-        for (key, value) in res.iter() {
-            if let Value::Number(num) = value {
-                if let Some(i) = num.as_i64() {
-                    svn.insert(key.to_string(), i);
+    match &references["svn"] {
+        Value::Number(res) => {
+            svn_str1 = format!("{}{}\n", "svn = ", res);
+            svn_str2 = format!("\t{}{}\n", "input.svn == ", res)
+        }
+        Value::Object(res) => {
+            for (key, value) in res.iter() {
+                if let Value::Number(num) = value {
+                    if let Some(i) = num.as_i64() {
+                        svn.insert(key.to_string(), i);
+                    }
                 }
             }
+            for (key, value) in &svn {
+                let s = format!("\t{} {} {}\n", "input.svn", key, value);
+                svn_str2 = svn_str2 + &s;
+            }
+            svn_str1 = format!("{}{:?}\n", "svn = ", svn);
         }
+        _ => (),
     }
 
     // Generate policy file from reference value
-    let mr_enclave_str = format!("{}{:?}", "mrEnclave = ", mr_enclave);
-    let mr_signer_str = format!("{}{:?}", "mrSigner = ", mr_signer);
-    let mut product_id_str = String::new();
-    for (key, value) in &product_id {
-        let s = format!("\t{} {} {}\n", "input.productId", key, value);
-        product_id_str = product_id_str + &s;
-    }
-    let product_id = &format!("{}{:?}", "productId = ", product_id);
-    let mut svn_str = String::new();
-    for (key, value) in &svn {
-        let s = format!("\t{} {} {}\n", "input.svn", key, value);
-        svn_str = svn_str + &s;
-    }
-    let svn = &format!("{}{:?}", "svn = ", svn);
     let policy = "package policy\n\n".to_string()
-        + &mr_enclave_str
-        + "\n"
-        + &mr_signer_str
-        + "\n"
-        + &product_id
-        + "\n"
-        + &svn
-        + "\n\n\
+        + &mr_enclave_str1
+        + &mr_signer_str1
+        + &product_id_str1
+        + &svn_str1
+        + "\n\
                 default allow = false\n\n\
                 allow = true {\n"
-        + &product_id_str
-        + &svn_str
-        + "\tinput.mrEnclave == mrEnclave[_]\n\
-                \tinput.mrSigner == mrSigner[_]\n\
-                }";
+        + &mr_enclave_str2
+        + &mr_signer_str2
+        + &product_id_str2
+        + &svn_str2
+        + "}";
 
     // Store the policy in the src/policy directory
     return write_to_file(policy_name, &policy);
@@ -232,7 +255,7 @@ pub fn export_policy(policy_name: &str) -> Option<String> {
 /// }
 pub fn make_decision(policy_name: &str, message: &str) -> Option<String> {
     // Get the content of policy from policy_name
-    let policy = match export_policy(policy_name){
+    let policy = match export_policy(policy_name) {
         Some(res) => res,
         None => return None,
     };
@@ -357,7 +380,7 @@ mod tests {
     fn test_export_policy() {
         let policy_name = "demo.rego";
 
-        let result = match export_policy(policy_name){
+        let result = match export_policy(policy_name) {
             Some(res) => res,
             None => String::new(),
         };
@@ -380,7 +403,7 @@ mod tests {
     #[test]
     fn test_make_decision() {
         let message = "{\"mrEnclave\":\"2343545\",\"mrSigner\":323232,\"productId\":8,\"svn\":1}";
-        let result_str = match make_decision("demo.rego", message){
+        let result_str = match make_decision("demo.rego", message) {
             Some(res) => res,
             None => String::new(),
         };
