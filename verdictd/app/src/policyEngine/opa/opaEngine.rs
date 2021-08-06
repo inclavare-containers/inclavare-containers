@@ -51,15 +51,9 @@ pub struct GoString {
 ///         ">=": 0
 ///     }
 /// }
-pub fn set_reference(policy_name: &str, references: &str) -> bool {
+pub fn set_reference(policy_name: &str, references: &str) -> Result<(), String> {
     // Deserialize the references in json format
-    let references: Value = match serde_json::from_str(references) {
-        Ok(res) => res,
-        Err(_) => {
-            println!("Json unmashall failed");
-            return false;
-        }
-    };
+    let references: Value = serde_json::from_str(references).map_err(|e| e.to_string())?;
 
     // Handle the "mrEnclave" field
     let mut mr_enclave: Vec<String> = Vec::new();
@@ -163,47 +157,37 @@ pub fn set_reference(policy_name: &str, references: &str) -> bool {
         + "}";
 
     // Store the policy in the src/policy directory
-    return write_to_file(policy_name, &policy);
+    write_to_file(policy_name, &policy)
 }
 
 /// Save the input raw policy file
 /// Note that the OPA binary program needs to be installed and placed in the system path
-pub fn set_raw_policy(policy_name: &str, policy: &str) -> bool {
+pub fn set_raw_policy(policy_name: &str, policy: &str) -> Result<(), String> {
     // Store the policy in the src/policy directory
-    if write_to_file(policy_name, policy) == false {
-        return false;
-    };
+    write_to_file(policy_name, policy)?;
 
     // Call the command line opa check to check the syntax
     let path = String::from(POLICY_PATH) + policy_name;
     let status = match Command::new("opa").arg("check").arg(&path).status() {
-        Err(_) => {
-            println!("Failed to check, note that the OPA binary program needs to be installed and placed in the system path");
-            match remove_file(&path) {
-                Err(_) => println!("Failed to delete the wrong policy"),
-                Ok(_) => (),
-            };
-            return false;
+        Err(e) => {
+            remove_file(&path).map_err(|e| e.to_string())?;
+            return Err(e.to_string());
         }
         Ok(res) => res,
     };
 
     // Determine whether the syntax is correct
     if !status.success() {
-        println!("The uploaded policy has a syntax error");
-        match remove_file(&path) {
-            Err(_) => println!("Failed to delete the wrong policy"),
-            Ok(_) => (),
-        };
-        return false;
+        remove_file(&path).map_err(|e| e.to_string())?;
+        return Err("The uploaded policy has a syntax error".to_string());
     }
 
-    true
+    Ok(())
 }
 
 /// Export existing policy from verdictd
 /// If the policy does not exist, a None will be returned
-pub fn export_policy(policy_name: &str) -> Option<String> {
+pub fn export_policy(policy_name: &str) -> Result<String, String> {
     let path = String::from(POLICY_PATH) + policy_name;
     let mut contents = String::new();
 
@@ -211,23 +195,13 @@ pub fn export_policy(policy_name: &str) -> Option<String> {
     assert_eq!(*lock, 0);
 
     // Open the file named policy_name
-    let mut file = match File::open(path) {
-        Err(_) => {
-            println!("Failed to open the policy");
-            return None;
-        }
-        Ok(res) => res,
-    };
+    let mut file = File::open(path).map_err(|e| e.to_string())?;
 
     // Read the content of the policy to content
-    match file.read_to_string(&mut contents) {
-        Err(_) => {
-            println!("Failed to read the policy");
-            return None;
-        }
-        Ok(res) => res,
-    };
-    Some(contents)
+    file.read_to_string(&mut contents)
+        .map_err(|e| e.to_string())?;
+
+    Ok(contents)
 }
 
 /// According to message and policy, the decision is made by opa
@@ -253,12 +227,9 @@ pub fn export_policy(policy_name: &str) -> Option<String> {
 ///             reference2, ],
 ///     }
 /// }
-pub fn make_decision(policy_name: &str, message: &str) -> Option<String> {
+pub fn make_decision(policy_name: &str, message: &str) -> Result<String, String> {
     // Get the content of policy from policy_name
-    let policy = match export_policy(policy_name) {
-        Some(res) => res,
-        None => return None,
-    };
+    let policy = export_policy(policy_name)?;
 
     let policy_go = GoString {
         p: policy.as_ptr() as *const i8,
@@ -273,19 +244,13 @@ pub fn make_decision(policy_name: &str, message: &str) -> Option<String> {
     // Call the function exported by cgo and process the returned decision
     let decision_buf: *mut c_char = unsafe { makeDecisionGo(policy_go, message_go) };
     let decision_str: &CStr = unsafe { CStr::from_ptr(decision_buf) };
-    let decision_slice: &str = match decision_str.to_str() {
-        Err(_) => {
-            println!("Failed to get the decision");
-            return None;
-        }
-        Ok(res) => res,
-    };
+    let decision_slice: &str = decision_str.to_str().map_err(|e| e.to_string())?;
 
-    Some(decision_slice.to_string())
+    Ok(decision_slice.to_string())
 }
 
 /// Write the string with the content of policy to the file named policy_name
-fn write_to_file(policy_name: &str, policy: &str) -> bool {
+fn write_to_file(policy_name: &str, policy: &str) -> Result<(), String> {
     // Store the policy in the src/policy directory
     let path = String::from(POLICY_PATH) + policy_name;
     let path = Path::new(&path);
@@ -295,23 +260,13 @@ fn write_to_file(policy_name: &str, policy: &str) -> bool {
 
     // Open the file in write-only mode
     // If a policy with the same name already exists, it will be overwritten
-    let mut file = match File::create(&path) {
-        Err(_) => {
-            println!("Couldn't create file");
-            return false;
-        }
-        Ok(file) => file,
-    };
+    let mut file = File::create(&path).map_err(|e| e.to_string())?;
 
     // Write the policy into file
-    match file.write_all(policy.as_bytes()) {
-        Err(_) => {
-            println!("Couldn't write to file");
-            return false;
-        }
-        Ok(_) => (),
-    }
-    true
+    file.write_all(policy.as_bytes())
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -344,7 +299,7 @@ mod tests {
         "#;
         let result = set_reference(policy_name, references);
 
-        assert!(result == true);
+        assert!(result.unwrap() == ());
         // You can view the content in the src/policy/test.rego file by yourself
     }
 
@@ -361,7 +316,7 @@ mod tests {
                     }";
         let result = set_raw_policy(policy_name, &policy);
 
-        assert!(result == true);
+        assert!(result.unwrap() == ());
 
         // Wrong case, because of the syntax error of the policy file
         let policy = "package policy\n\n".to_string()
@@ -372,7 +327,7 @@ mod tests {
                     }";
         let result = set_raw_policy(policy_name, &policy);
 
-        assert!(result == false);
+        assert!(result.is_err() == true);
         // You can view the content in the src/policy/test1.rego file by yourself
     }
 
@@ -380,10 +335,7 @@ mod tests {
     fn test_export_policy() {
         let policy_name = "demo.rego";
 
-        let result = match export_policy(policy_name) {
-            Some(res) => res,
-            None => String::new(),
-        };
+        let result = export_policy(policy_name).unwrap();
         let policy = "package policy\n\n\
         mrEnclave = \"123\"\n\
         mrSigner = \"456\"\n\
@@ -403,10 +355,7 @@ mod tests {
     #[test]
     fn test_make_decision() {
         let message = "{\"mrEnclave\":\"2343545\",\"mrSigner\":323232,\"productId\":8,\"svn\":1}";
-        let result_str = match make_decision("demo.rego", message) {
-            Some(res) => res,
-            None => String::new(),
-        };
+        let result_str = make_decision("demo.rego", message).unwrap();
 
         let result: Value = match serde_json::from_str(&result_str) {
             Ok(res) => res,
