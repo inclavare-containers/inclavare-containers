@@ -45,8 +45,8 @@ fn set_default_policy() -> Result<(), String>{
                 "productId": "1",
             });  
             match policyEngine::opa::opaEngine::set_reference("attestation.rego", &reference.to_string()){
-                true => Ok(()),
-                false => Err("Set attestation.rego policy failed".to_string()),
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
             }                    
         },
         true => Ok(()),
