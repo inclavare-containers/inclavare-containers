@@ -20,6 +20,8 @@ rust-crypto = "^0.2"
 uuid = { version = "0.8", features = ["serde", "v4"] }
 shadow-rs = "0.5.25"
 clap = "2.33.3"
+rayon = "1.5"
+num_cpus = "1.0"
 
 [build-dependencies]
 tonic-build = "0.3"
