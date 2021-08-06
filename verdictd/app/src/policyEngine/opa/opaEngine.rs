@@ -298,7 +298,7 @@ mod tests {
         "#;
         let result = set_reference(policy_name, references);
 
-        assert!(result.unwrap() == ());
+        assert_eq!(result.unwrap(), ());
         // You can view the content in the src/policy/test.rego file by yourself
     }
 
@@ -315,7 +315,7 @@ mod tests {
                     }";
         let result = set_raw_policy(policy_name, &policy);
 
-        assert!(result.unwrap() == ());
+        assert_eq!(result.unwrap(), ());
 
         // Wrong case, because of the syntax error of the policy file
         let policy = "package policy\n\n".to_string()
@@ -326,7 +326,7 @@ mod tests {
                     }";
         let result = set_raw_policy(policy_name, &policy);
 
-        assert!(result.is_err() == true);
+        assert_eq!(result.is_err(), true);
         // You can view the content in the src/policy/test1.rego file by yourself
     }
 
@@ -348,7 +348,7 @@ mod tests {
             \tproductId == input.productId\n\
         }";
 
-        assert!(result == policy);
+        assert_eq!(result, policy);
     }
 
     #[test]
@@ -363,6 +363,6 @@ mod tests {
             }
         };
 
-        assert!(result["allow"] == true);
+        assert_eq!(result["allow"], true);
     }
 }
