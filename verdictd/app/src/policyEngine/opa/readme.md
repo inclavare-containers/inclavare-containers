@@ -33,7 +33,7 @@ After that, you can use `cargo test -- --test-threads=1` to perform tests.
 Introduce reference values, update or create new opa's policy file.
 
 ```rust
-fn set_reference(policy_name: &str, references: &str) -> bool
+fn set_reference(policy_name: &str, references: &str) -> Result<(), String>
 
 references (JSON)
 {
@@ -62,7 +62,7 @@ references (JSON)
 Save the raw policy file.
 
 ```rust
-fn set_raw_policy(policy_name: &str, policy: &str) -> bool
+fn set_raw_policy(policy_name: &str, policy: &str) -> Result<(), String>
 ```
 
 ### export_policy
@@ -70,7 +70,7 @@ fn set_raw_policy(policy_name: &str, policy: &str) -> bool
 Export existing policy from verdictd. If the policy named `policy_name`  does not exist, a None will be returned.
 
 ```rust
-fn export_policy(policy_name: &str) -> Option<String>
+fn export_policy(policy_name: &str) -> Result<String, String>
 ```
 
 ### make_decision
@@ -78,7 +78,7 @@ fn export_policy(policy_name: &str) -> Option<String>
 According to the message and the policy,  return the decision made by opa.
 
 ```rust
-fn make_decision(policy_name: &str, message: &str) -> Option<String>
+fn make_decision(policy_name: &str, message: &str) -> Result<String, String>
 
 message (JSON)
 {
