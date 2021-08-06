@@ -186,7 +186,6 @@ pub fn set_raw_policy(policy_name: &str, policy: &str) -> Result<(), String> {
 }
 
 /// Export existing policy from verdictd
-/// If the policy does not exist, a None will be returned
 pub fn export_policy(policy_name: &str) -> Result<String, String> {
     let path = String::from(POLICY_PATH) + policy_name;
     let mut contents = String::new();
