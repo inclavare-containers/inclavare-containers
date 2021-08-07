@@ -4,16 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// clang-format off
 #include <string.h>
 #include <stdlib.h>
+#ifndef SGX
+#include <sys/types.h>
 #include <dirent.h>
+#endif
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
 #include "internal/tls_wrapper.h"
-
-// clang-format off
 #ifdef OCCLUM
-  #define PATTERN_SUFFIX ".so"
+#define PATTERN_SUFFIX ".so"
+#endif
+#ifdef SGX
+#include <sgx_error.h>
+#include "etls_t.h"
+#define DT_REG 8
 #endif
 // clang-format on
 
@@ -27,17 +34,18 @@ enclave_tls_err_t etls_tls_wrapper_load_all(void)
 {
 	ETLS_DEBUG("called\n");
 
-	DIR *dir = opendir(TLS_WRAPPERS_DIR);
+	uint64_t dir = etls_opendir(TLS_WRAPPERS_DIR);
 	if (!dir) {
-		ETLS_ERR("failed to open %s", TLS_WRAPPERS_DIR);
+		ETLS_ERR("failed to open %s\n", TLS_WRAPPERS_DIR);
 		return -ENCLAVE_TLS_ERR_UNKNOWN;
 	}
 
 	unsigned int total_loaded = 0;
-	struct dirent *ptr;
-	while ((ptr = readdir(dir)) != NULL) {
-		if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, ".."))
+	etls_dirent *ptr;
+	while (etls_readdir(dir, &ptr) != 1) {
+		if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, "..")) {
 			continue;
+		}
 
 #ifdef OCCLUM
 		/* Occlum can't identify the d_type of the file, always return DT_UNKNOWN */
@@ -51,7 +59,7 @@ enclave_tls_err_t etls_tls_wrapper_load_all(void)
 		}
 	}
 
-	closedir(dir);
+	etls_closedir((uint64_t)dir);
 
 	if (!total_loaded) {
 		ETLS_ERR("unavailable tls wrapper instance under %s\n", TLS_WRAPPERS_DIR);

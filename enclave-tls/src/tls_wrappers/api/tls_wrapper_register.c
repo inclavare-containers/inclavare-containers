@@ -9,7 +9,6 @@
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
 #include "internal/tls_wrapper.h"
-#include "internal/sgxutils.h"
 
 tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 {
@@ -17,15 +16,6 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts)
 		return -CRYPTO_WRAPPER_ERR_INVALID;
 
 	ETLS_DEBUG("registering the tls wrapper '%s' ...\n", opts->name);
-
-	if (opts->flags & TLS_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE) {
-		if (!is_sgx_supported_and_configured()) {
-			// clang-format off
-			ETLS_DEBUG("failed to register the tls wrapper '%s' due to lack of SGX capability\n", opts->name);
-			// clang-format on
-			return -TLS_WRAPPER_ERR_INVALID;
-		}
-	}
 
 	tls_wrapper_opts_t *new_opts = (tls_wrapper_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
