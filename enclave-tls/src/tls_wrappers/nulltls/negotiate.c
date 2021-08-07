@@ -21,7 +21,7 @@ tls_wrapper_err_t nulltls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 		attestation_evidence_t evidence;
 
 		/* There is no evidence in tls_wrapper_nulltls */
-		strncpy(evidence.type, "nulltls", sizeof(evidence.type));
+		snprintf(evidence.type, sizeof(evidence.type), "%s", "nulltls");
 
 		err = tls_wrapper_verify_certificate_extension(ctx, &evidence, hash,
 							       SHA256_HASH_SIZE);
