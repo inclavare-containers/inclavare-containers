@@ -9,7 +9,6 @@
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
 #include "internal/crypto_wrapper.h"
-#include "internal/sgxutils.h"
 
 crypto_wrapper_err_t crypto_wrapper_register(const crypto_wrapper_opts_t *opts)
 {
@@ -17,15 +16,6 @@ crypto_wrapper_err_t crypto_wrapper_register(const crypto_wrapper_opts_t *opts)
 		return -CRYPTO_WRAPPER_ERR_INVALID;
 
 	ETLS_DEBUG("registering the crypto wrapper '%s' ...\n", opts->name);
-
-	if (opts->flags & CRYPTO_WRAPPER_OPTS_FLAGS_SGX_ENCLAVE) {
-		if (!is_sgx_supported_and_configured()) {
-			// clang-format off
-			ETLS_DEBUG("failed to register the crypto wrapper '%s' due to lack of SGX capability\n", opts->name);
-			// clang-format on
-			return -CRYPTO_WRAPPER_ERR_INVALID;
-		}
-	}
 
 	crypto_wrapper_opts_t *new_opts = (crypto_wrapper_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
