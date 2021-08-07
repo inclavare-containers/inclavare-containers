@@ -28,11 +28,15 @@ static enclave_attester_opts_t sgx_la_attester_opts = {
 	.cleanup = sgx_la_attester_cleanup,
 };
 
+#ifdef SGX
+void libattester_sgx_la_init(void)
+#else
 void __attribute__((constructor)) libattester_sgx_la_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 
 	enclave_attester_err_t err = enclave_attester_register(&sgx_la_attester_opts);
 	if (err != ENCLAVE_ATTESTER_ERR_NONE)
-		ETLS_DEBUG("failed to register the enclave attester 'sgx_la' %#x\n", err);
+		ETLS_ERR("failed to register the enclave attester 'sgx_la' %#x\n", err);
 }
