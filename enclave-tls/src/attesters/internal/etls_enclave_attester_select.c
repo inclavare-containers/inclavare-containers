@@ -14,10 +14,11 @@ static enclave_tls_err_t init_enclave_attester(etls_core_context_t *ctx,
 					       enclave_attester_ctx_t *attester_ctx,
 					       enclave_tls_cert_algo_t algo)
 {
-	enclave_tls_err_t err = attester_ctx->opts->init(attester_ctx, algo);
+	ETLS_DEBUG("called enclave core ctx: %#x enclave attester ctx: %#x algo: %#x\n", ctx, attester_ctx, algo);
 
+	enclave_attester_err_t err = attester_ctx->opts->init(attester_ctx, algo);
 	if (err != ENCLAVE_ATTESTER_ERR_NONE)
-		return err;
+		return -ENCLAVE_TLS_ERR_INIT;
 
 	if (!attester_ctx->attester_private)
 		return -ENCLAVE_TLS_ERR_INIT;
@@ -28,7 +29,7 @@ static enclave_tls_err_t init_enclave_attester(etls_core_context_t *ctx,
 enclave_tls_err_t etls_attester_select(etls_core_context_t *ctx, const char *name,
 				       enclave_tls_cert_algo_t algo)
 {
-	ETLS_DEBUG("selecting the enclave attester '%s' ...\n", name);
+	ETLS_DEBUG("selecting the enclave attester '%s' cert algo '%#x'...\n", name, algo);
 
 	/* Explicitly specify the enclave verifier which will never be changed */
 	if (name)
