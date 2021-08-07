@@ -6,3 +6,6 @@
 .vscode/
 src/lib/.build/
 build/
+src/external/sgx-ssl/intel-sgx-ssl
+src/external/sgx-ssl/*.cmake
+src/external/sgx-ssl/*.sh

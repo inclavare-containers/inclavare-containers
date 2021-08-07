@@ -9,7 +9,6 @@
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
 #include "internal/verifier.h"
-#include "internal/sgxutils.h"
 
 enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *opts)
 {
@@ -17,15 +16,6 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 		return -ENCLAVE_VERIFIER_ERR_INVALID;
 
 	ETLS_DEBUG("registering the enclave verifier '%s' ...\n", opts->name);
-
-	if (opts->flags & ENCLAVE_VERIFIER_OPTS_FLAGS_SGX_ENCLAVE) {
-		if (!is_sgx_supported_and_configured()) {
-			// clang-format off
-			ETLS_DEBUG("failed to register the enclave verifier '%s' due to lack of SGX capability\n", opts->type);
-			// clang-format on
-			return -ENCLAVE_VERIFIER_ERR_INVALID;
-		}
-	}
 
 	enclave_verifier_opts_t *new_opts = (enclave_verifier_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
@@ -51,7 +41,7 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 
 	/* Default type equals to name */
 	if (new_opts->type[0] == '\0')
-		strcpy(new_opts->type, new_opts->name);
+		snprintf(new_opts->type, sizeof(new_opts->type), "%s", new_opts->name);
 
 	enclave_verifiers_opts[registerd_enclave_verifier_nums++] = new_opts;
 
