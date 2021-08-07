@@ -6,7 +6,9 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include "sgx_stub_t.h"
+#include "etls_t.h"
+
+#define POSSIBLE_UNUSED __attribute__((unused))
 
 void printf(const char *fmt, ...)
 {
@@ -18,13 +20,19 @@ void printf(const char *fmt, ...)
 	ocall_print_string(buf);
 }
 
-int sprintf(char *buf, const char *fmt, ...)
+size_t recv(int sockfd, void *buf, size_t len, int flags)
 {
-	va_list ap;
-	int ret;
-	va_start(ap, fmt);
-	ret = vsnprintf(buf, BUFSIZ, fmt, ap);
-	va_end(ap);
+	size_t ret;
+	sgx_status_t POSSIBLE_UNUSED sgxStatus = ocall_recv(&ret, sockfd, buf, len, flags);
+
+	return ret;
+}
+
+size_t send(int sockfd, const void *buf, size_t len, int flags)
+{
+	size_t ret;
+	sgx_status_t POSSIBLE_UNUSED sgxStatus = ocall_send(&ret, sockfd, buf, len, flags);
+
 	return ret;
 }
 

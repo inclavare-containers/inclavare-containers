@@ -7,13 +7,14 @@
 #ifndef _ENCLAVE_LOG_H_
 #define _ENCLAVE_LOG_H_
 
+// clang-format off
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <enclave-tls/api.h>
-
-// clang-format off
-#ifdef OCCLUM
+#ifdef SGX
+#include <enclave-tls/sgx.h>
+#elif defined(OCCLUM)
   #define FPRINTF(io, fmt, ...)                  \
 	do {                                     \
 		fprintf(io, fmt, ##__VA_ARGS__); \
@@ -25,14 +26,12 @@
 		fprintf(io, fmt, ##__VA_ARGS__); \
 	} while (0)
 #endif
-// clang-format on
 
 extern enclave_tls_log_level_t global_log_level;
 
 #define ETLS_FATAL(fmt, ...)                               \
 	do {                                               \
 		__PR__(FATAL, stderr, fmt, ##__VA_ARGS__); \
-		exit(EXIT_FAILURE);                        \
 	} while (0)
 
 #define ETLS_ERR(fmt, ...)                                 \
@@ -55,8 +54,15 @@ extern enclave_tls_log_level_t global_log_level;
 		__PR__(DEBUG, stdout, fmt, ##__VA_ARGS__); \
 	} while (0)
 
-// clang-format off
-#define __PR__(level, io, fmt, ...)                                                   \
+#ifdef SGX
+  #define __PR__(level, io, fmt, ...)                                                 \
+	do {                                                                          \
+		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level)                \
+			printf("[" #level "] %s()@L%d: " fmt, __FUNCTION__, __LINE__, \
+			       ##__VA_ARGS__);                                        \
+	} while (0)
+#else
+  #define __PR__(level, io, fmt, ...)                                                   \
 	do {                                                                            \
 		if (global_log_level <= ENCLAVE_TLS_LOG_LEVEL_##level) {                \
 			if (ENCLAVE_TLS_LOG_LEVEL_##level !=                            \
@@ -74,6 +80,7 @@ extern enclave_tls_log_level_t global_log_level;
 			}                                                               \
 		}                                                                       \
 	} while (0)
+#endif
 // clang-format on
 
 #endif

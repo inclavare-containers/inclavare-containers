@@ -60,9 +60,9 @@ enclave_tls_err_t etls_core_generate_certificate(etls_core_context_t *ctx)
 	/* Collect certificate evidence */
 	enclave_tls_cert_info_t cert_info = {
 		.subject = {
-			.organization = "Inclavare Containers",
-			.organization_unit = "Enclave Attestation Architecture",
-			.common_name = "Enclave TLS",
+			.organization = (const unsigned char *)"Inclavare Containers",
+			.organization_unit = (const unsigned char *)"Enclave Attestation Architecture",
+			.common_name = (const unsigned char *)"Enclave TLS",
 		},
 	};
 	enclave_attester_err_t q_err;

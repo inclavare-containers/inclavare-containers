@@ -19,10 +19,10 @@ enclave_tls_err_t enclave_tls_transmit(enclave_tls_handle handle, void *buf, siz
 	    !handle->tls_wrapper->opts->transmit || !buf || !buf_size)
 		return -ENCLAVE_TLS_ERR_INVALID;
 
-	enclave_tls_err_t err;
-	err = handle->tls_wrapper->opts->transmit(handle->tls_wrapper, buf, buf_size);
+	tls_wrapper_err_t err =
+		handle->tls_wrapper->opts->transmit(handle->tls_wrapper, buf, buf_size);
 	if (err != TLS_WRAPPER_ERR_NONE)
-		return err;
+		return -ENCLAVE_TLS_ERR_INVALID;
 
 	return ENCLAVE_TLS_ERR_NONE;
 }

@@ -8,9 +8,9 @@
 #define _ENCLAVE_CERT_H
 
 typedef struct {
-	const char *organization;
-	const char *organization_unit;
-	const char *common_name;
+	const unsigned char *organization;
+	const unsigned char *organization_unit;
+	const unsigned char *common_name;
 } cert_subject_t;
 
 typedef struct {

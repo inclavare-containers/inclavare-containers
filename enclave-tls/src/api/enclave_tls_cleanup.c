@@ -5,7 +5,6 @@
  */
 
 #include <stdlib.h>
-#include <dlfcn.h>
 #include <enclave-tls/api.h>
 #include <enclave-tls/log.h>
 
@@ -26,23 +25,22 @@ enclave_tls_err_t enclave_tls_cleanup(enclave_tls_handle handle)
 	    !handle->verifier->opts->cleanup)
 		return -ENCLAVE_TLS_ERR_INVALID;
 
-	enclave_tls_err_t err;
-	err = handle->tls_wrapper->opts->cleanup(handle->tls_wrapper);
+	tls_wrapper_err_t err = handle->tls_wrapper->opts->cleanup(handle->tls_wrapper);
 	if (err != TLS_WRAPPER_ERR_NONE) {
 		ETLS_DEBUG("failed to clean up tls wrapper %#x\n", err);
 		return err;
 	}
 
-	err = handle->attester->opts->cleanup(handle->attester);
-	if (err != ENCLAVE_ATTESTER_ERR_NONE) {
-		ETLS_DEBUG("failed to clean up attester %#x\n", err);
-		return err;
+	enclave_attester_err_t err_ea = handle->attester->opts->cleanup(handle->attester);
+	if (err_ea != ENCLAVE_ATTESTER_ERR_NONE) {
+		ETLS_DEBUG("failed to clean up attester %#x\n", err_ea);
+		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
-	err = handle->verifier->opts->cleanup(handle->verifier);
-	if (err != ENCLAVE_VERIFIER_ERR_NONE) {
-		ETLS_DEBUG("failed to clean up verifier %#x\n", err);
-		return err;
+	enclave_verifier_err_t err_ev = handle->verifier->opts->cleanup(handle->verifier);
+	if (err_ev != ENCLAVE_VERIFIER_ERR_NONE) {
+		ETLS_DEBUG("failed to clean up verifier %#x\n", err_ev);
+		return -ENCLAVE_TLS_ERR_INVALID;
 	}
 
 	free(ctx);
