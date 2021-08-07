@@ -21,12 +21,16 @@
 
 // clang-format off
 #ifdef OCCLUM
-  #include <sgx_report.h>
+#include <sgx_report.h>
 #elif defined(SGX)
-  #include <sgx_urts.h>
-  #include <sgx_quote.h>
+#include <sgx_urts.h>
+#include <sgx_quote.h>
+#include "sgx_stub_u.h"
 
-  #define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
+#define ENCLAVE_FILENAME "sgx_stub_enclave.signed.so"
+// clang-format on
+
+enclave_tls_log_level_t global_log_level = ENCLAVE_TLS_LOG_LEVEL_DEFAULT;
 
 static sgx_enclave_id_t load_enclave(bool debug_enclave)
 {
@@ -39,19 +43,47 @@ static sgx_enclave_id_t load_enclave(bool debug_enclave)
 	int ret = sgx_create_enclave(ENCLAVE_FILENAME, debug_enclave, &t, &updated, &eid, NULL);
 	if (ret != SGX_SUCCESS) {
 		ETLS_ERR("Failed to load enclave %d\n", ret);
-		return -1;
+		return 0;
 	}
 
-	ETLS_DEBUG("Success to load enclave id %ld\n", eid);
+	ETLS_INFO("Success to load enclave with enclave id %ld\n", eid);
 
 	return eid;
 }
-#endif
-// clang-format on
 
-int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_type,
-		     char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-		     bool debug_enclave)
+int enclave_tls_client_startup(enclave_tls_log_level_t log_level, char *attester_type,
+			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			       bool debug_enclave, char *ip, int port)
+{
+	uint32_t s_ip = inet_addr(ip);
+	uint16_t s_port = htons((uint16_t)port);
+
+	sgx_enclave_id_t enclave_id = load_enclave(debug_enclave);
+	if (enclave_id == 0) {
+		ETLS_ERR("Failed to load sgx stub enclave\n");
+		return -1;
+	}
+
+	unsigned long flags = 0;
+	if (mutual)
+		flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
+
+	int ret = 0;
+	int sgx_status = ecall_etls_client_startup((sgx_enclave_id_t)enclave_id, &ret,
+						   (sgx_enclave_id_t)enclave_id, log_level,
+						   attester_type, verifier_type, tls_type,
+						   crypto_type, flags, s_ip, s_port);
+	if (sgx_status != SGX_SUCCESS || ret)
+		ETLS_ERR("failed to startup client: sgx status %#x return %#x\n", sgx_status, ret);
+
+	return ret;
+}
+#endif
+
+#ifndef SGX
+int enclave_tls_client_startup(enclave_tls_log_level_t log_level, char *attester_type,
+			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			       bool debug_enclave, char *ip, int port)
 {
 	enclave_tls_conf_t conf;
 
@@ -61,15 +93,35 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
-#ifdef SGX
-	conf.enclave_id = load_enclave(debug_enclave);
-	if (conf.enclave_id == -1) {
-		ETLS_ERR("Failed to load sgx stub enclave\n");
-		return -1;
-	}
-#endif
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
+
+	/* Create a socket that uses an internet IPv4 address,
+	 * Sets the socket to be stream based (TCP),
+	 * 0 means choose the default protocol.
+	 */
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) {
+		ETLS_ERR("failed to call socket()\n");
+		return -1;
+	}
+
+	struct sockaddr_in s_addr;
+	memset(&s_addr, 0, sizeof(s_addr));
+	s_addr.sin_family = AF_INET;
+	s_addr.sin_port = htons(port);
+
+	/* Get the server IPv4 address from the command line call */
+	if (inet_pton(AF_INET, ip, &s_addr.sin_addr) != 1) {
+		ETLS_ERR("invalid server address\n");
+		return -1;
+	}
+
+	/* Connect to the server */
+	if (connect(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
+		ETLS_ERR("failed to call connect()\n");
+		return -1;
+	}
 
 	enclave_tls_handle handle;
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
@@ -78,7 +130,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 		return -1;
 	}
 
-	ret = enclave_tls_negotiate(handle, fd);
+	ret = enclave_tls_negotiate(handle, sockfd);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_ERR("Failed to negotiate %#x\n", ret);
 		goto err;
@@ -104,7 +156,7 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 		len = sizeof(buf) - 1;
 	buf[len] = '\0';
 
-#if defined(OCCLUM) || defined(SGX)
+	#ifdef OCCLUM
 	/* Server running in SGX Enclave will send mrenclave, mrsigner and hello message to client */
 	if (len >= 2 * sizeof(sgx_measurement_t)) {
 		ETLS_INFO("Server's SGX identity:\n");
@@ -123,10 +175,10 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 
 		ETLS_INFO("Server:\n%s\n", buf);
 	} else
-#endif
+	#endif
 	{
 		/* Server not running in SGX Enlcave will only send hello message to client */
-		ETLS_INFO("Server: %s\n", buf);
+		printf("Server: %s\n", buf);
 	}
 
 	/* Sanity check whether the response is expected */
@@ -144,14 +196,16 @@ int enclave_tls_echo(int fd, enclave_tls_log_level_t log_level, char *attester_t
 err:
 	/* Ignore the error code of cleanup in order to return the prepositional error */
 	enclave_tls_cleanup(handle);
+
 	return -1;
 }
+#endif
 
 int main(int argc, char **argv)
 {
-	printf("    - Welcome to Enclave-TLS sample client program\n");
+	ETLS_INFO("    - Welcome to Enclave-TLS sample client program\n");
 
-	char *const short_options = "a:v:t:c:ml:i:p:P:h";
+	char *const short_options = "a:v:t:c:ml:i:p:D:h";
 	// clang-format off
 	struct option long_options[] = {
 		{ "attester", required_argument, NULL, 'a' },
@@ -162,7 +216,7 @@ int main(int argc, char **argv)
 		{ "log-level", required_argument, NULL, 'l' },
 		{ "ip", required_argument, NULL, 'i' },
 		{ "port", required_argument, NULL, 'p' },
-		{ "product-enclave", no_argument, NULL, 'P' },
+		{ "debug-enclave", no_argument, NULL, 'D' },
 		{ "help", no_argument, NULL, 'h' },
 		{ 0, 0, 0, 0 }
 	};
@@ -176,7 +230,7 @@ int main(int argc, char **argv)
 	enclave_tls_log_level_t log_level = ENCLAVE_TLS_LOG_LEVEL_INFO;
 	char *srv_ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
-	bool debug_enclave = true;
+	bool debug_enclave = false;
 	int opt;
 
 	do {
@@ -217,8 +271,8 @@ int main(int argc, char **argv)
 		case 'p':
 			port = atoi(optarg);
 			break;
-		case 'P':
-			debug_enclave = false;
+		case 'D':
+			debug_enclave = true;
 			break;
 		case -1:
 			break;
@@ -234,41 +288,16 @@ int main(int argc, char **argv)
 			     "        --log-level/-l        set the log level\n"
 			     "        --ip/-i               set the listening ip address\n"
 			     "        --port/-p             set the listening tcp port\n"
-			     "        --product-enclave/-P  set to enable product enclave\n"
+			     "        --debug-enclave/-D    set to enable enclave debugging\n"
 			     "        --help/-h             show the usage\n");
+			exit(1);
 		default:
 			exit(1);
 		}
 	} while (opt != -1);
 
-	/* Create a socket that uses an internet IPv4 address,
-	 * Sets the socket to be stream based (TCP),
-	 * 0 means choose the default protocol.
-	 */
+        global_log_level = log_level;
 
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) {
-		perror("failed to call socket()\n");
-		return -1;
-	}
-
-	struct sockaddr_in s_addr;
-	memset(&s_addr, 0, sizeof(s_addr));
-	s_addr.sin_family = AF_INET;
-	s_addr.sin_port = htons(port);
-
-	/* Get the server IPv4 address from the command line call */
-	if (inet_pton(AF_INET, srv_ip, &s_addr.sin_addr) != 1) {
-		ETLS_ERR("invalid server address\n");
-		return -1;
-	}
-
-	/* Connect to the server */
-	if (connect(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
-		perror("failed to call connect()\n");
-		return -1;
-	}
-
-	return enclave_tls_echo(sockfd, log_level, attester_type, verifier_type, tls_type,
-				crypto_type, mutual, debug_enclave);
+	return enclave_tls_client_startup(log_level, attester_type, verifier_type, tls_type,
+					  crypto_type, mutual, debug_enclave, srv_ip, port);
 }
