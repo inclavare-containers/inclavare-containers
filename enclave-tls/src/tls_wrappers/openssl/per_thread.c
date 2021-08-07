@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include "per_thread.h"
+#include <pthread.h>
 
 static pthread_key_t g_key;
 static pthread_once_t g_key_once = PTHREAD_ONCE_INIT;

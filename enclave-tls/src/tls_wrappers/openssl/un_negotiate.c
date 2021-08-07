@@ -105,12 +105,11 @@ static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, enclave_tls_cert_al
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
 
-static int find_oid(X509 *crt, const unsigned char *oid)
+static int find_oid(X509 *crt, const char *oid)
 {
 	// clang-format off
 	const STACK_OF(X509_EXTENSION) *extensions;
 	// clang-format on
-	unsigned char oid_buf[128];
 
 	/* Set a pointer to the stack of extensions (possibly NULL) */
 	if (!(extensions = X509_get0_extensions(crt))) {
@@ -125,7 +124,7 @@ static int find_oid(X509 *crt, const unsigned char *oid)
 	for (int i = 0; i < num_extensions; ++i) {
 		X509_EXTENSION *ext;
 		ASN1_OBJECT *obj;
-		unsigned char oid_buf[128];
+		char oid_buf[128];
 
 		/* Get the i-th extension from the stack */
 		if (!(ext = sk_X509_EXTENSION_value(extensions, i))) {
@@ -145,7 +144,7 @@ static int find_oid(X509 *crt, const unsigned char *oid)
 			continue;
 		}
 
-		if (!strcmp(oid_buf, oid))
+		if (!strcmp((const char *)oid_buf, oid))
 			return SSL_SUCCESS;
 	}
 
@@ -170,7 +169,7 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 	for (int i = 0; i < num_extensions; ++i) {
 		X509_EXTENSION *ext;
 		ASN1_OBJECT *obj;
-		unsigned char oid_buf[128];
+		char oid_buf[128];
 
 		/* Get the i-th extension from the stack */
 		if (!(ext = sk_X509_EXTENSION_value(extensions, i))) {
@@ -191,7 +190,7 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 		}
 
 		/* If found then get the data */
-		if (!strcmp(oid_buf, oid)) {
+		if (!strcmp((const char *)oid_buf, oid)) {
 			ASN1_OCTET_STRING *str;
 
 			/* Get the data from the extension */
@@ -256,10 +255,22 @@ int openssl_extract_x509_extensions(X509 *crt, attestation_evidence_t *evidence)
 	return SSL_SUCCESS;
 }
 
-#ifdef SSL_SGX_WRAPPER
-int verify_certificate(void *ctx, uint8_t *der_cert, uint32_t der_cert_len)
+#ifdef SGX
+int verify_certificate(X509_STORE_CTX *ctx)
 {
-	tls_wrapper_ctx_t *tls_ctx = ctx;
+	int preverify = 0;
+	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
+	int *ex_data = per_thread_getspecific();
+	if (!ex_data) {
+		ETLS_ERR("failed to get ex_data\n");
+		return 0;
+	}
+
+	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, *ex_data);
+	if (!tls_ctx) {
+		ETLS_ERR("failed to get tls_wrapper_ctx pointer\n");
+		return 0;
+	}
 #else
 int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 {
@@ -313,12 +324,12 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 	 */
 	attestation_evidence_t evidence;
 
-	if (find_oid(cert, ecdsa_quote_oid) == SSL_SUCCESS)
-		strncpy(evidence.type, "sgx_ecdsa", sizeof(evidence.type));
-	else if (find_oid(cert, la_report_oid) == SSL_SUCCESS)
-		strncpy(evidence.type, "sgx_la", sizeof(evidence.type));
+	if (find_oid(cert, (const char *)ecdsa_quote_oid) == SSL_SUCCESS)
+		snprintf(evidence.type, sizeof(evidence.type), "%s", "sgx_ecdsa");
+	else if (find_oid(cert, (const char *)la_report_oid) == SSL_SUCCESS)
+		snprintf(evidence.type, sizeof(evidence.type), "%s", "sgx_la");
 	else
-		strncpy(evidence.type, "nullverifier", sizeof(evidence.type));
+		snprintf(evidence.type, sizeof(evidence.type), "%s", "nullverifier");
 
 	int rc = openssl_extract_x509_extensions(cert, &evidence);
 	if (rc != SSL_SUCCESS) {

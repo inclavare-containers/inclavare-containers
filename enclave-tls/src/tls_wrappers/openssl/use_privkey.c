@@ -18,18 +18,17 @@ tls_wrapper_err_t openssl_tls_use_privkey(tls_wrapper_ctx_t *ctx, enclave_tls_ce
 
 	openssl_ctx_t *ssl_ctx = (openssl_ctx_t *)ctx->tls_private;
 
-	int ret;
-	int EVP_PKEY;
+	int EPKEY;
 
 	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
-		EVP_PKEY = EVP_PKEY_EC;
+		EPKEY = EVP_PKEY_EC;
 	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
-		EVP_PKEY = EVP_PKEY_RSA;
+		EPKEY = EVP_PKEY_RSA;
 	} else {
 		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
 	}
 
-	ret = SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY, ssl_ctx->sctx, privkey_buf, (long)privkey_len);
+	int ret = SSL_CTX_use_PrivateKey_ASN1(EPKEY, ssl_ctx->sctx, privkey_buf, (long)privkey_len);
 
 	if (ret != SSL_SUCCESS) {
 		ETLS_ERR("failed to use private key %d\n", ret);

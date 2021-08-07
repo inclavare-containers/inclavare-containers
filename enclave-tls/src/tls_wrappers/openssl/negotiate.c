@@ -11,7 +11,9 @@
 #include "per_thread.h"
 #include "openssl.h"
 
-#ifndef SSL_SGX_WRAPPER
+#ifdef SGX
+extern int verify_certificate(X509_STORE_CTX *ctx);
+#else
 extern int verify_certificate(int preverify, X509_STORE_CTX *store);
 #endif
 
@@ -94,16 +96,11 @@ tls_wrapper_err_t openssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 	return TLS_WRAPPER_ERR_NONE;
 }
 
-#ifdef SSL_SGX_WRAPPER
+#ifdef SGX
 static int ssl_ctx_set_verify_callback(int mode, X509_STORE_CTX *store)
 {
 	(void)mode;
-	int result;
-	int sgxStatus = ocall_verify_certificate(&result, store->userCtx, store->certs->buffer,
-						 store->certs->length);
-	if (sgxStatus != SGX_SUCCESS)
-		return 0;
-
+	int result = verify_certificate(store);
 	return result;
 }
 #endif
@@ -120,7 +117,7 @@ tls_wrapper_err_t openssl_tls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 
 	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER) ||
 	    (conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)) {
-#ifdef SSL_SGX_WRAPPER
+#ifdef SGX
 		verify = ssl_ctx_set_verify_callback;
 #else
 		verify = verify_certificate;

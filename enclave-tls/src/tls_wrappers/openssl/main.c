@@ -34,7 +34,11 @@ static tls_wrapper_opts_t openssl_opts = {
 	.cleanup = openssl_tls_cleanup,
 };
 
+#ifdef SGX
+void libtls_wrapper_openssl_init(void)
+#else
 void __attribute__((constructor)) libtls_wrapper_openssl_init(void)
+#endif
 {
 	ETLS_DEBUG("called\n");
 
