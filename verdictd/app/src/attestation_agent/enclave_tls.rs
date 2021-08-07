@@ -1,7 +1,5 @@
 use crate::attestation_agent::protocol;
 use crate::enclave_tls;
-use rayon;
-use serde_json::json;
 use std::net::TcpListener;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::{sync::Arc, u64};
@@ -14,35 +12,31 @@ fn handle_client(
     verifier: &Option<String>,
     mutual: bool,
     enclave_id: u64,
-) {
-    let tls = match enclave_tls::EnclaveTls::new(
+) -> Result<(), String> {
+    let tls = enclave_tls::EnclaveTls::new(
         true, enclave_id, tls_type, crypto, attester, verifier, mutual,
-    ) {
-        Ok(r) => r,
-        Err(_e) => {
-            return;
-        }
-    };
+    )
+    .map_err(|e| format!("new EnclaveTls failed with error {:?}", e))?;
 
     /* accept */
     if tls.negotiate(sockfd).is_err() {
-        print!("tls_negotiate() failed, sockfd = {}", sockfd);
-        return;
+        return Err(format!("tls_negotiate() failed, sockfd = {}", sockfd));
     }
 
-    /* get client request */
-    let mut buffer = [0u8; 4096];
-    let n = tls.receive(&mut buffer).unwrap();
-    let response = protocol::handle_aa_request(&buffer[..n]).unwrap_or_else(|e| {
-        json!({
-            "status": "Fail",
-            "error": e
-        })
-        .to_string()
-    });
+    loop {
+        /* get client request */
+        let mut buffer = [0u8; 4096];
 
-    let n = tls.transmit(response.as_bytes()).unwrap();
-    assert!(n > 0);
+        let n = tls.receive(&mut buffer)
+            .map_err(|e| format!("tls receive failed with error: {:?}", e))?;
+
+        let response = protocol::handle_aa_request(&buffer[..n])
+            .map_err(|e| format!("sockfd:{} handle_aa_request err: {}", sockfd, e))?;
+        println!("response: {}", response);
+
+        tls.transmit(response.as_bytes())
+            .map_err(|e| format!("tls transmit error {:?}", e))?;
+    }
 }
 
 pub fn server(
@@ -53,11 +47,6 @@ pub fn server(
     verifier: String,
     mutual: bool,
 ) {
-    let pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(num_cpus::get())
-        .build()
-        .unwrap();
-
     let tls_type = Arc::new(Some(tls_type));
     let crypto = Arc::new(Some(crypto));
     let attester = Arc::new(Some(attester));
@@ -72,12 +61,12 @@ pub fn server(
         let crypto = crypto.clone();
         let attester = attester.clone();
         let verifier = verifier.clone();
-        pool.spawn(move || {
+        std::thread::spawn(move || {
             println!(
                 "##### Task executes on thread: {:?} #####",
                 std::thread::current().id()
             );
-            handle_client(
+            match handle_client(
                 socket.as_raw_fd(),
                 &tls_type,
                 &crypto,
@@ -85,7 +74,10 @@ pub fn server(
                 &verifier,
                 mutual,
                 0,
-            );
+            ) {
+                Ok(_) => {},
+                Err(e) => println!("handle_client error: {}", e),
+            }
         });
     }
 }
