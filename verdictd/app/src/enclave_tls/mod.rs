@@ -2,10 +2,10 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-use std::os::unix::io::RawFd;
-use std::ops::{Deref, DerefMut};
-use std::ptr::NonNull;
 use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
+use std::ops::{Deref, DerefMut};
+use std::os::unix::io::RawFd;
+use std::ptr::NonNull;
 
 mod ffi;
 use ffi::*;
@@ -45,7 +45,9 @@ unsafe impl ForeignType for EnclaveTls {
 
 impl Drop for EnclaveTls {
     fn drop(&mut self) {
-        unsafe { enclave_tls_cleanup(self.as_ptr()); }
+        unsafe {
+            enclave_tls_cleanup(self.as_ptr());
+        }
     }
 }
 
@@ -58,20 +60,21 @@ impl Deref for EnclaveTls {
 }
 
 impl DerefMut for EnclaveTls {
-    fn deref_mut(&mut self) ->&mut EnclaveTlsRef {
+    fn deref_mut(&mut self) -> &mut EnclaveTlsRef {
         unsafe { EnclaveTlsRef::from_ptr_mut(self.as_ptr()) }
     }
 }
 
 impl EnclaveTls {
-    pub fn new(server: bool,
-            enclave_id: u64,
-            tls_type: &Option<String>,
-            crypto: &Option<String>,
-            attester: &Option<String>,
-            verifier: &Option<String>,
-            mutual: bool
-            ) -> Result<EnclaveTls, enclave_tls_err_t> {
+    pub fn new(
+        server: bool,
+        enclave_id: u64,
+        tls_type: &Option<String>,
+        crypto: &Option<String>,
+        attester: &Option<String>,
+        verifier: &Option<String>,
+        mutual: bool,
+    ) -> Result<EnclaveTls, enclave_tls_err_t> {
         let mut conf: enclave_tls_conf_t = Default::default();
         conf.api_version = ENCLAVE_TLS_API_VERSION_DEFAULT;
         conf.log_level = ENCLAVE_TLS_LOG_LEVEL_DEBUG;
@@ -119,8 +122,11 @@ impl EnclaveTls {
     pub fn receive(&self, buf: &mut [u8]) -> Result<usize, enclave_tls_err_t> {
         let mut len: size_t = buf.len() as size_t;
         let err = unsafe {
-            enclave_tls_receive(self.as_ptr(),
-                        buf.as_mut_ptr() as *mut ::std::os::raw::c_void, &mut len)
+            enclave_tls_receive(
+                self.as_ptr(),
+                buf.as_mut_ptr() as *mut ::std::os::raw::c_void,
+                &mut len,
+            )
         };
         if err == ENCLAVE_TLS_ERR_NONE {
             Ok(len as usize)
@@ -132,8 +138,11 @@ impl EnclaveTls {
     pub fn transmit(&self, buf: &[u8]) -> Result<usize, enclave_tls_err_t> {
         let mut len: size_t = buf.len() as size_t;
         let err = unsafe {
-            enclave_tls_transmit(self.as_ptr(),
-                        buf.as_ptr() as *const ::std::os::raw::c_void, &mut len)
+            enclave_tls_transmit(
+                self.as_ptr(),
+                buf.as_ptr() as *const ::std::os::raw::c_void,
+                &mut len,
+            )
         };
         if err == ENCLAVE_TLS_ERR_NONE {
             Ok(len as usize)

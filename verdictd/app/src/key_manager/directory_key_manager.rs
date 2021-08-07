@@ -5,7 +5,7 @@ const VERDICTD_KEY_PATH: &str = "/opt/verdictd/keys/";
 
 pub fn get_key(kid: &String) -> Result<Vec<u8>, io::Error> {
     let path = VERDICTD_KEY_PATH.to_string() + kid;
-    println!("get key from keyFile: {}", path); 
+    println!("get key from keyFile: {}", path);
 
     let data = fs::read(path);
     match data {
