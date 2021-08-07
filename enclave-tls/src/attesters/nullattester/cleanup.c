@@ -7,7 +7,7 @@
 #include <enclave-tls/log.h>
 #include <enclave-tls/attester.h>
 
-enclave_attester_err_t nullattester_cleanup(enclave_attester_ctx_t *ctx)
+enclave_attester_err_t nullattester_cleanup(__attribute__((unused)) enclave_attester_ctx_t *ctx)
 {
 	ETLS_DEBUG("called\n");
 
