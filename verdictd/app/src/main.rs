@@ -6,7 +6,6 @@
 use clap::{App, Arg};
 use serde_json::json;
 use shadow_rs::shadow;
-use std::os::unix::io::{AsRawFd, RawFd};
 
 mod attestation_agent;
 mod crypto;
