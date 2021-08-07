@@ -8,22 +8,21 @@ use serde_json::json;
 use shadow_rs::shadow;
 use std::os::unix::io::{AsRawFd, RawFd};
 
+mod attestation_agent;
 mod crypto;
 mod enclave_tls;
 mod key_manager;
 mod key_provider;
 mod policyEngine;
-mod attestation_agent;
 
 shadow!(build);
 
 const POLICY_PATH: &str = "/opt/verdictd/opa/policy/";
 
-fn set_default_policy() -> Result<(), String>{
+fn set_default_policy() -> Result<(), String> {
     if !std::path::Path::new(&POLICY_PATH.to_string()).exists() {
         std::fs::create_dir_all(POLICY_PATH)
-            .map_err(|_| format!("create {:?} failed", POLICY_PATH))
-            ?;
+            .map_err(|_| format!("create {:?} failed", POLICY_PATH))?;
     }
 
     if !std::path::Path::new(&(POLICY_PATH.to_string() + "attestation.rego")).exists() {
@@ -42,8 +41,7 @@ fn set_default_policy() -> Result<(), String>{
             },
         });
         policyEngine::opa::opaEngine::set_reference("attestation.rego", &reference.to_string())
-            .map_err(|e|format!("Set attestation.rego policy failed with error {:?}", e))
-            ?;
+            .map_err(|e| format!("Set attestation.rego policy failed with error {:?}", e))?;
     }
 
     Ok(())
@@ -67,54 +65,60 @@ async fn main() {
         }
     }
 
-    let matches = 
-        App::new("verdictd")
-            .version(version.as_str())
-            .long_version(version.as_str())
-            .author("Inclavare-Containers Team")
-            .arg(Arg::with_name("listen")
+    let matches = App::new("verdictd")
+        .version(version.as_str())
+        .long_version(version.as_str())
+        .author("Inclavare-Containers Team")
+        .arg(
+            Arg::with_name("listen")
                 .short("l")
                 .long("listen")
                 .value_name("sockaddr")
                 .help("Work in listen mode")
-                .takes_value(true)
-            )
-            .arg(Arg::with_name("tls")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("tls")
                 .long("tls")
                 .value_name("tls_type")
                 .help("Specify the TLS type")
-                .takes_value(true)
-            )
-            .arg(Arg::with_name("crypto")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("crypto")
                 .long("crypto")
                 .value_name("crypto_type")
                 .help("Specify the crypto type")
-                .takes_value(true)
-            )   
-            .arg(Arg::with_name("attester")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("attester")
                 .long("attester")
                 .value_name("attester_type")
                 .help("Specify the attester type")
-                .takes_value(true)
-            )
-            .arg(Arg::with_name("verifier")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("verifier")
                 .long("verifier")
                 .value_name("verifier_type")
                 .help("Specify the verifier type")
-                .takes_value(true)
-            )
-            .arg(Arg::with_name("mutual")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("mutual")
                 .short("m")
                 .long("mutual")
-                .help("Work in mutual mode")
-            )                
-            .arg(Arg::with_name("gRPC")
+                .help("Work in mutual mode"),
+        )
+        .arg(
+            Arg::with_name("gRPC")
                 .long("gRPC")
                 .value_name("gRPC_addr")
                 .help("Specify the gRPC listen addr")
-                .takes_value(true)
-            )                                  
-            .get_matches();
+                .takes_value(true),
+        )
+        .get_matches();
 
     let sockaddr = match matches.is_present("listen") {
         true => matches.value_of("listen").unwrap().to_string(),
@@ -137,10 +141,12 @@ async fn main() {
         false => "sgx_ecdsa".to_string(),
     };
 
-    let mutual = matches.is_present("mutual");   
+    let mutual = matches.is_present("mutual");
     std::thread::spawn(move || {
         println!("Listen addr: {}", sockaddr);
-        attestation_agent::enclave_tls::server(&sockaddr, tls_type, crypto, attester, verifier, mutual);
+        attestation_agent::enclave_tls::server(
+            &sockaddr, tls_type, crypto, attester, verifier, mutual,
+        );
     });
 
     // Launch gRPC server
