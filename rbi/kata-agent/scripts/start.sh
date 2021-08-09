@@ -6,7 +6,12 @@ OUTPUT_DIR=/root/output
 REPORT_FILE=$OUTPUT_DIR/report
 
 ARTIFEST_HASH=81de8efd8475c7413c5cf16066b6e023bcea6c3cd52c2984ff36b3dd69b855ff
-ERROR="[ERROR]"
+
+error() {
+    echo "[ERROR]" $1
+    exit -1
+}
+
 analyze() {
     local report_file=$3
     local artifest_hash=$2
@@ -27,8 +32,7 @@ main() {
     cd $SRC_DIR
     make clean && make
     if [ "$?" != 0 ]; then
-        echo "$ERROR Build failed."
-        exit -1
+        error "Build failed."
     fi
     analyze $ARTIFEST $ARTIFEST_HASH $REPORT_FILE
     mv $ARTIFEST $OUTPUT_DIR
