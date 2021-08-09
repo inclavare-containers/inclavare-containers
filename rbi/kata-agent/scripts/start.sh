@@ -1,11 +1,12 @@
 #! /bin/bash
+
 SRC_DIR=/root/input/src/agent
 ARTIFEST=$SRC_DIR/target/x86_64-unknown-linux-musl/release/kata-agent
 OUTPUT_DIR=/root/output
 
 REPORT_FILE=$OUTPUT_DIR/report
 
-ARTIFEST_HASH=81de8efd8475c7413c5cf16066b6e023bcea6c3cd52c2984ff36b3dd69b855ff
+ARTIFEST_HASH=f7925d04fec554e9d427f59416e04b19f7af184faabf8cb3b32ee33f7b36c02f
 
 error() {
     echo "[ERROR]" $1
