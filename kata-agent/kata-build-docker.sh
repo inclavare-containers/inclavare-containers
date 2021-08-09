@@ -17,7 +17,7 @@ main() {
         usage
     fi
 
-    sudo docker build -t $1 $dir
+    sudo docker build -t $1 --network host $dir
     if [ "$?" = "0" ] ;then
         echo "[SUCCEED] Docker build succeed."
     else 
