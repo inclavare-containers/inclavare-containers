@@ -42,6 +42,7 @@ run_build() {
     local abs_output_dir=$(cd "$output_dir";pwd)
     sudo docker run -it --rm \
                 --env HTTPS_PROXY=$https_proxy \
+                --network host \
                 -v $abs_source_code_dir:/root/input -v $abs_output_dir:/root/output $image_name
     if [ "$?" != "0" ] ; then
         echo "$ERROR docker run failed"
