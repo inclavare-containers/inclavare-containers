@@ -8,8 +8,14 @@ KATA_VERSION=stable-2.1
 PATCH_DIR=$(cd $(dirname "$0"); pwd)/patch
 PROTOCOL_DIR=$source_code_dir/$REPO_NAME/src/agent/protocols
 
-INFO="[INFO]"
-ERROR="[ERROR]"
+info() {
+    echo "[INFO]" $1
+}
+
+error() {
+    echo "[ERROR]" $1
+    exit -1
+}
 
 usage() {
     cat << EOT
@@ -24,12 +30,11 @@ EOT
 download_code() {
     cd $source_code_dir
     if [ -d $REPO_NAME ]; then 
-        echo "$INFO $REPO_NAME already exists, use it"
+        info "$REPO_NAME already exists, use it"
     else
         git clone $GIT_REPO
         if [ "$?" != 0 ]; then 
-        echo "$ERROR Git clone failed."
-            exit -1
+            error "Git clone failed."
         fi
     fi
 }
