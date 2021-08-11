@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package keyProvider;
+package keyprovider;
 
 message keyProviderKeyWrapProtocolInput {
     bytes KeyProviderKeyWrapProtocolInput = 1;
