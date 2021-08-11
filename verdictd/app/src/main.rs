@@ -154,7 +154,7 @@ async fn main() {
         false => "[::1]:50000".to_string(),
     };
     println!("Listen gRPC server addr: {}", gRPC_addr);
-    let key_provider_server = key_provider::key_provider_grpc::key_provider_server(&gRPC_addr);
+    let key_provider_server = key_provider::key_provider_grpc::server(&gRPC_addr);
     match key_provider_server.await {
         Ok(_) => {}
         Err(_) => println!("key_provider_server launch failed."),

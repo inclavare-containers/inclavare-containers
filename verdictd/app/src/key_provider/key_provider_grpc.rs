@@ -7,9 +7,10 @@ use keyProvider::{KeyProviderKeyWrapProtocolInput, KeyProviderKeyWrapProtocolOut
 use rand::*;
 use tonic::{transport::Server, Request, Response, Status};
 use uuid::Uuid;
+use base64;
 
 pub mod keyProvider {
-    tonic::include_proto!("key_provider");
+    tonic::include_proto!("keyprovider");
 }
 
 #[derive(Debug, Default)]
@@ -36,11 +37,16 @@ impl KeyProviderService for keyProviderSrv {
             }
         };
 
+        println!("wrap_command: {:?}", wrap_command);
+
         let mut kid = Uuid::new_v4().to_string();
         let ec = wrap_command.keywrapparams.ec.unwrap();
         let optsdata = wrap_command.keywrapparams.optsdata.unwrap();
-        if ec.Parameters.contains_key("attestation-agent") {
-            kid = ec.Parameters["attestation-agent"][0].to_string();
+        if !ec.Parameters.is_empty() {
+            for key in ec.Parameters.keys() {
+                kid = String::from_utf8(base64::decode(ec.Parameters[key][0].to_string()).unwrap()).unwrap();
+                break;
+            }
         } else {
             // generate a new key file with a new random key
             let mut key: [u8; 32] = [0; 32];
@@ -53,7 +59,7 @@ impl KeyProviderService for keyProviderSrv {
         let encrypted_data = directory_key_manager::get_key(&kid)
             .and_then(|key| {
                 println!("key: {:?}", key);
-                let encrypted_data = aes256_cbc::encrypt(optsdata.as_bytes(), key.as_slice(), &iv)
+                let encrypted_data = aes256_cbc::encrypt(&base64::decode(optsdata).unwrap(), key.as_slice(), &iv)
                     .unwrap_or_else(|e| {
                         println!("encrypt data failed with error:{:?}", e);
                         vec![0]
@@ -73,15 +79,16 @@ impl KeyProviderService for keyProviderSrv {
             wrap_type: String::from("AES256-CBC"),
         };
 
-        let key_wrap_results = KeyWrapResults {
-            annotation: serde_json::to_string(&annotation)
-                .unwrap()
-                .as_bytes()
-                .to_vec(),
+        let key_wrap_output = KeyWrapOutput {
+            keywrapresults: KeyWrapResults {
+                annotation: serde_json::to_string(&annotation)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+            },
         };
-
         let reply = KeyProviderKeyWrapProtocolOutput {
-            key_provider_key_wrap_protocol_output: serde_json::to_string(&key_wrap_results)
+            key_provider_key_wrap_protocol_output: serde_json::to_string(&key_wrap_output)
                 .unwrap()
                 .as_bytes()
                 .to_vec(),
@@ -146,7 +153,7 @@ impl KeyProviderService for keyProviderSrv {
     }
 }
 
-pub async fn key_provider_server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
     let addr = addr.parse()?;
     let service = keyProviderSrv::default();
 
