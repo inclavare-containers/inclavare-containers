@@ -24,6 +24,14 @@ TODO
 
 ### Setup Environment
 
+Install OPA tool, refer [Download OPA](https://www.openpolicyagent.org/docs/latest/#1-download-opa)
+```bash
+curl -L -o opa https://openpolicyagent.org/downloads/v0.30.1/opa_linux_amd64_static
+chmod 755 ./opa
+mv opa /usr/local/bin/opa
+```
+
+Install bindgen tool
 ```bash
 cargo install protobuf
 cargo install bindgen
