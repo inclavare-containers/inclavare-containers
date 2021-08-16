@@ -130,8 +130,8 @@ jobs:
       - name: Configure containerd
         run: |
           pushd ${WORK_DIR}
-          curl -LO http://aliacs-edge-k8s-cn-hangzhou.oss-cn-hangzhou.aliyuncs.com/jiazhuo/containerd-1.3.4.linux-amd64.tar.gz
-          tar -xvf containerd-1.3.4.linux-amd64.tar.gz
+          curl -LO https://github.com/containerd/containerd/releases/download/v1.4.8/containerd-1.4.8-linux-amd64.tar.gz
+          tar -xvf containerd-1.4.8-linux-amd64.tar.gz
           /bin/cp -f bin/* /usr/local/bin
           cat <<- EOF >/etc/systemd/system/containerd.service
           [Unit]

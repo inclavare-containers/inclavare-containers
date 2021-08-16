@@ -43,11 +43,11 @@ jobs:
           [inclavare-containers]
           name=inclavare-containers
           enabled=1
-          baseurl=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/
+          baseurl=https://mirrors.openanolis.org/inclavare-containers/alinux2-repo/
           gpgcheck=1
           repo_gpgcheck=1
-          gpgkey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
-          gpgcakey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+          gpgkey=https://mirrors.openanolis.org/inclavare-containers/alinux2-repo/RPM-GPG-KEY-rpm-sign
+          gpgcakey=https://mirrors.openanolis.org/inclavare-containers/alinux2-repo/RPM-GPG-KEY-rpm-sign-ca
           EOF
           sudo yum install -y gcc gcc-c++ \
             libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \
@@ -68,12 +68,8 @@ jobs:
         run: |
           pushd ${WORK_DIR}
           if [ ! $(lsmod | grep enable_rdfsbase) ]; then
-            wget https://github.com/occlum/enable_rdfsbase/archive/master.zip -O enable_rdfsbase.zip && unzip enable_rdfsbase.zip
-            pushd enable_rdfsbase-master
-            make && make install
-            popd
+            yum install -y occlum-rdfsbase-dkms
           fi
-          yum install -y occlum-rdfsbase-dkms
           popd
 
       - name: Install rune and shim
