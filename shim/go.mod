@@ -8,7 +8,7 @@ require (
 	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59
 	github.com/containerd/console v1.0.2 // indirect
-	github.com/containerd/containerd v1.3.3
+	github.com/containerd/containerd v1.4.8
 	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7 // indirect
 	github.com/containerd/fifo v0.0.0-20201026212402-0724c46b320c // indirect
 	github.com/containerd/go-runc v0.0.0-20200220073739-7016d3ce2328
@@ -20,6 +20,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/gogo/protobuf v1.3.1
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000
 	github.com/kr/pretty v0.2.1 // indirect
