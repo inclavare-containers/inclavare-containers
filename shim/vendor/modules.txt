@@ -26,12 +26,20 @@ github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/internal/winapi
 github.com/Microsoft/hcsshim/osversion
+# github.com/cilium/ebpf v0.0.0-20200319110858-a7172c01168f
+github.com/cilium/ebpf
+github.com/cilium/ebpf/asm
+github.com/cilium/ebpf/internal
+github.com/cilium/ebpf/internal/btf
+github.com/cilium/ebpf/internal/unix
 # github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59
 github.com/containerd/cgroups
 github.com/containerd/cgroups/stats/v1
+github.com/containerd/cgroups/v2
+github.com/containerd/cgroups/v2/stats
 # github.com/containerd/console v1.0.2
 github.com/containerd/console
-# github.com/containerd/containerd v1.3.3
+# github.com/containerd/containerd v1.4.8
 github.com/containerd/containerd
 github.com/containerd/containerd/api/events
 github.com/containerd/containerd/api/services/containers/v1
@@ -72,12 +80,15 @@ github.com/containerd/containerd/namespaces
 github.com/containerd/containerd/oci
 github.com/containerd/containerd/pkg/dialer
 github.com/containerd/containerd/pkg/oom
+github.com/containerd/containerd/pkg/oom/v1
+github.com/containerd/containerd/pkg/oom/v2
 github.com/containerd/containerd/pkg/process
 github.com/containerd/containerd/pkg/stdio
 github.com/containerd/containerd/pkg/ttrpcutil
 github.com/containerd/containerd/platforms
 github.com/containerd/containerd/plugin
 github.com/containerd/containerd/reference
+github.com/containerd/containerd/reference/docker
 github.com/containerd/containerd/remotes
 github.com/containerd/containerd/remotes/docker
 github.com/containerd/containerd/remotes/docker/schema1
@@ -88,6 +99,8 @@ github.com/containerd/containerd/runtime/v2/runc
 github.com/containerd/containerd/runtime/v2/runc/options
 github.com/containerd/containerd/runtime/v2/shim
 github.com/containerd/containerd/runtime/v2/task
+github.com/containerd/containerd/services
+github.com/containerd/containerd/services/introspection
 github.com/containerd/containerd/snapshots
 github.com/containerd/containerd/snapshots/proxy
 github.com/containerd/containerd/sys
@@ -108,10 +121,6 @@ github.com/containerd/typeurl
 github.com/coreos/go-systemd/v22/dbus
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/docker/distribution v0.0.0-00010101000000-000000000000 => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
-github.com/docker/distribution/digestset
-github.com/docker/distribution/reference
-github.com/docker/distribution/registry/api/errcode
 # github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c
 github.com/docker/go-events
 # github.com/docker/go-units v0.4.0
@@ -149,6 +158,12 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/google/uuid v1.1.2
+github.com/google/uuid
+# github.com/hashicorp/errwrap v1.0.0
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.1
+github.com/hashicorp/go-multierror
 # github.com/hashicorp/golang-lru v0.5.1
 github.com/hashicorp/golang-lru/simplelru
 # github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000 => ../epm
@@ -173,10 +188,13 @@ github.com/opencontainers/image-spec/identity
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
 # github.com/opencontainers/runc v1.0.1 => github.com/opencontainers/runc v0.0.0-20200429033603-85c44b190e42
-github.com/opencontainers/runc/libcontainer/system
 github.com/opencontainers/runc/libcontainer/user
 # github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 github.com/opencontainers/runtime-spec/specs-go
+# github.com/opencontainers/selinux v1.4.0
+github.com/opencontainers/selinux/go-selinux
+github.com/opencontainers/selinux/go-selinux/label
+github.com/opencontainers/selinux/pkg/pwalk
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
@@ -219,6 +237,9 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
+# golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+golang.org/x/xerrors
+golang.org/x/xerrors/internal
 # google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.33.1
