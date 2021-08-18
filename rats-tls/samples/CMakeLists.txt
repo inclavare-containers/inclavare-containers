@@ -1,0 +1,5 @@
+add_subdirectory(enclave-tls-client)
+add_subdirectory(enclave-tls-server)
+if(SGX)
+    add_subdirectory(sgx-stub-enclave)
+endif()

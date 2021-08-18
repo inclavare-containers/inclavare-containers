@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+BUILD_ROOT := $(CURDIR)/debian/enclave-tls
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+
+override_dh_strip:
+	dh_strip --exclude=sgx_stub_enclave.signed.so --exclude=enclave-tls-server --exclude=enclave-tls-client --exclude=libenclave_tls.so* --exclude=libtls_wrapper*.so* --exclude=libcrypto_wrapper*.so* --exclude=libattester*.so* --exclude=libverifier*.so*
+
+override_dh_auto_build:
+	make -C enclave-tls SGX=1
+
+override_dh_auto_install:
+	Enclave_Tls_Root=$(BUILD_ROOT)/opt/enclave-tls Enclave_Tls_Bindir=$(BUILD_ROOT)/usr/share/enclave-tls/samples make -C enclave-tls install
