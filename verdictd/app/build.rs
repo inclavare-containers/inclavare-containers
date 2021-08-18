@@ -6,6 +6,7 @@ fn main() -> shadow_rs::SdResult<()> {
     println!("cargo:rustc-link-lib=dylib=opa");
 
     tonic_build::compile_protos("proto/keyprovider.proto")?;
+    tonic_build::compile_protos("proto/configureprovider.proto")?;
 
     shadow_rs::new()
 }

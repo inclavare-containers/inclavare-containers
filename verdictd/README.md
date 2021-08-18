@@ -66,8 +66,14 @@ User can use `--gRPC` option to specify grpc server's listen address.
 ```bash
 ./bin/verdictd --gRPC [::1]:10000
 ```
+
+User can use `--config` option to specify configuration server's listen address.
+```bash
+./bin/verdictd --config [::1]:10001
+```
+
 ##### Default
 These options all exist default values. If user execute `./bin/verdictd` directly, it will execute with following configurations.
 ```bash
-./bin/verdictd --listen 127.0.0.1:1234 --tls openssl --crypto openssl --attester nullattester --verifier sgx_ecdsa --gRPC [::1]:50000
+./bin/verdictd --listen 127.0.0.1:1234 --tls openssl --crypto openssl --attester nullattester --verifier sgx_ecdsa --gRPC [::1]:50000 --config [::1]:60000
 ```
