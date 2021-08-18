@@ -1,0 +1,355 @@
+diff --git a/Linux/Makefile b/Linux/Makefile
+index 9524f45..304ce24 100644
+--- a/Linux/Makefile
++++ b/Linux/Makefile
+@@ -55,6 +55,7 @@ sgxssl_no_mitigation:
+ clean:
+ 	$(MAKE) -C sgx/ clean
+ 	rm -rf $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_INC)/openssl/
++	rm -rf $(PACKAGE_LIB)/$(OPENSSL_SSL_LIB)
+ 	rm -rf $(PACKAGE_LIB)/cve_2020_0551_load
+ 	rm -rf $(PACKAGE_LIB)/cve_2020_0551_cf
+ 
+diff --git a/Linux/build_openssl.sh b/Linux/build_openssl.sh
+index d5c5c32..0bcb714 100755
+--- a/Linux/build_openssl.sh
++++ b/Linux/build_openssl.sh
+@@ -69,8 +69,10 @@ sed -i '/OPENSSL_die("assertion failed/d' $OPENSSL_VERSION/include/openssl/crypt
+ fi
+ 
+ OUTPUT_LIB=libsgx_tsgxssl_crypto.a
++OUTPUT_SSLLIB=libsgx_tsgxssl_ssl.a
+ if [[ $# -gt 0 ]] && [[ $1 == "debug" || $2 == "debug" || $3 == "debug" || $4 == "debug" ]] ; then
+-	OUTPUT_LIB=libsgx_tsgxssl_cryptod.a
++        OUTPUT_LIB=libsgx_tsgxssl_cryptod.a
++        OUTPUT_SSLLIB=libsgx_tsgxssl_ssld.a
+     ADDITIONAL_CONF="-g "
+ fi
+ 
+@@ -132,7 +134,7 @@ cp sgx_config.conf $OPENSSL_VERSION/ || exit 1
+ cp x86_64-xlate.pl $OPENSSL_VERSION/crypto/perlasm/ || exit 1
+ 
+ cd $SGXSSL_ROOT/../openssl_source/$OPENSSL_VERSION || exit 1
+-perl Configure --config=sgx_config.conf sgx-linux-x86_64 --with-rand-seed=none $ADDITIONAL_CONF $SPACE_OPT $MITIGATION_FLAGS no-idea no-mdc2 no-rc5 no-rc4 no-bf no-ec2m no-camellia no-cast no-srp no-hw no-dso no-shared no-ssl3 no-md2 no-md4 no-ui no-stdio no-afalgeng -D_FORTIFY_SOURCE=2 -DGETPID_IS_MEANINGLESS -include$SGXSSL_ROOT/../openssl_source/bypass_to_sgxssl.h --prefix=$OPENSSL_INSTALL_DIR || exit 1
++perl Configure --config=sgx_config.conf sgx-linux-x86_64 --with-rand-seed=none $ADDITIONAL_CONF $SPACE_OPT $MITIGATION_FLAGS no-idea no-mdc2 no-rc5 no-rc4 no-bf no-ec2m no-camellia no-cast no-srp no-hw no-dso no-shared no-ssl3 no-md2 no-md4 no-ui no-stdio no-afalgeng -D_FORTIFY_SOURCE=2 -DGETPID_IS_MEANINGLESS -include$SGXSSL_ROOT/../openssl_source/bypass_to_sgxssl.h -include$SGXSSL_ROOT/../Linux/package/include/tsgxsslio.h --prefix=$OPENSSL_INSTALL_DIR || exit 1
+ 
+ make build_all_generated || exit 1
+ 
+@@ -154,8 +156,9 @@ then
+     cp $SGXSSL_ROOT/../openssl_source/Linux/x86_64cpuid.s       ./crypto/x86_64cpuid.s
+ fi
+ 
+-make libcrypto.a || exit 1
++make libcrypto.a libssl.a || exit 1
+ cp libcrypto.a $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
++cp libssl.a $SGXSSL_ROOT/package/lib64/$OUTPUT_SSLLIB || exit 1
+ objcopy --rename-section .init=Q6A8dc14f40efc4288a03b32cba4e $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
+ cp include/openssl/* $SGXSSL_ROOT/package/include/openssl/ || exit 1
+ cp include/crypto/* $SGXSSL_ROOT/package/include/crypto/ || exit 1
+diff --git a/Linux/package/include/sgx_tsgxssl.edl b/Linux/package/include/sgx_tsgxssl.edl
+index cbc4888..ffcb5b2 100644
+--- a/Linux/package/include/sgx_tsgxssl.edl
++++ b/Linux/package/include/sgx_tsgxssl.edl
+@@ -36,7 +36,21 @@ enclave {
+     from "sgx_tstdc.edl" import *;
+     
+     untrusted {
+-    	 void u_sgxssl_ftime([out, size=timeb_len] void * timeptr, uint32_t timeb_len);
++            void u_sgxssl_ftime([out, size=timeb_len] void * timeptr, uint32_t timeb_len);
++            int ocall_sgxssl_read(int fd, [out, size = buf_len] void *buf, size_t buf_len);
++            int ocall_sgxssl_write(int fd, [in, size = buf_len] const void *buf, size_t buf_len);
++            int ocall_sgxssl_getenv([in, size = name_len] const char *name, size_t name_len, [out, size = buf_len] void *buf, int buf_len, [out] int *need_len);
++            uint64_t ocall_sgxssl_fopen([in, size = filename_len] const char *filename, size_t filename_len, [in, size = mode_len] const char *mode, size_t mode_len);
++            int ocall_sgxssl_fclose(uint64_t fp);
++            int ocall_sgxssl_ferror(uint64_t fp);
++            int ocall_sgxssl_feof(uint64_t fp);
++            int ocall_sgxssl_fflush(uint64_t fp);
++            long ocall_sgxssl_ftell(uint64_t fp);
++            int ocall_sgxssl_fseek(uint64_t fp, long offset, int origin);
++            size_t ocall_sgxssl_fread([out, size = total_size] void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp);
++            size_t ocall_sgxssl_fwrite([in, size = total_size] const void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp);
++            int ocall_sgxssl_fgets([out, size = max_cnt] char *str, int max_cnt, uint64_t fp);
++            int ocall_sgxssl_fputs([in, size = total_size] const char *str, size_t total_size, uint64_t fp);
+     };
+ 
+     trusted {
+diff --git a/Linux/package/include/tsgxsslio.h b/Linux/package/include/tsgxsslio.h
+index a200a17..6a38de1 100644
+--- a/Linux/package/include/tsgxsslio.h
++++ b/Linux/package/include/tsgxsslio.h
+@@ -32,6 +32,13 @@
+ #ifndef _TSGXSSL_IO_H_
+ #define _TSGXSSL_IO_H_
+ 
+-typedef void FILE;
++#include <stdio.h>
++
++#undef stdout
++#define stdout  ((void*)1)
++#undef  stderr
++#define stderr  ((void*)2)
++
++typedef struct _IO_FILE FILE;
+ 
+ #endif // _TSGXSSL_IO_H_
+diff --git a/Linux/sgx/Makefile b/Linux/sgx/Makefile
+index 5e42cd5..6463aae 100644
+--- a/Linux/sgx/Makefile
++++ b/Linux/sgx/Makefile
+@@ -54,9 +54,11 @@ endif
+ 
+ ifneq ($(MITIGATION-CVE-2020-0551),)
+ 	$(RM) -r $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/$(TRUSTED_LIB)
++	$(RM) -r $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/$(OPENSSL_SSL_LIB)
+ 	$(RM) -r $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/$(OPENSSL_LIB)
+ 	mkdir -p $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)
+ 	mv $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/
++	mv $(PACKAGE_LIB)/$(OPENSSL_SSL_LIB) $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/
+ 	mv $(PACKAGE_LIB)/$(TRUSTED_LIB) $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/
+ endif
+ 
+diff --git a/Linux/sgx/buildenv.mk b/Linux/sgx/buildenv.mk
+index cd8818e..7cd794c 100644
+--- a/Linux/sgx/buildenv.mk
++++ b/Linux/sgx/buildenv.mk
+@@ -73,11 +73,13 @@ endif
+ ifeq ($(DEBUG), 1)
+ 	OBJDIR := debug
+ 	OPENSSL_LIB := libsgx_tsgxssl_cryptod.a
++	OPENSSL_SSL_LIB := libsgx_tsgxssl_ssld.a
+ 	TRUSTED_LIB := libsgx_tsgxssld.a
+ 	UNTRUSTED_LIB := libsgx_usgxssld.a
+ else
+ 	OBJDIR := release
+ 	OPENSSL_LIB := libsgx_tsgxssl_crypto.a
++	OPENSSL_SSL_LIB := libsgx_tsgxssl_ssl.a
+ 	TRUSTED_LIB := libsgx_tsgxssl.a
+ 	UNTRUSTED_LIB := libsgx_usgxssl.a
+ endif
+diff --git a/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp b/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp
+index 81851a7..243e630 100644
+--- a/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp
++++ b/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp
+@@ -57,39 +57,26 @@ SGX_ACCESS_VERSION(tssl, 1);
+ 
+ extern "C" {
+ 
++#define MAX_ENV_BUF_LEN 4096
++static __thread char env_buf[MAX_ENV_BUF_LEN];
++
+ char *sgxssl_getenv(const char *name)
+ {
+-	FSTART;
+-
+-	if (name == NULL ) {
+-		FEND;
+-		return NULL;
+-	}
+-
+-	if (!strcmp(name, "OPENSSL_CONF" )) {
+-		FEND;
+-		return NULL;
+-	}
+-
+-	if (!strcmp(name, "OPENSSL_ENGINES" )) {
+-		FEND;
+-		return (char *) PATH_DEV_NULL;
+-	}
+-
+-	if (!strcmp(name, "OPENSSL_ALLOW_PROXY_CERTS" )) {
+-		FEND;
+-		return NULL;
+-	}
+-	
+-	if (!strcmp(name, "OPENSSL_ia32cap" )) {
+-		FEND;
+-		return NULL;
+-	}
+-
+-	SGX_UNREACHABLE_CODE(SET_ERRNO);
+-
+-	FEND;
+-	return NULL;
++        int ret = 0;
++        int res;
++        int buf_len = 0;
++
++        if (env_buf == NULL || MAX_ENV_BUF_LEN <= 0) {
++                return NULL;
++        }
++
++        memset(env_buf, 0, MAX_ENV_BUF_LEN);
++        res = ocall_sgxssl_getenv(&ret, name, strlen(name), env_buf, MAX_ENV_BUF_LEN, &buf_len);
++        if (res != SGX_SSL_SUCCESS || ret <= 0 || ret != buf_len) {
++                return NULL;
++        }
++
++        return env_buf;
+ }
+ 
+ }
+diff --git a/Linux/sgx/libsgx_usgxssl/ustdio.cpp b/Linux/sgx/libsgx_usgxssl/ustdio.cpp
+new file mode 100644
+index 0000000..df1f26b
+--- /dev/null
++++ b/Linux/sgx/libsgx_usgxssl/ustdio.cpp
+@@ -0,0 +1,67 @@
++#include <stdio.h>
++#include <stdint.h>
++#include <string.h>
++
++extern "C" {
++
++uint64_t ocall_sgxssl_fopen(const char *filename, size_t filename_len, const char *mode, size_t mode_len)
++{
++    FILE *file_host = fopen(filename, mode);
++    return (uint64_t)file_host;
++}
++
++int ocall_sgxssl_fclose(uint64_t fp)
++{
++    return fclose((FILE *)fp);
++}
++
++int ocall_sgxssl_ferror(uint64_t fp)
++{
++    return ferror((FILE *)fp);
++}
++
++int ocall_sgxssl_feof(uint64_t fp)
++{
++    return feof((FILE *)fp);
++}
++
++int ocall_sgxssl_fflush(uint64_t fp)
++{
++    return fflush((FILE *)fp);
++}
++
++int ocall_sgxssl_ftell(uint64_t fp)
++{
++    return ftell((FILE *)fp);
++}
++
++int ocall_sgxssl_fseek(uint64_t fp, long offset, int origin)
++{
++    return fseek((FILE *)fp, offset, origin);
++}
++
++size_t ocall_sgxssl_fread(void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp)
++{
++    return fread(buf, element_size, cnt, (FILE *)fp);
++}
++
++size_t ocall_sgxssl_fwrite(const void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp)
++{
++    return fwrite(buf, element_size, cnt, (FILE *)fp);
++}
++
++int ocall_sgxssl_fgets(char *str, int max_cnt, uint64_t fp)
++{
++    if (fgets(str, max_cnt, (FILE *)fp) != NULL) {
++        return 0;
++    } else {
++        return -1;
++    }
++}
++
++int ocall_sgxssl_fputs(const char *str, size_t total_size, uint64_t fp)
++{
++    return fputs(str, (FILE *)fp);
++}
++
++}
+diff --git a/Linux/sgx/libsgx_usgxssl/ustdlib.cpp b/Linux/sgx/libsgx_usgxssl/ustdlib.cpp
+new file mode 100644
+index 0000000..6dc8cd9
+--- /dev/null
++++ b/Linux/sgx/libsgx_usgxssl/ustdlib.cpp
+@@ -0,0 +1,33 @@
++#include <stdlib.h>
++#include <string.h>
++
++extern "C" {
++
++int ocall_sgxssl_getenv(const char *name, int name_len, void *buf, int buf_len, int *need_len)
++{
++    char *get_buf = NULL;
++
++    if (name == NULL || need_len == NULL || buf_len <= 0) {
++        return -1;
++    }
++
++    get_buf = getenv(name);
++    if (get_buf == NULL) {
++        *need_len = 0;
++        return 0;
++    }
++
++    *need_len = strlen(get_buf) + 1;
++    if (*need_len > buf_len) {
++        return 0;
++    }
++
++    if (buf == NULL) {
++        return -1;
++    }
++    memcpy(buf, get_buf, *need_len);
++
++    return (*need_len);
++}
++
++}
+diff --git a/Linux/sgx/libsgx_usgxssl/uunistd.cpp b/Linux/sgx/libsgx_usgxssl/uunistd.cpp
+new file mode 100644
+index 0000000..222087f
+--- /dev/null
++++ b/Linux/sgx/libsgx_usgxssl/uunistd.cpp
+@@ -0,0 +1,15 @@
++#include <unistd.h>
++
++extern "C" {
++
++int ocall_sgxssl_read(int fd, void *buf, size_t buf_len)
++{
++    return read(fd, buf, buf_len);
++}
++
++int ocall_sgxssl_write(int fd, const void *buf, size_t buf_len)
++{
++    return write(fd, buf, buf_len);
++}
++
++}
+diff --git a/openssl_source/bypass_to_sgxssl.h b/openssl_source/bypass_to_sgxssl.h
+index b83dfd0..80cb4f9 100644
+--- a/openssl_source/bypass_to_sgxssl.h
++++ b/openssl_source/bypass_to_sgxssl.h
+@@ -181,23 +181,20 @@
+ #define mlock sgxssl_mlock
+ #define madvise sgxssl_madvise
+ 
+-/*
+-#define fopen64 sgxssl_fopen64
+ #define fopen sgxssl_fopen
+-#define wfopen sgxssl_wfopen
+ #define fclose sgxssl_fclose
+ #define ferror sgxssl_ferror
+ #define feof sgxssl_feof
+ #define fflush sgxssl_fflush
+ #define ftell sgxssl_ftell
+ #define fseek sgxssl_fseek
+-#define fread sgxssl_fread
+ #define fwrite sgxssl_fwrite
+-#define fgets sgxssl_fgets
+ #define fputs sgxssl_fputs
+-#define fileno sgxssl_fileno
+ #define __fprintf_chk sgxssl_fprintf
+-*/
++
++#define __vfprintf_chk sgxssl_vfprintf
++#define __fread_alias sgxssl_fread
++#define __fgets_alias sgxssl_fgets
+ 
+ #if defined(SGXSDK_INT_VERSION) && (SGXSDK_INT_VERSION > 18)
+ 	#define _longjmp longjmp

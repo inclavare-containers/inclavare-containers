@@ -1,0 +1,25 @@
+enclave {
+	include "etls_syscalls.h"
+
+	from "sgx_dummy.edl" import *;
+
+	untrusted {
+		void ocall_exit(void);
+		void ocall_print_string([in, string] const char *str);
+		uint64_t ocall_opendir([in, string] const char *name)
+			propagate_errno;
+		int ocall_readdir(uint64_t dirp, [out, count=1] struct ocall_dirent *entry)
+			propagate_errno;
+		int ocall_closedir(uint64_t dirp)
+			propagate_errno;
+		ssize_t ocall_read(int fd, [in, out, size=count] void *buf, size_t count);
+		ssize_t ocall_write(int fd, [user_check] const void *buf, size_t count);
+		void ocall_getenv([in, string] const char *name, [out, size=len] char *value, size_t len);
+		void ocall_current_time([out] double *time);
+		void ocall_low_res_time([out] int *time);
+		size_t ocall_recv(int sockfd, [out, size=len] void *buf, size_t len,
+				  int flags) propagate_errno;
+		size_t ocall_send(int sockfd, [in, size=len] const void *buf, size_t len,
+				  int flags) propagate_errno;
+	};
+};

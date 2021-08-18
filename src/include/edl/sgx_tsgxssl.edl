@@ -1,0 +1,28 @@
+/* sgx_tsgxssl.edl - Top EDL file. */
+
+enclave {
+
+    from "sgx_tstdc.edl" import *;
+
+    untrusted {
+            void u_sgxssl_ftime([out, size=timeb_len] void * timeptr, uint32_t timeb_len);
+            int ocall_sgxssl_read(int fd, [out, size = buf_len] void *buf, size_t buf_len);
+            int ocall_sgxssl_write(int fd, [in, size = buf_len] const void *buf, size_t buf_len);
+            int ocall_sgxssl_getenv([in, size = name_len] const char *name, size_t name_len, [out, size = buf_len] void *buf, int buf_len, [out] int *need_len);
+            uint64_t ocall_sgxssl_fopen([in, size = filename_len] const char *filename, size_t filename_len, [in, size = mode_len] const char *mode, size_t mode_len);
+            int ocall_sgxssl_fclose(uint64_t fp);
+            int ocall_sgxssl_ferror(uint64_t fp);
+            int ocall_sgxssl_feof(uint64_t fp);
+            int ocall_sgxssl_fflush(uint64_t fp);
+            long ocall_sgxssl_ftell(uint64_t fp);
+            int ocall_sgxssl_fseek(uint64_t fp, long offset, int origin);
+            size_t ocall_sgxssl_fread([out, size = total_size] void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp);
+            size_t ocall_sgxssl_fwrite([in, size = total_size] const void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp);
+            int ocall_sgxssl_fgets([out, size = max_cnt] char *str, int max_cnt, uint64_t fp);
+            int ocall_sgxssl_fputs([in, size = total_size] const char *str, size_t total_size, uint64_t fp);
+    };
+
+    trusted {
+
+    };
+};

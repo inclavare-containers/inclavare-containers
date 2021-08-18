@@ -1,0 +1,28 @@
+/* Copyright (c) 2021 Intel Corporation
+ * Copyright (c) 2020-2021 Alibaba Cloud
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <enclave-tls/api.h>
+#include <enclave-tls/log.h>
+
+#include "internal/core.h"
+
+enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf, size_t *buf_size)
+{
+	etls_core_context_t *ctx = (etls_core_context_t *)handle;
+
+	ETLS_DEBUG("handle %p, buf %p, buf_size %p (%Zd-byte)\n", ctx, buf, buf_size, *buf_size);
+
+	if (!handle || !handle->tls_wrapper || !handle->tls_wrapper->opts ||
+	    !handle->tls_wrapper->opts->receive || !buf || !buf_size)
+		return -ENCLAVE_TLS_ERR_INVALID;
+
+	tls_wrapper_err_t err =
+		handle->tls_wrapper->opts->receive(handle->tls_wrapper, buf, buf_size);
+	if (err != TLS_WRAPPER_ERR_NONE)
+		return -ENCLAVE_TLS_ERR_INVALID;
+
+	return ENCLAVE_TLS_ERR_NONE;
+}
