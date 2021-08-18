@@ -4,12 +4,11 @@ github.com/cpuguy83/go-md2man/v2/md2man
 ## explicit
 github.com/go-restruct/restruct
 github.com/go-restruct/restruct/expr
-# github.com/golang/protobuf v1.4.2
-## explicit
+# github.com/golang/protobuf v1.5.0
 github.com/golang/protobuf/proto
 # github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000 => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
 ## explicit
-# github.com/inclavare-containers/rune v0.0.0-00010101000000-000000000000 => github.com/alibaba/inclavare-containers/rune v0.0.0-20210223012914-c5e205ce10d5
+# github.com/inclavare-containers/rune v0.0.0-00010101000000-000000000000 => github.com/alibaba/inclavare-containers/rune v0.0.0-20210817133247-5cb0274219c8
 ## explicit
 github.com/inclavare-containers/rune/libenclave/attestation
 github.com/inclavare-containers/rune/libenclave/attestation/internal/registration
@@ -20,23 +19,24 @@ github.com/inclavare-containers/rune/libenclave/attestation/internal/sgx/ias
 github.com/inclavare-containers/rune/libenclave/intelsgx
 github.com/inclavare-containers/rune/libenclave/intelsgx/proto
 # github.com/konsorten/go-windows-terminal-sequences v1.0.3
-github.com/konsorten/go-windows-terminal-sequences
+## explicit
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
-# github.com/sirupsen/logrus v1.6.0
+# github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus
 # github.com/urfave/cli v1.22.4
 ## explicit
 github.com/urfave/cli
-# golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
+# golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# google.golang.org/protobuf v1.23.0
+golang.org/x/sys/windows
+# google.golang.org/protobuf v1.27.1
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -47,22 +47,22 @@ google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
 google.golang.org/protobuf/internal/errors
-google.golang.org/protobuf/internal/fieldnum
-google.golang.org/protobuf/internal/fieldsort
 google.golang.org/protobuf/internal/filedesc
 google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
-google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
-google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/order
 google.golang.org/protobuf/internal/pragma
 google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb
 # github.com/inclavare-containers/epm => github.com/alibaba/inclavare-containers/epm v0.0.0-20201031054937-5f9853351c6c
-# github.com/inclavare-containers/rune => github.com/alibaba/inclavare-containers/rune v0.0.0-20210223012914-c5e205ce10d5
+# github.com/inclavare-containers/rune => github.com/alibaba/inclavare-containers/rune v0.0.0-20210817133247-5cb0274219c8
