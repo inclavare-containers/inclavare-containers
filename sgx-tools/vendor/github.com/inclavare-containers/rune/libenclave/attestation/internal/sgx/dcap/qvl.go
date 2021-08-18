@@ -1,8 +1,7 @@
 package dcap // import "github.com/inclavare-containers/rune/libenclave/attestation/internal/sgx/dcap"
 
 /*
-#cgo LDFLAGS: -lsgx_dcap_quoteverify
-#cgo CFLAGS: -I/opt/intel/sgxsdk/include
+#cgo LDFLAGS: -lsgx_dcap_quoteverify -lsgx_urts
 
 #include <stdio.h>
 #include <stdlib.h>
