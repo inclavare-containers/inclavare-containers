@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package configureprovider;
+
+message CreateKeyRequest {}
+message CreateKeyResponse {
+    bytes status = 1;
+    bytes uuid = 2;
+}
+
+message GetKeyRequest {
+    bytes uuid = 1;
+}
+message GetKeyResponse {
+    bytes status = 1;
+    bytes key = 2;
+}
+
+message DeleteKeyRequest {
+    bytes uuid = 1;
+}
+message DeleteKeyResponse {
+    bytes status = 1;
+}
+
+message SetPolicyRequest {
+    bytes policyname = 1;
+    bytes references = 2;
+}
+message SetPolicyResponse {
+    bytes status = 1;
+}
+
+message SetRawPolicyRequest {
+    bytes policyname = 1;
+    bytes policycontent = 2;
+}
+message SetRawPolicyResponse {
+    bytes status = 1;
+}
+
+message ExportPolicyRequest {
+    bytes policyname = 1;
+}
+message ExportPolicyResponse {
+    bytes status = 1;
+    bytes policycontent = 2;
+}
+
+service ConfigureProviderService {
+    rpc CreateKey(CreateKeyRequest) returns (CreateKeyResponse) {};
+    rpc GetKey(GetKeyRequest) returns (GetKeyResponse) {};
+    rpc DeleteKey(DeleteKeyRequest) returns (DeleteKeyResponse) {};
+    rpc SetPolicy(SetPolicyRequest) returns (SetPolicyResponse) {};
+    rpc setRawPolicy(SetRawPolicyRequest) returns (SetRawPolicyResponse) {};
+    rpc exportPolicy(ExportPolicyRequest) returns (ExportPolicyResponse) {};
+}

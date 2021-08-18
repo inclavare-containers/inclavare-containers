@@ -8,6 +8,7 @@ use serde_json::json;
 use shadow_rs::shadow;
 
 mod attestation_agent;
+mod configure_provider;
 mod crypto;
 mod enclave_tls;
 mod key_manager;
@@ -117,6 +118,13 @@ async fn main() {
                 .help("Specify the gRPC listen addr")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("config")
+                .long("config")
+                .value_name("config_addr")
+                .help("Specify the config listen addr")
+                .takes_value(true),
+        )        
         .get_matches();
 
     let sockaddr = match matches.is_present("listen") {
@@ -148,15 +156,21 @@ async fn main() {
         );
     });
 
-    // Launch gRPC server
+    // Launch wrap/unwrap gRPC server
     let gRPC_addr = match matches.is_present("gRPC") {
         true => matches.value_of("gRPC").unwrap().to_string(),
         false => "[::1]:50000".to_string(),
     };
     println!("Listen gRPC server addr: {}", gRPC_addr);
     let key_provider_server = key_provider::key_provider_grpc::server(&gRPC_addr);
-    match key_provider_server.await {
-        Ok(_) => {}
-        Err(_) => println!("key_provider_server launch failed."),
-    }
+
+     // Launch configuration gRPC server
+     let config_addr = match matches.is_present("config") {
+        true => matches.value_of("config").unwrap().to_string(),
+        false => "[::1]:60000".to_string(),
+    };
+    println!("Listen configuration server addr: {}", config_addr);
+    let config_provider_server = configure_provider::provider::server(&config_addr);
+
+    let (_first, _second) = tokio::join!(key_provider_server, config_provider_server);
 }
