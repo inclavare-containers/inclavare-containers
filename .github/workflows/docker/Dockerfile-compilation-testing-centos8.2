@@ -4,7 +4,7 @@ LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
 RUN dnf clean all && rm -r /var/cache/dnf && \
     dnf --enablerepo=PowerTools install -y which wget git \
-    make gcc gcc-c++ libseccomp-devel binutils-devel protobuf \
+    make gcc gcc-c++ libseccomp-devel binutils-devel protobuf cmake libarchive \
     protobuf-devel protobuf-c-devel openssl openssl-devel yum-utils \
     autoconf libtool file
 

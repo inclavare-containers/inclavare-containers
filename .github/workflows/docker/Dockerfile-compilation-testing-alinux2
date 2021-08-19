@@ -10,7 +10,7 @@ ENV PROTOBUF_VERSION 2.5.0
 ENV PROTOBUF_C_VERSION 1.0.2
 
 RUN yum install -y \
-    which wget git make autoconf libtool openssl yum-utils file \
+    which wget git make autoconf libtool openssl yum-utils file cmake \
     libseccomp-devel binutils-devel openssl-devel devtoolset-9-toolchain \
     protobuf-devel-$PROTOBUF_VERSION protobuf-c-devel-$PROTOBUF_C_VERSION
 
@@ -50,3 +50,5 @@ RUN yum install --nogpgcheck -y libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-
 RUN yum install --nogpgcheck -y teesdk
 
 RUN echo "source /opt/alibaba/teesdk/intel/sgxsdk/environment" >> /root/.bashrc
+
+RUN ln -sf /usr/bin/cmake3 /usr/bin/cmake
