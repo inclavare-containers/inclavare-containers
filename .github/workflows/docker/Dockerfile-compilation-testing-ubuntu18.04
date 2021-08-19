@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
-RUN apt-get update && apt-get install -y autoconf gcc g++ make wget git \
+RUN apt-get update && apt-get install -y autoconf gcc g++ make wget git cmake \
     libseccomp-dev binutils-dev libprotoc-dev protobuf-compiler \
     pkg-config libssl-dev openssl libtool file curl
 
