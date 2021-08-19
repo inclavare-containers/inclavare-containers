@@ -22,7 +22,7 @@ opa:
 	@cd $(Opa_Lib_Path) && go build -o $(Opa_Name) -buildmode=c-shared $(Opa_SRC_Files)
 
 enclave-tls:
-	$(MAKE) -C $(PROJDIR)/enclave-tls SGX=1 install
+	cd $(PROJDIR)/rats-tls && cmake -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install
 
 $(App_Name): opa enclave-tls $(App_SRC_Files)
 	@cd app && RUSTFLAGS="-C link-args=-Wl,-rpath=/opt/enclave-tls/lib:/usr/local/lib:$(PROJDIR)/verdictd/lib,--enable-new-dtags" cargo build $(App_Rust_Flags)
@@ -51,3 +51,4 @@ uninstall:
 clean:
 	@rm -rf $(TOP_DIR)/bin/ $(TOP_DIR)/lib/ $(Opa_Lib_Path)/libopa.*
 	@cd app && cargo clean && rm -f Cargo.lock
+	cd $(PROJDIR)/rats-tls && make -C build clean
