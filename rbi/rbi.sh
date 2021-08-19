@@ -1,6 +1,8 @@
 #! /bin/bash
 
-KATA=kata-agent
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+KATA=$SCRIPT_DIR/kata-agent
 KATA_DIR=kata-containers
 KATA_SOURCE_CODE_GETTER=$KATA/kata-source-code.sh
 KATA_AGENT_TEST_SCRIPT=$KATA/kata-test.sh
@@ -11,7 +13,7 @@ KATA_AGENT_SCRIPT=$KATA/scripts
 KATA_AGENT_BUILD_SCRIPT=$KATA/kata-build-docker.sh
 KATA_AGENT_TESTER=$KATA/kata-test.sh
 
-RAW_DISK_BUILDER=rootfs-img
+RAW_DISK_BUILDER=$SCRIPT_DIR/rootfs-img
 ROOTFS_BUILDER_DIR=$RAW_DISK_BUILDER/rootfs
 ROOTFS_BUILDER=$ROOTFS_BUILDER_DIR/build.sh
 ROOTFS_BUILDER_PATCH=$ROOTFS_BUILDER_DIR/patch
@@ -22,7 +24,7 @@ ROOTFS_CHECKER_DIR=$RAW_DISK_BUILDER/image-check
 ROOTFS_CHECKER_BUILDER_SCRIPT=$ROOTFS_CHECKER_DIR/check-build-image.sh
 ROOTFS_CHECKER_SCRIPT=$ROOTFS_CHECKER_DIR/check-test.sh
 
-RESULT_DIR=result
+RESULT_DIR=$SCRIPT_DIR/result
 KATA_AGENT_ARTIFEST=$RESULT_DIR/$KATA
 ROOTFS_OUTPUT=$RESULT_DIR/rootfs
 ROOTFS_OUTPUT_DIR=$ROOTFS_OUTPUT/rootfs
@@ -31,16 +33,16 @@ RAW_DISK_IMAGE=$ROOTFS_OUTPUT/kata-containers.img
 RAW_DISK_CHECK_REPORT=$ROOTFS_OUTPUT/check-report
 
 KERNEL_IMAGE=kernel-rbci
-KERNEL_IMAGE_BUILDER=kernel/build-docker-image.sh
-KERNEL_BUILDER=kernel/build-kernel.sh
-KERNEL_SOURCE_CODE_SCRIPT=kernel/get-source-code.sh
+KERNEL_IMAGE_BUILDER=$SCRIPT_DIR/kernel/build-docker-image.sh
+KERNEL_BUILDER=$SCRIPT_DIR/kernel/build-kernel.sh
+KERNEL_SOURCE_CODE_SCRIPT=$SCRIPT_DIR/kernel/get-source-code.sh
 KERNEL_SOURCE_DIR=$KATA/$KATA_DIR
 KERNEL_OUTPUT_DIR=$RESULT_DIR/kernel
 
 BIOS_IMAGE=bios-256k-rbci
-BIOS_IMAGE_BUILDER=bios-256k/build-docker-image.sh
+BIOS_IMAGE_BUILDER=$SCRIPT_DIR/bios-256k/build-docker-image.sh
 BIOS_CODE_DIR=bios-256k
-BIOS_BUILDER=bios-256k/build-bios.sh
+BIOS_BUILDER=$SCRIPT_DIR/bios-256k/build-bios.sh
 BIOS_OUTPUT=$RESULT_DIR/bios
 
 usage()
@@ -88,6 +90,9 @@ Tips:
   3. kernel-build - Build kernel, the artifest will be 
     'result/kernel/bzImage' and the report 'result/kernel/kernel_report'
 
+  or you may want to use a single cmd to build kernel, just use
+  'kernel'
+
   [[ bios-256k.bin build & test ]]
   1. bios-rbi - Create a RBCI of bios-256k.bin. The name of the
     docker image will be bios-256k-rbci.
@@ -113,6 +118,7 @@ Options:
   rootfs-rmi        Remove rootfs raw disk checker image(RRDCI)' RBI.
   rootfs-check      Check a rootfs raw disk image's content.
   
+  kernel            Generate kernel file.
   kernel-rbi        Make linux kernel's RBCI.
   kernel-build      Build linux kernel and check artifest's sha256 hash.
 
@@ -137,12 +143,12 @@ error() {
 
 test_agent_git() {
     info "Get kata source code from github.com"
-    ./$KATA_SOURCE_CODE_GETTER $KATA
+    $KATA_SOURCE_CODE_GETTER $KATA
     if [ "$?" != 0 ]; then
         error "Can not get source code."
     fi
     info "Run reproducible test for kata agent"
-    ./$KATA_AGENT_TESTER $KATA/$KATA_DIR $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
+    $KATA_AGENT_TESTER $KATA/$KATA_DIR $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
 }
 
 test_agent_local() {
@@ -152,7 +158,7 @@ test_agent_local() {
         exit -1
     fi
     info "Run reproducible test for kata agent locally"
-    ./$KATA_AGENT_TESTER $local_dir $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
+    $KATA_AGENT_TESTER $local_dir $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
 }
 
 build_agent_image() {
@@ -162,7 +168,7 @@ build_agent_image() {
         rm_agent_image
     fi
     info "Build docker image for kata-agent rbc"
-    ./$KATA_AGENT_BUILD_SCRIPT $KATA_AGENT_RBCI_NAME
+    $KATA_AGENT_BUILD_SCRIPT $KATA_AGENT_RBCI_NAME
 }
 
 rm_agent_image() {
@@ -211,7 +217,7 @@ build_rootfs_checker_image() {
         rm_rootfs_checker_image
     fi
     info "Build docker image for rootfs's raw disk checker rbc"
-    ./$ROOTFS_CHECKER_BUILDER_SCRIPT $ROOTFS_RRDCI_NAME
+    $ROOTFS_CHECKER_BUILDER_SCRIPT $ROOTFS_RRDCI_NAME
 }
 
 rm_rootfs_checker_image() {
@@ -227,6 +233,24 @@ check_rootfs_img() {
                         $ROOTFS_RRDCI_NAME
 }
 
+kernel() {
+    info "Build RBCI..."
+
+    image_already=`sudo docker images| grep $KERNEL_IMAGE | awk {'print $1'}`
+    if [ "$image_already" != "$KERNEL_IMAGE" ]; then
+        info "Build docker image for kernel RBC"
+        $KERNEL_IMAGE_BUILDER $KERNEL_IMAGE
+    fi
+    
+    info "Get kata-containers code..."
+    $KATA_SOURCE_CODE_GETTER $KATA
+    if [ "$?" != 0 ]; then
+        error "Can not get source code."
+    fi
+
+    kernel_build
+}
+
 kernel_rbi() {
     image_already=`sudo docker images| grep $KERNEL_IMAGE | awk {'print $1'}`
     if [ "$image_already" = "$KERNEL_IMAGE" ]; then
@@ -234,22 +258,22 @@ kernel_rbi() {
         exit
     fi
     info "Build docker image for kernel RBC"
-    ./$KERNEL_IMAGE_BUILDER $KERNEL_IMAGE
+    $KERNEL_IMAGE_BUILDER $KERNEL_IMAGE
 }
 
 kernel_build() {
     info "Build kernel..."
-    ./$KERNEL_BUILDER $KERNEL_SOURCE_DIR $KERNEL_OUTPUT_DIR
+    $KERNEL_BUILDER $KERNEL_SOURCE_DIR $KERNEL_OUTPUT_DIR
 }
 
 bios_rbi() {
     info "Build RBCI for bios..."
-    ./$BIOS_IMAGE_BUILDER
+    $BIOS_IMAGE_BUILDER
 }
 
 bios_build() {
     info "Build BIOS..."
-    ./$BIOS_BUILDER $BIOS_CODE_DIR $BIOS_OUTPUT
+    $BIOS_BUILDER $BIOS_CODE_DIR $BIOS_OUTPUT
 }
 
 clean() {
@@ -293,6 +317,9 @@ main() {
         ;;
     rootfs-check)
         check_rootfs_img
+        ;;
+    kernel)
+        kernel
         ;;
     kernel-rbi)
         kernel_rbi
