@@ -13,7 +13,7 @@ pub mod configureProvider {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     let matches = App::new("verdict")
         .version("0.1")
         .author("Inclavare-Containers Team")
@@ -43,30 +43,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .help("Export the contents of the policy file named <POLICY_NAME>.")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("path")
+                .long("path")
+                .short("p")
+                .value_name("PATH")
+                .requires("export_policy")
+                .help("Specify the path of the export file, must be used with '-e'.")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("config")
+                .long("config")
+                .short("c")
+                .value_name("CONFIG_ADDR")
+                .help("Specify the config address.")
+                .takes_value(true),
+        )
         .get_matches();
 
-    let mut client = ConfigureProviderServiceClient::connect("http://[::1]:60000").await?;
+    let config_addr = if matches.is_present("config") {
+        matches.value_of("config").unwrap().to_string()
+    } else {
+        "[::1]:60000".to_string()
+    };
+    println!("Listen configuration server addr: {}", config_addr);
+
+    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", config_addr))
+        .await
+        .unwrap();
 
     // set_policy
     if matches.is_present("set_policy") {
         let vals: Vec<&str> = matches.values_of("set_policy").unwrap().collect();
 
-        let mut reference = String::new();
-
-        File::open(vals[1])
-            .expect(&format!("Failed to open the file named {}.", vals[1]))
-            .read_to_string(&mut reference)
-            .expect(&format!("Failed to read from the file named {}.", vals[1]));
-
-        let reference: Value =
-            serde_json::from_str(&reference).expect("File content is not in json format.");
-
-        let request = SetPolicyRequest {
-            policyname: vals[0].as_bytes().to_vec(),
-            references: reference.to_string().into_bytes(),
-        };
-
-        let response: SetPolicyResponse = client.set_policy(request).await?.into_inner();
+        let response: SetPolicyResponse = client
+            .set_policy(set_policy(vals))
+            .await
+            .unwrap()
+            .into_inner();
         println!(
             "SetPolicy status is: {:?}",
             String::from_utf8(response.status).unwrap()
@@ -77,19 +92,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if matches.is_present("set_raw_policy") {
         let vals: Vec<&str> = matches.values_of("set_raw_policy").unwrap().collect();
 
-        let mut policy = String::new();
-
-        File::open(vals[1])
-            .expect(&format!("Failed to open the file named {}.", vals[1]))
-            .read_to_string(&mut policy)
-            .expect(&format!("Failed to read from the file named {}.", vals[1]));
-
-        let request = SetRawPolicyRequest {
-            policyname: vals[0].as_bytes().to_vec(),
-            policycontent: policy.to_string().into_bytes(),
-        };
-
-        let response: SetRawPolicyResponse = client.set_raw_policy(request).await?.into_inner();
+        let response: SetRawPolicyResponse = client
+            .set_raw_policy(set_raw_policy(vals))
+            .await
+            .unwrap()
+            .into_inner();
         println!(
             "SetRawPolicy status is: {:?}",
             String::from_utf8(response.status).unwrap()
@@ -104,7 +111,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             policyname: policyname.as_bytes().to_vec(),
         };
 
-        let response: ExportPolicyResponse = client.export_policy(request).await?.into_inner();
+        let response: ExportPolicyResponse =
+            client.export_policy(request).await.unwrap().into_inner();
         let policy = String::from_utf8(response.policycontent).unwrap();
 
         println!(
@@ -113,11 +121,50 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         println!("policy: {} content is:\n{}", policyname, policy);
 
-        File::create(policyname)
+        let mut path: String = if matches.is_present("path") {
+            matches.value_of("path").unwrap().to_string()
+        } else {
+            "./".to_string()
+        };
+
+        if !path.ends_with("/") {
+            path = format!("{}/", path);
+        }
+
+        File::create(path + policyname)
             .expect("Failed to create the file.")
             .write_all(policy.as_bytes())
             .expect("Faied to write the policy content into the file.");
     }
+}
 
-    Ok(())
+fn set_policy(vals: Vec<&str>) -> SetPolicyRequest {
+    let mut reference = String::new();
+
+    File::open(vals[1])
+        .expect(&format!("Failed to open the file named {}.", vals[1]))
+        .read_to_string(&mut reference)
+        .expect(&format!("Failed to read from the file named {}.", vals[1]));
+
+    let reference: Value =
+        serde_json::from_str(&reference).expect("File content is not in json format.");
+
+    SetPolicyRequest {
+        policyname: vals[0].as_bytes().to_vec(),
+        references: reference.to_string().into_bytes(),
+    }
+}
+
+fn set_raw_policy(vals: Vec<&str>) -> SetRawPolicyRequest {
+    let mut policy = String::new();
+
+    File::open(vals[1])
+        .expect(&format!("Failed to open the file named {}.", vals[1]))
+        .read_to_string(&mut policy)
+        .expect(&format!("Failed to read from the file named {}.", vals[1]));
+
+    SetRawPolicyRequest {
+        policyname: vals[0].as_bytes().to_vec(),
+        policycontent: policy.to_string().into_bytes(),
+    }
 }
