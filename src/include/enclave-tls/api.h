@@ -64,6 +64,42 @@ typedef struct {
 	} quote_sgx_ecdsa;
 } enclave_tls_conf_t;
 
+typedef struct etls_sgx_evidence {
+	uint8_t *mr_enclave;
+	uint8_t *mr_signer;
+	uint32_t product_id;
+	uint32_t security_version;
+	uint8_t *attributes;
+	size_t collateral_size;
+	char *collateral;
+} etls_sgx_evidence_t;
+
+typedef struct etls_tdx_evidence {
+	/* TODO */
+} etls_tdx_evidence_t;
+
+/* The public_key, user_data_size and user_data are needed to include in hash. */
+typedef struct ehd {
+	void *public_key;
+	int user_data_size;
+	char *user_data;
+	int unhashed_size;
+	char *unhashed;
+} ehd_t;
+
+typedef enum { SGX_ECDSA = 1, TDX } enclave_evidence_type_t;
+
+typedef struct etls_evidence {
+	enclave_evidence_type_t type;
+	ehd_t ehd;
+	int quote_size;
+	char *quote;
+	union {
+		etls_sgx_evidence_t sgx;
+		etls_tdx_evidence_t tdx;
+	};
+} etls_evidence_t;
+
 #define ENCLAVE_TLS_API_VERSION_1	1
 #define ENCLAVE_TLS_API_VERSION_MAX	ENCLAVE_TLS_API_VERSION_1
 #define ENCLAVE_TLS_API_VERSION_DEFAULT ENCLAVE_TLS_API_VERSION_1
@@ -78,7 +114,11 @@ typedef struct {
 #define ENCLAVE_TLS_CONF_FLAGS_SERVER	   (1UL << ENCLAVE_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT)
 #define ENCLAVE_TLS_CONF_VERIFIER_ENFORCED (1UL << ENCLAVE_TLS_CONF_FLAGS_VERENFORCED_MASK_SHIFT)
 
+typedef int (*enclave_tls_callback_t)(void *);
+
 enclave_tls_err_t enclave_tls_init(const enclave_tls_conf_t *conf, enclave_tls_handle *handle);
+enclave_tls_err_t enclave_tls_set_verification_callback(enclave_tls_handle *handle,
+							enclave_tls_callback_t user_callback);
 enclave_tls_err_t enclave_tls_negotiate(enclave_tls_handle handle, int fd);
 enclave_tls_err_t enclave_tls_receive(enclave_tls_handle handle, void *buf, size_t *buf_size);
 enclave_tls_err_t enclave_tls_transmit(enclave_tls_handle handle, void *buf, size_t *buf_size);
