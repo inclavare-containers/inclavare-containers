@@ -130,6 +130,12 @@ int enclave_tls_client_startup(enclave_tls_log_level_t log_level, char *attester
 		return -1;
 	}
 
+	ret = enclave_tls_set_verification_callback(&handle, NULL);
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
+		ETLS_ERR("Failed to set verification callback %#x\n", ret);
+		return -1;
+	}
+
 	ret = enclave_tls_negotiate(handle, sockfd);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_ERR("Failed to negotiate %#x\n", ret);
