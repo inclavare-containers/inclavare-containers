@@ -2,6 +2,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+use crate::policyEngine::opa::opaEngine::*;
+use base64;
 use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
 use std::ops::{Deref, DerefMut};
 use std::os::unix::io::RawFd;
@@ -102,10 +104,15 @@ impl EnclaveTls {
         let mut handle: enclave_tls_handle = unsafe { std::mem::zeroed() };
         let mut tls: *mut enclave_tls_handle = &mut handle;
         let err = unsafe { enclave_tls_init(&conf, &mut tls) };
+        if err != ENCLAVE_TLS_ERR_NONE {
+            println!("enclave_tls_init() failed");
+            return Err(err);
+        }
+
+        let err = unsafe { enclave_tls_set_verification_callback(&mut tls, Some(Self::callback)) };
         if err == ENCLAVE_TLS_ERR_NONE {
             Ok(unsafe { EnclaveTls::from_ptr(tls) })
         } else {
-            print!("init(), err = {}", err);
             Err(err)
         }
     }
@@ -149,5 +156,54 @@ impl EnclaveTls {
         } else {
             Err(err)
         }
+    }
+
+    fn sgx_callback(ev: etls_sgx_evidence_t) -> Result<(), String> {
+        let mr_enclave =
+            base64::encode(unsafe { std::slice::from_raw_parts(ev.mr_enclave, 32).to_vec() });
+        let mr_signer =
+            base64::encode(unsafe { std::slice::from_raw_parts(ev.mr_signer, 32).to_vec() });
+
+        let message = serde_json::json!({
+            "mrEnclave": mr_enclave,
+            "mrSigner": mr_signer,
+            "productId": ev.product_id,
+            "svn": ev.security_version
+        });
+
+        make_decision("attestation.rego", &message.to_string())
+            .map_err(|e| format!("make_decision error: {}", e))
+            .and_then(|res| {
+                serde_json::from_str(&res).map_err(|_| "Json unmashall failed".to_string())
+            })
+            .and_then(|res: serde_json::Value| {
+                if res["allow"] == true {
+                    Ok(())
+                } else {
+                    println!("parseInfo: {}", res["parseInfo"].to_string());
+                    Err("decision is false".to_string())
+                }
+            })
+    }
+
+    #[no_mangle]
+    extern "C" fn callback(evidence: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int {
+        println!("Verdictd Enclave-TLS callback function is called.");
+        let evidence = evidence as *mut etls_evidence;
+        let res = if unsafe { (*evidence).type_ } == enclave_evidence_type_t_SGX_ECDSA {
+            Self::sgx_callback(unsafe { (*evidence).__bindgen_anon_1.sgx })
+        } else {
+            Err("Not implemented".to_string())
+        };
+
+        let allow = match res {
+            Ok(_) => 1,
+            Err(e) => {
+                println!("error: {}", e);
+                0
+            }
+        };
+
+        allow
     }
 }
