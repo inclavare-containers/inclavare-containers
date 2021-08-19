@@ -503,10 +503,314 @@ impl Default for enclave_tls_conf_t {
     }
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct etls_sgx_evidence {
+    pub mr_enclave: *mut u8,
+    pub mr_signer: *mut u8,
+    pub product_id: u32,
+    pub security_version: u32,
+    pub attributes: *mut u8,
+    pub collateral_size: size_t,
+    pub collateral: *mut ::std::os::raw::c_char,
+}
+#[test]
+fn bindgen_test_layout_etls_sgx_evidence() {
+    assert_eq!(
+        ::std::mem::size_of::<etls_sgx_evidence>(),
+        48usize,
+        concat!("Size of: ", stringify!(etls_sgx_evidence))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<etls_sgx_evidence>(),
+        8usize,
+        concat!("Alignment of ", stringify!(etls_sgx_evidence))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_sgx_evidence>())).mr_enclave as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(mr_enclave)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_sgx_evidence>())).mr_signer as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(mr_signer)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_sgx_evidence>())).product_id as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(product_id)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<etls_sgx_evidence>())).security_version as *const _ as usize
+        },
+        20usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(security_version)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_sgx_evidence>())).attributes as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(attributes)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<etls_sgx_evidence>())).collateral_size as *const _ as usize
+        },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(collateral_size)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_sgx_evidence>())).collateral as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_sgx_evidence),
+            "::",
+            stringify!(collateral)
+        )
+    );
+}
+pub type etls_sgx_evidence_t = etls_sgx_evidence;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct etls_tdx_evidence {}
+#[test]
+fn bindgen_test_layout_etls_tdx_evidence() {
+    assert_eq!(
+        ::std::mem::size_of::<etls_tdx_evidence>(),
+        0usize,
+        concat!("Size of: ", stringify!(etls_tdx_evidence))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<etls_tdx_evidence>(),
+        1usize,
+        concat!("Alignment of ", stringify!(etls_tdx_evidence))
+    );
+}
+pub type etls_tdx_evidence_t = etls_tdx_evidence;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ehd {
+    pub public_key: *mut ::std::os::raw::c_void,
+    pub user_data_size: ::std::os::raw::c_int,
+    pub user_data: *mut ::std::os::raw::c_char,
+    pub unhashed_size: ::std::os::raw::c_int,
+    pub unhashed: *mut ::std::os::raw::c_char,
+}
+#[test]
+fn bindgen_test_layout_ehd() {
+    assert_eq!(
+        ::std::mem::size_of::<ehd>(),
+        40usize,
+        concat!("Size of: ", stringify!(ehd))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<ehd>(),
+        8usize,
+        concat!("Alignment of ", stringify!(ehd))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<ehd>())).public_key as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(ehd),
+            "::",
+            stringify!(public_key)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<ehd>())).user_data_size as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(ehd),
+            "::",
+            stringify!(user_data_size)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<ehd>())).user_data as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(ehd),
+            "::",
+            stringify!(user_data)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<ehd>())).unhashed_size as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(ehd),
+            "::",
+            stringify!(unhashed_size)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<ehd>())).unhashed as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(ehd),
+            "::",
+            stringify!(unhashed)
+        )
+    );
+}
+pub type ehd_t = ehd;
+pub const enclave_evidence_type_t_SGX_ECDSA: enclave_evidence_type_t = 1;
+pub const enclave_evidence_type_t_TDX: enclave_evidence_type_t = 2;
+pub type enclave_evidence_type_t = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct etls_evidence {
+    pub type_: enclave_evidence_type_t,
+    pub ehd: ehd_t,
+    pub quote_size: ::std::os::raw::c_int,
+    pub quote: *mut ::std::os::raw::c_char,
+    pub __bindgen_anon_1: etls_evidence__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union etls_evidence__bindgen_ty_1 {
+    pub sgx: etls_sgx_evidence_t,
+    pub tdx: etls_tdx_evidence_t,
+}
+#[test]
+fn bindgen_test_layout_etls_evidence__bindgen_ty_1() {
+    assert_eq!(
+        ::std::mem::size_of::<etls_evidence__bindgen_ty_1>(),
+        48usize,
+        concat!("Size of: ", stringify!(etls_evidence__bindgen_ty_1))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<etls_evidence__bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(etls_evidence__bindgen_ty_1))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_evidence__bindgen_ty_1>())).sgx as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_evidence__bindgen_ty_1),
+            "::",
+            stringify!(sgx)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_evidence__bindgen_ty_1>())).tdx as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_evidence__bindgen_ty_1),
+            "::",
+            stringify!(tdx)
+        )
+    );
+}
+#[test]
+fn bindgen_test_layout_etls_evidence() {
+    assert_eq!(
+        ::std::mem::size_of::<etls_evidence>(),
+        112usize,
+        concat!("Size of: ", stringify!(etls_evidence))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<etls_evidence>(),
+        8usize,
+        concat!("Alignment of ", stringify!(etls_evidence))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_evidence>())).type_ as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_evidence),
+            "::",
+            stringify!(type_)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_evidence>())).ehd as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_evidence),
+            "::",
+            stringify!(ehd)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_evidence>())).quote_size as *const _ as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_evidence),
+            "::",
+            stringify!(quote_size)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<etls_evidence>())).quote as *const _ as usize },
+        56usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(etls_evidence),
+            "::",
+            stringify!(quote)
+        )
+    );
+}
+
+pub type etls_evidence_t = etls_evidence;
+pub type enclave_tls_callback_t = ::std::option::Option<
+    unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int,
+>;
+
 extern "C" {
     pub fn enclave_tls_init(
         conf: *const enclave_tls_conf_t,
         handle: *mut *mut enclave_tls_handle,
+    ) -> enclave_tls_err_t;
+
+    pub fn enclave_tls_set_verification_callback(
+        handle: *mut *mut enclave_tls_handle,
+        user_callback: enclave_tls_callback_t,
     ) -> enclave_tls_err_t;
 
     pub fn enclave_tls_negotiate(
