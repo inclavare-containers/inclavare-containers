@@ -76,6 +76,12 @@ int ecall_etls_server_startup(sgx_enclave_id_t enclave_id, enclave_tls_log_level
 		return -1;
 	}
 
+	ret = enclave_tls_set_verification_callback(&handle, NULL);
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
+		ETLS_ERR("Failed to set verification callback %#x\n", ret);
+		return -1;
+	}
+
 	/* Accept client connections */
 	struct etls_sockaddr_in c_addr;
 	uint32_t addrlen_in = sizeof(c_addr);
@@ -177,6 +183,12 @@ int ecall_etls_client_startup(sgx_enclave_id_t enclave_id, enclave_tls_log_level
 	enclave_tls_err_t ret = enclave_tls_init(&conf, &handle);
 	if (ret != ENCLAVE_TLS_ERR_NONE) {
 		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
+		return -1;
+	}
+
+	ret = enclave_tls_set_verification_callback(&handle, NULL);
+	if (ret != ENCLAVE_TLS_ERR_NONE) {
+		ETLS_ERR("Failed to set verification callback %#x\n", ret);
 		return -1;
 	}
 

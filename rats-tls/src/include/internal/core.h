@@ -22,6 +22,7 @@
 typedef struct etls_core_context_t {
 	enclave_tls_conf_t config;
 	unsigned long flags;
+	enclave_tls_callback_t user_callback;
 	enclave_attester_ctx_t *attester;
 	enclave_verifier_ctx_t *verifier;
 	tls_wrapper_ctx_t *tls_wrapper;

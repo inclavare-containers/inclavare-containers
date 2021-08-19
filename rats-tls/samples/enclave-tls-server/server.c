@@ -176,17 +176,23 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 	}
 
 	enclave_tls_handle handle;
-	enclave_tls_err_t ret;
-	ret = enclave_tls_init(&conf, &handle);
-	if (ret != ENCLAVE_TLS_ERR_NONE) {
-		ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
-		return -1;
-	}
-
 	/* Accept client connections */
 	struct sockaddr_in c_addr;
 	socklen_t size = sizeof(c_addr);
 	while (1) {
+		enclave_tls_err_t ret;
+		ret = enclave_tls_init(&conf, &handle);
+		if (ret != ENCLAVE_TLS_ERR_NONE) {
+			ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
+			return -1;
+		}
+
+		ret = enclave_tls_set_verification_callback(&handle, NULL);
+		if (ret != ENCLAVE_TLS_ERR_NONE) {
+			ETLS_ERR("Failed to set verification callback %#x\n", ret);
+			return -1;
+		}
+
 		ETLS_INFO("Waiting for a connection ...\n");
 
 		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);

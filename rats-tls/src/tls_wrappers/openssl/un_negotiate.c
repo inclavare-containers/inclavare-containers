@@ -12,6 +12,8 @@
 #include <enclave-tls/tls_wrapper.h>
 #include <enclave-tls/oid.h>
 #include <internal/core.h>
+#include "sgx_report.h"
+#include "sgx_quote_3.h"
 #include "per_thread.h"
 #include "openssl.h"
 
@@ -259,21 +261,10 @@ int openssl_extract_x509_extensions(X509 *crt, attestation_evidence_t *evidence)
 int verify_certificate(X509_STORE_CTX *ctx)
 {
 	int preverify = 0;
-	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
-	int *ex_data = per_thread_getspecific();
-	if (!ex_data) {
-		ETLS_ERR("failed to get ex_data\n");
-		return 0;
-	}
-
-	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, *ex_data);
-	if (!tls_ctx) {
-		ETLS_ERR("failed to get tls_wrapper_ctx pointer\n");
-		return 0;
-	}
 #else
 int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 {
+#endif
 	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
 	int *ex_data = per_thread_getspecific();
 	if (!ex_data) {
@@ -286,7 +277,6 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 		ETLS_ERR("failed to get tls_wrapper_ctx pointer\n");
 		return 0;
 	}
-#endif
 
 	X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
 	if (!cert) {
@@ -342,6 +332,28 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 	if (err != TLS_WRAPPER_ERR_NONE) {
 		ETLS_ERR("failed to verify certificate extension %#x\n", err);
 		return 0;
+	}
+
+	if (!strncmp(evidence.type, "sgx_ecdsa", sizeof(evidence.type))) {
+		etls_evidence_t ev;
+		sgx_quote3_t *quote3 = (sgx_quote3_t *)evidence.ecdsa.quote;
+
+		ev.sgx.mr_enclave = (char *)quote3->report_body.mr_enclave.m;
+		ev.sgx.mr_signer = quote3->report_body.mr_signer.m;
+		ev.sgx.product_id = quote3->report_body.isv_prod_id;
+		ev.sgx.security_version = quote3->report_body.isv_svn;
+		ev.sgx.attributes = (char *)&(quote3->report_body.attributes);
+		ev.type = SGX_ECDSA;
+		ev.quote = (char *)quote3;
+		ev.quote_size = sizeof(sgx_quote3_t);
+
+		if (tls_ctx->etls_handle->user_callback) {
+			rc = tls_ctx->etls_handle->user_callback(&ev);
+			if (!rc) {
+				ETLS_ERR("failed to verify user callback %d\n", rc);
+				return 0;
+			}
+		}
 	}
 
 	return SSL_SUCCESS;
