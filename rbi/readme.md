@@ -7,6 +7,7 @@ For convenience, some scripts are collected for automatically building.
 *   `kata-agent/` scripts related to RB of kata-agent.
 *   `rootfs-img` scripts and patches related to RB of rootfs raw disk image
 *   `kernel` scripts related to RB of kernel
+*   `in-toto` files about in-toto support software supply chain
 
 ## Instructions
 
