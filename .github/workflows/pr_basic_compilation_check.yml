@@ -35,13 +35,20 @@ jobs:
           source /root/.bashrc && make && make install && make clean &&
             make SGX=1 && make clean && make OCCLUM=1
 
+      - name: Compile "verdict"
+        run: 
+          cd verdict;
+          source /root/.bashrc && make && make install && make clean
+        env:
+          HOME: /root
+
       - name: Compile "verdictd"
-        run:
-          export GOPROXY=https://goproxy.io,direct;        
+        run:  
           cd verdictd;
           source /root/.bashrc && make && make install && make clean
         env:
           HOME: /root
+          GOPROXY: https://goproxy.io,direct
 
       - name: Compile "rune shim-rune sgx-tools epm pal"
         run:
