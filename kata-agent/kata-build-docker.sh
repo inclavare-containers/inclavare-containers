@@ -17,7 +17,7 @@ main() {
         usage
     fi
 
-    sudo docker build -t $1 --network host $dir
+    sudo docker build -t $1 --network host --build-arg https_proxy=$https_proxy $dir
     if [ "$?" = "0" ] ;then
         echo "[SUCCEED] Docker build succeed."
     else 
