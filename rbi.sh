@@ -25,7 +25,7 @@ ROOTFS_CHECKER_BUILDER_SCRIPT=$ROOTFS_CHECKER_DIR/check-build-image.sh
 ROOTFS_CHECKER_SCRIPT=$ROOTFS_CHECKER_DIR/check-test.sh
 
 RESULT_DIR=$SCRIPT_DIR/result
-KATA_AGENT_ARTIFEST=$RESULT_DIR/$KATA
+KATA_AGENT_ARTIFEST=$RESULT_DIR/kata-agent
 ROOTFS_OUTPUT=$RESULT_DIR/rootfs
 ROOTFS_OUTPUT_DIR=$ROOTFS_OUTPUT/rootfs
 ROOTFS_OUTPUT_REPORT=$ROOTFS_OUTPUT/rootfs-report
@@ -101,6 +101,7 @@ Tips:
 
 Options:
   help              Show this help message.
+  agent             Generate kata-agent file.
   agent-git         Do kata-agent reproducible build test, pull source code
                     from github.
   agent-local <path/to/code>     
@@ -139,6 +140,25 @@ info() {
 error() {
     echo "[ERROR]" $1
     exit -1
+}
+
+agent() {
+    info "Get kata source code from github.com"
+    $KATA_SOURCE_CODE_GETTER $KATA
+    if [ "$?" != 0 ]; then
+        error "Can not get source code."
+    fi
+
+    info "Build RBCI..."
+
+    image_already=`sudo docker images| grep $KATA_AGENT_RBCI_NAME | awk {'print $1'}`
+    if [ "$image_already" != "$KATA_AGENT_RBCI_NAME" ]; then
+        info "Build docker image for kata-agent RBC"
+        $KATA_AGENT_BUILD_SCRIPT $KATA_AGENT_RBCI_NAME
+    fi
+    
+    info "Run reproducible for kata agent"
+    $KATA_AGENT_TESTER $KATA/$KATA_DIR $KATA_AGENT_ARTIFEST $KATA_AGENT_RBCI_NAME
 }
 
 test_agent_git() {
@@ -291,6 +311,9 @@ clean_all() {
 main() {
     local feature=$1
     case $feature in
+    agent)
+        agent
+        ;;
     agent-git)
         test_agent_git
         ;;
