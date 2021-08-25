@@ -9,6 +9,7 @@ set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../verifiers/sgx-ecdsa
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../verifiers/sgx-ecdsa-qve
                  ${CMAKE_CURRENT_SOURCE_DIR}/../../verifiers/sgx-la
+                 ${CMAKE_CURRENT_SOURCE_DIR}/../../utils
                  )
 include_directories(${INCLUDE_DIRS})
 
@@ -17,6 +18,8 @@ set(SOURCES etls_syscalls_ocall.c
             etls_socket_ocall.c
             sgx_ecdsa_ocall.c
             sgx_la_ocall.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../utils/parse.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/../../utils/toml.c
             )
 
 # Generate library
