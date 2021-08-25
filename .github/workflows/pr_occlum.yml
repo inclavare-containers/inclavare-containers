@@ -48,13 +48,10 @@ jobs:
         find ../ -name *.pb.go | xargs -I files touch files;
         make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
-    - name: Start docker daemon
-      run: |
-        if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
-          docker exec $rune_test bash -c "service docker start"
-        else
-          docker exec -d $rune_test bash -c "dockerd -b docker0 --storage-driver=vfs &"
-        fi;
+    - uses: ./.github/actions/start-docker-daemon
+      with:
+        container-id: $rune_test
+      timeout-minutes: 2
 
     - name: Build Occlum docker image
       run: docker exec $rune_test bash -c "cd /root; occlum-gcc -o hello_world hello_world.c;
