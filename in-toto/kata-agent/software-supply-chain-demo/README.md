@@ -3,25 +3,17 @@
 This is a demo fork and modified from in-toto demo https://github.com/in-toto/demo. This is used for 
 produce a kata-agent `kata-agent`.
 
-### Download and setup in-toto on \*NIX (Linux, OS X, ..)
-__Virtual Environments (optional)__
-
-We highly recommend to install `in-toto` and its dependencies in a [`virtualenv`](https://virtualenv.pypa.io/en/stable/). Just copy-paste the following snippet to install
-[`virtualenvwrapper`](https://virtualenvwrapper.readthedocs.io/en/latest/) and create a virtual environment:
+### Download and setup in-toto on \*NIX (Centos 8.3.2011)
+__Set up Environment__
+As `python 3.6.8`
 
 ```bash
-# Install virtualenvwrapper
-pip install virtualenvwrapper
+# install gcc, docker
+yum install -y gcc docker
 
-# Create directory for your virtualenvs, default is
-mkdir -p ~/.virtualenvs
-
-# Source the scripts (you may want to add this to your shell startup file)
-source /usr/local/bin/virtualenvwrapper.sh
-
-# Create and change into a virtual environment, e.g. "in-toto-demo"
-# This will add the prefix "(in-toto-demo)" to your shell prompt
-mkvirtualenv in-toto-demo
+# install rust for cryptography package for python3
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+source $HOME/.cargo/env
 ```
 
 __Get demo files and install in-toto__
@@ -34,7 +26,12 @@ cd inclavare-containers/rbi/in-toto/kata-agent/software-supply-chain-demo
 
 # Install a compatible version of in-toto
 pip install -r requirements.txt
+
+# Every step has a default timeout 10s, which is too short for a build
+# Change it to 900s
+export IN_TOTO_LINK_CMD_EXEC_TIMEOUT='900'
 ```
+
 *Note: If you are having troubles installing in-toto, make sure you have all
 the system dependencies. See the [installation guide on
 in-toto.readthedocs.io](https://in-toto.readthedocs.io/en/latest/installing.html)
