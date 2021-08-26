@@ -15,9 +15,9 @@
 
 ## Build and Install
 
-Please follow the command to build Enclave TLS from the latested source code on your system.
+Please follow the command to build RATS TLS from the latested source code on your system.
 
-1. Download the latest source code of Enclave TLS
+1. Download the latest source code of RATS TLS
 
 ```shell
 mkdir -p "$WORKSPACE"
@@ -25,10 +25,10 @@ cd "$WORKSPACE"
 git clone https://github.com/alibaba/inclavare-containers
 ```
 
-2. Build and install Enclave TLS
+2. Build and install RATS TLS
 
 ```shell
-cd inclavare-containers/enclave-tls
+cd inclavare-containers/rats-tls
 cmake -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
@@ -53,7 +53,7 @@ Note that [SGX LVI mitigation](https://software.intel.com/security-software-guid
 
 # RUN
 
-Right now, Enclave TLS supports the following instance types:
+Right now, RATS TLS supports the following instance types:
 
 | Priority | Tls Wrapper instances |     Attester instances     |     Verifier instances     | Crypto Wrapper Instance |
 | -------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
@@ -61,15 +61,15 @@ Right now, Enclave TLS supports the following instance types:
 | Medium   | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
 | High     |                       | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve |                         |
 
-By default,  Enclave TLS will select the **highest priority** instance to use.
+By default,  RATS TLS will select the **highest priority** instance to use.
 
-## Run enclave tls server
+## Run RATS TLS server
 ```
 cd /usr/share/enclave-tls/samples
 ./enclave-tls-server
 ```
 
-## Run enclave tls client
+## Run RATS TLS client
 ```
 cd /usr/share/enclave-tls/samples
 ./enclave-tls-client
@@ -77,7 +77,7 @@ cd /usr/share/enclave-tls/samples
 
 ## Specify the instance type
 
-The options of enclave-tls-server are as followed:  
+The options of enclave-tls-server are as followed:
 
 ```shell
 OPTIONS:
@@ -104,7 +104,7 @@ For example:
 ./enclave-tls-server --crypto openssl
 ```
 
-Enclave TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
+RATS TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
 
 For example:
 
@@ -112,7 +112,7 @@ For example:
 ./enclave-tls-server -l debug
 ```
 
-Enclave TLS server binds `127.0.0.1:1234` by default. You can use `-i` and `-p` options to set custom configuration.
+RATS TLS server binds `127.0.0.1:1234` by default. You can use `-i` and `-p` options to set custom configuration.
 
 ```shell
 ./enclave-tls-server -i [ip_addr] -p [port]
