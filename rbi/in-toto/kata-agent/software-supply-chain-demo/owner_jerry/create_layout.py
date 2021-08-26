@@ -2,7 +2,7 @@ from securesystemslib import interface
 from in_toto.models.layout import Layout
 from in_toto.models.metadata import Metablock
 
-SHA256_VALUE = "11c8d799173ef309e1117471ca9d3d4d6ce495fda3e3d3ca00fff77439ce2d52"
+SHA256_VALUE = "91ff21380e407d373a440ea9ed5d2a1435bb8ddaff30a1e4ee671a556e66da51"
 
 def main():
   # Load Jerry's private key to later sign the layout
@@ -21,10 +21,20 @@ def main():
       "steps": [{
           "name": "clone",
           "expected_materials": [],
-          "expected_products": [[
-            "CREATE",
-            "inclavare-containers/rbi/kata-agent/*"
-        ]],
+          "expected_products": [
+            ["CREATE","inclavare-containers/rbi/kata-agent/Dockerfile"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/kata-build-docker.sh"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/kata-source-code.sh"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/kata-test.sh"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/patch/Cargo.lock"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/patch/Makefile"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/patch/protocols"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/patch/protocols/Cargo.toml"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/readme.md"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/readme_cn.md"],
+            ["CREATE","inclavare-containers/rbi/kata-agent/scripts/start.sh"],
+            ["CREATE","inclavare-containers/rbi/misc/check-integrity.sh"]
+          ],
           "pubkeys": [key_alice["keyid"]],
           "expected_command": [
               "git",
@@ -35,8 +45,17 @@ def main():
         },{
           "name": "build",
           "expected_materials": [
-            ["MATCH", "inclavare-containers/rbi/kata-agent/*", "WITH", "PRODUCTS", "FROM",
-             "clone"]
+            ["MATCH", "inclavare-containers/rbi/kata-agent/Dockerfile", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/kata-build-docker.sh", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/kata-source-code.sh", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/kata-test.sh", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/patch/Cargo.lock", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/patch/Makefile", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/patch/protocols", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/patch/protocols/Cargo.toml", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/readme.md", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/readme_cn.md", "WITH", "PRODUCTS", "FROM","clone"],
+            ["MATCH", "inclavare-containers/rbi/kata-agent/scripts/start.sh", "WITH", "PRODUCTS", "FROM","clone"]
           ],
           "expected_products": [
               ["CREATE", "inclavare-containers/rbi/result/kata-agent/kata-agent"],
@@ -52,18 +71,21 @@ def main():
       "inspect": [{
           "name": "integrity",
           "expected_materials": [
-              ["MATCH", "inclavare-containers/rbi/result/*", "WITH", "PRODUCTS", "FROM", "build"],
+              ["MATCH", "inclavare-containers/rbi/result/kata-agent/kata-agent", "WITH", "PRODUCTS", "FROM", "build"],
+              ["MATCH", "inclavare-containers/rbi/misc/check-integrity.sh", "WITH", "PRODUCTS", "FROM", "clone"],
               # FIXME: If the routine running inspections would gather the
               # materials/products to record from the rules we wouldn't have to
               # ALLOW other files that we aren't interested in.
               ["ALLOW", "jerry.pub"],
-              ["ALLOW", "root.layout"]
+              ["ALLOW", "root.layout"],
+              ["ALLOW", ".keep"]
           ],
           "expected_products": [
               ["CREATE", "inclavare-containers/rbi/result/kata-agent/.check_done"],
               # FIXME: See expected_materials above
               ["ALLOW", "jerry.pub"],
-              ["ALLOW", "root.layout"]
+              ["ALLOW", "root.layout"],
+              ["ALLOW", ".keep"]
           ],
           "run": [
               "bash",
