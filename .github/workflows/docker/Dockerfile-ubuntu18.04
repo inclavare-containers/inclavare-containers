@@ -2,6 +2,9 @@ FROM occlum/occlum:OCCLUM_VERSION-ubuntu18.04
 
 LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
+ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && apt-get install libseccomp-dev libprotoc-dev binutils-dev
 
 RUN wget https://github.com/protobuf-c/protobuf-c/archive/v1.3.1.tar.gz &&\
