@@ -24,7 +24,7 @@ make submodule && OCCLUM_RELEASE_BUILD=1 make install
 
 # Quick start
 
-1. Download the latest source code of Enclave TLS
+1. Download the latest source code of RATS TLS
 
 ```shell
 mkdir -p "$WORKSPACE"
@@ -32,21 +32,21 @@ cd "$WORKSPACE"
 git clone https://github.com/alibaba/inclavare-containers
 ```
 
-2. Build and install Enclave TLS
+2. Build and install RATS TLS
 
 ```shell
-cd inclavare-containers/enclave-tls
-make OCCLUM=1
-make install
+cd inclavare-containers/rats-tls
+cmake -DENCLAVE_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild
+make -C build install
 ```
 
 Note that the implementation of the Unix socket in Occlum is NOT complete yet. Occlum only supports the connection between the internal Unix sockets of Occlum.
 
-In addition, Occlum only provides `occlum-go` to compile go program. While the enclave-tls is compiled based on `gcc`. In practice, using `occlum-go` to compile the `enclave-tls-server` program linked with enclave-tls will generate undefined symbol errors. Therefore we provide the server and client programs in C language for functional elaboration. With the continuous development of occlum functions, this will no longer be a problem.
+In addition, Occlum only provides `occlum-go` to compile go program. While the rats-tls is compiled based on `gcc`. In practice, using `occlum-go` to compile the `enclave-tls-server` program linked with rats-tls will generate undefined symbol errors. Therefore we provide the server and client programs in C language for functional elaboration. With the continuous development of occlum functions, this will no longer be a problem.
 
-# RUN Enclave Tls with Occlum and Rune
+# RUN RATS TLS with Occlum and Rune
 
-Right now, Enclave TLS running on Occlum Libos supports the following instance types:
+Right now, RATS TLS running on Occlum Libos supports the following instance types:
 
 | Priority | Tls Wrapper instances |     Attester instances    |     Verifier instances    | Crypto Wrapper Instance |
 | -------- | --------------------- | ------------------------- | ------------------------- | ----------------------- |
