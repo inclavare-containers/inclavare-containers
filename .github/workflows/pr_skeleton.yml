@@ -164,26 +164,12 @@ jobs:
       if: ${{ contains(matrix.sgx, 'SGX1') }}
       run: docker exec $inclavare_test bash -c "rune --debug attest --isRA --quote-type=epidUnlinkable --spid=${{ secrets.SPID }} --subscription-key=${{ secrets.SUB_KEY }} skeleton-enclave-container"
 
-    - name: Kill RA containers with rune kill command
+    - uses: ./.github/actions/rune-kill
       if: ${{ contains(matrix.sgx, 'SGX1') }}
       timeout-minutes: 3
-      run: |
-        docker exec $inclavare_test bash -c "
-        status=\$(rune list 2>/dev/null | grep skeleton-enclave-container | awk '{print \$3}')
-        echo Current status: \$status
-        if [[ \$status = 'running' ]]; then
-          echo Killing RA containers...
-          rune kill skeleton-enclave-container 9
-          while true; do
-                status=\$(rune list 2>/dev/null | grep skeleton-enclave-container | awk '{print \$3}')
-                echo Current status: \$status
-                if [[ \$status = '' ]]; then
-                    echo Killing successfully
-                    break
-                fi
-                sleep 5
-          done
-        fi"
+      with:
+        container-id: ${{ env.inclavare_test }}
+        container-name: skeleton-enclave-container
 
     - name: Get target info with sgx-tools
       if: ${{ contains(matrix.sgx, 'SGX1') }}

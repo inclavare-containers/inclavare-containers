@@ -1,0 +1,31 @@
+name: 'rune_kill'
+description: 'rune_kill'
+inputs:
+  container-id:  # id of input
+    description: 'The running container id'
+    required: true
+  container-name:
+    description: 'The name of container'
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - id: rune-kill
+    run: |
+        docker exec ${{ inputs.container-id }} bash -c "
+          status=\$(rune list 2>/dev/null | grep ${{ inputs.container-name }} | awk '{print \$3}')
+          echo Current status: \$status
+          if [[ \$status = 'running' ]]; then
+            echo Killing ${{ inputs.container-name }} containers...
+            rune kill ${{ inputs.container-name }} 9
+            while true; do
+              status=\$(rune list 2>/dev/null | grep ${{ inputs.container-name }} | awk '{print \$3}')
+              echo Current status: \$status
+              if [[ \$status = '' ]]; then
+                echo Killing successfully
+                  break
+              fi
+              sleep 5
+            done
+          fi"
+    shell: bash
