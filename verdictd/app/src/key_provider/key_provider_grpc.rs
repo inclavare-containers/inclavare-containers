@@ -106,13 +106,24 @@ impl KeyProviderService for keyProviderSrv {
                 .and_then(|request| Ok(serde_json::from_str::<KeyProviderInput>(&request[..])))
                 .unwrap()
                 .and_then(|unwrap_command| Ok(unwrap_command.keyunwrapparams.annotation))
-                .unwrap();
-
+                .unwrap()
+                .ok_or("annotation is empty".to_string())
+                .and_then(|annotation| {
+                    base64::decode(annotation)
+                        .map_err(|_| "base64 decode annotation failed".to_string())
+                })
+                .and_then(|annotation| {
+                    String::from_utf8(annotation)
+                        .map_err(|_| "utf8 error".to_string())
+                });
+        
         let annotation = match annotation {
-            Some(annotation) => annotation,
-            None => {
+            Ok(annotation) => annotation,
+            Err(e) => {
                 let reply = KeyProviderKeyWrapProtocolOutput {
-                    key_provider_key_wrap_protocol_output: b"Parser failure".to_vec(),
+                    key_provider_key_wrap_protocol_output: e
+                        .as_bytes()
+                        .to_vec(),
                 };
                 return Ok(Response::new(reply));
             }
@@ -138,12 +149,14 @@ impl KeyProviderService for keyProviderSrv {
             })
             .unwrap();
 
-        let key_unwrap_results = KeyUnwrapResults {
-            optsdata: decrypted_data,
-        };
+        let key_unwrap_output = KeyUnwrapOutput {
+            keyunwrapresults: KeyUnwrapResults {
+                optsdata: decrypted_data,
+            },
+        };        
 
         let reply = KeyProviderKeyWrapProtocolOutput {
-            key_provider_key_wrap_protocol_output: serde_json::to_string(&key_unwrap_results)
+            key_provider_key_wrap_protocol_output: serde_json::to_string(&key_unwrap_output)
                 .unwrap()
                 .as_bytes()
                 .to_vec(),
