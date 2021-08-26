@@ -5,75 +5,44 @@ on: [workflow_dispatch]
 
 jobs:
   wamr_build:
-    runs-on: [self-hosted, centos, SGX1]
+    runs-on: [self-hosted, SGX1, commit]
     steps:
     - uses: actions/checkout@v1
 
     - name: Get version
-      run: wget https://raw.githubusercontent.com/occlum/occlum/master/src/pal/include/occlum_version.h;
-        echo "OCCLUM_VERSION=$(grep 'Version =' occlum_version.h | awk '{print $4}')" >> $GITHUB_ENV && rm -f occlum_version.h;
-        echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
 
     - name: Create ubuntu container
       run: docker rm -f wamr || true;
-        docker run -itd --privileged --rm --name=wamr --net host --device /dev/isgx -v $GITHUB_WORKSPACE:/root/inclavare-containers occlum/occlum:$OCCLUM_VERSION-ubuntu18.04
+        docker pull inclavarecontainers/dev:${{ env.RUNE_VERSION }}-ubuntu18.04;
+        docker tag inclavarecontainers/dev:${{ env.RUNE_VERSION }}-ubuntu18.04 inclavare-dev:ubuntu18.04;
+        docker run -itd --privileged --rm --name=wamr --net host --device /dev/isgx -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavare-dev:ubuntu18.04
 
-    - name: Prepare work
+    - name: Config git proxy
       run: |
-        docker exec wamr bash -c "apt-get update;
-        apt-get install -y proxychains4;
-        cat <<- EOF >/etc/proxychains.conf
-        strict_chain
-        [ProxyList]
-        socks5 127.0.0.1 5432
-        EOF"
+        docker exec wamr bash -c "git config --global http.proxy socks5://localhost:5432"
+        docker exec wamr bash -c "git config --global https.proxy socks5://localhost:5432"
 
-    - name: Install and configure docker
-      run: |
-        docker exec wamr bash -c "apt-get install -y apt-transport-https ca-certificates curl software-properties-common;
-        curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -;
-        add-apt-repository 'deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable';
-        apt-get update && apt-get install -y docker-ce"
-
-        docker exec wamr bash -c "mkdir -p /etc/docker;
-        cat <<- EOF >/etc/docker/daemon.json
-        {
-            \"runtimes\":{
-                \"rune\":{
-                    \"path\":\"/usr/local/bin/rune\",
-                    \"runtimeArgs\":[]
-                  }
-              },
-              \"storage-driver\":\"vfs\"
-        }
-        EOF"
-
-        docker exec wamr bash -c "service docker start"
+    - uses: ./.github/actions/start-docker-daemon
+      with:
+        container-id: wamr
+      timeout-minutes: 2
 
     - name: Build and install rune on ubuntu
-      run: docker exec wamr bash -c "apt-get update;
-         apt-get install libseccomp-dev;
-         cd /root && proxychains4 wget -t 5 https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz;
-         tar -zxvf /root/go1.14.2.linux-amd64.tar.gz -C /usr/lib;
-         echo 'export GOROOT=/usr/lib/go' >> /etc/profile;
-         echo 'export GOPATH=/root/gopath' >> /etc/profile;
-         echo 'export PATH=\$GOROOT/bin:\$PATH:\$GOPATH/bin' >> /etc/profile;
-         echo 'export GOPROXY="https://mirrors.aliyun.com/goproxy,direct"' >>/etc/profile;
-         echo 'export PKG_CONFIG_PATH=/usr/lib/pkgconfig' >>/etc/profile;
-         echo 'export GO111MODULE=on' >>/etc/profile;
-         source /etc/profile;
+      run: docker exec wamr bash -c "source /etc/profile;
          cd /root/inclavare-containers/rune && make -j${CPU_NUM} && make install -j${CPU_NUM}"
 
     - name: Build wamr application image
       run: |
-        docker exec wamr bash -c "proxychains4 git clone https://github.com/bytecodealliance/wasm-micro-runtime;
+        docker exec wamr bash -c "git clone https://github.com/bytecodealliance/wasm-micro-runtime;
         cd wasm-micro-runtime/product-mini/platforms/linux-sgx/;
-        mkdir build && cd build && cmake .. && make -j${CPU_NUM};
-        cd ../enclave-sample && make SGX_MODE=HW SGX_DEBUG=1 -j${CPU_NUM};
+        mkdir build && cd build && cmake .. && make;
+        cd ../enclave-sample && make SGX_MODE=HW SGX_DEBUG=1;
         g++ -shared -fPIC -o libwamr-pal.so App/*.o libvmlib_untrusted.a -L/opt/intel/sgxsdk/lib64 -lsgx_urts -lpthread -lssl -lcrypto;
         cp ./libwamr-pal.so /usr/lib/libwamr-pal.so;
         cd /root/wasm-micro-runtime/wamr-compiler;
-        proxychains4 ./build_llvm.sh;
+        ./build_llvm.sh;
         mkdir build && cd build;
         cmake .. && make -j${CPU_NUM};
         cp wamrc /usr/bin/wamrc"
@@ -87,7 +56,7 @@ jobs:
         }
         EOF"
 
-        docker exec wamr bash -c "proxychains4 wget -t 5 https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz;
+        docker exec wamr bash -c "wget -t 5 https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-12/wasi-sdk-12.0-linux.tar.gz;
         tar zxf wasi-sdk-12.0-linux.tar.gz -C /opt;
         mv /opt/wasi-sdk-12.0 /opt/wasi-sdk;
         cd /root/wasm-micro-runtime/product-mini/platforms/linux-sgx/enclave-sample;
