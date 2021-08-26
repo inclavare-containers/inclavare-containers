@@ -127,6 +127,8 @@ Note that the version of Linux SGX software stack must be same with the one [ins
     ```
     The content of the `image` directory is initialized by the `occlum init` command. The structure of the `image` directory mimics that of an ordinary UNIX FS, containing directories like `/bin`, `/lib`, `/root`, `/tmp`, etc. After copying the user program `hello_world` into `image/bin/`, the `image` directory is packaged by the `occlum build` command to generate a secure Occlum FS image as well as the Occlum SGX enclave.
 
+The FS image is integrity protected by default, if you want to protect the confidentiality and integrity with your own key, please check out [here](https://github.com/occlum/occlum/blob/master/docs/encrypted_image.md).
+
 - Step 6. Run the user program inside an SGX enclave via `occlum run`
     ```
     occlum run /bin/hello_world
@@ -156,6 +158,11 @@ Note that the version of Linux SGX software stack must be same with the one [ins
 
 
 ### 4. Run the "Hello World" Container
+
+If you want to run the "Hello World" Container on off-cloud signing scheme, please modify configuration as following:
+    ```bash
+    sed -i 's/server/client/g' /etc/inclavare-containers/config.toml
+    ```
 
 - Step 1. Create the "Hello World" Pod
 
