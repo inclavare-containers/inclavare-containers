@@ -37,9 +37,20 @@ def supply_chain():
   os.chdir("../functionary_alice")
   clone_cmd = ("in-toto-run"
                     " --step-name clone"
-                    " --products inclavare-containers/rbi/kata-agent/*"
+                    " --products inclavare-containers/rbi/kata-agent/Dockerfile"
+                    "  inclavare-containers/rbi/kata-agent/kata-build-docker.sh"
+                    "  inclavare-containers/rbi/kata-agent/kata-source-code.sh"
+                    "  inclavare-containers/rbi/kata-agent/kata-test.sh"
+                    "  inclavare-containers/rbi/kata-agent/patch/Cargo.lock"
+                    "  inclavare-containers/rbi/kata-agent/patch/Makefile"
+                    "  inclavare-containers/rbi/kata-agent/patch/protocols"
+                    "  inclavare-containers/rbi/kata-agent/patch/protocols/Cargo.toml"
+                    "  inclavare-containers/rbi/kata-agent/readme.md"
+                    "  inclavare-containers/rbi/kata-agent/readme_cn.md"
+                    "  inclavare-containers/rbi/kata-agent/scripts/start.sh"
+                    "  inclavare-containers/rbi/misc/check-integrity.sh"
                     " --key alice"
-                    " -- git clone https://github.com/xynnn007/inclavare-containers.git")
+                    " -- git clone https://github.com/alibaba/inclavare-containers.git")
   print(clone_cmd)
   print("This process may take a while..")
   subprocess.call(shlex.split(clone_cmd))
@@ -49,8 +60,18 @@ def supply_chain():
   copytree("../functionary_alice/inclavare-containers", "inclavare-containers")
   build_cmd = ("in-toto-run"
                     " --step-name build"
-                    " --materials inclavare-containers/rbi/kata-agent/* "
-                    " --products inclavare-containers/rbi/result/kata-agent/kata-agent"
+                    " --materials inclavare-containers/rbi/kata-agent/Dockerfile"
+                    " inclavare-containers/rbi/kata-agent/kata-build-docker.sh"
+                    " inclavare-containers/rbi/kata-agent/kata-source-code.sh"
+                    " inclavare-containers/rbi/kata-agent/kata-test.sh"
+                    " inclavare-containers/rbi/kata-agent/patch/Cargo.lock"
+                    " inclavare-containers/rbi/kata-agent/patch/Makefile"
+                    " inclavare-containers/rbi/kata-agent/patch/protocols"
+                    " inclavare-containers/rbi/kata-agent/patch/protocols/Cargo.toml"
+                    " inclavare-containers/rbi/kata-agent/readme.md"
+                    " inclavare-containers/rbi/kata-agent/readme_cn.md"
+                    " inclavare-containers/rbi/kata-agent/scripts/start.sh"
+                    " inclavare-containers/rbi/result/kata-agent/kata-agent"
                     " --key bob -- bash inclavare-containers/rbi/rbi.sh agent")
 
   print(build_cmd)
