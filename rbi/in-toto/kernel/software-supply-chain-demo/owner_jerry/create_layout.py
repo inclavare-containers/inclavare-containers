@@ -2,6 +2,8 @@ from securesystemslib import interface
 from in_toto.models.layout import Layout
 from in_toto.models.metadata import Metablock
 
+SHA256_VALUE = "f5c16c540d89b96b9a9040991d1646b46f90ec1a25fea42bd637dd978a41824b"
+
 def main():
   # Load Jerry's private key to later sign the layout
   key_jerry = interface.import_rsa_privatekey_from_file("jerry")
@@ -19,10 +21,15 @@ def main():
       "steps": [{
           "name": "clone",
           "expected_materials": [],
-          "expected_products": [[
-            "CREATE",
-            "inclavare-containers/rbi/kernel/*"
-        ]],
+          "expected_products": [
+            ["CREATE", "inclavare-containers/rbi/kernel/Dockerfile"],
+            ["CREATE", "inclavare-containers/rbi/kernel/build-docker-image.sh"],
+            ["CREATE", "inclavare-containers/rbi/kernel/build-kernel.sh"],
+            ["CREATE", "inclavare-containers/rbi/kernel/check-integrity.sh"],
+            ["CREATE", "inclavare-containers/rbi/kernel/patch/build-kernel.sh"],
+            ["CREATE", "inclavare-containers/rbi/kernel/scripts/start.sh"],
+            ["CREATE", "inclavare-containers/rbi/misc/check-integrity.sh"]
+          ],
           "pubkeys": [key_alice["keyid"]],
           "expected_command": [
               "git",
@@ -33,8 +40,13 @@ def main():
         },{
           "name": "build",
           "expected_materials": [
-            ["MATCH", "inclavare-containers/rbi/kernel/*", "WITH", "PRODUCTS", "FROM",
-             "clone"]
+            ["MATCH", "inclavare-containers/rbi/kernel/Dockerfile","WITH", "PRODUCTS", "FROM", "clone"],
+            ["MATCH", "inclavare-containers/rbi/kernel/build-docker-image.sh","WITH", "PRODUCTS", "FROM", "clone"],
+            ["MATCH", "inclavare-containers/rbi/kernel/build-kernel.sh","WITH", "PRODUCTS", "FROM", "clone"],
+            ["MATCH", "inclavare-containers/rbi/kernel/check-integrity.sh","WITH", "PRODUCTS", "FROM", "clone"],
+            ["MATCH", "inclavare-containers/rbi/kernel/patch/build-kernel.sh","WITH", "PRODUCTS", "FROM", "clone"],
+            ["MATCH", "inclavare-containers/rbi/kernel/readme.md","WITH", "PRODUCTS", "FROM", "clone"],
+            ["MATCH", "inclavare-containers/rbi/kernel/scripts/start.sh","WITH", "PRODUCTS", "FROM", "clone"]
           ],
           "expected_products": [
               ["CREATE", "inclavare-containers/rbi/result/kernel/vmlinux"],
@@ -50,23 +62,24 @@ def main():
       "inspect": [{
           "name": "integrity",
           "expected_materials": [
-              ["MATCH", "inclavare-containers/rbi/result/*", "WITH", "PRODUCTS", "FROM", "build"],
-              # FIXME: If the routine running inspections would gather the
-              # materials/products to record from the rules we wouldn't have to
-              # ALLOW other files that we aren't interested in.
+              ["MATCH", "inclavare-containers/rbi/result/kernel/vmlinux", "WITH", "PRODUCTS", "FROM", "build"],
+              ["MATCH", "inclavare-containers/rbi/misc/check-integrity.sh", "WITH", "PRODUCTS", "FROM", "clone"],
               ["ALLOW", "jerry.pub"],
-              ["ALLOW", "root.layout"]
+              ["ALLOW", "root.layout"],
+              ["ALLOW", ".keep"]
           ],
           "expected_products": [
               ["CREATE", "inclavare-containers/rbi/result/kernel/.check_done"],
               # FIXME: See expected_materials above
               ["ALLOW", "jerry.pub"],
-              ["ALLOW", "root.layout"]
+              ["ALLOW", "root.layout"],
+              ["ALLOW", ".keep"]
           ],
           "run": [
               "bash",
-              "inclavare-containers/rbi/kernel/check-integrity.sh",
-              "inclavare-containers/rbi/result/kernel/vmlinux"
+              "inclavare-containers/rbi/misc/check-integrity.sh",
+              "inclavare-containers/rbi/result/kernel/vmlinux",
+              SHA256_VALUE
           ]
         }],
   })
