@@ -10,7 +10,7 @@
 #include <enclave-tls/attester.h>
 #include "internal/core.h"
 
-#define ENCLAVE_ATTESTERS_DIR "/opt/enclave-tls/lib/attesters/"
+#define ENCLAVE_ATTESTERS_DIR "/usr/local/lib/enclave-tls/attesters/"
 
 extern enclave_tls_err_t etls_enclave_attester_load_all(void);
 extern enclave_tls_err_t etls_enclave_attester_load_single(const char *);
