@@ -37,7 +37,13 @@ def supply_chain():
   os.chdir("../functionary_alice")
   clone_cmd = ("in-toto-run"
                     " --step-name clone"
-                    " --products inclavare-containers/rbi/kernel/*"
+                    " --products inclavare-containers/rbi/kernel/Dockerfile"
+                    " inclavare-containers/rbi/kernel/build-docker-image.sh"
+                    " inclavare-containers/rbi/kernel/build-kernel.sh"
+                    " inclavare-containers/rbi/kernel/check-integrity.sh"
+                    " inclavare-containers/rbi/kernel/patch/build-kernel.sh"
+                    " inclavare-containers/rbi/kernel/scripts/start.sh"
+                    " inclavare-containers/rbi/misc/check-integrity.sh"
                     " --key alice"
                     " -- git clone https://github.com/alibaba/inclavare-containers.git")
   print(clone_cmd)
@@ -49,7 +55,13 @@ def supply_chain():
   copytree("../functionary_alice/inclavare-containers", "inclavare-containers")
   build_cmd = ("in-toto-run"
                     " --step-name build"
-                    " --materials inclavare-containers/rbi/kernel/* "
+                    " --materials inclavare-containers/rbi/kernel/Dockerfile"
+                    " inclavare-containers/rbi/kernel/build-docker-image.sh"
+                    " inclavare-containers/rbi/kernel/build-kernel.sh"
+                    " inclavare-containers/rbi/kernel/check-integrity.sh"
+                    " inclavare-containers/rbi/kernel/patch/build-kernel.sh"
+                    " inclavare-containers/rbi/kernel/scripts/start.sh"
+                    " inclavare-containers/rbi/misc/check-integrity.sh"
                     " --products inclavare-containers/rbi/result/kernel/vmlinux"
                     " --key bob -- bash inclavare-containers/rbi/rbi.sh kernel")
 
@@ -62,9 +74,9 @@ def supply_chain():
   copyfile("owner_jerry/root.layout", "final_product/root.layout")
   copyfile("functionary_alice/clone.3b1a98aa.link", "final_product/clone.3b1a98aa.link")
   copyfile("functionary_bob/build.f6701b1e.link", "final_product/build.f6701b1e.link")
-  pathlib.Path("final_product/inclavare-containers/rbi/kernel").mkdir(parents = True, exist_ok = True)
+  pathlib.Path("final_product/inclavare-containers/rbi/misc").mkdir(parents = True, exist_ok = True)
   pathlib.Path("final_product/inclavare-containers/rbi/result/kernel").mkdir(parents = True, exist_ok = True)
-  copyfile("functionary_bob/inclavare-containers/rbi/kernel/check-integrity.sh", "final_product/inclavare-containers/rbi/kernel/check-integrity.sh")
+  copyfile("functionary_bob/inclavare-containers/rbi/misc/check-integrity.sh", "final_product/inclavare-containers/rbi/misc/check-integrity.sh")
   copyfile("functionary_bob/inclavare-containers/rbi/result/kernel/vmlinux", "final_product/inclavare-containers/rbi/result/kernel/vmlinux")
 
   prompt_key("Verify final product (client)")
