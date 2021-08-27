@@ -93,6 +93,7 @@ int enclave_tls_client_startup(enclave_tls_log_level_t log_level, char *attester
 	strcpy(conf.verifier_type, verifier_type);
 	strcpy(conf.tls_type, tls_type);
 	strcpy(conf.crypto_type, crypto_type);
+	conf.cert_algo = ENCLAVE_TLS_CERT_ALGO_DEFAULT;
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
