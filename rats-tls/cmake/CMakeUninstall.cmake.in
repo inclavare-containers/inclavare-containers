@@ -20,12 +20,23 @@ foreach(file ${files})
     endif()
 endforeach()
 
-if(EXISTS "@ENCLAVE_TLS_INSTALL_PATH@")
-        exec_program("rm" ARGS "-rf  @ENCLAVE_TLS_INSTALL_PATH@"
+if(EXISTS "@ENCLAVE_TLS_INSTALL_LIB_PATH@")
+        exec_program("rm" ARGS "-rf  @ENCLAVE_TLS_INSTALL_LIB_PATH@"
                 OUTPUT_VARIABLE rm_out
                 RETURN_VALUE rm_retval
                 )
                 if(NOT "${rm_retval}" STREQUAL 0)
-                        message(FATAL_ERROR "Problem when removing @ENCLAVE_TLS_INSTALL_PATH@")
+                        message(FATAL_ERROR "Problem when removing @ENCLAVE_TLS_INSTALL_LIB_PATH@")
                 endif()
 endif()
+
+if(EXISTS "@ENCLAVE_TLS_INSTALL_INCLUDE_PATH@")
+        exec_program("rm" ARGS "-rf  @ENCLAVE_TLS_INSTALL_INCLUDE_PATH@"
+                OUTPUT_VARIABLE rm_out
+                RETURN_VALUE rm_retval
+                )
+                if(NOT "${rm_retval}" STREQUAL 0)
+                        message(FATAL_ERROR "Problem when removing @ENCLAVE_TLS_INSTALL_INCLUDE_PATH@")
+                endif()
+endif()
+

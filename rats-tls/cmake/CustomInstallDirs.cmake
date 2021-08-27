@@ -1,23 +1,23 @@
-# enclave_tls
-set(ENCLAVE_TLS_INSTALL_PATH "/opt/enclave-tls")
+# /usr/local
+set(ENCLAVE_TLS_INSTALL_PATH "/usr/local")
 
-# encalve_tls/lib
-set(ENCLAVE_TLS_INSTALL_LIB_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib")
+# lib/enclave_tls
+set(ENCLAVE_TLS_INSTALL_LIB_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib/enclave-tls")
 
-# enclave_tls/lib/crypto-wrappers
-set(ENCLAVE_TLS_INSTALL_LIBCW_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib/crypto-wrappers")
+# enclave_tls/crypto-wrappers
+set(ENCLAVE_TLS_INSTALL_LIBCW_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/crypto-wrappers")
 
-# enclave_tls/lib/attesters
-set(ENCLAVE_TLS_INSTALL_LIBA_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib/attesters")
+# enclave_tls/attesters
+set(ENCLAVE_TLS_INSTALL_LIBA_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/attesters")
 
-# enclave_tls/lib/verifiers
-set(ENCLAVE_TLS_INSTALL_LIBV_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib/verifiers")
+# enclave_tls/verifiers
+set(ENCLAVE_TLS_INSTALL_LIBV_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/verifiers")
 
-# enclave_tls/lib/tls-wrappers
-set(ENCLAVE_TLS_INSTALL_LIBTW_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib/tls-wrappers")
+# enclave_tls/tls-wrappers
+set(ENCLAVE_TLS_INSTALL_LIBTW_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/tls-wrappers")
 
-# enclave_tls/include
-set(ENCLAVE_TLS_INSTALL_INCLUDE_PATH "${ENCLAVE_TLS_INSTALL_PATH}/include")
+# include/enclave_tls
+set(ENCLAVE_TLS_INSTALL_INCLUDE_PATH "${ENCLAVE_TLS_INSTALL_PATH}/include/enclave-tls")
 
 # enclave_tls/sample
 set(ENCLAVE_TLS_INSTALL_BIN_PATH "/usr/share/enclave-tls/samples")
