@@ -13,9 +13,8 @@
 #include <enclave-tls/err.h>
 #include <enclave-tls/log.h>
 #include "internal/attester.h"
-#ifdef OCCLUM
 #define PATTERN_SUFFIX ".so"
-#elif defined(SGX)
+#ifdef SGX
 #include <sgx_error.h>
 #include "etls_t.h"
 #define DT_REG 8
@@ -43,13 +42,15 @@ enclave_tls_err_t etls_enclave_attester_load_all(void)
 	while ((etls_readdir(dir, &ptr)) != 1) {
 		if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, ".."))
 			continue;
+		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)))
+			continue;
 
 #ifdef OCCLUM
 		/* Occlum can't identify the d_type of the file, always return DT_UNKNOWN */
 		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX),
 			    PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)) == 0) {
 #else
-		if (ptr->d_type == DT_REG) {
+		if (ptr->d_type == DT_REG || ptr->d_type == DT_LNK) {
 #endif
 			if (etls_enclave_attester_load_single(ptr->d_name) == ENCLAVE_TLS_ERR_NONE)
 				++total_loaded;
