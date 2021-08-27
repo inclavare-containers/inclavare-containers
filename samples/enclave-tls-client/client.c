@@ -210,7 +210,13 @@ err:
 
 int main(int argc, char **argv)
 {
-	ETLS_INFO("    - Welcome to Enclave-TLS sample client program\n");
+#ifdef SGX
+	printf("    - Welcome to Enclave-TLS sample client program for Intel SGX\n");
+#elif defined(OCCLUM)
+	printf("    - Welcome to Enclave-TLS sample client program for Occlum\n");
+#else
+	printf("    - Welcome to Enclave-TLS sample client program\n");
+#endif
 
 	char *const short_options = "a:v:t:c:ml:i:p:D:h";
 	// clang-format off
