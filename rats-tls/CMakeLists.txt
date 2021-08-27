@@ -7,10 +7,12 @@ set(ETLS_LIB enclave_tls)
 set(ETLS_SRC_PATH ${CMAKE_CURRENT_LIST_DIR})
 
 # Software version
-set(VERSION "0.1.0")
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 0)
+file(STRINGS "VERSION" RATS_TLS_VERSION)
+set(VERSION ${RATS_TLS_VERSION})
+string(REPLACE "." ";" VERSION_LIST ${RATS_TLS_VERSION})
+list(GET VERSION_LIST 0 VERSION_MAJOR)
+list(GET VERSION_LIST 1 VERSION_MINOR)
+list(GET VERSION_LIST 2 VERSION_PATCH)
 
 # Build options
 option(BUILD_SAMPLES "Compile sample code along with libraries" ON)
