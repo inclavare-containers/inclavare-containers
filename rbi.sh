@@ -41,7 +41,7 @@ KERNEL_OUTPUT_DIR=$RESULT_DIR/kernel
 
 BIOS_IMAGE=bios-256k-rbci
 BIOS_IMAGE_BUILDER=$SCRIPT_DIR/bios-256k/build-docker-image.sh
-BIOS_CODE_DIR=bios-256k
+BIOS_CODE_DIR=$SCRIPT_DIR/bios-256k
 BIOS_BUILDER=$SCRIPT_DIR/bios-256k/build-bios.sh
 BIOS_OUTPUT=$RESULT_DIR/bios
 
@@ -123,6 +123,7 @@ Options:
   kernel-rbi        Make linux kernel's RBCI.
   kernel-build      Build linux kernel and check artifest's sha256 hash.
 
+  bios              Generate BIOS file.
   bios-rbi          Make bios-256k.bin's RBCI, named 'bios-256k-rbci'.
   bios-build        Build bios-256k.bin, using image 'bios-256k-rbci'.
 
@@ -286,8 +287,20 @@ kernel_build() {
     $KERNEL_BUILDER $KERNEL_SOURCE_DIR $KERNEL_OUTPUT_DIR
 }
 
+bios() {
+    bios_rbi
+
+    bios_build
+}
+
 bios_rbi() {
-    info "Build RBCI for bios..."
+    image_already=`sudo docker images| grep $BIOS_IMAGE | awk {'print $1'}`
+    if [ "$image_already" = "$BIOS_IMAGE" ]; then
+        info "Detected image already exists."
+        exit
+    fi
+
+    info "Build docker image for kernel RBC"
     $BIOS_IMAGE_BUILDER
 }
 
@@ -349,6 +362,9 @@ main() {
         ;;
     kernel-build)
         kernel_build
+        ;;
+    bios)
+        bios
         ;;
     bios-rbi)
         bios_rbi
