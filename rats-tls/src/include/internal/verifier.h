@@ -10,7 +10,7 @@
 #include <enclave-tls/verifier.h>
 #include "internal/core.h"
 
-#define ENCLAVE_VERIFIERS_DIR "/opt/enclave-tls/lib/verifiers/"
+#define ENCLAVE_VERIFIERS_DIR "/usr/local/lib/enclave-tls/verifiers/"
 
 extern enclave_tls_err_t etls_enclave_verifier_load_all(void);
 extern enclave_tls_err_t etls_enclave_verifier_load_single(const char *);

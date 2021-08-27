@@ -10,7 +10,7 @@
 #include <enclave-tls/tls_wrapper.h>
 #include "internal/core.h"
 
-#define TLS_WRAPPERS_DIR "/opt/enclave-tls/lib/tls-wrappers/"
+#define TLS_WRAPPERS_DIR "/usr/local/lib/enclave-tls/tls-wrappers/"
 
 extern enclave_tls_err_t etls_tls_wrapper_load_all(void);
 extern enclave_tls_err_t etls_tls_wrapper_load_single(const char *);
