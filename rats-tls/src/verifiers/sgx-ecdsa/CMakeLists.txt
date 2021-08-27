@@ -45,6 +45,7 @@ if(SGX)
 else()
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
     target_link_libraries(${PROJECT_NAME} ${EXTRA_LINK_LIBRARY} ${ENCLAVE_TLS_LDFLAGS} ${ETLS_LIB})
+    set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
     # Install library
     install(TARGETS ${PROJECT_NAME}
             DESTINATION ${ENCLAVE_TLS_INSTALL_LIBV_PATH})
