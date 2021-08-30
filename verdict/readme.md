@@ -1,14 +1,18 @@
 # Verdict
 
-A simple command line tool for issuing and exporting policies.
+A simple command line tool for issuing and exporting policies, currently only used as a preliminary alternative implementation of `Verdict`. The reference value should come from Reproducible Build Infrastructure (RBI), but this item is not reflected in the current implementation.
 
-Mainly provide the following functions：
+Currently, `Verdict` is a binary package written in Rust and also a CLT. Mainly provide the following functions:
 
 * Pass the reference value to "verdictd" to complete the policy generation.
 * Send the prepared policy file directly to "verdictd".
 * Export the "verdictd" policy file to the local.
 
 ## Usage
+
+You can use `cargo build --release` to compile this project and place the generated executable file in the `/bin` directory.
+
+The basic usage is as follows.
 
 ```bash
 verdict [OPTIONS]
