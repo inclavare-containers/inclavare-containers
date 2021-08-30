@@ -135,7 +135,7 @@ In the early bootstrap of enclave-tls, the debug message is mute by default. In 
 
 ## Occlum LibOS
 
-Please refer to [this guide](docs/run_enclave_tls_with_occlum.md) to run Enclave Tls with [Occlum](https://github.com/occlum/occlum) and [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune).
+Please refer to [this guide](docs/run_rats_tls_with_occlum.md) to run Enclave Tls with [Occlum](https://github.com/occlum/occlum) and [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune).
 
 ## Non-SGX Enviroment
 
