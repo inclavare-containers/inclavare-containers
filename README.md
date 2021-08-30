@@ -52,8 +52,8 @@ Inclavare Containers implements Enclave Attestation Architecture (EAA), a univer
 
 The major components of EAA are:
 
-- [Enclave-TLS](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)  
-  `Enclave-TLS` enhances the standard TLS to support the trusted communications between heterogeneous hardware TEEs based on confidential computing technology, which is evolved from the [ra-tls (deprecated)](https://github.com/alibaba/inclavare-containers/tree/master/ra-tls). Even a non-hardware TEE platforms using `Enclave-TLS` can communicate with a hardware TEE, e.g, SGX Enclave, through the attested and secured channel to transmit the sensitive information. In other words, the boundary of TCB is extended from execution environment to network transmission with `Enclave-TLS`. In addition, `Enclave-TLS` has an extensible model to support various hardware TEE.
+- [Rats-TLS](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls) 
+  `Rats-TLS` enhances the standard TLS to support the trusted communications between heterogeneous hardware TEEs based on confidential computing technology, which is evolved from the [ra-tls (deprecated)](https://github.com/alibaba/inclavare-containers/tree/master/ra-tls). Even a non-hardware TEE platforms using `Rats-TLS` can communicate with a hardware TEE, e.g, SGX Enclave, through the attested and secured channel to transmit the sensitive information. In other words, the boundary of TCB is extended from execution environment to network transmission with `Rats-TLS`. In addition, `Rats-TLS` has an extensible model to support various hardware TEE. Refer to [this design doc](rats-tls/docs/design/design.md) for more details.
 
 - Confidential Container  
   Confidential container in the form of the enclave runtime `Occlum` responds to the request from `Inclavared`, and then sends back the attestation evidence of confidential container to `Inclavared`. Confidential container plays the role of the attester.

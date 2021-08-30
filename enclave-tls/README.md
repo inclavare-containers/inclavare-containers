@@ -1,3 +1,8 @@
+# Introduction
+
+[Enclave-TLS](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)  
+  `Enclave-TLS` enhances the standard TLS to support the trusted communications between heterogeneous hardware TEEs based on confidential computing technology, which is evolved from the [ra-tls (deprecated)](https://github.com/alibaba/inclavare-containers/tree/master/ra-tls). Even a non-hardware TEE platforms using `Enclave-TLS` can communicate with a hardware TEE, e.g, SGX Enclave, through the attested and secured channel to transmit the sensitive information. In other words, the boundary of TCB is extended from execution environment to network transmission with `Enclave-TLS`. In addition, `Enclave-TLS` has an extensible model to support various hardware TEE. Refer to [this design doc](docs/design/design.md) for more details.
+
 # Building
 
 ## Build Requirements
@@ -12,6 +17,7 @@
 - [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the packages from this [page](https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro).
   - centos 8.2: `libsgx-dcap-quote-verify-devel`, `libsgx-dcap-ql-devel`, `libsgx-uae-service`
   - ubuntu 18.04: `libsgx-dcap-quote-verify-dev`, `libsgx-dcap-ql-dev`, `libsgx-uae-service`
+
 
 ## Build and Install
 
