@@ -25,7 +25,7 @@ enclave-tls:
 	cd $(PROJDIR)/rats-tls && cmake -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install
 
 $(App_Name): opa enclave-tls $(App_SRC_Files)
-	@cd app && RUSTFLAGS="-C link-args=-Wl,-rpath=/opt/enclave-tls/lib:/usr/local/lib:$(PROJDIR)/verdictd/lib,--enable-new-dtags" cargo build $(App_Rust_Flags)
+	@cd app && RUSTFLAGS="-C link-args=-Wl,-rpath=/usr/local/lib/enclave-tls:/usr/local/lib:$(PROJDIR)/verdictd/lib,--enable-new-dtags" cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 	mkdir -p bin lib
 	cp $(App_Rust_Path)/$(App_Name) $(TOP_DIR)/bin
