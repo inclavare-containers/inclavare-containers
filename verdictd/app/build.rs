@@ -1,5 +1,5 @@
 fn main() -> shadow_rs::SdResult<()> {
-    println!("cargo:rustc-link-search=native=/opt/enclave-tls/lib");
+    println!("cargo:rustc-link-search=native=/usr/local/lib/enclave-tls");
     println!("cargo:rustc-link-lib=dylib=enclave_tls");
 
     println!("cargo:rustc-link-search=native=./src/policyEngine/opa");
