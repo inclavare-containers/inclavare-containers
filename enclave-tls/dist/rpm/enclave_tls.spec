@@ -23,7 +23,7 @@
 %global ENCLAVE_TLS_INCDIR /opt/enclave-tls/include
 
 Name: enclave-tls
-Version: 0.6.2
+Version: 0.6.3
 Release: %{centos_base_release}%{?dist}
 Summary: enclave-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.
 
@@ -84,6 +84,9 @@ rm -rf %{ENCLAVE_TLS_ROOTDIR} $(dirname %{ENCLAVE_TLS_BINDIR})
 %{ENCLAVE_TLS_LIBDIR}/verifiers/libverifier*.so*
 
 %changelog
+* Mon Aug 30 2021 Liang Yang <liang3.yang@intel.com> - 0.6.3
+- Update to version 0.6.3.
+
 * Wed Jun 30 2021 Liang Yang <liang3.yang@intel.com> - 0.6.2
 - Update to version 0.6.2.
 
