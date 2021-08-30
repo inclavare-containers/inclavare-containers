@@ -153,7 +153,7 @@ Enclave-TLS的工作流程主要分为初始化与运行两个阶段。
 
 核心库`libenclave_tls.so`的构造函数核心代码如上图所示，会以此加载`/opt/enclave-tls/lib`下的所有Crypto Wrapper 实例，Enclave Attester 实例 ，Enclave Verifier 实例和TLS Wrapper实例 。四类实例的加载过程逻辑一致，如下图所示：
 
-![initialization.png](initialization.png) 
+![initialization.png](initialization.png)
 
 以加载Crypto Wrapper 为例，具体流程如下：
 - 调用`etls_crypto_wrapper_load_all()`尝试加载`/opt/enclave-tls/lib/crypto-wrappers`目录下的所有Crypto Wrapper实例。
@@ -173,12 +173,12 @@ Enclave-TLS的工作流程主要分为初始化与运行两个阶段。
 ![enclave\_tls\_init.png](enclave_tls_init.png)
 
 2. Enclave TLS应用调用Enclave TLS API `enclave_tls_negotiate()`启动Enclave TLS协商。
-- 对于开启了双向认证支持的客户端以及TLS服务端来说，需要调用`etls_core_generate_certificate()`创建Enclave TLS证书 
+- 对于开启了双向认证支持的客户端以及TLS服务端来说，需要调用`etls_core_generate_certificate()`创建Enclave TLS证书
   - 调用Crypto Wrapperr实例的`gen_privkey`和`gen_pubkey_hash`方法生成新的key pair和公钥的摘要值
   - 调用Enclave Attester实例的`collect_evidence`方法收集当前平台的证明材料
   - 调用Crypto Wrapper实例的`gen_cert`方法生成TLS证书
   - 调用TLS Wrapper实例的`use_privkey`和`use_cert`方法将私钥和证书加载到tls wrapper上下文
-- 调用TLS Wrapper实例的`negotiate`方法 
+- 调用TLS Wrapper实例的`negotiate`方法
   - 设置验证TLS证书的验证回调函数。
   - 在进行TLS握手阶段，TLS库调用验证TLS证书的回调函数
     - 调用对应的Enclave Verifier实例的`verify_evidence`方法验证证书。
@@ -243,7 +243,7 @@ tls_wrapper_err_t tls_wrapper_register(const tls_wrapper_opts_t *opts);
 ```c
 typedef struct {
 	uint8_t api_version;
-	unsigned long flags; 
+	unsigned long flags;
 	const char name[ENCLAVE_ATTESTER_TYPE_NAME_SIZE];
 	/* Different attester instances may generate the same format of attester,
 	 * e.g, sgx_ecdsa and sgx_ecdsa_qve both generate the format "sgx_ecdsa".
@@ -317,10 +317,10 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 
 ```c
 typedef struct {
-	uint8_t api_version; 
-	unsigned long flags; 
-	const char name[CRYPTO_TYPE_NAME_SIZE]; 
-	uint8_t priority;  // The higher the value, the higher the priority 
+	uint8_t api_version;
+	unsigned long flags;
+	const char name[CRYPTO_TYPE_NAME_SIZE];
+	uint8_t priority;  // The higher the value, the higher the priority
 
 	// Detect whether the current crypto wrapper can run in the current environment
 	crypto_wrapper_err_t (*pre_init)(void);
@@ -354,6 +354,6 @@ Enclave-TLS主要应用于Enclave 证明架构 (EAA)。EAA是针对云场景的�
 
 # 参考文献
 
-[1] https://confidentialcomputing.io/wp-content/uploads/sites/85/2021/03/confidentialcomputing_outreach_whitepaper-8-5x11-1.pdf  
-[2] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4562&rep=rep1&type=pdf  
+[1] https://confidentialcomputing.io/wp-content/uploads/sites/85/2021/03/confidentialcomputing_outreach_whitepaper-8-5x11-1.pdf
+[2] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4562&rep=rep1&type=pdf
 [3] https://arxiv.org/ftp/arxiv/papers/1801/1801.05863.pdf
