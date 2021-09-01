@@ -1,4 +1,4 @@
-module opaEngine.go
+module opa_engine.go
 
 go 1.16
 

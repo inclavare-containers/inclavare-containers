@@ -10,7 +10,7 @@ use configureProvider::{SetRawPolicyRequest, SetRawPolicyResponse};
 use configureProvider::{ExportPolicyRequest, ExportPolicyResponse};
 
 use crate::key_manager::directory_key_manager;
-use crate::policyEngine;
+use crate::policy_engine;
 use rand::*;
 use tonic::{transport::Server, Request, Response, Status};
 use uuid::Uuid;
@@ -104,7 +104,7 @@ impl ConfigureProviderService for configProviderService {
                 &empty
             });
             
-        let res = policyEngine::opa::opaEngine::set_reference(policyname, references)
+        let res = policy_engine::opa::opa_engine::set_reference(policyname, references)
             .and_then(|_| {
                 let res = SetPolicyResponse {
                     status: "OK".as_bytes().to_vec(),
@@ -137,7 +137,7 @@ impl ConfigureProviderService for configProviderService {
                 &empty
             });
 
-        let res = policyEngine::opa::opaEngine::set_raw_policy(policyname, policycontent)
+        let res = policy_engine::opa::opa_engine::set_raw_policy(policyname, policycontent)
             .and_then(|_| {
                 let res = SetRawPolicyResponse {
                     status: "OK".as_bytes().to_vec(),
@@ -163,7 +163,7 @@ impl ConfigureProviderService for configProviderService {
                 "".to_string()
             });
 
-        let res = policyEngine::opa::opaEngine::export_policy(&policyname)
+        let res = policy_engine::opa::opa_engine::export_policy(&policyname)
             .and_then(|content| {
                 let res = ExportPolicyResponse {
                     status: "OK".as_bytes().to_vec(),

@@ -35,16 +35,9 @@ jobs:
           source /root/.bashrc && make && make install && make clean &&
             make SGX=1 && make clean && make OCCLUM=1
 
-      - name: Compile "verdict"
-        run: 
-          cd verdict;
-          source /root/.bashrc && make && make install && make clean
-        env:
-          HOME: /root
-
-      - name: Compile "verdictd"
+      - name: Compile "eaa"
         run:  
-          cd verdictd;
+          cd eaa;
           source /root/.bashrc && make && make install && make clean
         env:
           HOME: /root

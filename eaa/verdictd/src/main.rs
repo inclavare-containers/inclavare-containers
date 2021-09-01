@@ -13,7 +13,7 @@ mod crypto;
 mod enclave_tls;
 mod key_manager;
 mod key_provider;
-mod policyEngine;
+mod policy_engine;
 
 shadow!(build);
 
@@ -40,7 +40,7 @@ fn set_default_policy() -> Result<(), String> {
                 ">=": 1
             },
         });
-        policyEngine::opa::opaEngine::set_reference("attestation.rego", &reference.to_string())
+        policy_engine::opa::opa_engine::set_reference("attestation.rego", &reference.to_string())
             .map_err(|e| format!("Set attestation.rego policy failed with error {:?}", e))?;
     }
 

@@ -2,7 +2,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-use crate::policyEngine::opa::opaEngine::*;
+use crate::policy_engine::opa::opa_engine::*;
 use base64;
 use foreign_types::{ForeignType, ForeignTypeRef, Opaque};
 use std::ops::{Deref, DerefMut};
