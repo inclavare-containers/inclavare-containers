@@ -1,9 +1,11 @@
-# Normal and occlum mode
+# Normal, occlum and sev modes
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -fPIC")
 set(RATS_TLS_LDFLAGS "-fPIC -Bsymbolic -ldl")
 
 if(OCCLUM)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOCCLUM")
+else(SEV)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSEV")
 endif()
 
 if(DEBUG)

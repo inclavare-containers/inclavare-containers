@@ -35,6 +35,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #  normal: NORMAL
 #  occlum: OCCLUM
 #  sgx: SGX
+#  sev: SEV
 if(RATS_TLS_BUILD_MODE STREQUAL "host")
     set(HOST 1)
     add_definitions(-DHOST)
@@ -54,6 +55,9 @@ elseif(RATS_TLS_BUILD_MODE STREQUAL "sgx")
 elseif(RATS_TLS_BUILD_MODE STREQUAL "tdx")
     set(TDX 1)
     add_definitions(-DTDX)
+elseif(RATS_TLS_BUILD_MODE STREQUAL "sev")
+    set(SEV 1)
+    add_definitions(-DSEV)
 else()
     message(FATAL_ERROR "Invalid build mode!")
 endif()
