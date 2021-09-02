@@ -13,5 +13,6 @@
 #define ecdsa_quote_oid		 "1.2.840.113741.1337.6"
 #define la_report_oid		 "1.2.840.113741.1337.14"
 #define tdx_quote_oid		 "1.2.840.113741.1337.8"
+#define sev_report_oid		 "1.2.840.113741.1337.18"
 
 #endif
