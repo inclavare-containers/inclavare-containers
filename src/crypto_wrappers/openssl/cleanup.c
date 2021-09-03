@@ -5,13 +5,13 @@
  */
 
 #include <stdlib.h>
-#include <enclave-tls/log.h>
-#include <enclave-tls/crypto_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/crypto_wrapper.h>
 #include "openssl.h"
 
 crypto_wrapper_err_t openssl_cleanup(crypto_wrapper_ctx_t *ctx)
 {
-	ETLS_DEBUG("ctx %p\n", ctx);
+	RTLS_DEBUG("ctx %p\n", ctx);
 
 	openssl_ctx *octx = ctx->crypto_private;
 

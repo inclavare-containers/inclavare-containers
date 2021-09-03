@@ -6,8 +6,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <enclave-tls/err.h>
-#include <enclave-tls/log.h>
+#include <rats-tls/err.h>
+#include <rats-tls/log.h>
 #include "internal/verifier.h"
 
 enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *opts)
@@ -15,7 +15,7 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 	if (!opts)
 		return -ENCLAVE_VERIFIER_ERR_INVALID;
 
-	ETLS_DEBUG("registering the enclave verifier '%s' ...\n", opts->name);
+	RTLS_DEBUG("registering the enclave verifier '%s' ...\n", opts->name);
 
 	enclave_verifier_opts_t *new_opts = (enclave_verifier_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
@@ -24,17 +24,17 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 	memcpy(new_opts, opts, sizeof(*new_opts));
 
 	if ((new_opts->name[0] == '\0') || (strlen(new_opts->name) >= sizeof(new_opts->name))) {
-		ETLS_ERR("invalid enclave verifier name\n");
+		RTLS_ERR("invalid enclave verifier name\n");
 		goto err;
 	}
 
 	if (strlen(new_opts->type) >= sizeof(new_opts->type)) {
-		ETLS_ERR("invalid enclave verifier type\n");
+		RTLS_ERR("invalid enclave verifier type\n");
 		goto err;
 	}
 
 	if (new_opts->api_version > ENCLAVE_VERIFIER_API_VERSION_MAX) {
-		ETLS_ERR("unsupported enclave verifier api version %d > %d\n",
+		RTLS_ERR("unsupported enclave verifier api version %d > %d\n",
 			 new_opts->api_version, ENCLAVE_VERIFIER_API_VERSION_MAX);
 		goto err;
 	}
@@ -45,7 +45,7 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 
 	enclave_verifiers_opts[registerd_enclave_verifier_nums++] = new_opts;
 
-	ETLS_INFO("the enclave verifier '%s' registered with type '%s'\n", new_opts->name,
+	RTLS_INFO("the enclave verifier '%s' registered with type '%s'\n", new_opts->name,
 		  new_opts->type);
 
 	return ENCLAVE_VERIFIER_ERR_NONE;

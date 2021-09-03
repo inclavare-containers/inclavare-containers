@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/tls_wrapper.h>
-#include <enclave-tls/log.h>
-#include <enclave-tls/cert.h>
+#include <rats-tls/tls_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/cert.h>
 
 extern tls_wrapper_err_t openssl_tls_pre_init(void);
 extern tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *);
 extern tls_wrapper_err_t openssl_tls_use_privkey(tls_wrapper_ctx_t *ctx,
-						 enclave_tls_cert_algo_t algo, void *privkey_buf,
+						 rats_tls_cert_algo_t algo, void *privkey_buf,
 						 size_t privkey_len);
 extern tls_wrapper_err_t openssl_tls_use_cert(tls_wrapper_ctx_t *ctx,
-					      enclave_tls_cert_info_t *cert_info);
+					      rats_tls_cert_info_t *cert_info);
 extern tls_wrapper_err_t openssl_tls_negotiate(tls_wrapper_ctx_t *, int fd);
 extern tls_wrapper_err_t openssl_tls_transmit(tls_wrapper_ctx_t *, void *, size_t *);
 extern tls_wrapper_err_t openssl_tls_receive(tls_wrapper_ctx_t *, void *, size_t *);
@@ -40,9 +40,9 @@ void libtls_wrapper_openssl_init(void)
 void __attribute__((constructor)) libtls_wrapper_openssl_init(void)
 #endif
 {
-	ETLS_DEBUG("called\n");
+	RTLS_DEBUG("called\n");
 
 	tls_wrapper_err_t err = tls_wrapper_register(&openssl_opts);
 	if (err != TLS_WRAPPER_ERR_NONE)
-		ETLS_ERR("failed to register the tls wrapper 'openssl' %#x\n", err);
+		RTLS_ERR("failed to register the tls wrapper 'openssl' %#x\n", err);
 }

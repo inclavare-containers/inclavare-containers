@@ -38,6 +38,6 @@ static inline void print_openssl_err(SSL *ssl, int ret)
 	int err = SSL_get_error(ssl, ret);
 	ERR_error_string((unsigned long)err, buf);
 
-	ETLS_DEBUG("%s (err = %d)\n", buf, err);
+	RTLS_DEBUG("%s (err = %d)\n", buf, err);
 }
 #endif

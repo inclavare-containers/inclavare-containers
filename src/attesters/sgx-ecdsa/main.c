@@ -5,18 +5,18 @@
  */
 
 #include <stdio.h>
-#include <enclave-tls/attester.h>
-#include <enclave-tls/log.h>
+#include <rats-tls/attester.h>
+#include <rats-tls/log.h>
 
 extern enclave_attester_err_t enclave_attester_register(enclave_attester_opts_t *opts);
 extern enclave_attester_err_t sgx_ecdsa_attester_pre_init(void);
 extern enclave_attester_err_t sgx_ecdsa_attester_init(enclave_attester_ctx_t *ctx,
-						      enclave_tls_cert_algo_t algo);
+						      rats_tls_cert_algo_t algo);
 //extern enclave_attester_err_t null_extend_cert(enclave_attester_ctx_t *ctx,
-//					      const enclave_tls_cert_info_t *cert_info);
+//					      const rats_tls_cert_info_t *cert_info);
 extern enclave_attester_err_t sgx_ecdsa_collect_evidence(enclave_attester_ctx_t *ctx,
 							 attestation_evidence_t *evidence,
-							 enclave_tls_cert_algo_t algo,
+							 rats_tls_cert_algo_t algo,
 							 uint8_t *hash);
 extern enclave_attester_err_t sgx_ecdsa_attester_cleanup(enclave_attester_ctx_t *ctx);
 
@@ -38,9 +38,9 @@ void libattester_sgx_ecdsa_init(void)
 void __attribute__((constructor)) libattester_sgx_ecdsa_init(void)
 #endif
 {
-	ETLS_DEBUG("called\n");
+	RTLS_DEBUG("called\n");
 
 	enclave_attester_err_t err = enclave_attester_register(&sgx_ecdsa_attester_opts);
 	if (err != ENCLAVE_ATTESTER_ERR_NONE)
-		ETLS_DEBUG("failed to register the enclave attester 'sgx_ecdsa' %#x\n", err);
+		RTLS_DEBUG("failed to register the enclave attester 'sgx_ecdsa' %#x\n", err);
 }

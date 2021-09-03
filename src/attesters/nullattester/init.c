@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/attester.h>
+#include <rats-tls/log.h>
+#include <rats-tls/attester.h>
 
 static unsigned int dummy_private;
 
-enclave_attester_err_t nullattester_init(enclave_attester_ctx_t *ctx, enclave_tls_cert_algo_t algo)
+enclave_attester_err_t nullattester_init(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo)
 {
-	ETLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
+	RTLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 
 	ctx->attester_private = &dummy_private;
 

@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/attester.h>
+#include <rats-tls/log.h>
+#include <rats-tls/attester.h>
 #include "sgx_ecdsa.h"
 
 enclave_attester_err_t sgx_ecdsa_attester_init(enclave_attester_ctx_t *ctx,
-					       enclave_tls_cert_algo_t algo)
+					       rats_tls_cert_algo_t algo)
 {
-	ETLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
+	RTLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 
 	sgx_ecdsa_ctx_t *sgx_ecdsa_ctx = calloc(1, sizeof(*sgx_ecdsa_ctx));
 	if (!sgx_ecdsa_ctx)

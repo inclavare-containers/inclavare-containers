@@ -33,7 +33,7 @@ find_path(SGX_INCLUDE NAMES sgx.h PATHS ${SGX_INCLUDE_PATH})
 # Look for the library
 find_library(SGX_LIBRARY_DIR NAMES sgx_urts PATHS ${SGX_LIBRARY_PATH})
 
-# Handle the QUIETLY and REQUIRED arguments and set ENCLAVE_TLS_FOUND to TRUE if all listed variables are TRUE.
+# Handle the QUIETLY and REQUIRED arguments and set RATS_TLS_FOUND to TRUE if all listed variables are TRUE.
 find_package_handle_standard_args(SGX
                                   DEFAULT_MSG
                                   SGX_INCLUDE SGX_LIBRARY_DIR)

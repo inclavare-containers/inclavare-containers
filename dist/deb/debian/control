@@ -1,4 +1,4 @@
-Source: enclave-tls
+Source: rats-tls
 Section: devel
 Priority: extra
 Maintainer: shirong <shirong@linux.alibaba.com>
@@ -6,7 +6,7 @@ Build-Depends: debhelper (>=9), git, make, autoconf, libtool, gcc, g++, libsgx-d
 Standards-Version: 3.9.8
 Homepage: https://github.com/alibaba/inclavare-containers
 
-Package: enclave-tls
+Package: rats-tls
 Architecture: amd64
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: enclave-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.
+Description: rats-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.

@@ -6,15 +6,15 @@
 
 // clang-format off
 #include <string.h>
-#include <enclave-tls/log.h>
-#include <enclave-tls/verifier.h>
+#include <rats-tls/log.h>
+#include <rats-tls/verifier.h>
 #include <sgx_urts.h>
 #include <sgx_quote.h>
 #include <sgx_quote_3.h>
 #include <sgx_ql_quote.h>
 #include "sgx_ecdsa.h"
 #ifdef SGX
-#include <etls_t.h>
+#include <rtls_t.h>
 #elif defined(OCCLUM)
 #include <unistd.h>
 #include <sys/stat.h>
@@ -47,34 +47,34 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 
 	sgx_quote3_t *pquote = (sgx_quote3_t *)malloc(8192);
 	if (!pquote) {
-		ETLS_ERR("failed to malloc sgx quote3 data space.\n");
+		RTLS_ERR("failed to malloc sgx quote3 data space.\n");
 		return -ENCLAVE_VERIFIER_ERR_NO_MEM;
 	}
 
 	memcpy(pquote, evidence->ecdsa.quote, evidence->ecdsa.quote_len);
 
 	uint32_t quote_size = (uint32_t)sizeof(sgx_quote3_t) + pquote->signature_data_len;
-	ETLS_DEBUG("quote size is %d, quote signature_data_len is %d\n", quote_size,
+	RTLS_DEBUG("quote size is %d, quote signature_data_len is %d\n", quote_size,
 		   pquote->signature_data_len);
 
 	/* First verify the hash value */
 	if (memcmp(hash, pquote->report_body.report_data.d, hash_len) != 0) {
-		ETLS_ERR("unmatched hash value in evidence.\n");
+		RTLS_ERR("unmatched hash value in evidence.\n");
 		err = -ENCLAVE_VERIFIER_ERR_INVALID;
 		goto errout;
 	}
 
 	dcap_ret = sgx_qv_get_quote_supplemental_data_size(&supplemental_data_size);
 	if (dcap_ret == SGX_QL_SUCCESS) {
-		ETLS_INFO("sgx qv gets quote supplemental data size successfully.\n");
+		RTLS_INFO("sgx qv gets quote supplemental data size successfully.\n");
 		p_supplemental_data = (uint8_t *)malloc(supplemental_data_size);
 		if (!p_supplemental_data) {
-			ETLS_ERR("failed to malloc supplemental data space.\n");
+			RTLS_ERR("failed to malloc supplemental data space.\n");
 			err = -ENCLAVE_VERIFIER_ERR_NO_MEM;
 			goto errout;
 		}
 	} else {
-		ETLS_ERR("failed to get quote supplemental data size by sgx qv: %04x\n", dcap_ret);
+		RTLS_ERR("failed to get quote supplemental data size by sgx qv: %04x\n", dcap_ret);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)dcap_ret);
 		goto errout;
 	}
@@ -86,9 +86,9 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 				       &quote_verification_result, qve_report_info,
 				       supplemental_data_size, p_supplemental_data);
 	if (dcap_ret == SGX_QL_SUCCESS)
-		ETLS_INFO("sgx qv verifies quote successfully.\n");
+		RTLS_INFO("sgx qv verifies quote successfully.\n");
 	else {
-		ETLS_ERR("failed to verify quote by sgx qv: %04x\n", dcap_ret);
+		RTLS_ERR("failed to verify quote by sgx qv: %04x\n", dcap_ret);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)dcap_ret);
 		goto errret;
 	}
@@ -96,7 +96,7 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	/* Check verification result */
 	switch (quote_verification_result) {
 	case SGX_QL_QV_RESULT_OK:
-		ETLS_INFO("verification completed successfully.\n");
+		RTLS_INFO("verification completed successfully.\n");
 		err = ENCLAVE_VERIFIER_ERR_NONE;
 		break;
 	case SGX_QL_QV_RESULT_CONFIG_NEEDED:
@@ -104,7 +104,7 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	case SGX_QL_QV_RESULT_OUT_OF_DATE_CONFIG_NEEDED:
 	case SGX_QL_QV_RESULT_SW_HARDENING_NEEDED:
 	case SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED:
-		ETLS_WARN("verification completed with Non-terminal result: %x\n",
+		RTLS_WARN("verification completed with Non-terminal result: %x\n",
 			   quote_verification_result);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)quote_verification_result);
 		break;
@@ -112,7 +112,7 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	case SGX_QL_QV_RESULT_REVOKED:
 	case SGX_QL_QV_RESULT_UNSPECIFIED:
 	default:
-		ETLS_WARN("verification completed with Terminal result: %x\n",
+		RTLS_WARN("verification completed with Terminal result: %x\n",
 			   quote_verification_result);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)quote_verification_result);
 		break;
@@ -132,7 +132,7 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 						 attestation_evidence_t *evidence, uint8_t *hash,
 						 __attribute__((unused)) uint32_t hash_len)
 {
-	ETLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
+	RTLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
 
 	enclave_verifier_err_t err = -ENCLAVE_VERIFIER_ERR_UNKNOWN;
 #ifdef OCCLUM
@@ -143,12 +143,12 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 
 	int sgx_fd = open("/dev/sgx", O_RDONLY);
 	if (sgx_fd < 0) {
-		ETLS_ERR("failed to open /dev/sgx\n");
+		RTLS_ERR("failed to open /dev/sgx\n");
 		return -ENCLAVE_VERIFIER_ERR_INVALID;
 	}
 
 	if (ioctl(sgx_fd, SGXIOC_GET_DCAP_SUPPLEMENTAL_SIZE, &supplemental_data_size) < 0) {
-		ETLS_ERR("failed to ioctl get supplemental data size: %s\n", strerror(errno));
+		RTLS_ERR("failed to ioctl get supplemental data size: %s\n", strerror(errno));
 		close(sgx_fd);
 		return -ENCLAVE_VERIFIER_ERR_INVALID;
 	}
@@ -171,7 +171,7 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 	};
 
 	if (ioctl(sgx_fd, SGXIOC_VER_DCAP_QUOTE, &ver_quote_arg) < 0) {
-		ETLS_ERR("failed to ioctl verify quote: %s\n", strerror(errno));
+		RTLS_ERR("failed to ioctl verify quote: %s\n", strerror(errno));
 		close(sgx_fd);
 		return -ENCLAVE_VERIFIER_ERR_INVALID;
 	}
@@ -181,7 +181,7 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 	/* Check verification result */
 	switch (quote_verification_result) {
 	case SGX_QL_QV_RESULT_OK:
-		ETLS_INFO("verification completed successfully.\n");
+		RTLS_INFO("verification completed successfully.\n");
 		err = ENCLAVE_VERIFIER_ERR_NONE;
 		break;
 	case SGX_QL_QV_RESULT_CONFIG_NEEDED:
@@ -189,7 +189,7 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 	case SGX_QL_QV_RESULT_OUT_OF_DATE_CONFIG_NEEDED:
 	case SGX_QL_QV_RESULT_SW_HARDENING_NEEDED:
 	case SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED:
-		ETLS_WARN("verification completed with Non-terminal result: %x\n",
+		RTLS_WARN("verification completed with Non-terminal result: %x\n",
 			  quote_verification_result);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)quote_verification_result);
 		break;
@@ -197,7 +197,7 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 	case SGX_QL_QV_RESULT_REVOKED:
 	case SGX_QL_QV_RESULT_UNSPECIFIED:
 	default:
-		ETLS_ERR("verification completed with Terminal result: %x\n",
+		RTLS_ERR("verification completed with Terminal result: %x\n",
 			 quote_verification_result);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)quote_verification_result);
 		break;
@@ -211,7 +211,7 @@ enclave_verifier_err_t sgx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
 	err = ecdsa_verify_evidence(ctx, ctx->opts->name, evidence, sizeof(attestation_evidence_t),
 				    hash, hash_len);
 	if (err != ENCLAVE_VERIFIER_ERR_NONE)
-		ETLS_ERR("failed to verify ecdsa\n");
+		RTLS_ERR("failed to verify ecdsa\n");
 #endif
 
 	return err;

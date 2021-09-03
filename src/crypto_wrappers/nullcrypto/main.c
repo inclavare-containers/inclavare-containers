@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/crypto_wrapper.h>
-#include <enclave-tls/log.h>
+#include <rats-tls/crypto_wrapper.h>
+#include <rats-tls/log.h>
 
 extern crypto_wrapper_err_t nullcrypto_pre_init(void);
 extern crypto_wrapper_err_t nullcrypto_init(crypto_wrapper_ctx_t *);
 extern crypto_wrapper_err_t nullcrypto_gen_privkey(crypto_wrapper_ctx_t *ctx,
-						   enclave_tls_cert_algo_t algo,
+						   rats_tls_cert_algo_t algo,
 						   uint8_t *privkey_buf, unsigned int *privkey_len);
 extern crypto_wrapper_err_t nullcrypto_gen_pubkey_hash(crypto_wrapper_ctx_t *,
-						       enclave_tls_cert_algo_t, uint8_t *);
+						       rats_tls_cert_algo_t, uint8_t *);
 extern crypto_wrapper_err_t nullcrypto_gen_cert(crypto_wrapper_ctx_t *,
-						enclave_tls_cert_algo_t algo,
-						enclave_tls_cert_info_t *);
+						rats_tls_cert_algo_t algo,
+						rats_tls_cert_info_t *);
 extern crypto_wrapper_err_t nullcrypto_cleanup(crypto_wrapper_ctx_t *);
 
 static crypto_wrapper_opts_t nullcrypto_opts = {
@@ -37,9 +37,9 @@ void libcrypto_wrapper_nullcrypto_init(void)
 void __attribute__((constructor)) libcrypto_wrapper_nullcrypto_init(void)
 #endif
 {
-	ETLS_DEBUG("called\n");
+	RTLS_DEBUG("called\n");
 
 	crypto_wrapper_err_t err = crypto_wrapper_register(&nullcrypto_opts);
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
-		ETLS_ERR("failed to register the crypto wrapper 'nullcrypto' %#x\n", err);
+		RTLS_ERR("failed to register the crypto wrapper 'nullcrypto' %#x\n", err);
 }

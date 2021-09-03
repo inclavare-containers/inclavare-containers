@@ -5,13 +5,13 @@
  */
 
 #include <stdio.h>
-#include <enclave-tls/verifier.h>
-#include <enclave-tls/log.h>
+#include <rats-tls/verifier.h>
+#include <rats-tls/log.h>
 
 extern enclave_verifier_err_t enclave_verifier_register(enclave_verifier_opts_t *);
 extern enclave_verifier_err_t sgx_la_verifier_pre_init(void);
 extern enclave_verifier_err_t sgx_la_verifier_init(enclave_verifier_ctx_t *,
-						   enclave_tls_cert_algo_t algo);
+						   rats_tls_cert_algo_t algo);
 extern enclave_verifier_err_t sgx_la_verify_evidence(enclave_verifier_ctx_t *,
 						     attestation_evidence_t *, uint8_t *,
 						     unsigned int hash_len);
@@ -34,9 +34,9 @@ void libverifier_sgx_la_init(void)
 void __attribute__((constructor)) libverifier_sgx_la_init(void)
 #endif
 {
-	ETLS_DEBUG("called\n");
+	RTLS_DEBUG("called\n");
 
 	enclave_verifier_err_t err = enclave_verifier_register(&sgx_la_verifier_opts);
 	if (err != ENCLAVE_VERIFIER_ERR_NONE)
-		ETLS_DEBUG("failed to register the enclave verifier 'sgx_la' %#x\n", err);
+		RTLS_DEBUG("failed to register the enclave verifier 'sgx_la' %#x\n", err);
 }
