@@ -34,7 +34,8 @@ if(SGX)
     set(EDL_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../sgx-stub-enclave
                          ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include/edl
                          )
-    set(DEPEND_UNTRUSTED_LIBS ${CMAKE_BINARY_DIR}/src/sgx/untrust/libenclave_tls_u.a)
+    set(DEPEND_UNTRUSTED_LIBS ${CMAKE_BINARY_DIR}/src/sgx/untrust/libenclave_tls_u.a
+                              )
 
 else()
     set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include

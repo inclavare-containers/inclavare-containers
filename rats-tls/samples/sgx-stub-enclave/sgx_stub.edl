@@ -7,22 +7,10 @@ enclave {
         from "sgx_tsgxssl.edl" import *;
 
         trusted {
-                public int ecall_etls_server_startup(sgx_enclave_id_t enclave_id,
-                                enclave_tls_log_level_t log_level,
-                                [in, string] char *attester_type,
-                                [in, string] char *verifier_type,
-                                [in, string] char *tls_type,
-                                [in, string] char *crypto_type,
-                                unsigned long flags,
+                public int ecall_etls_server_startup(enclave_tls_conf_t conf,
                                 uint32_t s_ip,
                                 uint16_t s_port);
-                public int ecall_etls_client_startup(sgx_enclave_id_t enclave_id,
-                                enclave_tls_log_level_t log_level,
-                                [in, string] char *attester_type,
-                                [in, string] char *verifier_type,
-                                [in, string] char *tls_type,
-                                [in, string] char *crypto_type,
-                                unsigned long flags,
+                public int ecall_etls_client_startup(enclave_tls_conf_t conf,
                                 uint32_t s_ip,
                                 uint16_t s_port);
         };

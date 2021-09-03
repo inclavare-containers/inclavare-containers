@@ -40,6 +40,11 @@ typedef enum {
 } enclave_tls_cert_algo_t;
 
 typedef struct {
+	uint8_t mrsigner[32];
+	uint8_t mrenclave[32];
+} enclave_meta_t;
+
+typedef struct {
 	unsigned int api_version;
 	unsigned long flags;
 	enclave_tls_log_level_t log_level;
@@ -49,6 +54,7 @@ typedef struct {
 	char crypto_type[CRYPTO_TYPE_NAME_SIZE];
 	enclave_tls_cert_algo_t cert_algo;
 	unsigned long long enclave_id;
+	enclave_meta_t enclave_info;
 
 	/* FIXME: SGX EPID quote type specific parameters */
 	struct {

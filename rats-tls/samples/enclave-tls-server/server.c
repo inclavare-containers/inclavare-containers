@@ -16,9 +16,17 @@
 #include <netinet/in.h>
 #include <enclave-tls/api.h>
 #include <enclave-tls/log.h>
+#include <enclave-tls/utils.h>
 
-#define DEFAULT_PORT 1234
-#define DEFAULT_IP   "127.0.0.1"
+#define DEFAULT_PORT	    1234
+#define DEFAULT_IP	    "127.0.0.1"
+#define ENCLAVE_CONFIG_TOML "/opt/enclave-tls/config.toml"
+#define TOML_ENCLAVE_INFO   "enclave-info"
+#define TOML_MRSIGNER	    "mrsigner"
+#define TOML_MRENCLAVE	    "mrenclave"
+
+static uint8_t user_mrsigner[32];
+static uint8_t user_mrenclave[32];
 
 // clang-format off
 #ifdef SGX
@@ -115,16 +123,40 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 	if (mutual)
 		flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
+	enclave_tls_conf_t conf;
+	memset(&conf, 0, sizeof(conf));
+	conf.log_level = log_level;
+	strncpy(conf.attester_type, attester_type, strlen(attester_type));
+	strncpy(conf.verifier_type, verifier_type, strlen(verifier_type));
+	strncpy(conf.tls_type, tls_type, strlen(tls_type));
+	strncpy(conf.crypto_type, crypto_type, strlen(crypto_type));
+	conf.enclave_id = enclave_id;
+	conf.flags = flags;
+
 	int ret = 0;
-	int sgx_status = ecall_etls_server_startup((sgx_enclave_id_t)enclave_id, &ret,
-						   (sgx_enclave_id_t)enclave_id, log_level,
-						   attester_type, verifier_type, tls_type,
-						   crypto_type, flags, s_ip, s_port);
+	toml_datum_t *toml_data = malloc(sizeof(toml_data));
+	if (!parse_config_file(ENCLAVE_CONFIG_TOML, TOML_ENCLAVE_INFO, TOML_MRSIGNER, toml_data)) {
+		if (parse_hex(toml_data->u.s, user_mrsigner, sizeof(user_mrsigner)))
+			goto err;
+		memcpy(conf.enclave_info.mrsigner, user_mrsigner, sizeof(user_mrsigner));
+	}
+	if (!parse_config_file(ENCLAVE_CONFIG_TOML, TOML_ENCLAVE_INFO, TOML_MRENCLAVE, toml_data)) {
+		if (parse_hex(toml_data->u.s, user_mrenclave, sizeof(user_mrenclave)))
+			goto err;
+		memcpy(conf.enclave_info.mrenclave, user_mrenclave, sizeof(user_mrenclave));
+	}
+
+	int sgx_status =
+		ecall_etls_server_startup((sgx_enclave_id_t)enclave_id, &ret, conf, s_ip, s_port);
 	if (sgx_status != SGX_SUCCESS || ret) {
 		ETLS_ERR("failed to startup enclave server: sgx status %d, ecall return %d\n",
 			 sgx_status, ret);
-		return -1;
+		ret = -1;
 	}
+
+err:
+	free(toml_data->u.s);
+	free(toml_data);
 
 	return ret;
 }
@@ -143,19 +175,37 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 	strcpy(conf.crypto_type, crypto_type);
 	conf.cert_algo = ENCLAVE_TLS_CERT_ALGO_DEFAULT;
 	conf.flags |= ENCLAVE_TLS_CONF_FLAGS_SERVER;
+
 	if (mutual)
 		conf.flags |= ENCLAVE_TLS_CONF_FLAGS_MUTUAL;
 
+#ifdef OCCLUM
+	toml_datum_t *toml_data = malloc(sizeof(toml_data));
+	if (!parse_config_file(ENCLAVE_CONFIG_TOML, TOML_ENCLAVE_INFO, TOML_MRSIGNER, toml_data)) {
+		if (parse_hex(toml_data->u.s, user_mrsigner, sizeof(user_mrsigner)))
+			goto err;
+		memcpy(conf.enclave_info.mrsigner, user_mrsigner, sizeof(user_mrsigner));
+	}
+	if (!parse_config_file(ENCLAVE_CONFIG_TOML, TOML_ENCLAVE_INFO, TOML_MRENCLAVE, toml_data)) {
+		if (parse_hex(toml_data->u.s, user_mrenclave, sizeof(user_mrenclave)))
+			goto err;
+		memcpy(conf.enclave_info.mrenclave, user_mrenclave, sizeof(user_mrenclave));
+	}
+#endif
+
+	int ret = -1;
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		ETLS_ERR("Failed to call socket()");
-		return -1;
+		ret = -1;
+		goto err;
 	}
 
 	int reuse = 1;
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(int)) < 0) {
 		ETLS_ERR("Failed to call setsockopt()");
-		return -1;
+		ret = -1;
+		goto err;
 	}
 
 	struct sockaddr_in s_addr;
@@ -167,13 +217,15 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 	/* Bind the server socket */
 	if (bind(sockfd, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
 		ETLS_ERR("Failed to call bind()");
-		return -1;
+		ret = -1;
+		goto err;
 	}
 
 	/* Listen for a new connection, allow 5 pending connections */
 	if (listen(sockfd, 5) == -1) {
 		ETLS_ERR("Failed to call listen()");
-		return -1;
+		ret = -1;
+		goto err;
 	}
 
 	enclave_tls_handle handle;
@@ -185,13 +237,15 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 		ret = enclave_tls_init(&conf, &handle);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to initialize enclave tls %#x\n", ret);
-			return -1;
+			ret = -1;
+			goto err;
 		}
 
 		ret = enclave_tls_set_verification_callback(&handle, NULL);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to set verification callback %#x\n", ret);
-			return -1;
+			ret = -1;
+			goto err;
 		}
 
 		ETLS_INFO("Waiting for a connection ...\n");
@@ -199,12 +253,14 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
 		if (connd < 0) {
 			ETLS_ERR("Failed to call accept()");
+			ret = -1;
 			goto err;
 		}
 
 		ret = enclave_tls_negotiate(handle, connd);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to negotiate %#x\n", ret);
+			ret = -1;
 			goto err;
 		}
 
@@ -215,6 +271,7 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 		ret = enclave_tls_receive(handle, buf, &len);
 		if (ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to receive %#x\n", ret);
+			ret = -1;
 			goto err;
 		}
 
@@ -224,10 +281,11 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 
 		ETLS_INFO("Client: %s\n", buf);
 
-	#ifdef OCCLUM
+#ifdef OCCLUM
 		sgx_report_t app_report;
 		if (sgx_create_report(&app_report) < 0) {
 			ETLS_ERR("Failed to generate local report\n");
+			ret = -1;
 			goto err;
 		}
 
@@ -240,12 +298,13 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 		       sizeof(ENCLAVE_TLS_HELLO));
 
 		len = 2 * sizeof(sgx_measurement_t) + strlen(ENCLAVE_TLS_HELLO);
-	#endif
+#endif
 
 		/* Reply back to the client */
-		ret = enclave_tls_transmit(handle, buf, &len);
-		if (ret != ENCLAVE_TLS_ERR_NONE) {
+		enclave_tls_err_t tls_ret = enclave_tls_transmit(handle, buf, &len);
+		if (tls_ret != ENCLAVE_TLS_ERR_NONE) {
 			ETLS_ERR("Failed to transmit %#x\n", ret);
+			ret = -1;
 			goto err;
 		}
 
@@ -257,7 +316,13 @@ int enclave_tls_server_startup(enclave_tls_log_level_t log_level, char *attester
 err:
 	/* Ignore the error code of cleanup in order to return the prepositional error */
 	enclave_tls_cleanup(handle);
-	return -1;
+
+#ifdef OCCLUM
+	free(toml_data->u.s);
+	free(toml_data);
+#endif
+
+	return ret;
 }
 #endif
 
@@ -364,7 +429,7 @@ int main(int argc, char **argv)
 		}
 	} while (opt != -1);
 
-        global_log_level = log_level;
+	global_log_level = log_level;
 
 	return enclave_tls_server_startup(log_level, attester_type, verifier_type, tls_type,
 					  crypto_type, mutual, debug_enclave, ip, port);

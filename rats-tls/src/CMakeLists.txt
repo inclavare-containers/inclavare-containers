@@ -4,6 +4,7 @@ add_subdirectory(crypto_wrappers)
 add_subdirectory(attesters)
 add_subdirectory(verifiers)
 add_subdirectory(tls_wrappers)
+#add_subdirectory(utils)
 if(SGX)
     add_subdirectory(sgx)
 endif()
@@ -59,6 +60,10 @@ if(SGX)
                         )
 endif()
 
+list(APPEND UTILS_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/utils/parse.c
+                        ${CMAKE_CURRENT_SOURCE_DIR}/utils/toml.c
+                        )
+
 # Static library dependencies
 if(SGX)
     set(DEPEND_TRUSTED_LIBS etls_edl_t
@@ -82,7 +87,7 @@ if(SGX)
     add_trusted_library(${ETLS_LIB} SRCS ${SOURCES} TRUSTED_LIBS ${DEPEND_TRUSTED_LIBS})
     add_dependencies(${ETLS_LIB} ${DEPEND_TRUSTED_LIBS})
 else()
-    add_library(${ETLS_LIB} SHARED ${SOURCES})
+    add_library(${ETLS_LIB} SHARED ${SOURCES} ${UTILS_SRCS})
     target_link_libraries(${ETLS_LIB} ${ENCLAVE_TLS_LDFLAGS})
     set_target_properties(${ETLS_LIB} PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
     # Install lib

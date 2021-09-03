@@ -15,22 +15,8 @@
 #include "enclave-tls/api.h"
 #include "sgx_stub_t.h"
 
-int ecall_etls_server_startup(sgx_enclave_id_t enclave_id, enclave_tls_log_level_t log_level,
-			      char *attester_type, char *verifier_type, char *tls_type,
-			      char *crypto_type, unsigned long flags, uint32_t s_ip,
-			      uint16_t s_port)
+int ecall_etls_server_startup(enclave_tls_conf_t conf, uint32_t s_ip, uint16_t s_port)
 {
-	enclave_tls_conf_t conf;
-
-	memset(&conf, 0, sizeof(conf));
-	conf.log_level = log_level;
-	snprintf(conf.attester_type, sizeof(conf.attester_type), "%s", attester_type);
-	snprintf(conf.verifier_type, sizeof(conf.verifier_type), "%s", verifier_type);
-	snprintf(conf.tls_type, sizeof(conf.tls_type), "%s", tls_type);
-	snprintf(conf.crypto_type, sizeof(conf.crypto_type), "%s", crypto_type);
-	conf.enclave_id = enclave_id;
-	conf.flags = flags;
-
 	int64_t sockfd;
 	int sgx_status = ocall_socket(&sockfd, ETLS_AF_INET, ETLS_SOCK_STREAM, 0);
 	if (sgx_status != SGX_SUCCESS || sockfd < 0) {
@@ -136,22 +122,8 @@ err:
 	return -1;
 }
 
-int ecall_etls_client_startup(sgx_enclave_id_t enclave_id, enclave_tls_log_level_t log_level,
-			      char *attester_type, char *verifier_type, char *tls_type,
-			      char *crypto_type, unsigned long flags, uint32_t s_ip,
-			      uint16_t s_port)
+int ecall_etls_client_startup(enclave_tls_conf_t conf, uint32_t s_ip, uint16_t s_port)
 {
-	enclave_tls_conf_t conf;
-
-	memset(&conf, 0, sizeof(conf));
-	conf.log_level = log_level;
-	snprintf(conf.attester_type, sizeof(conf.attester_type), "%s", attester_type);
-	snprintf(conf.verifier_type, sizeof(conf.verifier_type), "%s", verifier_type);
-	snprintf(conf.tls_type, sizeof(conf.tls_type), "%s", tls_type);
-	snprintf(conf.crypto_type, sizeof(conf.crypto_type), "%s", crypto_type);
-	conf.enclave_id = enclave_id;
-	conf.flags = flags;
-
 	/* Create a socket that uses an internet IPv4 address,
 	 * Sets the socket to be stream based (TCP),
 	 * 0 means choose the default protocol.
