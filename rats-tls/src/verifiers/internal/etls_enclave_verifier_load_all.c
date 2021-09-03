@@ -18,6 +18,7 @@
 #include <sgx_error.h>
 #include "etls_t.h"
 #define DT_REG 8
+#define DT_LNK 10
 #endif
 // clang-format on
 
