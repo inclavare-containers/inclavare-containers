@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/tls_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/tls_wrapper.h>
 
 tls_wrapper_err_t nulltls_cleanup(tls_wrapper_ctx_t *ctx)
 {
-	ETLS_DEBUG("ctx %p\n", ctx);
+	RTLS_DEBUG("ctx %p\n", ctx);
 
 	return TLS_WRAPPER_ERR_NONE;
 }

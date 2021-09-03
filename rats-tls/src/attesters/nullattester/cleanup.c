@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/attester.h>
+#include <rats-tls/log.h>
+#include <rats-tls/attester.h>
 
 enclave_attester_err_t nullattester_cleanup(__attribute__((unused)) enclave_attester_ctx_t *ctx)
 {
-	ETLS_DEBUG("called\n");
+	RTLS_DEBUG("called\n");
 
 	return ENCLAVE_ATTESTER_ERR_NONE;
 }

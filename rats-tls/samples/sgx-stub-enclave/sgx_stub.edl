@@ -1,14 +1,14 @@
 enclave {
-        include "enclave-tls/api.h"
+        include "rats-tls/api.h"
         include "internal/core.h"
         include "sgx_eid.h"
 
-        from "../../src/include/edl/etls.edl" import *;
+        from "../../src/include/edl/rtls.edl" import *;
         from "sgx_tsgxssl.edl" import *;
 
         trusted {
-                public int ecall_etls_server_startup(sgx_enclave_id_t enclave_id,
-                                enclave_tls_log_level_t log_level,
+                public int ecall_rtls_server_startup(sgx_enclave_id_t enclave_id,
+                                rats_tls_log_level_t log_level,
                                 [in, string] char *attester_type,
                                 [in, string] char *verifier_type,
                                 [in, string] char *tls_type,
@@ -16,8 +16,8 @@ enclave {
                                 unsigned long flags,
                                 uint32_t s_ip,
                                 uint16_t s_port);
-                public int ecall_etls_client_startup(sgx_enclave_id_t enclave_id,
-                                enclave_tls_log_level_t log_level,
+                public int ecall_rtls_client_startup(sgx_enclave_id_t enclave_id,
+                                rats_tls_log_level_t log_level,
                                 [in, string] char *attester_type,
                                 [in, string] char *verifier_type,
                                 [in, string] char *tls_type,

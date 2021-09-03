@@ -36,13 +36,13 @@ git clone https://github.com/alibaba/inclavare-containers
 
 ```shell
 cd inclavare-containers/rats-tls
-cmake -DENCLAVE_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild
+cmake -DRATS_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
 
 Note that the implementation of the Unix socket in Occlum is NOT complete yet. Occlum only supports the connection between the internal Unix sockets of Occlum.
 
-In addition, Occlum only provides `occlum-go` to compile go program. While the rats-tls is compiled based on `gcc`. In practice, using `occlum-go` to compile the `enclave-tls-server` program linked with rats-tls will generate undefined symbol errors. Therefore we provide the server and client programs in C language for functional elaboration. With the continuous development of occlum functions, this will no longer be a problem.
+In addition, Occlum only provides `occlum-go` to compile go program. While the rats-tls is compiled based on `gcc`. In practice, using `occlum-go` to compile the `rats-tls-server` program linked with rats-tls will generate undefined symbol errors. Therefore we provide the server and client programs in C language for functional elaboration. With the continuous development of occlum functions, this will no longer be a problem.
 
 # RUN RATS TLS with Occlum and Rune
 
@@ -57,7 +57,7 @@ Right now, RATS TLS running on Occlum Libos supports the following instance type
 ## Building Occlum container image
 
 ```shell
-cd /usr/share/enclave-tls/samples
+cd /usr/share/rats-tls/samples
 
 # 1. Init Occlum server Workspace
 rm -rf occlum_workspace_server
@@ -66,15 +66,15 @@ cd occlum_workspace_server
 occlum init
 
 # 2. Copy files into Occlum Workspace and Build
-cp ../enclave-tls-server image/bin
+cp ../rats-tls-server image/bin
 cp /lib/x86_64-linux-gnu/libdl.so.2 image/opt/occlum/glibc/lib
 cp /usr/lib/x86_64-linux-gnu/libssl.so.1.1 image/opt/occlum/glibc/lib
 cp /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1 image/opt/occlum/glibc/lib
-mkdir -p image/opt/enclave-tls
-cp -rf /usr/local/enclave-tls/lib image/opt/enclave-tls
+mkdir -p image/opt/rats-tls
+cp -rf /usr/local/rats-tls/lib image/opt/rats-tls
 
 occlum build
-occlum run /bin/enclave-tls-server -m -l debug
+occlum run /bin/rats-tls-server -m -l debug
 ```
 
 Type the following commands to generate a minimal, self-contained package (.tar.gz) for the Occlum instance.
@@ -107,7 +107,7 @@ COPY libsgx_pce.signed.so /usr/lib/x86_64-linux-gnu
 COPY libsgx_qe3.signed.so /usr/lib/x86_64-linux-gnu
 COPY libsgx_qve.signed.so /usr/lib/x86_64-linux-gnu/
 
-ENTRYPOINT ["/bin/enclave-tls-server"]
+ENTRYPOINT ["/bin/rats-tls-server"]
 EOF
 ```
 
@@ -140,7 +140,7 @@ There are two way to run client.
 ### Run client based on Occlum
 
 ```shell
-cd /usr/share/enclave-tls/samples
+cd /usr/share/rats-tls/samples
 
 # 1. Init Occlum client Workspace
 rm -rf occlum_workspace_client
@@ -149,22 +149,22 @@ cd occlum_workspace_client
 occlum init
 
 # 2. Copy files into Occlum Workspace and Build
-cp ../enclave-tls-client image/bin
+cp ../rats-tls-client image/bin
 cp /lib/x86_64-linux-gnu/libdl.so.2 image/opt/occlum/glibc/lib
 cp /usr/lib/x86_64-linux-gnu/libssl.so.1.1 image/opt/occlum/glibc/lib
 cp /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1 image/opt/occlum/glibc/lib
-mkdir -p image/opt/enclave-tls
-cp -rf /usr/local/enclave-tls/lib image/opt/enclave-tls
+mkdir -p image/opt/rats-tls
+cp -rf /usr/local/rats-tls/lib image/opt/rats-tls
 
 occlum build
-occlum run /bin/enclave-tls-client -l debug -m
+occlum run /bin/rats-tls-client -l debug -m
 ```
 
 ## Run client based on sgxsdk
 
 ```shell
-cd "$WORKSPACE"/inclavare-containers/enclave-tls
+cd "$WORKSPACE"/inclavare-containers/rats-tls
 make clean && make uninstall && make SGX=1 && make install
-cd /usr/share/enclave-tls/samples
-./enclave-tls-client -a sgx_ecdsa -m -l debug
+cd /usr/share/rats-tls/samples
+./rats-tls-client -a sgx_ecdsa -m -l debug
 ```

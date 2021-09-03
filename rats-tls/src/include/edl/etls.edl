@@ -1,9 +1,0 @@
-enclave {
-        from "etls_syscalls.edl" import *;
-        from "etls_socket.edl" import *;
-        from "sgx_ecdsa.edl" import *;
-        from "sgx_la.edl" import *;
-        from "sgx_dummy.edl" import *;
-        from "sgx_tstdc.edl" import *;
-        from "sgx_pthread.edl" import *;
-};

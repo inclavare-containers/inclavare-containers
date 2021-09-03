@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/tls_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/tls_wrapper.h>
 #include "per_thread.h"
 #include "openssl.h"
 
 tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 {
-	ETLS_DEBUG("ctx %p\n", ctx);
+	RTLS_DEBUG("ctx %p\n", ctx);
 
 	if (!ctx)
 		return -TLS_WRAPPER_ERR_INVALID;
@@ -20,7 +20,7 @@ tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 	SSL_load_error_strings();
 
 	if (SSL_library_init() < 0) {
-		ETLS_ERR("failed to initialize the openssl library\n");
+		RTLS_ERR("failed to initialize the openssl library\n");
 		return -TLS_WRAPPER_ERR_NOT_FOUND;
 	}
 
@@ -28,14 +28,14 @@ tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 	if (!ssl_ctx)
 		return -TLS_WRAPPER_ERR_NO_MEM;
 
-	if (ctx->conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
+	if (ctx->conf_flags & RATS_TLS_CONF_FLAGS_SERVER)
 		ssl_ctx->sctx = SSL_CTX_new(TLS_server_method());
 	else
 		ssl_ctx->sctx = SSL_CTX_new(TLS_client_method());
 
 	if (!ssl_ctx->sctx) {
 		free(ssl_ctx);
-		ETLS_ERR("failed to init openssl ctx\n");
+		RTLS_ERR("failed to init openssl ctx\n");
 		return -TLS_WRAPPER_ERR_NO_MEM;
 	}
 

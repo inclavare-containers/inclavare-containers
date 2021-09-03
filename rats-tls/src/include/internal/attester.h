@@ -7,15 +7,15 @@
 #ifndef _INTERNAL_ATTESTER_H
 #define _INTERNAL_ATTESTER_H
 
-#include <enclave-tls/attester.h>
+#include <rats-tls/attester.h>
 #include "internal/core.h"
 
-#define ENCLAVE_ATTESTERS_DIR "/usr/local/lib/enclave-tls/attesters/"
+#define ENCLAVE_ATTESTERS_DIR "/usr/local/lib/rats-tls/attesters/"
 
-extern enclave_tls_err_t etls_enclave_attester_load_all(void);
-extern enclave_tls_err_t etls_enclave_attester_load_single(const char *);
-extern enclave_tls_err_t etls_attester_select(etls_core_context_t *, const char *,
-					      enclave_tls_cert_algo_t);
+extern rats_tls_err_t rtls_enclave_attester_load_all(void);
+extern rats_tls_err_t rtls_enclave_attester_load_single(const char *);
+extern rats_tls_err_t rtls_attester_select(rtls_core_context_t *, const char *,
+					      rats_tls_cert_algo_t);
 extern enclave_attester_opts_t *enclave_attesters_opts[ENCLAVE_ATTESTER_TYPE_MAX];
 extern enclave_attester_ctx_t *enclave_attesters_ctx[ENCLAVE_ATTESTER_TYPE_MAX];
 extern unsigned int enclave_attester_nums;

@@ -3,7 +3,7 @@
 PROJECT_DIR=$(cd ../../..; pwd)
 DEBBUILD_DIR=$(mktemp -u /tmp/debbuild.XXXX)
 SCRIPT_DIR=$(pwd)
-PACKAGE=enclave-tls
+PACKAGE=rats-tls
 PROJECT=inclavare-containers
 VERSION=$(cd ../../..; cat ./VERSION)
 RELEASE_TARBALL=$DEBBUILD_DIR/v$VERSION.tar.gz

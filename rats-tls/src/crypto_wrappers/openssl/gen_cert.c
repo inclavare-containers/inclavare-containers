@@ -5,9 +5,9 @@
  */
 
 #include <string.h>
-#include <enclave-tls/log.h>
-#include <enclave-tls/crypto_wrapper.h>
-#include <enclave-tls/oid.h>
+#include <rats-tls/log.h>
+#include <rats-tls/crypto_wrapper.h>
+#include <rats-tls/oid.h>
 #include "openssl.h"
 
 #define CERT_SERIAL_NUMBER 9527
@@ -23,7 +23,7 @@ static int x509_extension_add(X509 *cert, const char *oid, const void *data, siz
 	if (nid == NID_undef) {
 		nid = OBJ_create(oid, NULL, NULL);
 		if (nid == NID_undef) {
-			ETLS_DEBUG("failed to create the object %s\n", oid);
+			RTLS_DEBUG("failed to create the object %s\n", oid);
 			return ret;
 		}
 	}
@@ -36,12 +36,12 @@ static int x509_extension_add(X509 *cert, const char *oid, const void *data, siz
 
 	ext = X509_EXTENSION_create_by_NID(NULL, nid, 0, octet);
 	if (!ext) {
-		ETLS_DEBUG("extension create failed, %s\n", oid);
+		RTLS_DEBUG("extension create failed, %s\n", oid);
 		goto err;
 	}
 
 	if (!X509_add_ext(cert, ext, -1)) {
-		ETLS_DEBUG("extension add failed, %s\n", oid);
+		RTLS_DEBUG("extension add failed, %s\n", oid);
 		goto err;
 	}
 
@@ -49,7 +49,7 @@ static int x509_extension_add(X509 *cert, const char *oid, const void *data, siz
 
 err:
 	if (ret == 0)
-		ETLS_DEBUG("X509 extension add failed, %s, nid = %d\n", oid, nid);
+		RTLS_DEBUG("X509 extension add failed, %s, nid = %d\n", oid, nid);
 
 	if (ext)
 		X509_EXTENSION_free(ext);
@@ -60,8 +60,8 @@ err:
 	return ret;
 }
 
-crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
-				      enclave_tls_cert_info_t *cert_info)
+crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
+				      rats_tls_cert_info_t *cert_info)
 {
 	openssl_ctx *octx = NULL;
 	cert_subject_t *subject;
@@ -72,7 +72,7 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cer
 	int len;
 	int ret;
 
-	ETLS_DEBUG("ctx %p, cert_info %p\n", ctx, cert_info);
+	RTLS_DEBUG("ctx %p, cert_info %p\n", ctx, cert_info);
 
 	if (!ctx || !cert_info)
 		return -CRYPTO_WRAPPER_ERR_INVALID;
@@ -85,10 +85,10 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cer
 
 	ret = -CRYPTO_WRAPPER_ERR_PRIV_KEY_LEN;
 
-	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
+	if (algo == RATS_TLS_CERT_ALGO_ECC_256_SHA256) {
 		if (!EVP_PKEY_assign_EC_KEY(pkey, octx->eckey))
 			goto err;
-	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
+	} else if (algo == RATS_TLS_CERT_ALGO_RSA_3072_SHA256) {
 		if (!EVP_PKEY_assign_RSA(pkey, octx->key))
 			goto err;
 	} else {
@@ -125,7 +125,7 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cer
 
 	ret = -CRYPTO_WRAPPER_ERR_PUB_KEY_DECODE;
 
-	ETLS_DEBUG("evidence type '%s' requested\n", cert_info->evidence.type);
+	RTLS_DEBUG("evidence type '%s' requested\n", cert_info->evidence.type);
 
 	if (!strcmp(cert_info->evidence.type, "sgx_epid")) {
 		attestation_verification_report_t *epid = &cert_info->evidence.epid;
@@ -168,13 +168,13 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, enclave_tls_cer
 
 	cert_info->cert_len = len;
 
-	ETLS_DEBUG("self-signing certificate generated\n");
+	RTLS_DEBUG("self-signing certificate generated\n");
 
 	ret = CRYPTO_WRAPPER_ERR_NONE;
 
 err:
 	if (ret != CRYPTO_WRAPPER_ERR_NONE)
-		ETLS_DEBUG("failed to generate certificate %d\n", ret);
+		RTLS_DEBUG("failed to generate certificate %d\n", ret);
 
 	if (cert)
 		X509_free(cert);

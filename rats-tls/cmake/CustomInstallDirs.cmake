@@ -1,26 +1,26 @@
 # /usr/local
-set(ENCLAVE_TLS_INSTALL_PATH "/usr/local")
+set(RATS_TLS_INSTALL_PATH "/usr/local")
 
-# lib/enclave_tls
-set(ENCLAVE_TLS_INSTALL_LIB_PATH "${ENCLAVE_TLS_INSTALL_PATH}/lib/enclave-tls")
+# lib/rats_tls
+set(RATS_TLS_INSTALL_LIB_PATH "${RATS_TLS_INSTALL_PATH}/lib/rats-tls")
 
-# enclave_tls/crypto-wrappers
-set(ENCLAVE_TLS_INSTALL_LIBCW_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/crypto-wrappers")
+# rats_tls/crypto-wrappers
+set(RATS_TLS_INSTALL_LIBCW_PATH "${RATS_TLS_INSTALL_LIB_PATH}/crypto-wrappers")
 
-# enclave_tls/attesters
-set(ENCLAVE_TLS_INSTALL_LIBA_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/attesters")
+# rats_tls/attesters
+set(RATS_TLS_INSTALL_LIBA_PATH "${RATS_TLS_INSTALL_LIB_PATH}/attesters")
 
-# enclave_tls/verifiers
-set(ENCLAVE_TLS_INSTALL_LIBV_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/verifiers")
+# rats_tls/verifiers
+set(RATS_TLS_INSTALL_LIBV_PATH "${RATS_TLS_INSTALL_LIB_PATH}/verifiers")
 
-# enclave_tls/tls-wrappers
-set(ENCLAVE_TLS_INSTALL_LIBTW_PATH "${ENCLAVE_TLS_INSTALL_LIB_PATH}/tls-wrappers")
+# rats_tls/tls-wrappers
+set(RATS_TLS_INSTALL_LIBTW_PATH "${RATS_TLS_INSTALL_LIB_PATH}/tls-wrappers")
 
-# include/enclave_tls
-set(ENCLAVE_TLS_INSTALL_INCLUDE_PATH "${ENCLAVE_TLS_INSTALL_PATH}/include/enclave-tls")
+# include/rats_tls
+set(RATS_TLS_INSTALL_INCLUDE_PATH "${RATS_TLS_INSTALL_PATH}/include/rats-tls")
 
-# enclave_tls/sample
-set(ENCLAVE_TLS_INSTALL_BIN_PATH "/usr/share/enclave-tls/samples")
+# rats_tls/sample
+set(RATS_TLS_INSTALL_BIN_PATH "/usr/share/rats-tls/samples")
 
 # sgx sdk
 if(EXISTS $ENV{SGX_SDK})

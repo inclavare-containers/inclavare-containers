@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/verifier.h>
+#include <rats-tls/log.h>
+#include <rats-tls/verifier.h>
 
 enclave_verifier_err_t nullverifier_cleanup(enclave_verifier_ctx_t *ctx)
 {
-	ETLS_DEBUG("called enclave verifier ctx: %#x\n", ctx);
+	RTLS_DEBUG("called enclave verifier ctx: %#x\n", ctx);
 
 	return ENCLAVE_VERIFIER_ERR_NONE;
 }

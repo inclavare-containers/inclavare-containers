@@ -7,33 +7,33 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include <assert.h>
-#include <enclave-tls/log.h>
-#include <enclave-tls/err.h>
-#include <enclave-tls/tls_wrapper.h>
-#include <enclave-tls/oid.h>
+#include <rats-tls/log.h>
+#include <rats-tls/err.h>
+#include <rats-tls/tls_wrapper.h>
+#include <rats-tls/oid.h>
 #include <internal/core.h>
 #include "sgx_report.h"
 #include "sgx_quote_3.h"
 #include "per_thread.h"
 #include "openssl.h"
 
-static int etls_memcpy_s(void *dst, uint32_t dst_size, const void *src, uint32_t num_bytes)
+static int rtls_memcpy_s(void *dst, uint32_t dst_size, const void *src, uint32_t num_bytes)
 {
 	int result = 0;
 
 	if (dst == NULL) {
-		ETLS_ERR("dst parameter is null pointer!\n");
+		RTLS_ERR("dst parameter is null pointer!\n");
 		goto done;
 	}
 
 	if (src == NULL || dst_size < num_bytes) {
-		ETLS_ERR("invalid parameters found!\n");
+		RTLS_ERR("invalid parameters found!\n");
 		goto done;
 	}
 
 	if ((dst >= src && ((uint8_t *)dst < (uint8_t *)src + num_bytes)) ||
 	    (dst < src && ((uint8_t *)dst + dst_size > (uint8_t *)src))) {
-		ETLS_ERR("there is overlapping copy here!\n");
+		RTLS_ERR("there is overlapping copy here!\n");
 		goto done;
 	}
 
@@ -55,7 +55,7 @@ static crypto_wrapper_err_t sha256_ecc_pubkey(unsigned char hash[SHA256_HASH_SIZ
 	SHA256(buf, len, hash);
 
 	// clang-format off
-	ETLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
+	RTLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
 		len, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
 		hash[SHA256_HASH_SIZE - 4], hash[SHA256_HASH_SIZE - 3], hash[SHA256_HASH_SIZE - 2],
 		hash[SHA256_HASH_SIZE - 1]);
@@ -75,7 +75,7 @@ static crypto_wrapper_err_t sha256_rsa_pubkey(unsigned char hash[SHA256_HASH_SIZ
 	SHA256(buf, len, hash);
 
 	// clang-format off
-	ETLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
+	RTLS_DEBUG("the sha256 of public key [%d] %02x%02x%02x%02x%02x%02x%02x%02x...%02x%02x%02x%02x\n",
 		len, hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
 		hash[SHA256_HASH_SIZE - 4], hash[SHA256_HASH_SIZE - 3], hash[SHA256_HASH_SIZE - 2],
 		hash[SHA256_HASH_SIZE - 1]);
@@ -84,15 +84,15 @@ static crypto_wrapper_err_t sha256_rsa_pubkey(unsigned char hash[SHA256_HASH_SIZ
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
 
-static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, enclave_tls_cert_algo_t algo,
+static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, rats_tls_cert_algo_t algo,
 					     uint8_t *hash)
 {
 	crypto_wrapper_err_t err;
 
-	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
+	if (algo == RATS_TLS_CERT_ALGO_ECC_256_SHA256) {
 		EC_KEY *ecc = EVP_PKEY_get1_EC_KEY(pkey);
 		err = sha256_ecc_pubkey(hash, ecc);
-	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
+	} else if (algo == RATS_TLS_CERT_ALGO_RSA_3072_SHA256) {
 		RSA *rsa = EVP_PKEY_get1_RSA(pkey);
 		err = sha256_rsa_pubkey(hash, rsa);
 	} else {
@@ -115,7 +115,7 @@ static int find_oid(X509 *crt, const char *oid)
 
 	/* Set a pointer to the stack of extensions (possibly NULL) */
 	if (!(extensions = X509_get0_extensions(crt))) {
-		ETLS_DEBUG("there are no extensions in X509 cert\n");
+		RTLS_DEBUG("there are no extensions in X509 cert\n");
 		return 0;
 	}
 
@@ -130,19 +130,19 @@ static int find_oid(X509 *crt, const char *oid)
 
 		/* Get the i-th extension from the stack */
 		if (!(ext = sk_X509_EXTENSION_value(extensions, i))) {
-			ETLS_ERR("failed to get X509 extension value\n");
+			RTLS_ERR("failed to get X509 extension value\n");
 			continue;
 		}
 
 		/* Get the OID */
 		if (!(obj = X509_EXTENSION_get_object(ext))) {
-			ETLS_ERR("failed to get the OID from object\n");
+			RTLS_ERR("failed to get the OID from object\n");
 			continue;
 		}
 
 		/* Get the string name of the OID */
 		if (!OBJ_obj2txt(oid_buf, sizeof(oid_buf), obj, 1)) {
-			ETLS_ERR("failed to get string name of the oid\n");
+			RTLS_ERR("failed to get string name of the oid\n");
 			continue;
 		}
 
@@ -160,7 +160,7 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 
 	/* Set a pointer to the stack of extensions (possibly NULL) */
 	if (!(extensions = X509_get0_extensions(cert))) {
-		ETLS_DEBUG("failed to extensions from X509\n");
+		RTLS_DEBUG("failed to extensions from X509\n");
 		return 0;
 	}
 
@@ -175,19 +175,19 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 
 		/* Get the i-th extension from the stack */
 		if (!(ext = sk_X509_EXTENSION_value(extensions, i))) {
-			ETLS_ERR("failed to get X509 extension value\n");
+			RTLS_ERR("failed to get X509 extension value\n");
 			continue;
 		}
 
 		/* Get the OID */
 		if (!(obj = X509_EXTENSION_get_object(ext))) {
-			ETLS_ERR("failed to get the OID from object\n");
+			RTLS_ERR("failed to get the OID from object\n");
 			continue;
 		}
 
 		/* Get the string name of the OID */
 		if (!OBJ_obj2txt(oid_buf, sizeof(oid_buf), obj, 1)) {
-			ETLS_ERR("failed to get string name of the oid\n");
+			RTLS_ERR("failed to get string name of the oid\n");
 			continue;
 		}
 
@@ -197,7 +197,7 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 
 			/* Get the data from the extension */
 			if (!(str = X509_EXTENSION_get_data(ext))) {
-				ETLS_ERR("failed to get data from teh extension\n");
+				RTLS_ERR("failed to get data from teh extension\n");
 				return 0;
 			}
 
@@ -205,10 +205,10 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 				*size = (uint32_t)str->length;
 
 				if (data)
-					ETLS_DEBUG("buffer is too small\n");
+					RTLS_DEBUG("buffer is too small\n");
 			}
 			if (data) {
-				etls_memcpy_s(data, *size, str->data, (uint32_t)str->length);
+				rtls_memcpy_s(data, *size, str->data, (uint32_t)str->length);
 				*size = (uint32_t)str->length;
 				result = SSL_SUCCESS;
 				goto done;
@@ -268,37 +268,37 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
 	int *ex_data = per_thread_getspecific();
 	if (!ex_data) {
-		ETLS_ERR("failed to get ex_data\n");
+		RTLS_ERR("failed to get ex_data\n");
 		return 0;
 	}
 
 	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, *ex_data);
 	if (!tls_ctx) {
-		ETLS_ERR("failed to get tls_wrapper_ctx pointer\n");
+		RTLS_ERR("failed to get tls_wrapper_ctx pointer\n");
 		return 0;
 	}
 
 	X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
 	if (!cert) {
-		ETLS_ERR("failed to get cert from x509 context!\n");
+		RTLS_ERR("failed to get cert from x509 context!\n");
 		return 0;
 	}
 
 	if (preverify == 0) {
 		int err = X509_STORE_CTX_get_error(ctx);
 		if (err != X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) {
-			ETLS_ERR("This is not a self-signed cert\n");
+			RTLS_ERR("This is not a self-signed cert\n");
 			return 0;
 		}
 	}
 
 	EVP_PKEY *publickey = X509_get_pubkey(cert);
-	enclave_tls_cert_algo_t cert_algo = tls_ctx->etls_handle->config.cert_algo;
+	rats_tls_cert_algo_t cert_algo = tls_ctx->rtls_handle->config.cert_algo;
 	uint32_t hash_size;
 
 	switch (cert_algo) {
-	case ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256:
-	case ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256:
+	case RATS_TLS_CERT_ALGO_RSA_3072_SHA256:
+	case RATS_TLS_CERT_ALGO_ECC_256_SHA256:
 		hash_size = SHA256_HASH_SIZE;
 		break;
 
@@ -309,7 +309,7 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 	uint8_t hash[hash_size];
 	calc_pubkey_hash(publickey, cert_algo, hash);
 
-	/* Extract the Enclave TLS certificate extension from the TLS certificate
+	/* Extract the Rats TLS certificate extension from the TLS certificate
 	 * extension and parse it into evidence
 	 */
 	attestation_evidence_t evidence;
@@ -323,19 +323,19 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 
 	int rc = openssl_extract_x509_extensions(cert, &evidence);
 	if (rc != SSL_SUCCESS) {
-		ETLS_ERR("failed to extract the extensions from the certificate %d\n", rc);
+		RTLS_ERR("failed to extract the extensions from the certificate %d\n", rc);
 		return 0;
 	}
 
 	tls_wrapper_err_t err =
 		tls_wrapper_verify_certificate_extension(tls_ctx, &evidence, hash, hash_size);
 	if (err != TLS_WRAPPER_ERR_NONE) {
-		ETLS_ERR("failed to verify certificate extension %#x\n", err);
+		RTLS_ERR("failed to verify certificate extension %#x\n", err);
 		return 0;
 	}
 
 	if (!strncmp(evidence.type, "sgx_ecdsa", sizeof(evidence.type))) {
-		etls_evidence_t ev;
+		rtls_evidence_t ev;
 		sgx_quote3_t *quote3 = (sgx_quote3_t *)evidence.ecdsa.quote;
 
 		ev.sgx.mr_enclave = (char *)quote3->report_body.mr_enclave.m;
@@ -347,10 +347,10 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 		ev.quote = (char *)quote3;
 		ev.quote_size = sizeof(sgx_quote3_t);
 
-		if (tls_ctx->etls_handle->user_callback) {
-			rc = tls_ctx->etls_handle->user_callback(&ev);
+		if (tls_ctx->rtls_handle->user_callback) {
+			rc = tls_ctx->rtls_handle->user_callback(&ev);
 			if (!rc) {
-				ETLS_ERR("failed to verify user callback %d\n", rc);
+				RTLS_ERR("failed to verify user callback %d\n", rc);
 				return 0;
 			}
 		}
