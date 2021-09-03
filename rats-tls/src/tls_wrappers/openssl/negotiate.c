@@ -5,9 +5,9 @@
  */
 
 #include <string.h>
-#include <enclave-tls/log.h>
-#include <enclave-tls/err.h>
-#include <enclave-tls/tls_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/err.h>
+#include <rats-tls/tls_wrapper.h>
 #include "per_thread.h"
 #include "openssl.h"
 
@@ -34,9 +34,9 @@ tls_wrapper_err_t openssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 	if (verify) {
 		int mode = SSL_VERIFY_NONE;
 
-		if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER))
+		if (!(conf_flags & RATS_TLS_CONF_FLAGS_SERVER))
 			mode |= SSL_VERIFY_PEER;
-		else if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)
+		else if (conf_flags & RATS_TLS_CONF_FLAGS_MUTUAL)
 			mode |= SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
 
 		SSL_CTX_set_verify(ssl_ctx->sctx, mode, verify);
@@ -52,34 +52,34 @@ tls_wrapper_err_t openssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 
 	int *ex_data = calloc(1, sizeof(*ex_data));
 	if (!ex_data) {
-		ETLS_ERR("failed to calloc ex_data\n");
+		RTLS_ERR("failed to calloc ex_data\n");
 		return -TLS_WRAPPER_ERR_NO_MEM;
 	}
 
 	*ex_data = ex_data_idx;
 	if (!per_thread_setspecific((void *)ex_data)) {
-		ETLS_ERR("failed to store ex_data\n");
+		RTLS_ERR("failed to store ex_data\n");
 		return -TLS_WRAPPER_ERR_INVALID;
 	}
 
 	/* Attach openssl to the socket */
 	int ret = SSL_set_fd(ssl, fd);
 	if (ret != SSL_SUCCESS) {
-		ETLS_ERR("failed to attach SSL with fd, ret is %x\n", ret);
+		RTLS_ERR("failed to attach SSL with fd, ret is %x\n", ret);
 		return -TLS_WRAPPER_ERR_INVALID;
 	}
 
 	int err;
-	if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
+	if (conf_flags & RATS_TLS_CONF_FLAGS_SERVER)
 		err = SSL_accept(ssl);
 	else
 		err = SSL_connect(ssl);
 
 	if (err != 1) {
-		if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
-			ETLS_DEBUG("failed to negotiate %#x\n", err);
+		if (conf_flags & RATS_TLS_CONF_FLAGS_SERVER)
+			RTLS_DEBUG("failed to negotiate %#x\n", err);
 		else
-			ETLS_DEBUG("failed to connect %#x\n", err);
+			RTLS_DEBUG("failed to connect %#x\n", err);
 
 		print_openssl_err(ssl, err);
 
@@ -88,10 +88,10 @@ tls_wrapper_err_t openssl_internal_negotiate(tls_wrapper_ctx_t *ctx, unsigned lo
 
 	ssl_ctx->ssl = ssl;
 
-	if (conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER)
-		ETLS_DEBUG("success to negotiate\n");
+	if (conf_flags & RATS_TLS_CONF_FLAGS_SERVER)
+		RTLS_DEBUG("success to negotiate\n");
 	else
-		ETLS_DEBUG("success to connect\n");
+		RTLS_DEBUG("success to connect\n");
 
 	return TLS_WRAPPER_ERR_NONE;
 }
@@ -107,7 +107,7 @@ static int ssl_ctx_set_verify_callback(int mode, X509_STORE_CTX *store)
 
 tls_wrapper_err_t openssl_tls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 {
-	ETLS_DEBUG("ctx %p, fd %d\n", ctx, fd);
+	RTLS_DEBUG("ctx %p, fd %d\n", ctx, fd);
 
 	if (!ctx)
 		return -TLS_WRAPPER_ERR_INVALID;
@@ -115,8 +115,8 @@ tls_wrapper_err_t openssl_tls_negotiate(tls_wrapper_ctx_t *ctx, int fd)
 	int (*verify)(int, X509_STORE_CTX *) = NULL;
 	unsigned long conf_flags = ctx->conf_flags;
 
-	if (!(conf_flags & ENCLAVE_TLS_CONF_FLAGS_SERVER) ||
-	    (conf_flags & ENCLAVE_TLS_CONF_FLAGS_MUTUAL)) {
+	if (!(conf_flags & RATS_TLS_CONF_FLAGS_SERVER) ||
+	    (conf_flags & RATS_TLS_CONF_FLAGS_MUTUAL)) {
 #ifdef SGX
 		verify = ssl_ctx_set_verify_callback;
 #else

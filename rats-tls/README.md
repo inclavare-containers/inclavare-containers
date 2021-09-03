@@ -33,19 +33,19 @@ cmake -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
 
-`{enclave-tls-server,enclave-tls-client}` will be installed to `/usr/share/enclave-tls/samples/{enclave-tls-server,enclave-tls-client}` on your system. All instances are placed in `/opt/enclave-tls/lib`.
+`{rats-tls-server,rats-tls-client}` will be installed to `/usr/share/rats-tls/samples/{rats-tls-server,rats-tls-client}` on your system. All instances are placed in `/opt/rats-tls/lib`.
 
 If you want to build instances related to sgx(sgx\_ecdsa, sgx\_ecdsa\_qve, sgx\_la), please type the following command.
 
 ```shell
-cmake -DENCLAVE_TLS_BUILD_MODE="sgx" -DBUILD_SAMPLES=on -H. -Bbuild
+cmake -DRATS_TLS_BUILD_MODE="sgx" -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
 
 If you want to run instances on libos occlum, please type the following command.
 
 ```shell
-cmake -DENCLAVE_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild
+cmake -DRATS_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
 
@@ -65,19 +65,19 @@ By default,  RATS TLS will select the **highest priority** instance to use.
 
 ## Run RATS TLS server
 ```
-cd /usr/share/enclave-tls/samples
-./enclave-tls-server
+cd /usr/share/rats-tls/samples
+./rats-tls-server
 ```
 
 ## Run RATS TLS client
 ```
-cd /usr/share/enclave-tls/samples
-./enclave-tls-client
+cd /usr/share/rats-tls/samples
+./rats-tls-client
 ```
 
 ## Specify the instance type
 
-The options of enclave-tls-server are as followed:
+The options of rats-tls-server are as followed:
 
 ```shell
 OPTIONS:
@@ -97,11 +97,11 @@ You can set command line parameters to specify different configurations.
 For example:
 
 ```shell
-./enclave-tls-server --tls openssl
-./enclave-tls-server --attester sgx_ecdsa
-./enclave-tls-server --attester sgx_ecdsa_qve
-./enclave-tls-server --attester sgx_la
-./enclave-tls-server --crypto openssl
+./rats-tls-server --tls openssl
+./rats-tls-server --attester sgx_ecdsa
+./rats-tls-server --attester sgx_ecdsa_qve
+./rats-tls-server --attester sgx_la
+./rats-tls-server --crypto openssl
 ```
 
 RATS TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal`, `error`, `warn`, `info`, and `debug`. The default level is `error`. The most verbose level is `debug`.
@@ -109,13 +109,13 @@ RATS TLS's log level can be set through `-l` option with 6 levels: `off`, `fatal
 For example:
 
 ```
-./enclave-tls-server -l debug
+./rats-tls-server -l debug
 ```
 
 RATS TLS server binds `127.0.0.1:1234` by default. You can use `-i` and `-p` options to set custom configuration.
 
 ```shell
-./enclave-tls-server -i [ip_addr] -p [port]
+./rats-tls-server -i [ip_addr] -p [port]
 ```
 
 ## Mutual attestation
@@ -123,23 +123,23 @@ RATS TLS server binds `127.0.0.1:1234` by default. You can use `-i` and `-p` opt
 You can use `-m` option to enable mutual attestation.
 
 ```shell
-./enclave-tls-server -m
-./enclave-tls-client -m
+./rats-tls-server -m
+./rats-tls-client -m
 ```
 
 ## Enable bootstrap debugging
 
-In the early bootstrap of enclave-tls, the debug message is mute by default. In order to enable it, please explicitly set the environment variable `ENCLAVE_TLS_GLOBAL_LOG_LEVEL=<log_level>`, where \<log_level\> is same as the values of the option `-l`.
+In the early bootstrap of rats-tls, the debug message is mute by default. In order to enable it, please explicitly set the environment variable `RATS_TLS_GLOBAL_LOG_LEVEL=<log_level>`, where \<log_level\> is same as the values of the option `-l`.
 
 # Deployment
 
 ## Occlum LibOS
 
-Please refer to [this guide](docs/run_rats_tls_with_occlum.md) to run Enclave Tls with [Occlum](https://github.com/occlum/occlum) and [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune).
+Please refer to [this guide](docs/run_rats_tls_with_occlum.md) to run Rats Tls with [Occlum](https://github.com/occlum/occlum) and [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune).
 
 ## Non-SGX Enviroment
 
-In non-sgx enviroment, it's possible to show the error messages as below when running the command `./enclave-tls-client --attester sgx_ecdsa`. According to Intel DCAP's implementation, when calling to sgx_qv_get_quote_supplemental_data_size(),
+In non-sgx enviroment, it's possible to show the error messages as below when running the command `./rats-tls-client --attester sgx_ecdsa`. According to Intel DCAP's implementation, when calling to sgx_qv_get_quote_supplemental_data_size(),
 if the libsgx_urts library is present, it will try to load QvE firstly. If failed, the verification will be launched by QVL. So the error info can be ignored and have no impact on the final attestation result.
 
 ```

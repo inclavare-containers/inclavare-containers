@@ -65,7 +65,7 @@ install -m 0755 ${INTEL_SGXSSL_LIB}/libsgx_usgxssl.a ${INTEL_SGXSSL_LIB_PATH}/li
 install -m 0755 ${INTEL_SGXSSL_LIB}/libsgx_tsgxssl.a ${INTEL_SGXSSL_LIB_PATH}/libsgx_tsgxssl.a
 install -m 0755 ${INTEL_SGXSSL_LIB}/libsgx_tsgxssl_crypto.a ${INTEL_SGXSSL_LIB_PATH}/libsgx_tsgxssl_crypto.a
 install -m 0755 ${INTEL_SGXSSL_LIB}/libsgx_tsgxssl_ssl.a ${INTEL_SGXSSL_LIB_PATH}/libsgx_tsgxssl_ssl.a
-#sudo make install DESTDIR=/opt/enclave-tls/sgxssl/
+#sudo make install DESTDIR=/opt/rats-tls/sgxssl/
 cd -
 ")
 endif()

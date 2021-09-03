@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/tls_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/tls_wrapper.h>
 
 static unsigned int dummy_private;
 
 tls_wrapper_err_t nulltls_init(tls_wrapper_ctx_t *ctx)
 {
-	ETLS_DEBUG("ctx %p\n", ctx);
+	RTLS_DEBUG("ctx %p\n", ctx);
 
 	ctx->tls_private = &dummy_private;
 

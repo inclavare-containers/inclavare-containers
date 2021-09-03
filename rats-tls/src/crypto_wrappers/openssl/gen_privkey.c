@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/crypto_wrapper.h>
+#include <rats-tls/log.h>
+#include <rats-tls/crypto_wrapper.h>
 #include "openssl.h"
 
-crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
+crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
 					 uint8_t *privkey_buf, uint32_t *privkey_len)
 {
 	openssl_ctx *octx = NULL;
@@ -18,7 +18,7 @@ crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_
 	int len = 0;
 	int ret;
 
-	ETLS_DEBUG("ctx %p, algo %d, privkey_buf %p, privkey_len %p\n", ctx, algo, privkey_buf,
+	RTLS_DEBUG("ctx %p, algo %d, privkey_buf %p, privkey_len %p\n", ctx, algo, privkey_buf,
 		   privkey_len);
 
 	if (!ctx || !privkey_len)
@@ -27,13 +27,13 @@ crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_
 	if (privkey_buf != NULL && *privkey_len == 0)
 		return -CRYPTO_WRAPPER_ERR_INVALID;
 
-	ETLS_DEBUG("%d-byte private key buffer requested ...\n", *privkey_len);
+	RTLS_DEBUG("%d-byte private key buffer requested ...\n", *privkey_len);
 
 	octx = ctx->crypto_private;
 
 	ret = -CRYPTO_WRAPPER_ERR_NO_MEM;
 
-	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
+	if (algo == RATS_TLS_CERT_ALGO_ECC_256_SHA256) {
 		octx->eckey = EC_KEY_new();
 		if (octx->eckey == NULL)
 			goto err;
@@ -55,7 +55,7 @@ crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_
 		len = EC_GROUP_get_degree(EC_KEY_get0_group(octx->eckey));
 		if (len < 160) {
 			/* drop the curve */
-			ETLS_DEBUG(
+			RTLS_DEBUG(
 				"# FAIL: As the degree is less than 160, Drop the curve from processing\n");
 			goto err;
 		}
@@ -87,9 +87,9 @@ crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_
 		if (len < 0)
 			goto err;
 
-		ETLS_DEBUG("ECC-256 private key (%d-byte) in DER format generated\n", len);
+		RTLS_DEBUG("ECC-256 private key (%d-byte) in DER format generated\n", len);
 
-	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
+	} else if (algo == RATS_TLS_CERT_ALGO_RSA_3072_SHA256) {
 		octx->key = RSA_new();
 		if (octx->key == NULL)
 			goto err;
@@ -120,7 +120,7 @@ crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_
 		if (len < 0)
 			goto err;
 
-		ETLS_DEBUG("RSA-3072 private key (%d-byte) in DER format generated\n", len);
+		RTLS_DEBUG("RSA-3072 private key (%d-byte) in DER format generated\n", len);
 	} else {
 		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
 	}
@@ -130,8 +130,8 @@ crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, enclave_tls_
 	return CRYPTO_WRAPPER_ERR_NONE;
 
 err:
-	if (algo == ENCLAVE_TLS_CERT_ALGO_ECC_256_SHA256) {
-		ETLS_DEBUG("failed to generate ECC-256 private key %d\n", ret);
+	if (algo == RATS_TLS_CERT_ALGO_ECC_256_SHA256) {
+		RTLS_DEBUG("failed to generate ECC-256 private key %d\n", ret);
 
 		if (octx->eckey) {
 			EC_KEY_free(octx->eckey);
@@ -140,8 +140,8 @@ err:
 
 		if (group)
 			EC_GROUP_free(group);
-	} else if (algo == ENCLAVE_TLS_CERT_ALGO_RSA_3072_SHA256) {
-		ETLS_DEBUG("failed to generate RSA-3072 private key %d\n", ret);
+	} else if (algo == RATS_TLS_CERT_ALGO_RSA_3072_SHA256) {
+		RTLS_DEBUG("failed to generate RSA-3072 private key %d\n", ret);
 
 		if (octx->key) {
 			RSA_free(octx->key);

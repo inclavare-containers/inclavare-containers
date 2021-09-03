@@ -115,7 +115,7 @@ Rats-TLS架构需要支持和灵活选择多种可能性（例如：TLS库，Enc
 通过RegistrationAPIs，可以实现灵活的“插件”机制，也容易扩展一个框架的功能，发展其生态。调用者不一定是Application；这个模型可以在组成一个含有Application的完整架构中的每个子系统里实施这种模型。使得开发者能够非常容易扩展新的实例类型。
 - Rats TLS架构对具体的TLS Wrapper实例、Attester实例、Verifier实例和Crypto实例是无感知的。
   - TLS Wrapper实例、Attester实例、Verfier实例和Crypto实例的源码都可以单独进行编译，且无需Rats TLS架构配合修改。
-  - TLS Wrapper实例、Crypto Wrapper实例、Attester实例和Verifier实例都在编译时依赖Rats TLS核心库`libenclave_tls.so`；而`libenclave_tls.so`本身在编译时不依赖任何TLS Wrapper实例、Attester实例、Verifier实例和Crypto实例。
+  - TLS Wrapper实例、Crypto Wrapper实例、Attester实例和Verifier实例都在编译时依赖Rats TLS核心库`librats_tls.so`；而`librats_tls.so`本身在编译时不依赖任何TLS Wrapper实例、Attester实例、Verifier实例和Crypto实例。
 - 如果需要支持新的实例类型（例如，openssl wrapper实例），只需要实例开发者开发对应实例的功能即可，不需要关注其他实例类型的细节。
 - 不同的TLS Wrapper实例、Attester实例、Verfier实例和Crypto实例可以相互组合，满足不同场景下的多样需求。
 
@@ -125,38 +125,38 @@ Rats-TLS的工作流程主要分为初始化与运行两个阶段。
 
 ## 初始化阶段
 
-在SGX SDK模式下，由于SGX的编程约束，将所有的实例（ TLS Wrapper实例、Attester实例、Verfier实例和Crypto实例）都打包进了静态库`libenclave_tls.a`中，静态库中包含每个实例的回调函数地址。
+在SGX SDK模式下，由于SGX的编程约束，将所有的实例（ TLS Wrapper实例、Attester实例、Verfier实例和Crypto实例）都打包进了静态库`librats_tls.a`中，静态库中包含每个实例的回调函数地址。
 
-在非SGX SDK模式下（例如SEV，TDX，SGX Libos等），动态链接了核心库`libenclave_tls.so`的Rats TLS应用在启动时，会隐式调用`libenclave_tls.so`的构造函数。
+在非SGX SDK模式下（例如SEV，TDX，SGX Libos等），动态链接了核心库`librats_tls.so`的Rats TLS应用在启动时，会隐式调用`librats_tls.so`的构造函数。
 
 ```c
 	/* Load all crypto wrapper instances */
-	enclave_tls_err_t err = etls_crypto_wrapper_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any crypto wrapper %#x\n", err);
+	rats_tls_err_t err = rtls_crypto_wrapper_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any crypto wrapper %#x\n", err);
 
 	/* Load all enclave attester instances */
-	err = etls_enclave_attester_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any enclave attester %#x\n", err);
+	err = rtls_enclave_attester_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any enclave attester %#x\n", err);
 
 	/* Load all enclave verifier instances */
-	err = etls_enclave_verifier_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any enclave verifier %#x\n", err);
+	err = rtls_enclave_verifier_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any enclave verifier %#x\n", err);
 
 	/* Load all tls wrapper instances */
-	err = etls_tls_wrapper_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any tls wrapper %#x\n", err);
+	err = rtls_tls_wrapper_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any tls wrapper %#x\n", err);
 ```
 
-核心库`libenclave_tls.so`的构造函数核心代码如上图所示，会以此加载`/opt/Rats-TLS/lib`下的所有Crypto Wrapper 实例，Enclave Attester 实例 ，Enclave Verifier 实例和TLS Wrapper实例 。四类实例的加载过程逻辑一致，如下图所示：
+核心库`librats_tls.so`的构造函数核心代码如上图所示，会以此加载`/opt/Rats-TLS/lib`下的所有Crypto Wrapper 实例，Enclave Attester 实例 ，Enclave Verifier 实例和TLS Wrapper实例 。四类实例的加载过程逻辑一致，如下图所示：
 
 ![initialization.png](initialization.png)
 
 以加载Crypto Wrapper 为例，具体流程如下：
-- 调用`etls_crypto_wrapper_load_all()`尝试加载`/opt/Rats-TLS/lib/crypto-wrappers`目录下的所有Crypto Wrapper实例。
+- 调用`rtls_crypto_wrapper_load_all()`尝试加载`/opt/Rats-TLS/lib/crypto-wrappers`目录下的所有Crypto Wrapper实例。
 - 通过dlopen加载每一个Crypto Wrapper 实例，并触发其构造函数的调用。
   - Crypto Wrapper实例的构造函数调用Crypto Wrapper API `crypto_wrapper_register()`。
 - 调用每一个dlopen成功的Crypto Wrapper实例的`pre_init()`方法。
@@ -167,13 +167,13 @@ Rats-TLS的工作流程主要分为初始化与运行两个阶段。
 
 客户端和服务端通过五个Rats TLS API建立安全信道，然后进行数据的传输。
 
-1. Rats TLS应用调用Rats TLS API `enclave_tls_init()`初始化Rats TLS上下文。
+1. Rats TLS应用调用Rats TLS API `rats_tls_init()`初始化Rats TLS上下文。
 如下图所示：Rats TLS会依次选择参数指定的的Crypto Wrapper实例，Enclave Attester实例， Enclave Verifier实例，TLS Wrapper实例，然后调用对应的`init()`方法进行初始化。假如假如用户没有指定实例类型，会自动选择优先级高的实例作为运行实例。
 
-![enclave\_tls\_init.png](enclave_tls_init.png)
+![rats\_tls\_init.png](rats_tls_init.png)
 
-2. Rats TLS应用调用Rats TLS API `enclave_tls_negotiate()`启动Rats TLS协商。
-- 对于开启了双向认证支持的客户端以及TLS服务端来说，需要调用`etls_core_generate_certificate()`创建Rats TLS证书 
+2. Rats TLS应用调用Rats TLS API `rats_tls_negotiate()`启动Rats TLS协商。
+- 对于开启了双向认证支持的客户端以及TLS服务端来说，需要调用`rtls_core_generate_certificate()`创建Rats TLS证书 
   - 调用Crypto Wrapperr实例的`gen_privkey`和`gen_pubkey_hash`方法生成新的key pair和公钥的摘要值
   - 调用Enclave Attester实例的`collect_evidence`方法收集当前平台的证明材料
   - 调用Crypto Wrapper实例的`gen_cert`方法生成TLS证书
@@ -184,16 +184,16 @@ Rats-TLS的工作流程主要分为初始化与运行两个阶段。
     - 调用对应的Enclave Verifier实例的`verify_evidence`方法验证证书。
   - 如果是Rats TLS客户端，连接远程Rats TLS服务器；如果是Rats TLS服务端，则监听TLS端口。
 
-![enclave\_tls\_negotitate.png](enclave_tls_negotiate.png)
+![rats\_tls\_negotitate.png](rats_tls_negotiate.png)
 
-3. 当Rats-TLS 可信信道建立成功之后，客户端和服务端直接就有可以通过Rats TLS API `enclave_tls_transmit()`和`enclave_tls_receive()` 进行安全数据的传输。
+3. 当Rats-TLS 可信信道建立成功之后，客户端和服务端直接就有可以通过Rats TLS API `rats_tls_transmit()`和`rats_tls_receive()` 进行安全数据的传输。
 
-![enclave\_tls\_transmite.png](enclave_tls_transmite.png)
+![rats\_tls\_transmite.png](rats_tls_transmite.png)
 
-4. Rats TLS应用调用Rats TLS API `enclave_tls_cleanup()`清理Rats TLS运行环境。
+4. Rats TLS应用调用Rats TLS API `rats_tls_cleanup()`清理Rats TLS运行环境。
 如下图所示：Rats TLS会依次调用Crypto Wrapper实例，Enclave Attester实例， Enclave Verifier实例，TLS Wrapper实例的`clean_up()`方法进行对应实例上下文的清除（例如：关闭句柄等），然后进行核心层的上下文环境清除。
 
-![enclave\_tls\_cleanup.png](enclave_tls_cleanup.png)
+![rats\_tls\_cleanup.png](rats_tls_cleanup.png)
 
 # 实例设计
 
@@ -218,7 +218,7 @@ typedef struct {
 	tls_wrapper_err_t (*use_privkey)(tls_wrapper_ctx_t *ctx, void *privkey_buf,
 					 size_t privkey_len);
 	// Load the certificate buffer into a specific SSL context
-	tls_wrapper_err_t (*use_cert)(tls_wrapper_ctx_t *ctx, enclave_tls_cert_info_t *cert_info);
+	tls_wrapper_err_t (*use_cert)(tls_wrapper_ctx_t *ctx, rats_tls_cert_info_t *cert_info);
 	// Establish the actual TLS connection
 	tls_wrapper_err_t (*negotiate)(tls_wrapper_ctx_t *ctx, int fd);
 	// Transmiting data
@@ -255,14 +255,14 @@ typedef struct {
 	// Detect whether the current attester instance can run in the current environment
 	enclave_attester_err_t (*pre_init)(void);
 	// Initialize the attester instance
-	enclave_attester_err_t (*init)(enclave_attester_ctx_t *ctx, enclave_tls_cert_algo_t algo);
+	enclave_attester_err_t (*init)(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo);
 	// Collect extended certificate materials
 	enclave_attester_err_t (*extend_cert)(enclave_attester_ctx_t *ctx,
-					      const enclave_tls_cert_info_t *cert_info);
+					      const rats_tls_cert_info_t *cert_info);
 	// Collect evidence for generating Quote
 	enclave_attester_err_t (*collect_evidence)(enclave_attester_ctx_t *ctx,
 						   attestation_evidence_t *evidence,
-						   enclave_tls_cert_algo_t algo, uint8_t *hash);
+						   rats_tls_cert_algo_t algo, uint8_t *hash);
 	// Clean up attester instance
 	enclave_attester_err_t (*cleanup)(enclave_attester_ctx_t *ctx);
 } enclave_attester_opts_t;
@@ -293,7 +293,7 @@ typedef struct {
 	// Detect whether the current verifier instance can run in the current environment
 	enclave_verifier_err_t (*pre_init)(void);
 	// Initialize the verifier 实例
-	enclave_verifier_err_t (*init)(enclave_verifier_ctx_t *ctx, enclave_tls_cert_algo_t algo);
+	enclave_verifier_err_t (*init)(enclave_verifier_ctx_t *ctx, rats_tls_cert_algo_t algo);
 	// Verify the received quote evidenc
 	enclave_verifier_err_t (*verify_evidence)(enclave_verifier_ctx_t *ctx,
 						  attestation_evidence_t *evidence, uint8_t *hash,
@@ -327,14 +327,14 @@ typedef struct {
 	// Initialize the crypto wrapper instance
 	crypto_wrapper_err_t (*init)(crypto_wrapper_ctx_t *ctx);
 	// Generate private key
-	crypto_wrapper_err_t (*gen_privkey)(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
+	crypto_wrapper_err_t (*gen_privkey)(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
 					    uint8_t *privkey_buf, unsigned int *privkey_len);
 	// Generate public key hash
 	crypto_wrapper_err_t (*gen_pubkey_hash)(crypto_wrapper_ctx_t *ctx,
-						enclave_tls_cert_algo_t algo, uint8_t *hash);
+						rats_tls_cert_algo_t algo, uint8_t *hash);
 	// Generate certificate
 	crypto_wrapper_err_t (*gen_cert)(crypto_wrapper_ctx_t *ctx,
-					 enclave_tls_cert_info_t *cert_info);
+					 rats_tls_cert_info_t *cert_info);
 	// Clean up crypto wrapper instance
 	crypto_wrapper_err_t (*cleanup)(crypto_wrapper_ctx_t *ctx);
 } crypto_wrapper_opts_t;
@@ -354,6 +354,6 @@ Rats-TLS主要应用于Enclave 证明架构 (EAA)。EAA是针对云场景的通�
 
 # 参考文献
 
-[1] https://confidentialcomputing.io/wp-content/uploads/sites/85/2021/03/confidentialcomputing_outreach_whitepaper-8-5x11-1.pdf
-[2] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4562&rep=rep1&type=pdf
+[1] https://confidentialcomputing.io/wp-content/uploads/sites/85/2021/03/confidentialcomputing_outreach_whitepaper-8-5x11-1.pdf  
+[2] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4562&rep=rep1&type=pdf  
 [3] https://arxiv.org/ftp/arxiv/papers/1801/1801.05863.pdf

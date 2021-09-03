@@ -120,7 +120,7 @@ Rats-TLS architecture needs to support flexibly choose multiple possibilities (f
 Through Registration APIs, a flexible "plug-in" mechanism can be realized, and it is also easy to extend the functions of a framework and develop its ecology. The caller is not necessarily the application, this model can be implemented in every subsystem that composes a complete architecture containing the application. It is very easy for developers to extend new instance types.
 - The Rats TLS architecture is unaware of specific TLS Wrapper instances, Attester instances, Verifier instances, and Crypto instances.
   - The source code of the TLS Wrapper instance, Attester instance, Verifier instance, and Crypto instance can all be compiled separately without the need to modify the Rats TLS architecture.
-  - TLS Wrapper instance, Crypto Wrapper instance, Attester instance and Verifier instance all depend on Rats TLS core library `libenclave_tls.so` at compile-time, while `libenclave_tls.so` itself does not depend on any TLS Wrapper instance, Attester instance, Verifier instance, or Crypto instance at compile time.
+  - TLS Wrapper instance, Crypto Wrapper instance, Attester instance and Verifier instance all depend on Rats TLS core library `librats_tls.so` at compile-time, while `librats_tls.so` itself does not depend on any TLS Wrapper instance, Attester instance, Verifier instance, or Crypto instance at compile time.
 - If the developer needs to support a new instance type (for example, OpenSSL wrapper instance), just need to develop the function of the corresponding instance and don't need to pay attention to the details of other instance types.
 - Different TLS Wrapper instances, Atttester instances, Verifier instances, and Crypto instances can be combined with each other to meet diverse needs in different scenarios.
 
@@ -130,38 +130,38 @@ The workflow of Rats-TLS is mainly divided into two stages: initialization and r
 
 ## Initialization stage
 
-In the SGX SDK mode, due to the programming constraints of SGX, all instances (TLS Wrapper instances, Attester instances, Verifier instances, and Crypto instances) are packaged into the static library `libenclave_tls.a`. The static library contains function callbacks address for each instance. 
+In the SGX SDK mode, due to the programming constraints of SGX, all instances (TLS Wrapper instances, Attester instances, Verifier instances, and Crypto instances) are packaged into the static library `librats_tls.a`. The static library contains function callbacks address for each instance. 
 
-In the non-SGX SDK mode (such as SEV, TDX, SGX Libos, etc.), the Rats TLS application dynamically linked to the core library `libenclave_tls.so` will implicitly call the constructor of `libenclave_tls.so` when it is started.
+In the non-SGX SDK mode (such as SEV, TDX, SGX Libos, etc.), the Rats TLS application dynamically linked to the core library `librats_tls.so` will implicitly call the constructor of `librats_tls.so` when it is started.
 
 ```c
 	/* Load all crypto wrapper instances */
-	enclave_tls_err_t err = etls_crypto_wrapper_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any crypto wrapper %#x\n", err);
+	rats_tls_err_t err = rtls_crypto_wrapper_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any crypto wrapper %#x\n", err);
 
 	/* Load all enclave attester instances */
-	err = etls_enclave_attester_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any enclave attester %#x\n", err);
+	err = rtls_enclave_attester_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any enclave attester %#x\n", err);
 
 	/* Load all enclave verifier instances */
-	err = etls_enclave_verifier_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any enclave verifier %#x\n", err);
+	err = rtls_enclave_verifier_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any enclave verifier %#x\n", err);
 
 	/* Load all tls wrapper instances */
-	err = etls_tls_wrapper_load_all();
-	if (err != ENCLAVE_TLS_ERR_NONE)
-		ETLS_FATAL("failed to load any tls wrapper %#x\n", err);
+	err = rtls_tls_wrapper_load_all();
+	if (err != RATS_TLS_ERR_NONE)
+		RTLS_FATAL("failed to load any tls wrapper %#x\n", err);
 ```
 
-The core code of the constructor of the core library `libenclave_tls.so` is shown in the figure above, which will load all Crypto Wrapper instances, Enclave Attester instances, Enclave Verifier instances, and TLS Wrapper instances under `/opt/Rats-TLS/lib`. The logic of the loading process of the four types of instances is consistent, as shown in the following figure:
+The core code of the constructor of the core library `librats_tls.so` is shown in the figure above, which will load all Crypto Wrapper instances, Enclave Attester instances, Enclave Verifier instances, and TLS Wrapper instances under `/opt/Rats-TLS/lib`. The logic of the loading process of the four types of instances is consistent, as shown in the following figure:
 
 ![initialization.png](initialization.png)
 
 Taking the loading of Crypto Wrapper as an example, the specific process is as follows:
-- Call `etls_crypto_wrapper_load_all()` to load all Crypto Wrapper instances in the `/opt/Rats-TLS/lib/crypto-wrappers` directory.
+- Call `rtls_crypto_wrapper_load_all()` to load all Crypto Wrapper instances in the `/opt/Rats-TLS/lib/crypto-wrappers` directory.
   - Load each Crypto Wrapper instance through dlopen and trigger the call of its constructor.
     - The constructor of the Crypto Wrapper instance calls the Crypto Wrapper API `crypto_wrapper_register()`.
   - Call the `pre_init()` method of each Crypto Wrapper instance that dlopen succeeds.
@@ -172,13 +172,13 @@ Taking the loading of Crypto Wrapper as an example, the specific process is as f
 
 The client and the server establish a secure channel through five Rats TLS APIs and then perform data transmission.
 
-1. The Rats TLS application calls the Rats TLS API `enclave_tls_init()` to initialize the Rats TLS context. As shown in the following figure:
+1. The Rats TLS application calls the Rats TLS API `rats_tls_init()` to initialize the Rats TLS context. As shown in the following figure:
 Rats TLS will select the Crypto Wrapper instance, Enclave Attester instance, Enclave Verifier instance, and TLS Wrapper instance specified by the parameters in turn, and then call the corresponding `init()` method to initialize. If the user does not specify the instance type, the instance with the higher priority will be automatically selected as the running instance.
 
-![enclave\_tls\_init.png](enclave_tls_init.png)
+![rats\_tls\_init.png](rats_tls_init.png)
 
-2. Rats TLS application calls Rats TLS API `enclave_tls_negotiate()` to start Rats TLS negotiation.
-- For clients that have enabled mutual authentication support and TLS servers, it is necessary to call `etls_core_generate_certificate()` to create an Rats TLS certificate.
+2. Rats TLS application calls Rats TLS API `rats_tls_negotiate()` to start Rats TLS negotiation.
+- For clients that have enabled mutual authentication support and TLS servers, it is necessary to call `rtls_core_generate_certificate()` to create an Rats TLS certificate.
   - Call the `gen_privkey` and `gen_pubkey_hash` methods of the Crypto Wrapperr instance to generate a new key pair and digest value of the public key.
   - Call the `collect_evidence` method of the Enclave Attester instance to collect the proof materials of the current platform.
   - Call the `gen_cert` method of the Crypto Wrapper instance to generate a TLS certificate.
@@ -189,16 +189,16 @@ Rats TLS will select the Crypto Wrapper instance, Enclave Attester instance, Enc
     - Call the `verify_evidence` method of the corresponding Enclave Verifier instance to verify the certificate.
   - Rats TLS client connects to the remote Rats TLS server. Rats TLS server listens to the TLS port.
 
-![enclave\_tls\_negotitate.png](enclave_tls_negotiate.png)
+![rats\_tls\_negotitate.png](rats_tls_negotiate.png)
 
-3. After the Rats-TLS trusted channel is successfully established, the client and server can directly transmit sensitive data through the Rats TLS API `enclave_tls_transmit()` and `enclave_tls_receive()`.
+3. After the Rats-TLS trusted channel is successfully established, the client and server can directly transmit sensitive data through the Rats TLS API `rats_tls_transmit()` and `rats_tls_receive()`.
 
-![enclave\_tls\_transmite.png](enclave_tls_transmite.png)
+![rats\_tls\_transmite.png](rats_tls_transmite.png)
 
-4. The Rats TLS application calls the Rats TLS API `enclave_tls_cleanup()` to clean up the Rats TLS operating environment.
+4. The Rats TLS application calls the Rats TLS API `rats_tls_cleanup()` to clean up the Rats TLS operating environment.
 As shown in the following figure: Rats TLS will sequentially call the `clean_up()` method of Crypto Wrapper instance, Enclave Attester instance, Enclave Verifier instance, and TLS Wrapper instance to clean up the corresponding instance context (for example: close the handle, etc.), and then proceed to the core layer context The environment is cleared.
 
-![enclave\_tls\_cleanup.png](enclave_tls_cleanup.png)
+![rats\_tls\_cleanup.png](rats_tls_cleanup.png)
 
 # Instances design
 
@@ -223,7 +223,7 @@ typedef struct {
 	tls_wrapper_err_t (*use_privkey)(tls_wrapper_ctx_t *ctx, void *privkey_buf,
 					 size_t privkey_len);
 	// Load the certificate buffer into a specific SSL context
-	tls_wrapper_err_t (*use_cert)(tls_wrapper_ctx_t *ctx, enclave_tls_cert_info_t *cert_info);
+	tls_wrapper_err_t (*use_cert)(tls_wrapper_ctx_t *ctx, rats_tls_cert_info_t *cert_info);
 	// Establish the actual TLS connection
 	tls_wrapper_err_t (*negotiate)(tls_wrapper_ctx_t *ctx, int fd);
 	// Transmiting data
@@ -260,14 +260,14 @@ typedef struct {
 	// Detect whether the current attester instance can run in the current environment
 	enclave_attester_err_t (*pre_init)(void);
 	// Initialize the attester instance
-	enclave_attester_err_t (*init)(enclave_attester_ctx_t *ctx, enclave_tls_cert_algo_t algo);
+	enclave_attester_err_t (*init)(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo);
 	// Collect extended certificate materials
 	enclave_attester_err_t (*extend_cert)(enclave_attester_ctx_t *ctx,
-					      const enclave_tls_cert_info_t *cert_info);
+					      const rats_tls_cert_info_t *cert_info);
 	// Collect evidence for generating Quote
 	enclave_attester_err_t (*collect_evidence)(enclave_attester_ctx_t *ctx,
 						   attestation_evidence_t *evidence,
-						   enclave_tls_cert_algo_t algo, uint8_t *hash);
+						   rats_tls_cert_algo_t algo, uint8_t *hash);
 	// Clean up attester instance
 	enclave_attester_err_t (*cleanup)(enclave_attester_ctx_t *ctx);
 } enclave_attester_opts_t;
@@ -298,7 +298,7 @@ typedef struct {
 	// Detect whether the current verifier instance can run in the current environment
 	enclave_verifier_err_t (*pre_init)(void);
 	// Initialize the verifier instance
-	enclave_verifier_err_t (*init)(enclave_verifier_ctx_t *ctx, enclave_tls_cert_algo_t algo);
+	enclave_verifier_err_t (*init)(enclave_verifier_ctx_t *ctx, rats_tls_cert_algo_t algo);
 	// Verify the received quote evidence
 	enclave_verifier_err_t (*verify_evidence)(enclave_verifier_ctx_t *ctx,
 						  attestation_evidence_t *evidence, uint8_t *hash,
@@ -332,14 +332,14 @@ typedef struct {
 	// Initialize the crypto wrapper instance
 	crypto_wrapper_err_t (*init)(crypto_wrapper_ctx_t *ctx);
 	// Generate private key
-	crypto_wrapper_err_t (*gen_privkey)(crypto_wrapper_ctx_t *ctx, enclave_tls_cert_algo_t algo,
+	crypto_wrapper_err_t (*gen_privkey)(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
 					    uint8_t *privkey_buf, unsigned int *privkey_len);
 	// Generate public key hash
 	crypto_wrapper_err_t (*gen_pubkey_hash)(crypto_wrapper_ctx_t *ctx,
-						enclave_tls_cert_algo_t algo, uint8_t *hash);
+						rats_tls_cert_algo_t algo, uint8_t *hash);
 	// Generate certificate
 	crypto_wrapper_err_t (*gen_cert)(crypto_wrapper_ctx_t *ctx,
-					 enclave_tls_cert_info_t *cert_info);
+					 rats_tls_cert_info_t *cert_info);
 	// Clean up crypto wrapper instance
 	crypto_wrapper_err_t (*cleanup)(crypto_wrapper_ctx_t *ctx);
 } crypto_wrapper_opts_t;
@@ -359,6 +359,6 @@ Rats-TLS is mainly used in Enclave Attestation Architecture (EAA). EAA is a univ
 
 # Reference
 
-[1] https://confidentialcomputing.io/wp-content/uploads/sites/85/2021/03/confidentialcomputing_outreach_whitepaper-8-5x11-1.pdf
-[2] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4562&rep=rep1&type=pdf
-[3] https://arxiv.org/ftp/arxiv/papers/1801/1801.05863.pdf
+[1] https://confidentialcomputing.io/wp-content/uploads/sites/85/2021/03/confidentialcomputing_outreach_whitepaper-8-5x11-1.pdf  
+[2] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4562&rep=rep1&type=pdf  
+[3] https://arxiv.org/ftp/arxiv/papers/1801/1801.05863.pdf 

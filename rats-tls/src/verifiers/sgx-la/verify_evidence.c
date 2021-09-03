@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <enclave-tls/log.h>
-#include <enclave-tls/verifier.h>
+#include <rats-tls/log.h>
+#include <rats-tls/verifier.h>
 #include "sgx_error.h"
 #include "sgx_la.h"
-#include "etls_t.h"
+#include "rtls_t.h"
 
 /* Refer to explanation in sgx_la_collect_evidence */
 enclave_verifier_err_t sgx_la_verify_evidence(enclave_verifier_ctx_t *ctx,

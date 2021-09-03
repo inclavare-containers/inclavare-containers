@@ -11,14 +11,14 @@ ifneq ($(RELEASE_TARBALL_EXIST), y)
 endif
 
 rpm: release-tarball
-	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba rpm/enclave_tls.spec
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba rpm/rats_tls.spec
 	@cp $(RPMBUILD_DIR)/RPMS/x86_64/*.rpm $(PROJECT_DIR)
 	@rm -rf $(RPMBUILD_DIR)
-	@echo "the rpms of enclave tls located in $(PROJECT_DIR)"
+	@echo "the rpms of rats tls located in $(PROJECT_DIR)"
 
 deb:
 	@cd deb && ./build.sh
-	@echo "the debs of enclave tls located in $(PROJECT_DIR)"
+	@echo "the debs of rats tls located in $(PROJECT_DIR)"
 
 package:
 ifeq (/etc/debian_version, $(wildcard /etc/debian_version))

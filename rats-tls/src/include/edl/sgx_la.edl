@@ -1,8 +1,8 @@
 enclave {
-	include "enclave-tls/err.h"
-        include "enclave-tls/verifier.h"
+	include "rats-tls/err.h"
+        include "rats-tls/verifier.h"
 
-	include "enclave-tls/cert.h"
+	include "rats-tls/cert.h"
 
 	from "sgx_dummy.edl" import *;
 
