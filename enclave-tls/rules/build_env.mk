@@ -31,6 +31,7 @@ endif
 Enclave_Tls_Root ?= /opt/enclave-tls
 Enclave_Tls_Libdir := $(Enclave_Tls_Root)/lib
 Enclave_Tls_Lib := $(Enclave_Tls_Libdir)/libenclave_tls.so
+Global_Base_Libdir := /usr/lib/x86_64-linux-gnu
 
 # Determine the caller is from in-tree or out-of-tree
 ifeq ($(Topdir),)
@@ -97,7 +98,7 @@ else
 endif
 Enclave_Tls_Cflags := $(CFLAGS) -I$(Enclave_Tls_Incdir)
 
-LDFLAGS ?=
+LDFLAGS ?= -L$(Global_Base_Libdir)
 Enclave_Tls_Ldflags := \
   $(LDFLAGS) -shared -Bsymbolic -rpath=$(Enclave_Tls_Libdir) --enable-new-dtags
 
