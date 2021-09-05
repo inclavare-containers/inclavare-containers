@@ -1,6 +1,6 @@
 fn main() -> shadow_rs::SdResult<()> {
-    println!("cargo:rustc-link-search=native=/usr/local/lib/enclave-tls");
-    println!("cargo:rustc-link-lib=dylib=enclave_tls");
+    println!("cargo:rustc-link-search=native=/usr/local/lib/rats-tls");
+    println!("cargo:rustc-link-lib=dylib=rats_tls");
 
     println!("cargo:rustc-link-search=native=./verdictd/src/policy_engine/opa");
     println!("cargo:rustc-link-lib=dylib=opa");

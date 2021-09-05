@@ -43,7 +43,7 @@ yum install -y clang-libs clang-devel
 apt-get install llvm-dev libclang-dev clang
 ```
 
-### Based On [Enclave-tls](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)
+### Based On [Rats-tls](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls)
 
 #### Build
 
@@ -55,12 +55,12 @@ make install
 
 #### Run
 
-verdictd relies on enclave-tls to listen on tcp socket, the default sockaddr is `127.0.0.1:1234`.
+verdictd relies on rats-tls to listen on tcp socket, the default sockaddr is `127.0.0.1:1234`.
 User can use `--listen` option to specify a listen address.
 ```bash
 ./bin/verdictd --listen 127.0.0.1:1111
 ```
-User can use `--attester`, `--verifier`, `--tls`, `--crypto` and `--mutual` options to specific enclave-tls uses instances's type. See details: [Enclave-tls](https://github.com/alibaba/inclavare-containers/tree/master/enclave-tls)
+User can use `--attester`, `--verifier`, `--tls`, `--crypto` and `--mutual` options to specific rats-tls uses instances's type. See details: [Rats-tls](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls)
 
 User can use `--gRPC` option to specify grpc server's listen address.
 ```bash

@@ -1,2 +1,2 @@
-pub mod enclave_tls;
+pub mod rats_tls;
 mod protocol;
