@@ -1,5 +1,5 @@
 use crate::attestation_agent::protocol;
-use crate::enclave_tls;
+use crate::rats_tls;
 use std::net::TcpListener;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::{sync::Arc, u64};
@@ -13,10 +13,10 @@ fn handle_client(
     mutual: bool,
     enclave_id: u64,
 ) -> Result<(), String> {
-    let tls = enclave_tls::EnclaveTls::new(
+    let tls = rats_tls::RatsTls::new(
         true, enclave_id, tls_type, crypto, attester, verifier, mutual,
     )
-    .map_err(|e| format!("new EnclaveTls failed with error {:?}", e))?;
+    .map_err(|e| format!("new RatsTls failed with error {:?}", e))?;
 
     /* accept */
     if tls.negotiate(sockfd).is_err() {

@@ -10,7 +10,7 @@ use shadow_rs::shadow;
 mod attestation_agent;
 mod configure_provider;
 mod crypto;
-mod enclave_tls;
+mod rats_tls;
 mod key_manager;
 mod key_provider;
 mod policy_engine;
@@ -151,7 +151,7 @@ async fn main() {
     let mutual = matches.is_present("mutual");
     std::thread::spawn(move || {
         println!("Listen addr: {}", sockaddr);
-        attestation_agent::enclave_tls::server(
+        attestation_agent::rats_tls::server(
             &sockaddr, tls_type, crypto, attester, verifier, mutual,
         );
     });

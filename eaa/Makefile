@@ -22,11 +22,11 @@ all: $(Eaa_Name)
 opa:
 	@cd $(Opa_Lib_Path) && go build -o $(Opa_Name) -buildmode=c-shared $(Opa_SRC_Files)
 
-enclave-tls:
+rats-tls:
 	cd $(PROJDIR)/rats-tls && cmake -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install
 
-$(Eaa_Name): opa enclave-tls
-	RUSTFLAGS="-C link-args=-Wl,-rpath=/usr/local/lib/enclave-tls:/usr/local/lib:$(Opa_Lib_Path),--enable-new-dtags" cargo build $(App_Rust_Flags)
+$(Eaa_Name): opa rats-tls
+	RUSTFLAGS="-C link-args=-Wl,-rpath=/usr/local/lib/rats-tls:/usr/local/lib:$(Opa_Lib_Path),--enable-new-dtags" cargo build $(App_Rust_Flags)
 	@echo "Cargo  =>  $@"
 
 .PHONY: install uninstall clean
