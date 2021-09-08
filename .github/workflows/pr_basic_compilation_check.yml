@@ -52,3 +52,11 @@ jobs:
           which rune epm containerd-shim-rune-v2 sgx-tools
         env:
           HOME: /root
+
+      - name: Compile "rats-tls"
+        if: ${{ !contains(matrix.tag, 'alinux2') }}
+        run:
+          cd rats-tls;
+          source /root/.bashrc && cmake -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install && make -C build clean && rm -rf build &&
+          cmake -DRATS_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild && make -C build install && make -C build clean && rm -rf build &&
+          cmake -DRATS_TLS_BUILD_MODE="sgx" -DBUILD_SAMPLES=on -H. -Bbuild && make -C build clean && rm -rf build
