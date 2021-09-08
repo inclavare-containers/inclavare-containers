@@ -35,6 +35,11 @@ ENV GO111MODULE  on
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
 ENV PATH         /root/.cargo/bin:$PATH
 
+# install LVI binutils for rats-tls build
+RUN wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/as.ld.objdump.gold.r3.tar.gz && \
+     tar -zxvf as.ld.objdump.gold.r3.tar.gz && cp -rf external/toolset/ubuntu18.04/* /usr/local/bin/ && \
+     rm -rf external && rm -rf as.ld.objdump.gold.r3.tar.gz
+
 # install docker
 RUN apt-get install -y iptables && \
     wget https://download.docker.com/linux/static/stable/x86_64/docker-18.09.7.tgz && \
