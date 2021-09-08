@@ -29,7 +29,7 @@ endif()
 link_directories(${LIBRARY_DIRS})
 
 # Set extra link library
-set(EXTRA_LINK_LIBRARY sgx_dcap_quoteverify)
+set(EXTRA_LINK_LIBRARY sgx_dcap_quoteverify sgx_urts)
 
 # Set source file
 set(SOURCES cleanup.c
