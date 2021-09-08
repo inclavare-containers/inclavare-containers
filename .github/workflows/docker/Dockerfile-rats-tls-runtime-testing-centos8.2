@@ -1,0 +1,14 @@
+FROM centos:8.2.2004
+
+LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
+
+RUN yum -y install yum-utils wget
+
+RUN wget -c https://download.01.org/intel-sgx/latest/linux-latest/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
+    tar xzf sgx_rpm_local_repo.tgz && \
+    yum-config-manager --add-repo sgx_rpm_local_repo && \
+    yum makecache && \
+    yum install --nogpgcheck -y libsgx-dcap-quote-verify libsgx-dcap-default-qpl libsgx-dcap-ql-devel libsgx-uae-service && \
+    rm -f sgx_rpm_local_repo.tgz
+
+WORKDIR /root
