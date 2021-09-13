@@ -18,15 +18,6 @@ rats_tls_err_t rats_tls_negotiate(rats_tls_handle handle, int fd)
 	    !ctx->tls_wrapper->opts->negotiate || fd < 0)
 		return -RATS_TLS_ERR_INVALID;
 
-	/* Check whether requiring to generate TLS certificate */
-	if ((ctx->config.flags & RATS_TLS_CONF_FLAGS_SERVER) ||
-	    (ctx->config.flags & RATS_TLS_CONF_FLAGS_MUTUAL)) {
-		rats_tls_err_t err = rtls_core_generate_certificate(ctx);
-
-		if (err != RATS_TLS_ERR_NONE)
-			return err;
-	}
-
 	tls_wrapper_err_t t_err = ctx->tls_wrapper->opts->negotiate(ctx->tls_wrapper, fd);
 	if (t_err != TLS_WRAPPER_ERR_NONE)
 		return t_err;

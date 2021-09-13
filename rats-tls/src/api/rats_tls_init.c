@@ -93,6 +93,14 @@ rats_tls_err_t rats_tls_init(const rats_tls_conf_t *conf, rats_tls_handle *handl
 	if (err != RATS_TLS_ERR_NONE)
 		goto err_ctx;
 
+	/* Check whether requiring to generate TLS certificate */
+	if ((ctx->config.flags & RATS_TLS_CONF_FLAGS_SERVER) ||
+	    (ctx->config.flags & RATS_TLS_CONF_FLAGS_MUTUAL)) {
+		err = rtls_core_generate_certificate(ctx);
+		if (err != RATS_TLS_ERR_NONE)
+			goto err_ctx;
+	}
+
 	*handle = ctx;
 
 	RTLS_DEBUG("the handle %p returned\n", ctx);

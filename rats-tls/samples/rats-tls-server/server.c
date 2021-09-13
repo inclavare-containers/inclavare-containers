@@ -177,24 +177,24 @@ int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
 	}
 
 	rats_tls_handle handle;
-	/* Accept client connections */
-	struct sockaddr_in c_addr;
-	socklen_t size = sizeof(c_addr);
+	rats_tls_err_t ret = rats_tls_init(&conf, &handle);
+	if (ret != RATS_TLS_ERR_NONE) {
+		RTLS_ERR("Failed to initialize rats tls %#x\n", ret);
+		return -1;
+	}
+
+	ret = rats_tls_set_verification_callback(&handle, NULL);
+	if (ret != RATS_TLS_ERR_NONE) {
+		RTLS_ERR("Failed to set verification callback %#x\n", ret);
+		return -1;
+	}
+
 	while (1) {
-		rats_tls_err_t ret;
-		ret = rats_tls_init(&conf, &handle);
-		if (ret != RATS_TLS_ERR_NONE) {
-			RTLS_ERR("Failed to initialize rats tls %#x\n", ret);
-			return -1;
-		}
-
-		ret = rats_tls_set_verification_callback(&handle, NULL);
-		if (ret != RATS_TLS_ERR_NONE) {
-			RTLS_ERR("Failed to set verification callback %#x\n", ret);
-			return -1;
-		}
-
 		RTLS_INFO("Waiting for a connection ...\n");
+
+		/* Accept client connections */
+		struct sockaddr_in c_addr;
+		socklen_t size = sizeof(c_addr);
 
 		int connd = accept(sockfd, (struct sockaddr *)&c_addr, &size);
 		if (connd < 0) {
@@ -252,7 +252,12 @@ int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
 		close(connd);
 	}
 
-	return 0;
+	ret = rats_tls_cleanup(handle);
+	if (ret != RATS_TLS_ERR_NONE)
+		RTLS_ERR("Failed to cleanup %#x\n", ret);
+
+	return ret;
+
 
 err:
 	/* Ignore the error code of cleanup in order to return the prepositional error */
