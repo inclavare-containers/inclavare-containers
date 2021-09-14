@@ -60,7 +60,7 @@ jobs:
         mkdir -p /root/inclavare-containers/${{ matrix.tag }};
         cd inclavare-containers-${{ env.RUNE_VERSION }}/eaa;
         make install;
-        cp -rf ${{ env.RATS_TLS_ROOTDIR }} ${{ env.VERDICTD_BINDIR }} ${{ env.OPA_LIBDIR }} /root/inclavare-containers/${{ matrix.tag }}'
+        cp -rf ${{ env.RATS_TLS_ROOTDIR }} ${{ env.VERDICTD_BINDIR }} ${{ env.OPA_LIBDIR }} ${{ env.VERDICT_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}'
 
     - name: Kill the dev container
       run: docker stop $inclavare_dev
@@ -79,10 +79,11 @@ jobs:
     - id: random-port-generator3
       uses: ./.github/actions/generate-random-port      
 
-    - name: install rats-tls & verdictd
+    - name: install rats-tls & verdictd & verdict
       run: docker exec $inclavare_test bash -c 'mv /root/inclavare-containers/${{ matrix.tag }}/rats-tls /usr/local/lib/;
         mv /root/inclavare-containers/${{ matrix.tag }}/libopa.so /usr/local/lib/;
-        mv /root/inclavare-containers/${{ matrix.tag }}/verdictd /usr/local/bin/'
+        mv /root/inclavare-containers/${{ matrix.tag }}/verdictd /usr/local/bin/;
+        mv /root/inclavare-containers/${{ matrix.tag }}/verdict /usr/local/bin/'
 
     - name: install sample image
       run: docker exec $inclavare_test bash -c 'mkdir /root/images && cd /root/images;
@@ -133,9 +134,39 @@ jobs:
         docker exec $inclavare_test bash -c 'verdictd --listen 127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }} --gRPC 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --config 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }}' &
         docker exec $inclavare_test bash -c 'containerd' &
 
-    - name: Generate encrypted container image
+    - name: Test generate encrypted container image
       run: |
         docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:eaa:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}' 
+
+    - name: generate policy file
+      run: |
+        docker exec $inclavare_test bash -c "cat <<- EOF >./reference
+        {
+            \"mrEnclave\" : [
+                \"2343545\",
+                \"5465767\"
+            ],
+            \"mrSigner\" : [
+                \"1122\",
+                \"5566\"
+            ],
+            \"productId\" : {
+                \">=\": 0
+            },
+            \"svn\" : {
+                \">=\": 0
+            }
+        }
+        EOF"
+
+    - name: Test Verdict
+      run: |
+        docker exec $inclavare_test bash -c 'curl -L -o opa https://openpolicyagent.org/downloads/v0.30.2/opa_linux_amd64_static && chmod 755 ./opa && mv ./opa /usr/local/bin/'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_policy attestation.rego ./reference'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy attestation.rego'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_raw_policy attestation_export.rego ./attestation.rego'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy attestation_export.rego'
+        docker exec $inclavare_test bash -c 'cmp -s ./attestation.rego ./attestation_export.rego || exit -1'
 
     - name: Clean up the github workspace
       if: ${{ always() }}
