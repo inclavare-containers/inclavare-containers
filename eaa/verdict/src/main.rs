@@ -12,8 +12,13 @@ pub mod configureProvider {
     tonic::include_proto!("configureprovider");
 }
 
+#[macro_use]
+extern crate log;
+
 #[tokio::main]
 async fn main() {
+    env_logger::builder().filter(None, log::LevelFilter::Info).init();
+
     let matches = App::new("verdict")
         .version("0.1")
         .author("Inclavare-Containers Team")
@@ -67,7 +72,7 @@ async fn main() {
     } else {
         "[::1]:60000".to_string()
     };
-    println!("Listen configuration server addr: {}", config_addr);
+    info!("Listen configuration server addr: {}", config_addr);
 
     let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", config_addr))
         .await
@@ -82,7 +87,7 @@ async fn main() {
             .await
             .unwrap()
             .into_inner();
-        println!(
+        info!(
             "SetPolicy status is: {:?}",
             String::from_utf8(response.status).unwrap()
         );
@@ -97,7 +102,7 @@ async fn main() {
             .await
             .unwrap()
             .into_inner();
-        println!(
+        info!(
             "SetRawPolicy status is: {:?}",
             String::from_utf8(response.status).unwrap()
         );
@@ -115,11 +120,11 @@ async fn main() {
             client.export_policy(request).await.unwrap().into_inner();
         let policy = String::from_utf8(response.policycontent).unwrap();
 
-        println!(
+        info!(
             "export_policy status is: {:?}",
             String::from_utf8(response.status).unwrap()
         );
-        println!("policy: {} content is:\n{}", policyname, policy);
+        info!("policy: {} content is:\n{}", policyname, policy);
 
         let mut path: String = if matches.is_present("path") {
             matches.value_of("path").unwrap().to_string()

@@ -57,7 +57,7 @@ impl ConfigureProviderService for configProviderService {
     ) -> Result<Response<GetKeyResponse>, Status> {
         let kid = String::from_utf8(request.into_inner().uuid)
             .unwrap_or_else(|_| "00000000-0000-0000-0000-000000000000".to_string());
-        println!("kid: {}", kid);
+        info!("kid: {}", kid);
 
         let res = directory_key_manager::get_key(&kid)
             .and_then(|data| {
@@ -95,12 +95,12 @@ impl ConfigureProviderService for configProviderService {
         let request: SetPolicyRequest = request.into_inner();
         let policyname = std::str::from_utf8(&request.policyname)
             .unwrap_or_else(|_| {
-                println!("parse policyname failed");
+                error!("parse policyname failed");
                 &empty
             });
         let references = std::str::from_utf8(&request.references)
             .unwrap_or_else(|_| {
-                println!("parse references failed");
+                error!("parse references failed");
                 &empty
             });
             
@@ -128,12 +128,12 @@ impl ConfigureProviderService for configProviderService {
         let request: SetRawPolicyRequest = request.into_inner();
         let policyname = std::str::from_utf8(&request.policyname)
             .unwrap_or_else(|_| {
-                println!("parse policyname failed");
+                error!("parse policyname failed");
                 &empty
             });
         let policycontent = std::str::from_utf8(&request.policycontent)
             .unwrap_or_else(|_| {
-                println!("parse policycontent failed");
+                error!("parse policycontent failed");
                 &empty
             });
 
@@ -159,7 +159,7 @@ impl ConfigureProviderService for configProviderService {
     ) -> Result<Response<ExportPolicyResponse>, Status> {
         let policyname = String::from_utf8(request.into_inner().policyname)
             .unwrap_or_else(|_| {
-                println!("parse policyname failed");
+                error!("parse policyname failed");
                 "".to_string()
             });
 

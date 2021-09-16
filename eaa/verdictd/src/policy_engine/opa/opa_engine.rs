@@ -317,7 +317,7 @@ mod tests {
         "#;
         set_reference(policy_name, references)
             .map_err(|e| {
-                println!("set_reference error: {}", e);
+                error!("set_reference error: {}", e);
                 assert_eq!(true, false);
             });     
 
