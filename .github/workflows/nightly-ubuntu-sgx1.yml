@@ -11,9 +11,9 @@ env:
   WORK_DIR: /root/pkgs
   HOME: /root
   OCCLUM_VERSION: 0.21.0
-  SGX_DRIVER_VERSION: 2.11.0_0373e2e
-  SGX_SDK_VERSION: 2.13.100.4
-  DCAP_VERSION: 1.10.100.4
+  SGX_DRIVER_VERSION: 2.11.0_2d2b795
+  SGX_SDK_VERSION: 2.14.100.2
+  DCAP_VERSION: 1.11.100.2
   kubernetes_version: 1.18.8
   nap_time: 60
 
@@ -60,8 +60,8 @@ jobs:
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libprotobuf-dev
           sudo apt-get install -y build-essential python
           pushd ${WORK_DIR}
-          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -O sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
-          wget https://download.01.org/intel-sgx/sgx-linux/2.13/distro/ubuntu18.04-server/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin -O sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
+          wget https://download.01.org/intel-sgx/sgx-linux/2.14/distro/ubuntu18.04-server/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -O sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
+          wget https://download.01.org/intel-sgx/sgx-linux/2.14/distro/ubuntu18.04-server/sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin -O sgx_linux_x64_sdk_${SGX_SDK_VERSION}.bin
           echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
           wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
           sudo apt-get update
