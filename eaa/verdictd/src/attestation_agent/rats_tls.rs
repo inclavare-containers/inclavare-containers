@@ -32,7 +32,7 @@ fn handle_client(
 
         let response = protocol::handle_aa_request(&buffer[..n])
             .map_err(|e| format!("sockfd:{} handle_aa_request err: {}", sockfd, e))?;
-        println!("response: {}", response);
+        info!("response: {}", response);
 
         tls.transmit(response.as_bytes())
             .map_err(|e| format!("tls transmit error {:?}", e))?;
@@ -56,13 +56,13 @@ pub fn server(
     let listener = TcpListener::bind(sockaddr).unwrap();
     loop {
         let (socket, addr) = listener.accept().unwrap();
-        println!("thread for {} {:?}", socket.as_raw_fd(), addr);
+        info!("thread for {} {:?}", socket.as_raw_fd(), addr);
         let tls_type = tls_type.clone();
         let crypto = crypto.clone();
         let attester = attester.clone();
         let verifier = verifier.clone();
         std::thread::spawn(move || {
-            println!(
+            info!(
                 "##### Task executes on thread: {:?} #####",
                 std::thread::current().id()
             );
@@ -76,7 +76,7 @@ pub fn server(
                 0,
             ) {
                 Ok(_) => {},
-                Err(e) => println!("handle_client error: {}", e),
+                Err(e) => error!("handle_client error: {}", e),
             }
         });
     }

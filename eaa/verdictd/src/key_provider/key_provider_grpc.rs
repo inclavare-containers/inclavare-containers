@@ -37,7 +37,7 @@ impl KeyProviderService for keyProviderSrv {
             }
         };
 
-        println!("wrap_command: {:?}", wrap_command);
+        info!("wrap_command: {:?}", wrap_command);
 
         let mut kid = Uuid::new_v4().to_string();
         let ec = wrap_command.keywrapparams.ec.unwrap();
@@ -58,16 +58,16 @@ impl KeyProviderService for keyProviderSrv {
 
         let encrypted_data = directory_key_manager::get_key(&kid)
             .and_then(|key| {
-                println!("key: {:?}", key);
+                info!("key: {:?}", key);
                 let encrypted_data = aes256_cbc::encrypt(&base64::decode(optsdata).unwrap(), key.as_slice(), &iv)
                     .unwrap_or_else(|e| {
-                        println!("encrypt data failed with error:{:?}", e);
+                        error!("encrypt data failed with error:{:?}", e);
                         vec![0]
                     });
                 Ok(encrypted_data)
             })
             .unwrap_or_else(|_| {
-                println!("get encryption key faied");
+                error!("get encryption key faied");
                 vec![0]
             });
 
@@ -139,7 +139,7 @@ impl KeyProviderService for keyProviderSrv {
                             &annotation.iv[..],
                         )
                         .unwrap_or_else(|e| {
-                            println!("decrypt data failed with error:{:?}", e);
+                            error!("decrypt data failed with error:{:?}", e);
                             vec![0]
                         });
                         Ok(a)

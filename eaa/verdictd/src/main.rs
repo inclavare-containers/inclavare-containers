@@ -15,6 +15,9 @@ mod key_manager;
 mod key_provider;
 mod policy_engine;
 
+#[macro_use]
+extern crate log;
+
 shadow!(build);
 
 const POLICY_PATH: &str = "/opt/verdictd/opa/policy/";
@@ -26,7 +29,7 @@ fn set_default_policy() -> Result<(), String> {
     }
 
     if !std::path::Path::new(&(POLICY_PATH.to_string() + "attestation.rego")).exists() {
-        println!("attestation.rego isn't exist");
+        info!("attestation.rego isn't exist");
         let reference = json!({
             "mrEnclave": [
                 "123",
@@ -49,18 +52,20 @@ fn set_default_policy() -> Result<(), String> {
 
 #[tokio::main]
 async fn main() {
+    env_logger::builder().filter(None, log::LevelFilter::Info).init();
+
     let version = format!(
         "v{}\ncommit: {}\nbuildtime: {}",
         build::PKG_VERSION,
         build::COMMIT_HASH,
         build::BUILD_TIME
     );
-    println!("Verdictd info: {}", version);
+    info!("Verdictd info: {}", version);
 
     match set_default_policy() {
         Ok(_) => {}
         Err(e) => {
-            println!("error: {}", e);
+            error!("{}", e);
             return;
         }
     }
@@ -150,7 +155,7 @@ async fn main() {
 
     let mutual = matches.is_present("mutual");
     std::thread::spawn(move || {
-        println!("Listen addr: {}", sockaddr);
+        info!("Listen addr: {}", sockaddr);
         attestation_agent::rats_tls::server(
             &sockaddr, tls_type, crypto, attester, verifier, mutual,
         );
@@ -161,7 +166,7 @@ async fn main() {
         true => matches.value_of("gRPC").unwrap().to_string(),
         false => "[::1]:50000".to_string(),
     };
-    println!("Listen gRPC server addr: {}", gRPC_addr);
+    info!("Listen gRPC server addr: {}", gRPC_addr);
     let key_provider_server = key_provider::key_provider_grpc::server(&gRPC_addr);
 
      // Launch configuration gRPC server
@@ -169,7 +174,7 @@ async fn main() {
         true => matches.value_of("config").unwrap().to_string(),
         false => "[::1]:60000".to_string(),
     };
-    println!("Listen configuration server addr: {}", config_addr);
+    info!("Listen configuration server addr: {}", config_addr);
     let config_provider_server = configure_provider::provider::server(&config_addr);
 
     let (_first, _second) = tokio::join!(key_provider_server, config_provider_server);

@@ -96,7 +96,7 @@ pub fn handle_aa_request(request: &[u8]) -> Result<String, String> {
         Ok(r) => r,
         Err(_) => return Err("parse request failed".to_string()),
     };
-    println!("request: {:?}", parsed_request);
+    info!("request: {:?}", parsed_request);
 
     let response = match parsed_request["command"].as_str().unwrap() {
         "version" => handle_version(),

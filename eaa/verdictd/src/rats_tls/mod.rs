@@ -105,7 +105,7 @@ impl RatsTls {
         let mut tls: *mut rats_tls_handle = &mut handle;
         let err = unsafe { rats_tls_init(&conf, &mut tls) };
         if err != RATS_TLS_ERR_NONE {
-            println!("rats_tls_init() failed");
+            error!("rats_tls_init() failed");
             return Err(err);
         }
 
@@ -180,7 +180,7 @@ impl RatsTls {
                 if res["allow"] == true {
                     Ok(())
                 } else {
-                    println!("parseInfo: {}", res["parseInfo"].to_string());
+                    error!("parseInfo: {}", res["parseInfo"].to_string());
                     Err("decision is false".to_string())
                 }
             })
@@ -188,7 +188,7 @@ impl RatsTls {
 
     #[no_mangle]
     extern "C" fn callback(evidence: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int {
-        println!("Verdictd Rats-TLS callback function is called.");
+        info!("Verdictd Rats-TLS callback function is called.");
         let evidence = evidence as *mut rtls_evidence;
         let res = if unsafe { (*evidence).type_ } == enclave_evidence_type_t_SGX_ECDSA {
             Self::sgx_callback(unsafe { (*evidence).__bindgen_anon_1.sgx })
@@ -199,7 +199,7 @@ impl RatsTls {
         let allow = match res {
             Ok(_) => 1,
             Err(e) => {
-                println!("error: {}", e);
+                error!(" {}", e);
                 0
             }
         };
