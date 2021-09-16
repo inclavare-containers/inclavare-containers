@@ -27,18 +27,18 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no
 ENV PATH         /root/.cargo/bin:$PATH
 
 # install LVI binutils for rats-tls build
-RUN wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/as.ld.objdump.gold.r3.tar.gz && \
+RUN wget https://download.01.org/intel-sgx/sgx-linux/2.14/as.ld.objdump.gold.r3.tar.gz && \
      tar -zxvf as.ld.objdump.gold.r3.tar.gz && cp -rf external/toolset/centos8.2/* /usr/local/bin/ && \
      rm -rf external && rm -rf as.ld.objdump.gold.r3.tar.gz
 
 # install SGX
-RUN [ ! -f sgx_linux_x64_sdk_2.13.100.4.bin ] && \
-    wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_linux_x64_sdk_2.13.100.4.bin && \
-    chmod +x sgx_linux_x64_sdk_2.13.100.4.bin && echo -e 'no\n/opt/intel\n' | ./sgx_linux_x64_sdk_2.13.100.4.bin && \
-    rm -rf sgx_linux_x64_sdk_2.13.100.4.bin
+RUN [ ! -f sgx_linux_x64_sdk_2.14.100.2.bin ] && \
+    wget -c https://download.01.org/intel-sgx/sgx-linux/2.14/distro/centos8.2-server/sgx_linux_x64_sdk_2.14.100.2.bin && \
+    chmod +x sgx_linux_x64_sdk_2.14.100.2.bin && echo -e 'no\n/opt/intel\n' | ./sgx_linux_x64_sdk_2.14.100.2.bin && \
+    rm -rf sgx_linux_x64_sdk_2.14.100.2.bin
 
 RUN [ ! -f sgx_rpm_local_repo.tgz ] && \
-    wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
+    wget -c https://download.01.org/intel-sgx/sgx-linux/2.14/distro/centos8.2-server/sgx_rpm_local_repo.tgz && \
     tar xzf sgx_rpm_local_repo.tgz && \
     yum-config-manager --add-repo sgx_rpm_local_repo && \
     yum makecache && rm sgx_rpm_local_repo.tgz
