@@ -1,7 +1,8 @@
 [package]
 name = "inclavared"
 version = "0.0.1"
-authors = ["Tianjia Zhang <tianjia.zhang@linux.alibaba.com>"]
+authors = ["Tianjia Zhang <tianjia.zhang@linux.alibaba.com>",
+           "stormgbs <stormgbs@gmail.com>"]
 build = "build.rs"
 edition = "2018"
 
