@@ -94,10 +94,10 @@ jobs:
           wget -qO - http://occlum.io/occlum-package-repos/debian/public.key | apt-key add -
           sudo apt-get update
           sudo apt-get install -y occlum-pal=${{ env.OCCLUM_VERSION }}-1
-          sudo apt-get install -y occlum-runtime=${{ env.OCCLUM_VERSION }}-1
-          sudo apt-get install -y occlum-sgx-tools=${{ env.OCCLUM_VERSION }}-1
-          sudo apt-get install -y occlum-toolchains-gcc
-          sudo apt-get install -y occlum=${{ env.OCCLUM_VERSION }}-1
+          # sudo apt-get install -y occlum-runtime=${{ env.OCCLUM_VERSION }}-1
+          # sudo apt-get install -y occlum-sgx-tools=${{ env.OCCLUM_VERSION }}-1
+          # sudo apt-get install -y occlum-toolchains-gcc
+          # sudo apt-get install -y occlum=${{ env.OCCLUM_VERSION }}-1
 
       - name: Install rune shim and epm
         run: |
@@ -249,166 +249,166 @@ jobs:
             sleep 5
           done
 
-      - name: Run hello-world pod
-        timeout-minutes: 10
-        run: |
-          cat <<- EOF >$WORK_DIR/helloworld.yaml
-          apiVersion: v1
-          kind: Pod
-          metadata:
-            labels:
-              run: helloworld
-            name: helloworld
-          spec:
-            runtimeClassName: rune
-            containers:
-            - command:
-              - /bin/hello_world
-              env:
-              - name: RUNE_CARRIER
-                value: occlum
-              - name: IMAGE_DIGEST
-                value: "408fbccd943bb"
-              image: docker.io/inclavarecontainers/occlum-hello-world:scratch
-              imagePullPolicy: IfNotPresent
-              name: helloworld
-              workingDir: /run/rune
-          EOF
+      # - name: Run hello-world pod
+      #   timeout-minutes: 10
+      #   run: |
+      #     cat <<- EOF >$WORK_DIR/helloworld.yaml
+      #     apiVersion: v1
+      #     kind: Pod
+      #     metadata:
+      #       labels:
+      #         run: helloworld
+      #       name: helloworld
+      #     spec:
+      #       runtimeClassName: rune
+      #       containers:
+      #       - command:
+      #         - /bin/hello_world
+      #         env:
+      #         - name: RUNE_CARRIER
+      #           value: occlum
+      #         - name: IMAGE_DIGEST
+      #           value: "408fbccd943bb"
+      #         image: docker.io/inclavarecontainers/occlum-hello-world:scratch
+      #         imagePullPolicy: IfNotPresent
+      #         name: helloworld
+      #         workingDir: /run/rune
+      #     EOF
 
-          kubectl apply -f $WORK_DIR/helloworld.yaml
+      #     kubectl apply -f $WORK_DIR/helloworld.yaml
 
-      - name: Run Golang-web pod
-        run: |
-          cat <<- EOF >$WORK_DIR/golang-web.yaml
-          apiVersion: v1
-          kind: Pod
-          metadata:
-            labels:
-              run: golang-web
-            name: golang-web
-            namespace: default
-          spec:
-            containers:
-              - command:
-                  - /bin/web_server
-                env:
-                  - name: RUNE_CARRIER
-                    value: occlum
-                  - name: OCCLUM_USER_SPACE_SIZE
-                    value: "380MB"
-                  - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
-                    value: "300MB"
-                image: docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch
-                imagePullPolicy: IfNotPresent
-                livenessProbe:
-                  httpGet:
-                    path: /ping
-                    port: 8090
-                  initialDelaySeconds: 10
-                  periodSeconds: 10
-                readinessProbe:
-                  httpGet:
-                    path: /ping
-                    port: 8090
-                  initialDelaySeconds: 10
-                  periodSeconds: 10
-                name: golang-web
-                workingDir: /run/rune
-            dnsPolicy: ClusterFirst
-            runtimeClassName: rune
-          EOF
+      # - name: Run Golang-web pod
+      #   run: |
+      #     cat <<- EOF >$WORK_DIR/golang-web.yaml
+      #     apiVersion: v1
+      #     kind: Pod
+      #     metadata:
+      #       labels:
+      #         run: golang-web
+      #       name: golang-web
+      #       namespace: default
+      #     spec:
+      #       containers:
+      #         - command:
+      #             - /bin/web_server
+      #           env:
+      #             - name: RUNE_CARRIER
+      #               value: occlum
+      #             - name: OCCLUM_USER_SPACE_SIZE
+      #               value: "380MB"
+      #             - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+      #               value: "300MB"
+      #           image: docker.io/inclavarecontainers/occlum-golang-web:0.16.0-scratch
+      #           imagePullPolicy: IfNotPresent
+      #           livenessProbe:
+      #             httpGet:
+      #               path: /ping
+      #               port: 8090
+      #             initialDelaySeconds: 10
+      #             periodSeconds: 10
+      #           readinessProbe:
+      #             httpGet:
+      #               path: /ping
+      #               port: 8090
+      #             initialDelaySeconds: 10
+      #             periodSeconds: 10
+      #           name: golang-web
+      #           workingDir: /run/rune
+      #       dnsPolicy: ClusterFirst
+      #       runtimeClassName: rune
+      #     EOF
 
-          kubectl apply -f $WORK_DIR/golang-web.yaml
+      #     kubectl apply -f $WORK_DIR/golang-web.yaml
 
-      - name: Run dragonwell-web pod
-        run: |
-          cat <<- EOF >$WORK_DIR/dragonwell-web.yaml
-          apiVersion: v1
-          kind: Pod
-          metadata:
-            labels:
-              run: dragonwell-web
-            name: dragonwell-web
-            namespace: default
-          spec:
-            tolerations:
-              - key: "node.kubernetes.io/disk-pressure"
-                operator: "Exists"
-                effect: "NoSchedule"
-            containers:
-              - env:
-                  - name: RUNE_CARRIER
-                    value: occlum
-                  - name: OCCLUM_USER_SPACE_SIZE
-                    value: "1400MB"
-                  - name: OCCLUM_MAX_NUM_OF_THREADS
-                    value: "64"
-                  - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
-                    value: "1120MB"
-                  - name: OCCLUM_PROCESS_DEFAULT_HEAP_SIZE
-                    value: "256MB"
-                  - name: OCCLUM_KERNEL_SPACE_HEAP_SIZE
-                    value: "64MB"
-                  - name: OCCLUM_DEFAULT_ENV
-                    value: "LD_LIBRARY_PATH=/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib/server:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/../lib"
-                image: docker.io/inclavarecontainers/occlum-dragonwell-web:scratch
-                imagePullPolicy: IfNotPresent
-                livenessProbe:
-                  httpGet:
-                    path: /
-                    port: 8080
-                  initialDelaySeconds: 60
-                  periodSeconds: 10
-                  failureThreshold: 10
-                readinessProbe:
-                  httpGet:
-                    path: /
-                    port: 8080
-                  initialDelaySeconds: 60
-                  periodSeconds: 10
-                  failureThreshold: 10
-                name: dragonwell-web
-                workingDir: /run/rune
-            dnsPolicy: ClusterFirst
-            runtimeClassName: rune
-          EOF
-          kubectl apply -f $WORK_DIR/dragonwell-web.yaml
+      # - name: Run dragonwell-web pod
+      #   run: |
+      #     cat <<- EOF >$WORK_DIR/dragonwell-web.yaml
+      #     apiVersion: v1
+      #     kind: Pod
+      #     metadata:
+      #       labels:
+      #         run: dragonwell-web
+      #       name: dragonwell-web
+      #       namespace: default
+      #     spec:
+      #       tolerations:
+      #         - key: "node.kubernetes.io/disk-pressure"
+      #           operator: "Exists"
+      #           effect: "NoSchedule"
+      #       containers:
+      #         - env:
+      #             - name: RUNE_CARRIER
+      #               value: occlum
+      #             - name: OCCLUM_USER_SPACE_SIZE
+      #               value: "1400MB"
+      #             - name: OCCLUM_MAX_NUM_OF_THREADS
+      #               value: "64"
+      #             - name: OCCLUM_PROCESS_DEFAULT_MMAP_SIZE
+      #               value: "1120MB"
+      #             - name: OCCLUM_PROCESS_DEFAULT_HEAP_SIZE
+      #               value: "256MB"
+      #             - name: OCCLUM_KERNEL_SPACE_HEAP_SIZE
+      #               value: "64MB"
+      #             - name: OCCLUM_DEFAULT_ENV
+      #               value: "LD_LIBRARY_PATH=/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib/server:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/lib:/usr/lib/jvm/java-11-alibaba-dragonwell/jre/../lib"
+      #           image: docker.io/inclavarecontainers/occlum-dragonwell-web:scratch
+      #           imagePullPolicy: IfNotPresent
+      #           livenessProbe:
+      #             httpGet:
+      #               path: /
+      #               port: 8080
+      #             initialDelaySeconds: 60
+      #             periodSeconds: 10
+      #             failureThreshold: 10
+      #           readinessProbe:
+      #             httpGet:
+      #               path: /
+      #               port: 8080
+      #             initialDelaySeconds: 60
+      #             periodSeconds: 10
+      #             failureThreshold: 10
+      #           name: dragonwell-web
+      #           workingDir: /run/rune
+      #       dnsPolicy: ClusterFirst
+      #       runtimeClassName: rune
+      #     EOF
+      #     kubectl apply -f $WORK_DIR/dragonwell-web.yaml
 
-      - name: Check pod runing
-        timeout-minutes: 20
-        run: |
-          sleep $nap_time
-          while true; do
-            count=$(kubectl get pod | grep "Running" | grep -c "1/1")
-            if [ $count -eq 3 ]; then
-              break
-            fi
-            sleep 5
-          done
+      # - name: Check pod runing
+      #   timeout-minutes: 20
+      #   run: |
+      #     sleep $nap_time
+      #     while true; do
+      #       count=$(kubectl get pod | grep "Running" | grep -c "1/1")
+      #       if [ $count -eq 3 ]; then
+      #         break
+      #       fi
+      #       sleep 5
+      #     done
 
-      - name: Test hello-world pod
-        run:
-          timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
+      # - name: Test hello-world pod
+      #   run:
+      #     timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
 
-      - name: Check epm bundle cache
-        run: |
-          test -d /var/local/epm/bundle-cache.occlum.cache0/408fbccd943bb/bundle-cache.occlum.cache1/61c26bf4a05f2e7da6ccbdd629acf615/bundle-cache.occlum.cache2 \
-            || exit 1
+      # - name: Check epm bundle cache
+      #   run: |
+      #     test -d /var/local/epm/bundle-cache.occlum.cache0/408fbccd943bb/bundle-cache.occlum.cache1/61c26bf4a05f2e7da6ccbdd629acf615/bundle-cache.occlum.cache2 \
+      #       || exit 1
 
-      - name: Rerun hello-world pod
-        timeout-minutes: 10
-        run: |
-          kubectl delete pod helloworld
-          kubectl apply -f $WORK_DIR/helloworld.yaml
-          sleep $nap_time
-          while true; do
-            count=$(kubectl get pod helloworld | grep "Running" | grep -c "1/1")
-            if [ $count -eq 1 ]; then
-              break
-            fi
-            sleep 5
-          done
-          timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
+      # - name: Rerun hello-world pod
+      #   timeout-minutes: 10
+      #   run: |
+      #     kubectl delete pod helloworld
+      #     kubectl apply -f $WORK_DIR/helloworld.yaml
+      #     sleep $nap_time
+      #     while true; do
+      #       count=$(kubectl get pod helloworld | grep "Running" | grep -c "1/1")
+      #       if [ $count -eq 1 ]; then
+      #         break
+      #       fi
+      #       sleep 5
+      #     done
+      #     timeout 3 kubectl logs -f helloworld  | grep "Hello World" || true
 
       - name: Run off-cloud signed pod
         run: |
