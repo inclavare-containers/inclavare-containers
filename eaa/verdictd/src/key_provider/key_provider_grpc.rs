@@ -72,7 +72,6 @@ impl KeyProviderService for keyProviderSrv {
             });
 
         let annotation = annotation::AnnotationPacket {
-            url: String::from("https://key-provider"),
             kid: kid.to_string(),
             wrapped_data: encrypted_data,
             iv: iv.to_vec(),
