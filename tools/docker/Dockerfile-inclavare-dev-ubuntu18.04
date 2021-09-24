@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:18.04 AS builder
 
 LABEL maintainer="Shirong Hao <shirong@linux.alibaba.com>"
 
@@ -35,6 +35,35 @@ ENV GO111MODULE  on
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
 ENV PATH         /root/.cargo/bin:$PATH
 
+FROM builder AS eaa
+
+# download and install containerd 1.5.3
+RUN wget https://github.com/containerd/containerd/releases/download/v1.5.3/cri-containerd-cni-1.5.3-linux-amd64.tar.gz && \
+    tar zxvf cri-containerd-cni-1.5.3-linux-amd64.tar.gz && \
+    cp -rf etc/* /etc/ && cp -rf opt/* /opt/ && \
+    cp -f usr/local/bin/* /usr/local/bin/ && \
+    rm -rf cri-containerd-cni-1.5.3-linux-amd64.tar.gz etc opt usr
+
+# configue ocicrypt keyprovider
+RUN mkdir -p /etc/containerd/ocicrypt/keys
+
+# configure containerd
+RUN containerd config default > config.toml && \
+    sed -i "s#k8s.gcr.io/pause:3.5#registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.1#g" config.toml && \
+    sed -i 's/\(snapshotter = \)"overlayfs"/\1"native"/' config.toml && \
+    cp -f config.toml /etc/containerd
+
+# build and install skopeo
+RUN git clone https://github.com/containers/skopeo $GOPATH/src/github.com/containers/skopeo && \
+    apt-get install -y libdevmapper-dev build-essential nghttp2 libnghttp2-dev libssl-dev libfftw3-dev libsndfile1-dev libgpgme-dev && \
+    cd $GOPATH/src/github.com/containers/skopeo && make bin/skopeo && \
+    cp -f $GOPATH/src/github.com/containers/skopeo/bin/skopeo /usr/local/bin/
+
+# configue crictl
+RUN echo "runtime-endpoint: unix:///run/containerd/containerd.sock\nimage-endpoint: unix:///run/containerd/containerd.sock\ntimeout: 2\ndebug: true" > /etc/crictl.yaml
+
+FROM builder
+
 # install LVI binutils for rats-tls build
 RUN wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/as.ld.objdump.gold.r3.tar.gz && \
      tar -zxvf as.ld.objdump.gold.r3.tar.gz && cp -rf external/toolset/ubuntu18.04/* /usr/local/bin/ && \
@@ -61,3 +90,13 @@ RUN echo "deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu bio
 RUN apt-get update -y && apt-get install -y \
     libsgx-uae-service libsgx-dcap-default-qpl \
     libsgx-dcap-quote-verify-dev libsgx-dcap-ql-dev
+
+# install the packages need by skopeo
+RUN apt-get install -y libdevmapper-dev libgpgme-dev
+
+# copy binary and configure files
+COPY --from=eaa /opt/cni                             /opt/cni
+COPY --from=eaa /etc/containerd                      /etc/containerd
+COPY --from=eaa /etc/cni                             /etc/cni
+COPY --from=eaa /etc/crictl.yaml                     /etc
+COPY --from=eaa /usr/local/bin                       /usr/local/bin
