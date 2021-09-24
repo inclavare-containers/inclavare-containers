@@ -1,8 +1,0 @@
-*.swp
-*.o
-*.a
-*.so*
-*_[ut].[ch]
-.vscode/
-src/lib/.build/
-build/

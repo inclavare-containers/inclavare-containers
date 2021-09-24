@@ -1,3 +1,0 @@
-enclave {
-	from "../../src/sgx/enclave_tls.edl" import *;
-};
