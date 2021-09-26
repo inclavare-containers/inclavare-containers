@@ -41,7 +41,7 @@ jobs:
           source /root/.bashrc && make && make install && make clean
         env:
           HOME: /root
-          GOPROXY: https://goproxy.io,direct
+          GOPROXY: "https://goproxy.cn,direct"
 
       - name: Compile "rune shim-rune sgx-tools epm pal"
         run:
