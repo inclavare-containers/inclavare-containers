@@ -1,4 +1,8 @@
 add_subdirectory(nullattester)
+if(TDX)
+    add_subdirectory(tdx)
+endif()
+
 if(OCCLUM OR SGX)
     add_subdirectory(sgx-ecdsa)
 endif()

@@ -87,7 +87,7 @@ typedef struct ehd {
 	char *unhashed;
 } ehd_t;
 
-typedef enum { SGX_ECDSA = 1, TDX } enclave_evidence_type_t;
+typedef enum { SGX_ECDSA = 1, TDX_ECDSA } enclave_evidence_type_t;
 
 typedef struct rtls_evidence {
 	enclave_evidence_type_t type;
