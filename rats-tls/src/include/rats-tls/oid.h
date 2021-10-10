@@ -12,5 +12,6 @@
 #define ias_report_signature_oid        "1.2.840.113741.1337.5"
 #define ecdsa_quote_oid                 "1.2.840.113741.1337.6"
 #define la_report_oid                   "1.2.840.113741.1337.14"
+#define tdx_quote_oid                   "1.2.840.113741.1337.8"
 
 #endif

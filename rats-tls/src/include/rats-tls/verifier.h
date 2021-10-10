@@ -19,7 +19,8 @@
 #define ENCLAVE_VERIFIER_API_VERSION_MAX     ENCLAVE_VERIFIER_API_VERSION_1
 #define ENCLAVE_VERIFIER_API_VERSION_DEFAULT ENCLAVE_VERIFIER_API_VERSION_1
 
-#define ENCLAVE_VERIFIER_OPTS_FLAGS_SGX_ENCLAVE 1
+#define ENCLAVE_VERIFIER_OPTS_FLAGS_SGX_ENCLAVE 1 << 0
+#define ENCLAVE_VERIFIER_OPTS_FLAGS_TDX         1 << 1
 
 #define ENCLAVE_VERIFIER_FLAGS_DEFAULT 0
 
@@ -64,6 +65,11 @@ struct enclave_verifier_ctx {
 			const char name[ENCLAVE_VERIFIER_TYPE_NAME_SIZE];
 			uint8_t cert_type;
 		} sgx_ecdsa;
+		
+		struct {
+			const char name[ENCLAVE_VERIFIER_TYPE_NAME_SIZE];
+			uint8_t cert_type;
+		} tdx;
 	} config;
 };
 

@@ -155,7 +155,12 @@ crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, rats_tls_cert_a
 
 		if (!x509_extension_add(cert, la_report_oid, la->report, la->report_len))
 			goto err;
-	}
+	} else if(!strcmp(cert_info->evidence.type, "tdx_ecdsa")) {
+		tdx_attestation_evidence_t *tdx = &cert_info->evidence.tdx;
+
+		if (!x509_extension_add(cert, tdx_quote_oid, tdx->quote, tdx->quote_len))
+			goto err;
+	}	
 
 	ret = -CRYPTO_WRAPPER_ERR_CERT;
 	if (!X509_sign(cert, pkey, EVP_sha256()))

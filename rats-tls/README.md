@@ -12,6 +12,7 @@
 - [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the packages from this [page](https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro).
   - centos 8.2: `libsgx-dcap-quote-verify-devel`, `libsgx-dcap-ql-devel`, `libsgx-uae-service`
   - ubuntu 18.04: `libsgx-dcap-quote-verify-dev`, `libsgx-dcap-ql-dev`, `libsgx-uae-service`
+- For TDX, please see "TDX MVP Stack" (url will be released in future). You need to download the packages and following TDX_E2E_attestation_software_stack_Installation_README-dcap-2021XXXX.txt to do step 2 & step 3 to setup build and dependence libraries.
 
 ## Build and Install
 
@@ -49,6 +50,12 @@ cmake -DRATS_TLS_BUILD_MODE="occlum" -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
 
+If you want to run TDX instances, please type the following command.
+```shell
+cmake -DRATS_TLS_BUILD_MODE="tdx" -DBUILD_SAMPLES=on -H. -Bbuild
+make -C build install
+```
+
 Note that [SGX LVI mitigation](https://software.intel.com/security-software-guidance/advisory-guidance/load-value-injection) is enabled by default. You can set macro `SGX_LVI_MITIGATION` to `0` to disable SGX LVI mitigation.
 
 # RUN
@@ -59,7 +66,8 @@ Right now, RATS TLS supports the following instance types:
 | -------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
 | low      | nulltls               | nullattester               | nullverifier               | nullcrypto              |
 | Medium   | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
-| High     |                       | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve |                         |
+| High     |                       | tdx                        | tdx                        |                         |
+| Higher   |                       | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve |                         |                 
 
 By default,  RATS TLS will select the **highest priority** instance to use.
 
@@ -73,6 +81,13 @@ cd /usr/share/rats-tls/samples
 ```
 cd /usr/share/rats-tls/samples
 ./rats-tls-client
+```
+
+**Notice: special prerequisites for TDX remote attestation in bios configuration and hardware capability.**
+
+Check msr 0x503, return value must be 0:
+```
+sudo rdmsr 0x503s
 ```
 
 ## Specify the instance type
@@ -101,6 +116,7 @@ For example:
 ./rats-tls-server --attester sgx_ecdsa
 ./rats-tls-server --attester sgx_ecdsa_qve
 ./rats-tls-server --attester sgx_la
+./rats-tls-server --attester tdx
 ./rats-tls-server --crypto openssl
 ```
 
