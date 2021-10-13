@@ -35,6 +35,7 @@ set(SOURCES cleanup.c
             use_cert.c
             use_privkey.c
             per_thread.c
+            x509_openssl10x.c
             )
 
 # Generate library
