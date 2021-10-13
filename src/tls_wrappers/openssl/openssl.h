@@ -22,6 +22,7 @@
 #include <openssl/rand.h>
 #include <openssl/objects.h>
 #include <openssl/ec.h>
+#include <openssl/opensslv.h>
 
 #define SSL_SUCCESS 1
 
@@ -43,4 +44,8 @@ static inline void print_openssl_err(SSL *ssl, int ret)
 		RTLS_DEBUG("Error %lx: %s\n", l, buf);
 	}
 }
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+extern int X509_STORE_get_ex_new_index(long argl, void *argp, CRYPTO_EX_new *new_func, CRYPTO_EX_dup *dup_func, CRYPTO_EX_free *free_func);
+#endif
 #endif
