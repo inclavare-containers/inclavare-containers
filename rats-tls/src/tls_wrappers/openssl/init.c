@@ -18,6 +18,8 @@ tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_ciphers();
 
 	if (SSL_library_init() < 0) {
 		RTLS_ERR("failed to initialize the openssl library\n");
@@ -28,10 +30,20 @@ tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 	if (!ssl_ctx)
 		return -TLS_WRAPPER_ERR_NO_MEM;
 
-	if (ctx->conf_flags & RATS_TLS_CONF_FLAGS_SERVER)
+	if (ctx->conf_flags & RATS_TLS_CONF_FLAGS_SERVER) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+		ssl_ctx->sctx = SSL_CTX_new(TLSv1_server_method());
+#else
 		ssl_ctx->sctx = SSL_CTX_new(TLS_server_method());
-	else
+#endif
+	}
+	else {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+		ssl_ctx->sctx = SSL_CTX_new(TLSv1_client_method());
+#else
 		ssl_ctx->sctx = SSL_CTX_new(TLS_client_method());
+#endif
+	}
 
 	if (!ssl_ctx->sctx) {
 		free(ssl_ctx);

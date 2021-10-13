@@ -265,6 +265,8 @@ int verify_certificate(X509_STORE_CTX *ctx)
 int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 {
 #endif
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
 	int *ex_data = per_thread_getspecific();
 	if (!ex_data) {
@@ -277,6 +279,21 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 		RTLS_ERR("failed to get tls_wrapper_ctx pointer\n");
 		return 0;
 	}
+
+#else
+	X509_STORE *cert_store = X509_STORE_CTX_get0_store(ctx);
+	int *ex_data = per_thread_getspecific();
+	if (!ex_data) {
+		RTLS_ERR("failed to get ex_data\n");
+		return 0;
+	}
+
+	tls_wrapper_ctx_t *tls_ctx = X509_STORE_get_ex_data(cert_store, *ex_data);
+	if (!tls_ctx) {
+		RTLS_ERR("failed to get tls_wrapper_ctx pointer\n");
+		return 0;
+	}
+#endif
 
 	X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
 	if (!cert) {
