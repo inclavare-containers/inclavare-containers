@@ -29,6 +29,7 @@ Inclavare Containers is helping to keep tenants' confidential data secure so the
 Inclavare Containers follows the classic container runtime design. It takes the adaption to [containerd](https://github.com/containerd/containerd) as first class, and uses dedicated [shim-rune](https://github.com/alibaba/inclavare-containers/tree/master/shim) to interface with OCI Runtime [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune). In the downstrem, [init-runelet](docs/design/terminology.md#init-runelet) employs a novel approach of launching [enclave runtime](docs/design/terminology.md#enclave-runtime) and trusted application in hardware-enforced enclave.
 
 ![architecture](docs/design/architecture.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers?ref=badge_shield)
 
 The major components of Inclavare Containers are:
 
@@ -245,3 +246,7 @@ Please refer to [this guide](docs/running_inclavare_containers_with_pouch_and_oc
 Please refer to [this guide](https://github.com/bytecodealliance/wasm-micro-runtime/tree/main/product-mini/platforms/linux-sgx/enclave-sample/App#wamr-as-an-enclave-runtime-for-rune) to run [WAMR](https://github.com/bytecodealliance/wasm-micro-runtime) with `rune`.
 
 [WebAssembly Micro Runtime (WAMR) application image](https://hub.docker.com/r/inclavarecontainers/enclave-wamr/tags) is provided. WAMR image contains enclave runtime, because it doesn't adapt to shim-rune and use off-cloud signing. It is only used for the deployment with dockerd.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers?ref=badge_large)
