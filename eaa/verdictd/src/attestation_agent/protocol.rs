@@ -1,5 +1,5 @@
 use base64;
-use crate::crypto::aes256_cbc;
+use crate::crypto::aes256_gcm;
 use crate::key_manager;
 use serde_json::Value;
 
@@ -37,7 +37,7 @@ fn handle_decrypt(request: &Value) -> Result<String, String> {
         .and_then(|key| {
             let iv = base64::decode(blob["iv"].as_str().unwrap()).unwrap();
             let encrypted_data = base64::decode(blob["encrypted_data"].as_str().unwrap()).unwrap();
-            aes256_cbc::decrypt(&encrypted_data, key.as_slice(), &iv)
+            aes256_gcm::decrypt(&encrypted_data, key.as_slice(), &iv)
                 .map_err(|_| "decryption failed".to_string())
                 .and_then(|decrypted_data| Ok(decrypted_data))
         }) {
