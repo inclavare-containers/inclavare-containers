@@ -1,4 +1,4 @@
-use crate::crypto::aes256_cbc;
+use crate::crypto::aes256_gcm;
 use crate::key_manager::directory_key_manager;
 use crate::key_provider::annotation;
 use crate::key_provider::messages::*;
@@ -15,6 +15,9 @@ pub mod keyProvider {
 
 #[derive(Debug, Default)]
 pub struct keyProviderSrv {}
+
+const IV_LEN : usize = 12;
+const KEY_LEN : usize = 32;
 
 #[tonic::async_trait]
 impl KeyProviderService for keyProviderSrv {
@@ -49,17 +52,17 @@ impl KeyProviderService for keyProviderSrv {
             }
         } else {
             // generate a new key file with a new random key
-            let mut key: [u8; 32] = [0; 32];
+            let mut key = [0; KEY_LEN];
             rand::rngs::OsRng.fill_bytes(&mut key);
             directory_key_manager::set_key(&kid, &key)?;
         }
-        let mut iv: [u8; 16] = [0; 16];
+        let mut iv = [0; IV_LEN];
         rand::rngs::OsRng.fill_bytes(&mut iv);
 
         let encrypted_data = directory_key_manager::get_key(&kid)
             .and_then(|key| {
                 info!("key: {:?}", key);
-                let encrypted_data = aes256_cbc::encrypt(&base64::decode(optsdata).unwrap(), key.as_slice(), &iv)
+                let encrypted_data = aes256_gcm::encrypt(&base64::decode(optsdata).unwrap(), key.as_slice(), &iv)
                     .unwrap_or_else(|e| {
                         error!("encrypt data failed with error:{:?}", e);
                         vec![0]
@@ -72,11 +75,11 @@ impl KeyProviderService for keyProviderSrv {
             });
 
         let annotation = annotation::AnnotationPacket {
-            url: String::from("https://key-provider"),
             kid: kid.to_string(),
             wrapped_data: encrypted_data,
             iv: iv.to_vec(),
-            wrap_type: String::from("AES256-CBC"),
+            algorithm: String::from("AES"),
+            key_length: 256,
         };
 
         let key_wrap_output = KeyWrapOutput {
@@ -129,11 +132,13 @@ impl KeyProviderService for keyProviderSrv {
             }
         };
 
+        info!("unwrap's annotation: {:?}", &annotation);
+
         let decrypted_data = serde_json::from_str::<annotation::AnnotationPacket>(&annotation[..])
             .and_then(|annotation| {
                 let decrypted_data =
                     directory_key_manager::get_key(&annotation.kid).and_then(|key| {
-                        let a = aes256_cbc::decrypt(
+                        let a = aes256_gcm::decrypt(
                             &annotation.wrapped_data[..],
                             key.as_slice(),
                             &annotation.iv[..],
