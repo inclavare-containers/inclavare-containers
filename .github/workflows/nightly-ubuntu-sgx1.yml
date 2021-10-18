@@ -130,8 +130,8 @@ jobs:
       - name: Configure containerd
         run: |
           pushd ${WORK_DIR}
-          curl -LO https://github.com/containerd/containerd/releases/download/v1.4.8/containerd-1.4.8-linux-amd64.tar.gz
-          tar -xvf containerd-1.4.8-linux-amd64.tar.gz
+          proxychains4 curl -LO https://github.com/containerd/containerd/releases/download/v1.4.11/containerd-1.4.11-linux-amd64.tar.gz
+          tar -xvf containerd-1.4.11-linux-amd64.tar.gz
           /bin/cp -f bin/* /usr/local/bin
           cat <<- EOF >/etc/systemd/system/containerd.service
           [Unit]
