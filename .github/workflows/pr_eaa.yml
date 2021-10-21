@@ -86,8 +86,13 @@ jobs:
         mv /root/inclavare-containers/${{ matrix.tag }}/verdict /usr/local/bin/'
 
     - name: install sample image
-      run: docker exec $inclavare_test bash -c 'mkdir /root/images && cd /root/images;
-        skopeo --insecure-policy copy docker://docker.io/library/alpine:latest oci:alpine'
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 120
+        max_attempts: 500
+        command: docker exec $inclavare_test bash -c 'mkdir /root/images && cd /root/images;
+          skopeo --insecure-policy copy docker://docker.io/library/alpine:latest oci:alpine'
+        on_retry_command: echo '******************[RETRY]******************'
 
     - name: install configuration files
       run: |
@@ -135,8 +140,12 @@ jobs:
         docker exec $inclavare_test bash -c 'containerd' &
 
     - name: Test generate encrypted container image
-      run: |
-        docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:eaa:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}' 
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 120
+        max_attempts: 500
+        command: docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:eaa:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}'
+        on_retry_command: echo '******************[RETRY]******************'
 
     - name: generate policy file
       run: |
