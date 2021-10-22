@@ -36,7 +36,7 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	/* Call DCAP quote verify library to get supplemental data size */
 	uint32_t supplemental_data_size = 0;
         uint8_t *p_supplemental_data = NULL;
-	dcap_ret = tdx_qv_get_quote_supplemental_data_size(&supplemental_data_size);
+	quote3_error_t dcap_ret = tdx_qv_get_quote_supplemental_data_size(&supplemental_data_size);
 	if (dcap_ret == SGX_QL_SUCCESS && supplemental_data_size == sizeof(sgx_ql_qv_supplemental_t)) {
 		RTLS_INFO("tdx qv gets quote supplemental data size successfully.\n");
 		p_supplemental_data = (uint8_t *)malloc(supplemental_data_size);
