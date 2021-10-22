@@ -11,10 +11,10 @@
 extern enclave_verifier_err_t enclave_verifier_register(enclave_verifier_opts_t *opts);
 extern enclave_verifier_err_t tdx_verifier_pre_init(void);
 extern enclave_verifier_err_t tdx_verifier_init(enclave_verifier_ctx_t *ctx,
-						      rats_tls_cert_algo_t algo);
+						rats_tls_cert_algo_t algo);
 extern enclave_verifier_err_t tdx_verify_evidence(enclave_verifier_ctx_t *ctx,
-							attestation_evidence_t *evidence,
-							uint8_t *hash, uint32_t hash_len);
+						  attestation_evidence_t *evidence, uint8_t *hash,
+						  uint32_t hash_len);
 extern enclave_verifier_err_t tdx_verifier_cleanup(enclave_verifier_ctx_t *ctx);
 
 static enclave_verifier_opts_t tdx_verifier_opts = {
