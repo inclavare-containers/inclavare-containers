@@ -42,7 +42,7 @@ static int tdx_get_report(uint8_t *hash, tdx_report_t *tdx_report)
 	memcpy(report_data.d, hash, SHA256_HASH_SIZE);
 
 	/* Get report by tdcall */
-	if (TDX_ATTEST_SUCCESS != tdx_att_get_report(&report_data, &tdx_report)) {
+	if (TDX_ATTEST_SUCCESS != tdx_att_get_report(&report_data, tdx_report)) {
 		RTLS_ERR("failed to ioctl get tdx report data.\n");
 		return -1;
 	}
