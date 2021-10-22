@@ -9,8 +9,7 @@
 #include <rats-tls/attester.h>
 #include "tdx.h"
 
-enclave_attester_err_t tdx_attester_init(enclave_attester_ctx_t *ctx,
-                                         rats_tls_cert_algo_t algo)
+enclave_attester_err_t tdx_attester_init(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 
