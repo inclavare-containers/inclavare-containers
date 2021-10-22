@@ -7,6 +7,7 @@
 // clang-format off
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <rats-tls/log.h>
 #include <rats-tls/attester.h>
 #include <stddef.h>
