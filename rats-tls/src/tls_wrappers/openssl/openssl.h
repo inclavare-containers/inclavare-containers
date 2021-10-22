@@ -34,10 +34,13 @@ typedef struct {
 
 static inline void print_openssl_err(SSL *ssl, int ret)
 {
-	char buf[128];
-	int err = SSL_get_error(ssl, ret);
-	ERR_error_string((unsigned long)err, buf);
+	unsigned long l;
 
-	RTLS_DEBUG("%s (err = %d)\n", buf, err);
+	while ((l = ERR_get_error())) {
+		char buf[1024];
+
+		ERR_error_string_n(l, buf, sizeof buf);
+		RTLS_DEBUG("Error %lx: %s\n", l, buf);
+	}
 }
 #endif
