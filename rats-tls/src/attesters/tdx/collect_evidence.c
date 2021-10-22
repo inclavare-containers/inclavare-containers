@@ -42,7 +42,7 @@ static int tdx_get_report(uint8_t *hash, tdx_report_t *tdx_report)
 	memcpy(report_data.d, hash, SHA256_HASH_SIZE);
 
 	/* Get report by tdcall */
-	if (TDX_ATTEST_SUCCESS != tdx_att_get_report(&report_data, tdx_report)) {
+	if (tdx_att_get_report((const tdx_report_data_t *)&report_data, tdx_report) != TDX_ATTEST_SUCCESS) {
 		RTLS_ERR("failed to ioctl get tdx report data.\n");
 		return -1;
 	}
@@ -67,8 +67,8 @@ static int tdx_gen_quote(uint8_t *hash, uint8_t *quote_buff, uint32_t *quote_siz
 #ifdef VSOCK
 	tdx_uuid_t selected_att_key_id = {{0}};
 	uint8_t *p_quote_buf = NULL;
-	if (TDX_ATTEST_SUCCESS != tdx_att_get_quote(&tdx_report, NULL, 0, &selected_att_key_id,
-                                                    &p_quote_buf, quote_size, 0)) {
+	if (tdx_att_get_quote((const tdx_report_data_t *)&tdx_report, NULL, 0, &selected_att_key_id,
+                                                    &p_quote_buf, quote_size, 0) != TDX_ATTEST_SUCCESS) {
 		RTLS_ERR("failed to get tdx quote.\n");
 		return -1;
 	}
