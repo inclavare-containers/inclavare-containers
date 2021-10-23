@@ -66,12 +66,13 @@ Right now, RATS TLS supports the following instance types:
 | -------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
 | low      | nulltls               | nullattester               | nullverifier               | nullcrypto              |
 | Medium   | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
-| High     |                       | tdx                        | tdx                        |                         |
-| Higher   |                       | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve |                         |                 
+| High     | openssl               | tdx                        | tdx                        | openssl                 |
+| Higher   | openssl               | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve | openssl                 |
 
-By default,  RATS TLS will select the **highest priority** instance to use.
+By default, RATS TLS will select the **highest priority** instance to use.
 
 ## Run RATS TLS server
+
 ```
 cd /usr/share/rats-tls/samples
 ./rats-tls-server
