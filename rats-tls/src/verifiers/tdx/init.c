@@ -17,7 +17,7 @@ enclave_verifier_err_t tdx_verifier_init(enclave_verifier_ctx_t *ctx, rats_tls_c
 	if (!tdx_ctx)
 		return -ENCLAVE_VERIFIER_ERR_NO_MEM;
 
-	memset(tdx_ctx->mrowner, 0, MROWNER_SIZE);
+	memset(tdx_ctx->mrowner, 0, sizeof(tdx_ctx->mrowner));
 	ctx->verifier_private = tdx_ctx;
 
 	return ENCLAVE_VERIFIER_ERR_NONE;
