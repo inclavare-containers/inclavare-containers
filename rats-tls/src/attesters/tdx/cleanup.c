@@ -6,7 +6,7 @@
 
 #include <rats-tls/log.h>
 #include <rats-tls/attester.h>
-#include "tdx.h"
+#include "../../verifiers/tdx/tdx.h"
 
 enclave_attester_err_t tdx_attester_cleanup(enclave_attester_ctx_t *ctx)
 {

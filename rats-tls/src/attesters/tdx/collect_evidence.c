@@ -10,7 +10,7 @@
 #include <rats-tls/log.h>
 #include <rats-tls/attester.h>
 #include <stddef.h>
-#include "tdx.h"
+#include "../../verifiers/tdx/tdx.h"
 
 #define VSOCK
 
@@ -98,7 +98,7 @@ enclave_attester_err_t tdx_collect_evidence(enclave_attester_ctx_t *ctx,
 	/* Essentially speaking, QGS generates the same
 	 * format of quote as sgx_ecdsa.
 	 */
-	snprintf(evidence->type, sizeof(evidence->type), "%s", "tdx_ecdsa");
+	snprintf(evidence->type, sizeof(evidence->type), "tdx_ecdsa");
 
 	RTLS_DEBUG("ctx %p, evidence %p, quote_size %d\n", ctx, evidence, evidence->tdx.quote_len);
 

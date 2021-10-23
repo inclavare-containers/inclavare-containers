@@ -7,7 +7,7 @@
 #include <string.h>
 #include <rats-tls/log.h>
 #include <rats-tls/attester.h>
-#include "tdx.h"
+#include "../../verifiers/tdx/tdx.h"
 
 enclave_attester_err_t tdx_attester_init(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo)
 {
@@ -17,7 +17,7 @@ enclave_attester_err_t tdx_attester_init(enclave_attester_ctx_t *ctx, rats_tls_c
 	if (!tdx_ctx)
 		return -ENCLAVE_ATTESTER_ERR_NO_MEM;
 
-	memset(tdx_ctx->mrowner, 0, MROWNER_SIZE);
+	memset(tdx_ctx->mrowner, 0, sizeof(tdx_ctx->mrowner));
 	ctx->attester_private = tdx_ctx;
 
 	return ENCLAVE_ATTESTER_ERR_NONE;

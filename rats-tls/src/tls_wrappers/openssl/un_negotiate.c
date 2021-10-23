@@ -249,10 +249,15 @@ int openssl_extract_x509_extensions(X509 *crt, attestation_evidence_t *evidence)
 	} else if (!strcmp(evidence->type, "sgx_ecdsa")) {
 		return find_extension_from_cert(crt, ecdsa_quote_oid, evidence->ecdsa.quote,
 						&evidence->ecdsa.quote_len);
+	} else if (!strcmp(evidence->type, "tdx_ecdsa")) {
+		return find_extension_from_cert(crt, tdx_quote_oid, evidence->tdx.quote,
+						&evidence->tdx.quote_len);
+
 	} else if (!strcmp(evidence->type, "sgx_la")) {
 		return find_extension_from_cert(crt, la_report_oid, evidence->la.report,
 						&evidence->la.report_len);
-	}
+	} else
+		RTLS_WARN("Unhandled evidence type %s\n", evidence->type);
 
 	return SSL_SUCCESS;
 }
@@ -316,6 +321,8 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 
 	if (find_oid(cert, (const char *)ecdsa_quote_oid) == SSL_SUCCESS)
 		snprintf(evidence.type, sizeof(evidence.type), "%s", "sgx_ecdsa");
+	else if (find_oid(cert, (const char *)tdx_quote_oid) == SSL_SUCCESS)
+		snprintf(evidence.type, sizeof(evidence.type), "tdx_ecdsa");
 	else if (find_oid(cert, (const char *)la_report_oid) == SSL_SUCCESS)
 		snprintf(evidence.type, sizeof(evidence.type), "%s", "sgx_la");
 	else

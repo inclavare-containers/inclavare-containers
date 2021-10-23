@@ -7,7 +7,6 @@
 #include <string.h>
 #include <rats-tls/log.h>
 #include <rats-tls/verifier.h>
-#include <sgx_quote_3.h>
 #include <sgx_dcap_quoteverify.h>
 #include "tdx.h"
 
@@ -18,18 +17,11 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 {
 	enclave_verifier_err_t err = -ENCLAVE_VERIFIER_ERR_UNKNOWN;
 
-	sgx_quote3_t *pquote = (sgx_quote3_t *)malloc(sizeof(evidence->tdx.quote));
-	if (!pquote) {
-		RTLS_ERR("failed to malloc sgx quote3 data space.\n");
-		return -ENCLAVE_VERIFIER_ERR_NO_MEM;
-	}
-
-	/* First verify the hash value */
-	memcpy(pquote, evidence->tdx.quote, evidence->tdx.quote_len);
-	if (memcmp(hash, pquote->report_body.report_data.d, hash_len) != 0) {
+	/* Verify the hash value */
+	if (memcmp(hash, ((tdx_quote_t *)(evidence->tdx.quote))->report_body.report_data,
+		   hash_len) != 0) {
 		RTLS_ERR("unmatched hash value in evidence.\n");
-		err = -ENCLAVE_VERIFIER_ERR_INVALID;
-		goto errout;
+		return -ENCLAVE_VERIFIER_ERR_INVALID;
 	}
 
 	/* Call DCAP quote verify library to get supplemental data size */
@@ -42,13 +34,11 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 		p_supplemental_data = (uint8_t *)malloc(supplemental_data_size);
 		if (!p_supplemental_data) {
 			RTLS_ERR("failed to malloc supplemental data space.\n");
-			err = -ENCLAVE_VERIFIER_ERR_NO_MEM;
-			goto errout;
+			return -ENCLAVE_VERIFIER_ERR_NO_MEM;
 		}
 	} else {
 		RTLS_ERR("failed to get quote supplemental data size by sgx qv: %04x\n", dcap_ret);
-		err = (int)dcap_ret;
-		goto errout;
+		return (int)dcap_ret;
 	}
 
 	/* Call DCAP quote verify library for quote verification */
@@ -70,11 +60,12 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	/* Check verification result */
 	switch (quote_verification_result) {
 	case SGX_QL_QV_RESULT_OK:
+	/* FIXME: currently we deem this as success */
+	case SGX_QL_QV_RESULT_OUT_OF_DATE:
 		RTLS_INFO("verification completed successfully.\n");
 		err = ENCLAVE_VERIFIER_ERR_NONE;
 		break;
 	case SGX_QL_QV_RESULT_CONFIG_NEEDED:
-	case SGX_QL_QV_RESULT_OUT_OF_DATE:
 	case SGX_QL_QV_RESULT_OUT_OF_DATE_CONFIG_NEEDED:
 	case SGX_QL_QV_RESULT_SW_HARDENING_NEEDED:
 	case SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED:
@@ -93,8 +84,6 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	}
 errret:
 	free(p_supplemental_data);
-errout:
-	free(pquote);
 
 	return err;
 }
