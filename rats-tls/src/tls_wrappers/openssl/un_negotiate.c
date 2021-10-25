@@ -91,9 +91,18 @@ static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, rats_tls_cert_algo_
 
 	if (algo == RATS_TLS_CERT_ALGO_ECC_256_SHA256) {
 		EC_KEY *ecc = EVP_PKEY_get1_EC_KEY(pkey);
+		if (!ecc) {
+			RTLS_ERR("Unable to get ec key\n");
+			return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
+		}
+
 		err = sha256_ecc_pubkey(hash, ecc);
 	} else if (algo == RATS_TLS_CERT_ALGO_RSA_3072_SHA256) {
 		RSA *rsa = EVP_PKEY_get1_RSA(pkey);
+		if (!rsa) {
+			RTLS_ERR("Unable to get rsa key\n");
+			return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
+		}
 		err = sha256_rsa_pubkey(hash, rsa);
 	} else {
 		return -CRYPTO_WRAPPER_ERR_UNSUPPORTED_ALGO;
@@ -101,8 +110,6 @@ static crypto_wrapper_err_t calc_pubkey_hash(EVP_PKEY *pkey, rats_tls_cert_algo_
 
 	if (err != CRYPTO_WRAPPER_ERR_NONE)
 		return err;
-
-	EVP_PKEY_free(pkey);
 
 	return CRYPTO_WRAPPER_ERR_NONE;
 }
@@ -202,10 +209,11 @@ static int find_extension_from_cert(X509 *cert, const char *oid, uint8_t *data, 
 			}
 
 			if ((uint32_t)str->length > *size) {
-				*size = (uint32_t)str->length;
-
 				if (data)
-					RTLS_DEBUG("buffer is too small\n");
+					RTLS_DEBUG("buffer is too small (%d-byte vs %d-byte)\n",
+						   (uint32_t)str->length, *size);
+
+				*size = (uint32_t)str->length;
 			}
 			if (data) {
 				rtls_memcpy_s(data, *size, str->data, (uint32_t)str->length);
@@ -225,35 +233,42 @@ done:
 int openssl_extract_x509_extensions(X509 *crt, attestation_evidence_t *evidence)
 {
 	if (!strcmp(evidence->type, "sgx_epid")) {
+		evidence->epid.ias_report_len = sizeof(evidence->epid.ias_report);
 		int rc = find_extension_from_cert(crt, ias_response_body_oid,
 						  evidence->epid.ias_report,
 						  &evidence->epid.ias_report_len);
 		if (rc != SSL_SUCCESS)
 			return rc;
 
+		evidence->epid.ias_sign_ca_cert_len = sizeof(evidence->epid.ias_sign_ca_cert);
 		rc = find_extension_from_cert(crt, ias_root_cert_oid,
 					      evidence->epid.ias_sign_ca_cert,
 					      &evidence->epid.ias_sign_ca_cert_len);
 		if (rc != SSL_SUCCESS)
 			return rc;
 
+		evidence->epid.ias_sign_cert_len = sizeof(evidence->epid.ias_sign_cert);
 		rc = find_extension_from_cert(crt, ias_leaf_cert_oid, evidence->epid.ias_sign_cert,
 					      &evidence->epid.ias_sign_cert_len);
 		if (rc != SSL_SUCCESS)
 			return rc;
 
+		evidence->epid.ias_report_signature_len =
+			sizeof(evidence->epid.ias_report_signature);
 		rc = find_extension_from_cert(crt, ias_report_signature_oid,
 					      evidence->epid.ias_report_signature,
 					      &evidence->epid.ias_report_signature_len);
 		return rc;
 	} else if (!strcmp(evidence->type, "sgx_ecdsa")) {
+		evidence->ecdsa.quote_len = sizeof(evidence->ecdsa.quote);
 		return find_extension_from_cert(crt, ecdsa_quote_oid, evidence->ecdsa.quote,
 						&evidence->ecdsa.quote_len);
 	} else if (!strcmp(evidence->type, "tdx_ecdsa")) {
+		evidence->tdx.quote_len = sizeof(evidence->tdx.quote);
 		return find_extension_from_cert(crt, tdx_quote_oid, evidence->tdx.quote,
 						&evidence->tdx.quote_len);
-
 	} else if (!strcmp(evidence->type, "sgx_la")) {
+		evidence->la.report_len = sizeof(evidence->la.report);
 		return find_extension_from_cert(crt, la_report_oid, evidence->la.report,
 						&evidence->la.report_len);
 	} else
@@ -297,7 +312,6 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 		}
 	}
 
-	EVP_PKEY *publickey = X509_get_pubkey(cert);
 	rats_tls_cert_algo_t cert_algo = tls_ctx->rtls_handle->config.cert_algo;
 	uint32_t hash_size;
 
@@ -306,13 +320,21 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 	case RATS_TLS_CERT_ALGO_ECC_256_SHA256:
 		hash_size = SHA256_HASH_SIZE;
 		break;
-
 	default:
 		return 0;
 	}
 
+	EVP_PKEY *publickey = X509_get_pubkey(cert);
+	if (!publickey) {
+		RTLS_ERR("Unable to decode the public key from certificate\n");
+		return 0;
+	}
+
 	uint8_t hash[hash_size];
-	calc_pubkey_hash(publickey, cert_algo, hash);
+	crypto_wrapper_err_t err = calc_pubkey_hash(publickey, cert_algo, hash);
+	EVP_PKEY_free(publickey);
+	if (err != CRYPTO_WRAPPER_ERR_NONE)
+		return 0;
 
 	/* Extract the Rats TLS certificate extension from the TLS certificate
 	 * extension and parse it into evidence
