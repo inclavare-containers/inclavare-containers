@@ -356,9 +356,9 @@ int verify_certificate(int preverify, X509_STORE_CTX *ctx)
 		return 0;
 	}
 
-	tls_wrapper_err_t err =
+	tls_wrapper_err_t t_err =
 		tls_wrapper_verify_certificate_extension(tls_ctx, &evidence, hash, hash_size);
-	if (err != TLS_WRAPPER_ERR_NONE) {
+	if (t_err != TLS_WRAPPER_ERR_NONE) {
 		RTLS_ERR("failed to verify certificate extension %#x\n", err);
 		return 0;
 	}
