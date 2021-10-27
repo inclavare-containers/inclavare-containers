@@ -1,9 +1,6 @@
-// +build selinux,linux
-
 package label
 
 import (
-	"fmt"
 	"os"
 	"os/user"
 	"strings"
@@ -28,14 +25,14 @@ var ErrIncompatibleLabel = errors.New("Bad SELinux option z and Z can not be use
 // the container.  A list of options can be passed into this function to alter
 // the labels.  The labels returned will include a random MCS String, that is
 // guaranteed to be unique.
-func InitLabels(options []string) (plabel string, mlabel string, Err error) {
+func InitLabels(options []string) (plabel string, mlabel string, retErr error) {
 	if !selinux.GetEnabled() {
 		return "", "", nil
 	}
 	processLabel, mountLabel := selinux.ContainerLabels()
 	if processLabel != "" {
 		defer func() {
-			if Err != nil {
+			if retErr != nil {
 				selinux.ReleaseLabel(mountLabel)
 			}
 		}()
@@ -43,7 +40,7 @@ func InitLabels(options []string) (plabel string, mlabel string, Err error) {
 		if err != nil {
 			return "", "", err
 		}
-
+		mcsLevel := pcon["level"]
 		mcon, err := selinux.NewContext(mountLabel)
 		if err != nil {
 			return "", "", err
@@ -58,20 +55,24 @@ func InitLabels(options []string) (plabel string, mlabel string, Err error) {
 			con := strings.SplitN(opt, ":", 2)
 			if !validOptions[con[0]] {
 				return "", "", errors.Errorf("Bad label option %q, valid options 'disable, user, role, level, type, filetype'", con[0])
-
 			}
 			if con[0] == "filetype" {
 				mcon["type"] = con[1]
+				continue
 			}
 			pcon[con[0]] = con[1]
 			if con[0] == "level" || con[0] == "user" {
 				mcon[con[0]] = con[1]
 			}
 		}
-		selinux.ReleaseLabel(processLabel)
-		processLabel = pcon.Get()
+		if pcon.Get() != processLabel {
+			if pcon["level"] != mcsLevel {
+				selinux.ReleaseLabel(processLabel)
+			}
+			processLabel = pcon.Get()
+			selinux.ReserveLabel(processLabel)
+		}
 		mountLabel = mcon.Get()
-		selinux.ReserveLabel(processLabel)
 	}
 	return processLabel, mountLabel, nil
 }
@@ -80,24 +81,6 @@ func InitLabels(options []string) (plabel string, mlabel string, Err error) {
 // to the official API. Use InitLabels(strings.Fields(options)) instead.
 func GenLabels(options string) (string, string, error) {
 	return InitLabels(strings.Fields(options))
-}
-
-// FormatMountLabel returns a string to be used by the mount command.
-// The format of this string will be used to alter the labeling of the mountpoint.
-// The string returned is suitable to be used as the options field of the mount command.
-// If you need to have additional mount point options, you can pass them in as
-// the first parameter.  Second parameter is the label that you wish to apply
-// to all content in the mount point.
-func FormatMountLabel(src, mountLabel string) string {
-	if mountLabel != "" {
-		switch src {
-		case "":
-			src = fmt.Sprintf("context=%q", mountLabel)
-		default:
-			src = fmt.Sprintf("%s,context=%q", src, mountLabel)
-		}
-	}
-	return src
 }
 
 // SetFileLabel modifies the "path" label to the specified file label
