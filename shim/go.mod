@@ -46,6 +46,6 @@ replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
 	github.com/inclavare-containers/epm => ../epm
 	github.com/inclavare-containers/rune => ../rune
-	github.com/opencontainers/runc => github.com/opencontainers/runc v0.0.0-20200429033603-85c44b190e42
+	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
 
 )

@@ -26,7 +26,7 @@ github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/internal/winapi
 github.com/Microsoft/hcsshim/osversion
-# github.com/cilium/ebpf v0.0.0-20200319110858-a7172c01168f
+# github.com/cilium/ebpf v0.5.0
 github.com/cilium/ebpf
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/internal
@@ -187,11 +187,11 @@ github.com/opencontainers/go-digest
 github.com/opencontainers/image-spec/identity
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v1.0.1 => github.com/opencontainers/runc v0.0.0-20200429033603-85c44b190e42
+# github.com/opencontainers/runc v1.0.1 => github.com/opencontainers/runc v1.0.0-rc95
 github.com/opencontainers/runc/libcontainer/user
 # github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 github.com/opencontainers/runtime-spec/specs-go
-# github.com/opencontainers/selinux v1.4.0
+# github.com/opencontainers/selinux v1.8.0
 github.com/opencontainers/selinux/go-selinux
 github.com/opencontainers/selinux/go-selinux/label
 github.com/opencontainers/selinux/pkg/pwalk
@@ -211,6 +211,8 @@ github.com/stretchr/testify/assert
 github.com/syndtr/gocapability/capability
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
+# github.com/willf/bitset v1.1.11
+github.com/willf/bitset
 # go.opencensus.io v0.23.0
 go.opencensus.io
 go.opencensus.io/internal
@@ -240,9 +242,6 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-golang.org/x/xerrors
-golang.org/x/xerrors/internal
 # google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.38.0
