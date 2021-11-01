@@ -217,8 +217,9 @@ pub struct rats_tls_handle {
     _unused: [u8; 0],
 }
 pub const RATS_TLS_CERT_ALGO_RSA_3072_SHA256: rats_tls_cert_algo_t = 0;
-pub const RATS_TLS_CERT_ALGO_MAX: rats_tls_cert_algo_t = 1;
-pub const RATS_TLS_CERT_ALGO_DEFAULT: rats_tls_cert_algo_t = 0;
+pub const RATS_TLS_CERT_ALGO_ECC_256_SHA256: rats_tls_cert_algo_t = 1;
+pub const RATS_TLS_CERT_ALGO_MAX: rats_tls_cert_algo_t = 2;
+pub const RATS_TLS_CERT_ALGO_DEFAULT: rats_tls_cert_algo_t = 1;
 pub type rats_tls_cert_algo_t = ::std::os::raw::c_uint;
 pub const VERIFICATION_TYPE_QVL: quote_sgx_ecdsa_verification_type_t = 0;
 pub const VERIFICATION_TYPE_QEL: quote_sgx_ecdsa_verification_type_t = 1;
