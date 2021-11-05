@@ -4,6 +4,7 @@
 [![Nightly CentOS SGX1](https://github.com/alibaba/inclavare-containers/workflows/Nightly%20CentOS%20SGX1/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions?query=workflow%3A%22Nightly+CentOS+SGX1%22)
 [![Nightly Alibaba Cloud Linux2 SGX2](https://github.com/alibaba/inclavare-containers/actions/workflows/nightly-aliyunlinux-sgx2.yml/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions/workflows/nightly-aliyunlinux-sgx2.yml)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5219/badge)](https://bestpractices.coreinfrastructure.org/projects/5219)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers?ref=badge_shield)
 
 Inclavare, pronounced as `[ˈinklɑveə]`, is the Latin etymology of the word `enclave`, which means to isolate the user's sensitive workload from the untrusted and uncontrollable infrastructure in order to meet the protection requirement for the data in use.
 
@@ -29,7 +30,6 @@ Inclavare Containers is helping to keep tenants' confidential data secure so the
 Inclavare Containers follows the classic container runtime design. It takes the adaption to [containerd](https://github.com/containerd/containerd) as first class, and uses dedicated [shim-rune](https://github.com/alibaba/inclavare-containers/tree/master/shim) to interface with OCI Runtime [rune](https://github.com/alibaba/inclavare-containers/tree/master/rune). In the downstrem, [init-runelet](docs/design/terminology.md#init-runelet) employs a novel approach of launching [enclave runtime](docs/design/terminology.md#enclave-runtime) and trusted application in hardware-enforced enclave.
 
 ![architecture](docs/design/architecture.png)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers?ref=badge_shield)
 
 The major components of Inclavare Containers are:
 
