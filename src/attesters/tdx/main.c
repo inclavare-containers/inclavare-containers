@@ -14,7 +14,8 @@ extern enclave_attester_err_t tdx_attester_init(enclave_attester_ctx_t *ctx,
 						rats_tls_cert_algo_t algo);
 extern enclave_attester_err_t tdx_collect_evidence(enclave_attester_ctx_t *ctx,
 						   attestation_evidence_t *evidence,
-						   rats_tls_cert_algo_t algo, uint8_t *hash);
+						   rats_tls_cert_algo_t algo, uint8_t *hash,
+						   uint32_t hash_len);
 extern enclave_attester_err_t tdx_attester_cleanup(enclave_attester_ctx_t *ctx);
 
 static enclave_attester_opts_t tdx_attester_opts = {

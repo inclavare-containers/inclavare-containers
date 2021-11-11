@@ -16,8 +16,8 @@ extern enclave_attester_err_t sgx_ecdsa_attester_init(enclave_attester_ctx_t *ct
 //					      const rats_tls_cert_info_t *cert_info);
 extern enclave_attester_err_t sgx_ecdsa_collect_evidence(enclave_attester_ctx_t *ctx,
 							 attestation_evidence_t *evidence,
-							 rats_tls_cert_algo_t algo,
-							 uint8_t *hash);
+							 rats_tls_cert_algo_t algo, uint8_t *hash,
+							 uint32_t hash_len);
 extern enclave_attester_err_t sgx_ecdsa_attester_cleanup(enclave_attester_ctx_t *ctx);
 
 static enclave_attester_opts_t sgx_ecdsa_attester_opts = {

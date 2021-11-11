@@ -67,7 +67,7 @@ rats_tls_err_t rtls_core_generate_certificate(rtls_core_context_t *ctx)
 	};
 	enclave_attester_err_t q_err;
 	q_err = ctx->attester->opts->collect_evidence(ctx->attester, &cert_info.evidence,
-						      ctx->config.cert_algo, hash);
+						      ctx->config.cert_algo, hash, hash_size);
 	if (q_err != ENCLAVE_ATTESTER_ERR_NONE)
 		return c_err;
 

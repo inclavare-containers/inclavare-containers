@@ -16,8 +16,8 @@ extern enclave_attester_err_t nullattester_init(enclave_attester_ctx_t *,
 //					    const rats_tls_cert_info_t *cert_info);
 extern enclave_attester_err_t nullattester_collect_evidence(enclave_attester_ctx_t *,
 							    attestation_evidence_t *,
-							    rats_tls_cert_algo_t algo,
-							    uint8_t *);
+							    rats_tls_cert_algo_t algo, uint8_t *,
+							    uint32_t hash_len);
 extern enclave_attester_err_t nullattester_cleanup(enclave_attester_ctx_t *);
 
 static enclave_attester_opts_t nullattester_opts = {

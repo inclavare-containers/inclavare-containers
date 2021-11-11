@@ -44,7 +44,8 @@ typedef struct {
 					      const rats_tls_cert_info_t *cert_info);
 	enclave_attester_err_t (*collect_evidence)(enclave_attester_ctx_t *ctx,
 						   attestation_evidence_t *evidence,
-						   rats_tls_cert_algo_t algo, uint8_t *hash);
+						   rats_tls_cert_algo_t algo, uint8_t *hash,
+						   uint32_t hash_len);
 	enclave_attester_err_t (*cleanup)(enclave_attester_ctx_t *ctx);
 } enclave_attester_opts_t;
 
