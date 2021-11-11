@@ -14,7 +14,8 @@ extern enclave_attester_err_t sgx_la_attester_init(enclave_attester_ctx_t *,
 						   rats_tls_cert_algo_t algo);
 extern enclave_attester_err_t sgx_la_collect_evidence(enclave_attester_ctx_t *,
 						      attestation_evidence_t *,
-						      rats_tls_cert_algo_t algo, uint8_t *);
+						      rats_tls_cert_algo_t algo, uint8_t *,
+						      uint32_t hash_len);
 extern enclave_attester_err_t sgx_la_attester_cleanup(enclave_attester_ctx_t *);
 
 static enclave_attester_opts_t sgx_la_attester_opts = {

@@ -24,7 +24,8 @@ extern sgx_status_t sgx_generate_evidence(uint8_t *hash, sgx_report_t *app_repor
  */
 enclave_attester_err_t sgx_la_collect_evidence(enclave_attester_ctx_t *ctx,
 					       attestation_evidence_t *evidence,
-					       rats_tls_cert_algo_t algo, uint8_t *hash)
+					       rats_tls_cert_algo_t algo, uint8_t *hash,
+					       __attribute__((unused)) uint32_t hash_len)
 {
 	RTLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence, algo, hash);
 
