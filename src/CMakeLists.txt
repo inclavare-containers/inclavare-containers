@@ -24,6 +24,7 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/core/rtls_common.c
     ${CMAKE_CURRENT_SOURCE_DIR}/core/rtls_core_generate_certificate.c
     ${CMAKE_CURRENT_SOURCE_DIR}/core/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/core/cpu.c
     ${CMAKE_CURRENT_SOURCE_DIR}/api/rats_tls_cleanup.c
     ${CMAKE_CURRENT_SOURCE_DIR}/api/rats_tls_init.c
     ${CMAKE_CURRENT_SOURCE_DIR}/api/rats_tls_negotiate.c
