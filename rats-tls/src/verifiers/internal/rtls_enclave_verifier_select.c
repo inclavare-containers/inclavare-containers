@@ -64,6 +64,10 @@ rats_tls_err_t rtls_verifier_select(rtls_core_context_t *ctx, const char *name,
 		return -RATS_TLS_ERR_INVALID;
 	}
 
+	/* Explicitly specify the enclave verifier which will never be changed */
+	if (name)
+		ctx->flags |= RATS_TLS_CONF_FLAGS_VERIFIER_ENFORCED;
+
 	ctx->verifier = verifier_ctx;
 
 	RTLS_INFO("the enclave verifier '%s' selected\n", ctx->verifier->opts->name);
