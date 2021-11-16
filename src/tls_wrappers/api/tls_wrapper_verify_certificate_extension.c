@@ -25,7 +25,7 @@ tls_wrapper_err_t tls_wrapper_verify_certificate_extension(tls_wrapper_ctx_t *tl
 		return -TLS_WRAPPER_ERR_INVALID;
 
 	if (strcmp(tls_ctx->rtls_handle->verifier->opts->type, evidence->type) &&
-	    !(tls_ctx->rtls_handle->flags & RATS_TLS_CONF_VERIFIER_ENFORCED)) {
+	    !(tls_ctx->rtls_handle->flags & RATS_TLS_CONF_FLAGS_VERIFIER_ENFORCED)) {
 		RTLS_WARN("type doesn't match between verifier '%s' and evidence '%s'\n",
 			  tls_ctx->rtls_handle->verifier->opts->name, evidence->type);
 		rats_tls_err_t tlserr =
