@@ -31,9 +31,9 @@ rats_tls_err_t rtls_attester_select(rtls_core_context_t *ctx, const char *name,
 {
 	RTLS_DEBUG("selecting the enclave attester '%s' cert algo '%#x'...\n", name, algo);
 
-	/* Explicitly specify the enclave verifier which will never be changed */
+	/* Explicitly specify the enclave attester which will never be changed */
 	if (name)
-		ctx->flags |= RATS_TLS_CONF_VERIFIER_ENFORCED;
+		ctx->flags |= RATS_TLS_CONF_FLAGS_ATTESTER_ENFORCED;
 
 	enclave_attester_ctx_t *attester_ctx = NULL;
 	for (unsigned int i = 0; i < registerd_enclave_attester_nums; ++i) {
