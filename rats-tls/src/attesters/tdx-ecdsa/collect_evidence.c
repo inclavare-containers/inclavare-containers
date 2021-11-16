@@ -10,7 +10,7 @@
 #include <rats-tls/log.h>
 #include <rats-tls/attester.h>
 #include <stddef.h>
-#include "../../verifiers/tdx/tdx.h"
+#include "../../verifiers/tdx-ecdsa/tdx-ecdsa.h"
 
 #define VSOCK
 
@@ -81,10 +81,10 @@ static int tdx_gen_quote(uint8_t *hash, uint8_t *quote_buf, uint32_t *quote_size
 	return 0;
 }
 
-enclave_attester_err_t tdx_collect_evidence(enclave_attester_ctx_t *ctx,
-					    attestation_evidence_t *evidence,
-					    rats_tls_cert_algo_t algo, uint8_t *hash,
-					    __attribute__((unused)) uint32_t hash_len)
+enclave_attester_err_t tdx_ecdsa_collect_evidence(enclave_attester_ctx_t *ctx,
+						  attestation_evidence_t *evidence,
+						  rats_tls_cert_algo_t algo, uint8_t *hash,
+						  __attribute__((unused)) uint32_t hash_len)
 {
 	RTLS_DEBUG("ctx %p, evidence %p, algo %d, hash %p\n", ctx, evidence, algo, hash);
 

@@ -8,7 +8,7 @@
 #include <rats-tls/log.h>
 #include <rats-tls/verifier.h>
 #include <sgx_dcap_quoteverify.h>
-#include "tdx.h"
+#include "tdx-ecdsa.h"
 
 enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_verifier_ctx_t *ctx,
 					     const char *name, attestation_evidence_t *evidence,
@@ -88,9 +88,9 @@ errret:
 	return err;
 }
 
-enclave_verifier_err_t tdx_verify_evidence(enclave_verifier_ctx_t *ctx,
-					   attestation_evidence_t *evidence, uint8_t *hash,
-					   __attribute__((unused)) uint32_t hash_len)
+enclave_verifier_err_t tdx_ecdsa_verify_evidence(enclave_verifier_ctx_t *ctx,
+						 attestation_evidence_t *evidence, uint8_t *hash,
+						 __attribute__((unused)) uint32_t hash_len)
 {
 	RTLS_DEBUG("ctx %p, evidence %p, hash %p\n", ctx, evidence, hash);
 

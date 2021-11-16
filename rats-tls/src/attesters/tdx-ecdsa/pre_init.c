@@ -8,7 +8,7 @@
 #include <rats-tls/attester.h>
 #include <rats-tls/log.h>
 
-enclave_attester_err_t tdx_attester_pre_init(void)
+enclave_attester_err_t tdx_ecdsa_attester_pre_init(void)
 {
     RTLS_DEBUG("called\n");
 
