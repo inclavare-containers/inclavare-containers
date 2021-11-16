@@ -1,5 +1,5 @@
 # Project name
-project(attester_tdx)
+project(attester_tdx_ecdsa)
 
 # Set include directory
 set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include

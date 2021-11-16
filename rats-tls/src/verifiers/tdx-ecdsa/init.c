@@ -6,19 +6,19 @@
 
 #include <string.h>
 #include <rats-tls/log.h>
-#include <rats-tls/attester.h>
-#include "../../verifiers/tdx/tdx.h"
+#include <rats-tls/verifier.h>
+#include "tdx-ecdsa.h"
 
-enclave_attester_err_t tdx_attester_init(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo)
+enclave_verifier_err_t tdx_ecdsa_verifier_init(enclave_verifier_ctx_t *ctx, rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 
 	tdx_ctx_t *tdx_ctx = calloc(1, sizeof(*tdx_ctx));
 	if (!tdx_ctx)
-		return -ENCLAVE_ATTESTER_ERR_NO_MEM;
+		return -ENCLAVE_VERIFIER_ERR_NO_MEM;
 
 	memset(tdx_ctx->mrowner, 0, sizeof(tdx_ctx->mrowner));
-	ctx->attester_private = tdx_ctx;
+	ctx->verifier_private = tdx_ctx;
 
-	return ENCLAVE_ATTESTER_ERR_NONE;
+	return ENCLAVE_VERIFIER_ERR_NONE;
 }

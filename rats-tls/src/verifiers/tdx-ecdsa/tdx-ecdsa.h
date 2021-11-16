@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef _TDX_H
-#define _TDX_H
+#ifndef _TDX_ECDSA_H
+#define _TDX_ECDSA_H
 
 #include <rats-tls/api.h>
 
@@ -48,4 +48,4 @@ typedef struct {
 	tdx_report_body_t report_body;
 } __attribute__((__packed__)) tdx_quote_t;
 
-#endif
+#endif	/* _TDX_ECDSA_H */

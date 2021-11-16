@@ -2,7 +2,7 @@ add_subdirectory(nullverifier)
 add_subdirectory(sgx-ecdsa)
 
 if(TDX)
-    add_subdirectory(tdx)
+    add_subdirectory(tdx-ecdsa)
 endif()
 
 if(OCCLUM OR SGX)

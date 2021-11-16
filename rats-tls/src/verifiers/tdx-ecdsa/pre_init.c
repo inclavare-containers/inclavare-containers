@@ -7,7 +7,7 @@
 #include <rats-tls/log.h>
 #include <rats-tls/verifier.h>
 
-enclave_verifier_err_t tdx_verifier_pre_init(void)
+enclave_verifier_err_t tdx_ecdsa_verifier_pre_init(void)
 {
 	RTLS_DEBUG("called\n");
 
