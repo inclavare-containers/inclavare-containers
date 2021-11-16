@@ -98,7 +98,7 @@ jobs:
       run: |
         docker exec $inclavare_test bash -c 'mkdir /opt/verdictd/ && mkdir /opt/verdictd/keys/'
         docker exec $inclavare_test bash -c "cat <<- EOF >/opt/verdictd/keys/${{ env.UUID }}
-        11111111111111111111111111111111
+        1111111111111111111111111111111
         EOF"
         
         docker exec $inclavare_test bash -c "cat <<- EOF >/root/images/pod.yaml
