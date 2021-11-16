@@ -12,7 +12,7 @@
 - [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives): please download and install the packages from this [page](https://download.01.org/intel-sgx/sgx-dcap/#version#linux/distro).
   - centos 8.2: `libsgx-dcap-quote-verify-devel`, `libsgx-dcap-ql-devel`, `libsgx-uae-service`
   - ubuntu 18.04: `libsgx-dcap-quote-verify-dev`, `libsgx-dcap-ql-dev`, `libsgx-uae-service`
-- For TDX, please see "TDX MVP Stack" (url will be released in future). You need to download the packages and following TDX_E2E_attestation_software_stack_Installation_README-dcap-2021XXXX.txt to do step 2 & step 3 to setup build and dependence libraries.
+- For TDX, please see the README in TDX MVP Stack. You need to download the packages and following TDX_E2E_attestation_software_stack_Installation_README-dcap-2021XXXX.txt to do step 2 & step 3 to setup build and dependence libraries.
 
 ## Build and Install
 
@@ -66,7 +66,7 @@ Right now, RATS TLS supports the following instance types:
 | -------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
 | low      | nulltls               | nullattester               | nullverifier               | nullcrypto              |
 | Medium   | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
-| High     | openssl               | tdx                        | tdx                        | openssl                 |
+| High     | openssl               | tdx\_ecdsa                 | tdx\_ecdsa                 | openssl                 |
 | Higher   | openssl               | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve | openssl                 |
 
 By default, RATS TLS will select the **highest priority** instance to use.
@@ -117,7 +117,7 @@ For example:
 ./rats-tls-server --attester sgx_ecdsa
 ./rats-tls-server --attester sgx_ecdsa_qve
 ./rats-tls-server --attester sgx_la
-./rats-tls-server --attester tdx
+./rats-tls-server --attester tdx_ecdsa
 ./rats-tls-server --crypto openssl
 ```
 
