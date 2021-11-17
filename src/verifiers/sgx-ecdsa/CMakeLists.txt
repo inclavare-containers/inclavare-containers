@@ -2,19 +2,11 @@
 project(verifier_sgx_ecdsa)
 
 # Set include directory
-set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include
-                 ${CMAKE_CURRENT_SOURCE_DIR}/../../include/rats-tls
-                 ${CMAKE_CURRENT_SOURCE_DIR}/../../include/internal
-                 ${CMAKE_CURRENT_SOURCE_DIR}
-                 /usr/include
-                 )
+list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+                         /usr/include
+                         )
 if(OCCLUM)
     list(APPEND INCLUDE_DIRS ${SGXSDK_INSTALL_INCLUDE_PATH})
-endif()
-if(SGX)
-    list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include/edl
-                             ${CMAKE_BINARY_DIR}/src/sgx/trust
-                             )
 endif()
 include_directories(${INCLUDE_DIRS})
 

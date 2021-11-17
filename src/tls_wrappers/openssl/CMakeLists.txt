@@ -2,16 +2,8 @@
 project(tls_wrapper_openssl)
 
 # Set include directory
-set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include
-                 ${CMAKE_CURRENT_SOURCE_DIR}/../../include/rats-tls
-                 ${CMAKE_CURRENT_SOURCE_DIR}/../../include/internal
-                 )
 if(SGX)
-    list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../include/edl
-                             ${CMAKE_BINARY_DIR}/src/sgx/trust
-                             /opt/intel/sgxsdk/include/tlibc
-                             ${CMAKE_BINARY_DIR}/../src/external/sgx-ssl/intel-sgx-ssl/src/intel-sgx-ssl/Linux/package/include
-                             )
+    list(APPEND INCLUDE_DIRS /opt/intel/sgxsdk/include/tlibc)
 endif()
 include_directories(${INCLUDE_DIRS})
 
