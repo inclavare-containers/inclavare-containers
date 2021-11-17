@@ -4,7 +4,9 @@ project(sgx-stub-enclave)
 if(BUILD_SAMPLES)
     set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include
                      ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include/rats-tls
-                     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include/edl)
+                     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include/edl
+                     ${CMAKE_BINARY_DIR}/../src/external/sgx-ssl/intel-sgx-ssl/src/intel-sgx-ssl/Linux/package/include
+                     )
 
     set(LIBRARY_DIRS ${INTEL_SGXSSL_LIB_PATH}
                      ${CMAKE_BINARY_DIR}/src

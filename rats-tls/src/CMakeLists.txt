@@ -1,3 +1,17 @@
+# Set include directory
+set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
+                 ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls
+                 ${CMAKE_CURRENT_SOURCE_DIR}/include/internal
+		 /usr/include
+                 )
+if(SGX)
+    list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/edl
+                             ${CMAKE_BINARY_DIR}/src/sgx/trust
+                             ${CMAKE_BINARY_DIR}/../src/external/sgx-ssl/intel-sgx-ssl/src/intel-sgx-ssl/Linux/package/include
+                             )
+endif()
+include_directories(${INCLUDE_DIRS})
+
 # Add third party and instance directory
 add_subdirectory(external)
 add_subdirectory(crypto_wrappers)
@@ -7,17 +21,6 @@ add_subdirectory(tls_wrappers)
 if(SGX)
     add_subdirectory(sgx)
 endif()
-
-# Set include directory
-set(INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
-                 ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls
-                 ${CMAKE_CURRENT_SOURCE_DIR}/include/internal
-                 )
-if(SGX)
-    list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/edl
-                             ${CMAKE_BINARY_DIR}/src/sgx/trust)
-endif()
-include_directories(${INCLUDE_DIRS})
 
 # Set source file
 set(SOURCES

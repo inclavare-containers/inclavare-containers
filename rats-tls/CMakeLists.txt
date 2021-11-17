@@ -88,6 +88,7 @@ include(CustomInstallDirs)
 include(CompilerOptions)
 if(SGX)
     include(SGXCommon)
+    include(SGXSSL)
 endif()
 
 # Subdirectory

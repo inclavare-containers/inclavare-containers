@@ -1,5 +1,3 @@
-include(SGXSSL)
-
 set(SGXSSL_SRC_PATH ${CMAKE_BINARY_DIR}/src/external/sgx-ssl/intel-sgx-ssl/src)
 set(SGXSSL_LIB_PATH ${SGXSSL_SRC_PATH}/intel-sgx-ssl/Linux/package/lib64)
 set(SGXSSL_INC_PATH ${SGXSSL_SRC_PATH}/intel-sgx-ssl/Linux/package/include)
