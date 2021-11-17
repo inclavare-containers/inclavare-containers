@@ -17,8 +17,11 @@
 #define SGX1_STRING 0x00000001
 #define SGX2_STRING 0x00000002
 
+#define SEV_MSR 0xc0010131
+
 extern bool is_sgx1_supported(void);
 extern bool is_sgx2_supported(void);
 extern bool is_tdguest_supported(void);
+extern bool is_sevguest_supported(void);
 
 #endif /* _INTERNAL_CPU_H */

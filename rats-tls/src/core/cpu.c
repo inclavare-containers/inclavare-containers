@@ -17,6 +17,9 @@
 #include "rtls_t.h"
 #endif
 // clang-format on
+#include <rats-tls/log.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #ifndef SGX
 // clang-format off
@@ -176,4 +179,34 @@ bool is_tdguest_supported(void)
 
 	/* "IntelTDX    " */
 	return (sig[1] == 0x65746e49) && (sig[3] == 0x5844546c) && (sig[2] == 0x20202020);
+}
+
+/* rdmsr 0xc0010131
+ * 0 = Guest SEV is not active
+ * 1 = Guest SEV is active
+ */
+static uint64_t read_msr(uint32_t reg)
+{
+	int fd = open("/dev/cpu/0/msr", O_RDONLY);
+	if (fd < 0) {
+		RTLS_ERR("failed to open msr\n");
+		return 0;
+	}
+
+	uint64_t data;
+	if (pread(fd, &data, sizeof(data), reg) != sizeof(data)) {
+		close(fd);
+		RTLS_ERR("failed to read msr %#x\n", reg);
+		return data;
+	}
+
+	close(fd);
+
+	return data;
+}
+
+/* return true means in SEV(-ES) guest */
+bool is_sevguest_supported(void)
+{
+	return !!read_msr(SEV_MSR);
 }

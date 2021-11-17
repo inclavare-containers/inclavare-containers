@@ -11,3 +11,7 @@ endif()
 if(SGX)
     add_subdirectory(sgx-la)
 endif()
+
+if(SEV)
+    add_subdirectory(sev)
+endif()

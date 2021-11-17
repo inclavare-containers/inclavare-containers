@@ -56,18 +56,25 @@ cmake -DRATS_TLS_BUILD_MODE="tdx" -DBUILD_SAMPLES=on -H. -Bbuild
 make -C build install
 ```
 
+If you want to run SEV(-ES) instances, please type the following commands.
+```shell
+cmake -DRATS_TLS_BUILD_MODE="sev" -DBUILD_SAMPLES=on -H. -Bbuild
+make -C build install
+```
+
 Note that [SGX LVI mitigation](https://software.intel.com/security-software-guidance/advisory-guidance/load-value-injection) is enabled by default. You can set macro `SGX_LVI_MITIGATION` to `0` to disable SGX LVI mitigation.
 
 # RUN
 
 Right now, RATS TLS supports the following instance types:
 
-| Priority | Tls Wrapper instances |     Attester instances     |     Verifier instances     | Crypto Wrapper Instance |
-| -------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
-| low      | nulltls               | nullattester               | nullverifier               | nullcrypto              |
-| Medium   | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
-| High     | openssl               | tdx\_ecdsa                 | tdx\_ecdsa                 | openssl                 |
-| Higher   | openssl               | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve | openssl                 |
+| Priority    | Tls Wrapper instances |     Attester instances     |     Verifier instances     | Crypto Wrapper Instance |
+| ----------- | --------------------- | -------------------------- | -------------------------- | ----------------------- |
+| low         | nulltls               | nullattester               | nullverifier               | nullcrypto              |
+| Medium      | openssl               | sgx\_la                    | sgx\_la                    | openssl                 |
+| Medium-high | openssl               | sev                        | sev                        | openssl                 |
+| High        | openssl               | tdx\_ecdsa                 | tdx\_ecdsa                 | openssl                 |
+| Higher      | openssl               | sgx\_ecdsa                 | sgx\_ecdsa sgx\_ecdsa\_qve | openssl                 |
 
 By default, RATS TLS will select the **highest priority** instance to use.
 
@@ -90,6 +97,11 @@ Check msr 0x503, return value must be 0:
 ```
 sudo rdmsr 0x503s
 ```
+
+**Notice: special prerequisites for SEV remote attestation in software capability.**
+
+- Kernel support SEV(-ES) runtime attestation, please manually apply [these patches](https://github.com/haosanzi/attestation-evidence-broker/tree/master/hack/README.md).
+- Start the [attestation evidence broker](https://github.com/haosanzi/attestation-evidence-broker/blob/master/README.md) service in host.
 
 ## Specify the instance type
 
