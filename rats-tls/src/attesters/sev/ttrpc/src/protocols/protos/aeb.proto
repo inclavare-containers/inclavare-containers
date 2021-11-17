@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package aeb;
+
+message RetrieveAttestationEvidenceSizeRequest{
+    uint32 guest_handle = 1;
+}
+
+message RetrieveAttestationEvidenceRequest{
+    uint32 guest_handle = 1;
+    uint32 evidence_size = 2;
+}
+
+message RetrieveAttestationEvidenceSizeResponse{
+    uint32 error_code = 1;
+    uint32 evidence_size = 2;
+}
+
+message RetrieveAttestationEvidenceResponse{
+    uint32 error_code = 1;
+    uint32 evidence_size = 2;
+    bytes evidence = 3;
+}
+
+service AEB {
+    rpc RetrieveAttestationEvidenceSize(RetrieveAttestationEvidenceSizeRequest) returns (RetrieveAttestationEvidenceSizeResponse);
+    rpc RetrieveAttestationEvidence(RetrieveAttestationEvidenceRequest) returns (RetrieveAttestationEvidenceResponse);
+}
