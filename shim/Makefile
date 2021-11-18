@@ -1,5 +1,7 @@
 # Root directory of the project (absolute path).
 ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+SHIM_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+SHIM_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
 
 # Base path used to install.
 DESTDIR ?= /usr/local
@@ -55,11 +57,11 @@ bin/containerd-shim-rune-v2:
 binaries: clean $(BINARIES) ## build binaries
 
 clean: ## clean up binaries
-	@echo "$@"
 	@rm -f $(BINARIES)
+	@rm -f dist/rpm/shim-rune.spec
 
 package:
-	$(MAKE) -C dist package
+	$(MAKE) -C dist package SHIM_VERSION="$(SHIM_VERSION)" SHIM_MAINTAINER="$(SHIM_MAINTAINER)"
 
 install: ## install binaries
 	@echo "$@ $(BINARIES)"
