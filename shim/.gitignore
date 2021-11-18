@@ -1,3 +1,4 @@
 build/
 .idea/
 _output/
+dist/rpm/shim-rune.spec
