@@ -143,7 +143,7 @@ int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 		goto err;
 	}
 
-	const char *msg = "Hello and welcome to Rats TLS!\n";
+	const char *msg = "Hello and welcome to RATS-TLS!\n";
 	size_t len = strlen(msg);
 	ret = rats_tls_transmit(handle, (void *)msg, &len);
 	if (ret != RATS_TLS_ERR_NONE || len != strlen(msg)) {
@@ -211,11 +211,11 @@ err:
 int main(int argc, char **argv)
 {
 #ifdef SGX
-	printf("    - Welcome to Rats-TLS sample client program for Intel SGX\n");
+	printf("    - Welcome to RATS-TLS sample client program for Intel SGX\n");
 #elif defined(OCCLUM)
-	printf("    - Welcome to Rats-TLS sample client program for Occlum\n");
+	printf("    - Welcome to RATS-TLS sample client program for Occlum\n");
 #else
-	printf("    - Welcome to Rats-TLS sample client program\n");
+	printf("    - Welcome to RATS-TLS sample client program\n");
 #endif
 
 	char *const short_options = "a:v:t:c:ml:i:p:D:h";
