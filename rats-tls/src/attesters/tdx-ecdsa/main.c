@@ -20,7 +20,7 @@ extern enclave_attester_err_t tdx_ecdsa_attester_cleanup(enclave_attester_ctx_t 
 
 static enclave_attester_opts_t tdx_ecdsa_attester_opts = {
 	.api_version = ENCLAVE_ATTESTER_API_VERSION_DEFAULT,
-	.flags = ENCLAVE_ATTESTER_OPTS_FLAGS_TDX,
+	.flags = ENCLAVE_ATTESTER_OPTS_FLAGS_TDX_GUEST,
 	.name = "tdx_ecdsa",
 	.priority = 42,
 	.pre_init = tdx_ecdsa_attester_pre_init,
