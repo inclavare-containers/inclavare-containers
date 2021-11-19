@@ -19,7 +19,7 @@ extern enclave_verifier_err_t sgx_ecdsa_verifier_cleanup(enclave_verifier_ctx_t 
 
 static enclave_verifier_opts_t sgx_ecdsa_verifier_opts = {
 	.api_version = ENCLAVE_VERIFIER_API_VERSION_DEFAULT,
-	.flags = ENCLAVE_VERIFIER_FLAGS_DEFAULT,
+	.flags = ENCLAVE_VERIFIER_FLAGS_DEFAULT | ENCLAVE_VERIFIER_OPTS_FLAGS_SGX2_ENCLAVE,
 	.name = "sgx_ecdsa",
 	.priority = 52,
 	.pre_init = sgx_ecdsa_verifier_pre_init,
@@ -38,5 +38,5 @@ void __attribute__((constructor)) libverifier_sgx_ecdsa_init(void)
 
 	enclave_verifier_err_t err = enclave_verifier_register(&sgx_ecdsa_verifier_opts);
 	if (err != ENCLAVE_VERIFIER_ERR_NONE)
-		RTLS_ERR("failed to register the enclave verifier 'sgx_ecdsa' %#x\n", err);
+		RTLS_DEBUG("failed to register the enclave verifier 'sgx_ecdsa' %#x\n", err);
 }

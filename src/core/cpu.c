@@ -15,53 +15,115 @@
 static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 {
 #if defined(__x86_64__)
-    asm volatile("cpuid"
-                 : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
-                 : "0"(*eax), "1"(*ebx), "2"(*ecx), "3"(*edx)
-                 : "memory");
+	asm volatile("cpuid"
+		     : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+		     : "0"(*eax), "1"(*ebx), "2"(*ecx), "3"(*edx)
+		     : "memory");
 #else
-    /* on 32bit, ebx can NOT be used as PIC code */
-    asm volatile("xchgl %%ebx, %1; cpuid; xchgl %%ebx, %1"
-                 : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
-                 : "0"(*eax), "1"(*ebx), "2"(*ecx), "3"(*edx)
-                 : "memory");
+	/* on 32bit, ebx can NOT be used as PIC code */
+	asm volatile("xchgl %%ebx, %1; cpuid; xchgl %%ebx, %1"
+		     : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
+		     : "0"(*eax), "1"(*ebx), "2"(*ecx), "3"(*edx)
+		     : "memory");
 #endif
 }
 
 static inline void __cpuidex(int a[4], int b, int c)
 {
-    a[0] = b;
-    a[2] = c;
-    cpuid(&a[0], &a[1], &a[2], &a[3]);
+	a[0] = b;
+	a[2] = c;
+	cpuid(&a[0], &a[1], &a[2], &a[3]);
+}
+
+static bool is_sgx_device(const char *dev)
+{
+	struct stat st;
+
+	if (!stat(dev, &st)) {
+		if ((st.st_mode & S_IFCHR) && (major(st.st_rdev) == 10))
+			return true;
+	}
+
+	return false;
+}
+
+static bool is_legacy_oot_kernel_driver(void)
+{
+	return is_sgx_device("/dev/isgx");
+}
+
+/* Prior to DCAP 1.10 release, the DCAP OOT driver uses this legacy
+ * name.
+ */
+static bool is_dcap_1_9_oot_kernel_driver(void)
+{
+	return is_sgx_device("/dev/sgx/enclave");
+}
+
+/* Since DCAP 1.10 release, the DCAP OOT driver uses the same name
+ * as in-tree driver.
+ */
+static bool is_in_tree_kernel_driver(void)
+{
+	return is_sgx_device("/dev/sgx_enclave");
 }
 
 /* return true means in sgx1 enabled */
-bool is_sgx1_supported(void)
+static bool __is_sgx1_supported(void)
 {
-    int cpu_info[4] = {0, 0, 0, 0};
+	int cpu_info[4] = { 0, 0, 0, 0 };
 
-    __cpuidex(cpu_info, SGX_CPUID, 0);
+	__cpuidex(cpu_info, SGX_CPUID, 0);
 
-    return !!(cpu_info[0] & SGX1_STRING);
+	return !!(cpu_info[0] & SGX1_STRING);
 }
 
 /* return true means in sgx2 enabled */
+static bool __is_sgx2_supported(void)
+{
+	int cpu_info[4] = { 0, 0, 0, 0 };
+
+	__cpuidex(cpu_info, SGX_CPUID, 0);
+
+	return !!(cpu_info[0] & SGX2_STRING);
+}
+
+bool is_sgx1_supported(void)
+{
+	if (!__is_sgx1_supported())
+		return false;
+
+	/* SGX2 using ECDSA attestation is not compatible with SGX1
+	 * which uses EPID attestation.
+	 */
+	if (is_sgx2_supported())
+		return false;
+
+	/* Check whether the kernel driver is accessible */
+	if (!is_legacy_oot_kernel_driver())
+		return false;
+
+	return true;
+}
+
 bool is_sgx2_supported(void)
 {
-    int cpu_info[4] = {0, 0, 0, 0};
+	if (!__is_sgx2_supported())
+		return false;
 
-    __cpuidex(cpu_info, SGX_CPUID, 0);
+	/* Check whether the kernel driver is accessible */
+	if (!is_dcap_1_9_oot_kernel_driver() && !is_in_tree_kernel_driver())
+		return false;
 
-    return !!(cpu_info[0] & SGX2_STRING);
+	return true;
 }
 
 /* return true means in td guest */
 bool is_in_tdguest(void)
 {
-    int cpu_info[4] = {0, 0, 0, 0};
+	int cpu_info[4] = { 0, 0, 0, 0 };
 
-    __cpuidex(cpu_info, TDX_CPUID, 0);
+	__cpuidex(cpu_info, TDX_CPUID, 0);
 
-    return !((cpu_info[1] & (!(TDX_STRING_HIGH))) &&
-             (cpu_info[3] & (!(TDX_STRING_LOW))));
+	return !((cpu_info[1] & (!(TDX_STRING_HIGH))) && (cpu_info[3] & (!(TDX_STRING_LOW))));
 }

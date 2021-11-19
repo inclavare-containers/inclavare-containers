@@ -9,6 +9,7 @@
 #include <rats-tls/err.h>
 #include <rats-tls/log.h>
 #include "internal/verifier.h"
+#include "internal/cpu.h"
 
 enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *opts)
 {
@@ -16,6 +17,16 @@ enclave_verifier_err_t enclave_verifier_register(const enclave_verifier_opts_t *
 		return -ENCLAVE_VERIFIER_ERR_INVALID;
 
 	RTLS_DEBUG("registering the enclave verifier '%s' ...\n", opts->name);
+
+	if (opts->flags & ENCLAVE_VERIFIER_OPTS_FLAGS_SGX2_ENCLAVE) {
+		if (!is_sgx2_supported()) {
+			// clang-format off
+			RTLS_DEBUG("failed to register the verifier '%s' due to lack of SGX2 capability\n",
+				   opts->type);
+			// clang-format on
+			return -ENCLAVE_VERIFIER_ERR_INVALID;
+		}
+	}
 
 	enclave_verifier_opts_t *new_opts = (enclave_verifier_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
