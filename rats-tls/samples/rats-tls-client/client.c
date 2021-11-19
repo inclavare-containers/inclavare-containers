@@ -52,8 +52,8 @@ static sgx_enclave_id_t load_enclave(bool debug_enclave)
 }
 
 int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
-			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			       bool debug_enclave, char *ip, int port)
+			    char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			    bool debug_enclave, char *ip, int port)
 {
 	uint32_t s_ip = inet_addr(ip);
 	uint16_t s_port = htons((uint16_t)port);
@@ -82,8 +82,8 @@ int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 
 #ifndef SGX
 int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
-			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			       bool debug_enclave, char *ip, int port)
+			    char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			    bool debug_enclave, char *ip, int port)
 {
 	rats_tls_conf_t conf;
 
@@ -309,8 +309,8 @@ int main(int argc, char **argv)
 		}
 	} while (opt != -1);
 
-        global_log_level = log_level;
+	global_log_level = log_level;
 
 	return rats_tls_client_startup(log_level, attester_type, verifier_type, tls_type,
-					  crypto_type, mutual, debug_enclave, srv_ip, port);
+				       crypto_type, mutual, debug_enclave, srv_ip, port);
 }

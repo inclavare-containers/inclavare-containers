@@ -9,7 +9,8 @@
 #include <rats-tls/verifier.h>
 #include "tdx-ecdsa.h"
 
-enclave_verifier_err_t tdx_ecdsa_verifier_init(enclave_verifier_ctx_t *ctx, rats_tls_cert_algo_t algo)
+enclave_verifier_err_t tdx_ecdsa_verifier_init(enclave_verifier_ctx_t *ctx,
+					       rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 

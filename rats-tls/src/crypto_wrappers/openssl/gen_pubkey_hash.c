@@ -10,8 +10,8 @@
 
 #define RSA_PUBKEY_3072_RAW_LEN 398
 
-crypto_wrapper_err_t openssl_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
-					     rats_tls_cert_algo_t algo, uint8_t *hash)
+crypto_wrapper_err_t openssl_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
+					     uint8_t *hash)
 {
 	openssl_ctx *octx = NULL;
 

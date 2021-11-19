@@ -7,8 +7,7 @@
 #include <rats-tls/log.h>
 #include "internal/core.h"
 
-rats_tls_err_t rats_tls_set_verification_callback(rats_tls_handle *handle,
-							rats_tls_callback_t cb)
+rats_tls_err_t rats_tls_set_verification_callback(rats_tls_handle *handle, rats_tls_callback_t cb)
 {
 	RTLS_DEBUG("set user verification callback handle: %p, cb %p\n", handle, cb);
 

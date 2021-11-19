@@ -107,25 +107,25 @@ typedef struct rtls_evidence {
 	};
 } rtls_evidence_t;
 
-#define RATS_TLS_API_VERSION_1	1
-#define RATS_TLS_API_VERSION_MAX	RATS_TLS_API_VERSION_1
+#define RATS_TLS_API_VERSION_1	     1
+#define RATS_TLS_API_VERSION_MAX     RATS_TLS_API_VERSION_1
 #define RATS_TLS_API_VERSION_DEFAULT RATS_TLS_API_VERSION_1
 
-#define RATS_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT     0
-#define RATS_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT      32
-#define RATS_TLS_CONF_FLAGS_GLOBAL_MASK            0xffffffffUL
-#define RATS_TLS_CONF_FLAGS_PRIVATE_MASK           0xffffffff00000000UL
+#define RATS_TLS_CONF_FLAGS_PRIVATE_MASK_SHIFT 0
+#define RATS_TLS_CONF_FLAGS_GLOBAL_MASK_SHIFT  32
+#define RATS_TLS_CONF_FLAGS_GLOBAL_MASK	       0xffffffffUL
+#define RATS_TLS_CONF_FLAGS_PRIVATE_MASK       0xffffffff00000000UL
 
-#define RATS_TLS_CONF_FLAGS_MUTUAL                 (1UL << 0)
-#define RATS_TLS_CONF_FLAGS_SERVER                 (1UL << 1)
-#define RATS_TLS_CONF_FLAGS_VERIFIER_ENFORCED      (1UL << 2)
-#define RATS_TLS_CONF_FLAGS_ATTESTER_ENFORCED      (1UL << 3)
+#define RATS_TLS_CONF_FLAGS_MUTUAL	      (1UL << 0)
+#define RATS_TLS_CONF_FLAGS_SERVER	      (1UL << 1)
+#define RATS_TLS_CONF_FLAGS_VERIFIER_ENFORCED (1UL << 2)
+#define RATS_TLS_CONF_FLAGS_ATTESTER_ENFORCED (1UL << 3)
 
 typedef int (*rats_tls_callback_t)(void *);
 
 rats_tls_err_t rats_tls_init(const rats_tls_conf_t *conf, rats_tls_handle *handle);
 rats_tls_err_t rats_tls_set_verification_callback(rats_tls_handle *handle,
-							rats_tls_callback_t user_callback);
+						  rats_tls_callback_t user_callback);
 rats_tls_err_t rats_tls_negotiate(rats_tls_handle handle, int fd);
 rats_tls_err_t rats_tls_receive(rats_tls_handle handle, void *buf, size_t *buf_size);
 rats_tls_err_t rats_tls_transmit(rats_tls_handle handle, void *buf, size_t *buf_size);

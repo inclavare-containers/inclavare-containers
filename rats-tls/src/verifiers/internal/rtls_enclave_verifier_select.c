@@ -11,8 +11,8 @@
 #include "internal/core.h"
 
 static rats_tls_err_t init_enclave_verifier(rtls_core_context_t *ctx,
-					       enclave_verifier_ctx_t *verifier_ctx,
-					       rats_tls_cert_algo_t algo)
+					    enclave_verifier_ctx_t *verifier_ctx,
+					    rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("init enclave verifier rtls_core_context: %#x\n", ctx);
 	enclave_verifier_err_t err = verifier_ctx->opts->init(verifier_ctx, algo);
@@ -27,7 +27,7 @@ static rats_tls_err_t init_enclave_verifier(rtls_core_context_t *ctx,
 }
 
 rats_tls_err_t rtls_verifier_select(rtls_core_context_t *ctx, const char *name,
-				       rats_tls_cert_algo_t algo)
+				    rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("selecting the enclave verifier '%s' ...\n", name);
 

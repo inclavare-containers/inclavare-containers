@@ -11,10 +11,11 @@
 #include "internal/core.h"
 
 static rats_tls_err_t init_enclave_attester(rtls_core_context_t *ctx,
-					       enclave_attester_ctx_t *attester_ctx,
-					       rats_tls_cert_algo_t algo)
+					    enclave_attester_ctx_t *attester_ctx,
+					    rats_tls_cert_algo_t algo)
 {
-	RTLS_DEBUG("called enclave core ctx: %#x enclave attester ctx: %#x algo: %#x\n", ctx, attester_ctx, algo);
+	RTLS_DEBUG("called enclave core ctx: %#x enclave attester ctx: %#x algo: %#x\n", ctx,
+		   attester_ctx, algo);
 
 	enclave_attester_err_t err = attester_ctx->opts->init(attester_ctx, algo);
 	if (err != ENCLAVE_ATTESTER_ERR_NONE)
@@ -27,7 +28,7 @@ static rats_tls_err_t init_enclave_attester(rtls_core_context_t *ctx,
 }
 
 rats_tls_err_t rtls_attester_select(rtls_core_context_t *ctx, const char *name,
-				       rats_tls_cert_algo_t algo)
+				    rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("selecting the enclave attester '%s' cert algo '%#x'...\n", name, algo);
 
