@@ -67,7 +67,7 @@ int ecall_rtls_server_startup(sgx_enclave_id_t enclave_id, rats_tls_log_level_t 
 		return -1;
 	}
 
-	/* Rats-tls init */
+	/* rats-tls init */
 	librats_tls_init();
 	rats_tls_handle handle;
 	rats_tls_err_t ret = rats_tls_init(&conf, &handle);
@@ -177,7 +177,7 @@ int ecall_rtls_client_startup(sgx_enclave_id_t enclave_id, rats_tls_log_level_t 
 		return -1;
 	}
 
-	/* Rats-tls init */
+	/* rats-tls init */
 	librats_tls_init();
 	rats_tls_handle handle;
 	rats_tls_err_t ret = rats_tls_init(&conf, &handle);
@@ -198,7 +198,7 @@ int ecall_rtls_client_startup(sgx_enclave_id_t enclave_id, rats_tls_log_level_t 
 		goto err;
 	}
 
-	const char *msg = "Hello and welcome to Rats TLS!\n";
+	const char *msg = "Hello and welcome to RATS-TLS!\n";
 	size_t len = strlen(msg);
 	ret = rats_tls_transmit(handle, (void *)msg, &len);
 	if (ret != RATS_TLS_ERR_NONE || len != strlen(msg)) {
