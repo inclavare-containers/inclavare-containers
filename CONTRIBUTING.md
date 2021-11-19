@@ -82,9 +82,14 @@ For Ubuntu:
 sudo apt-get install -y clang-format-9
 ```
 
-For CentOS:
+For CentOS 7:
 ```shell
 sudo yum install -y clang
+```
+
+For CentOS 8:
+```shell
+sudo yum install -y git-clang-format
 ```
 
 2. Format C code style using the following command:
