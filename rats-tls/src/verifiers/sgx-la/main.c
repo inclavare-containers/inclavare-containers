@@ -19,7 +19,7 @@ extern enclave_verifier_err_t sgx_la_verifier_cleanup(enclave_verifier_ctx_t *);
 
 static enclave_verifier_opts_t sgx_la_verifier_opts = {
 	.api_version = ENCLAVE_VERIFIER_API_VERSION_DEFAULT,
-	.flags = ENCLAVE_VERIFIER_FLAGS_DEFAULT | ENCLAVE_VERIFIER_OPTS_FLAGS_SGX2_ENCLAVE,
+	.flags = ENCLAVE_VERIFIER_OPTS_FLAGS_SGX2_ENCLAVE,
 	.name = "sgx_la",
 	.priority = 15,
 	.pre_init = sgx_la_verifier_pre_init,
