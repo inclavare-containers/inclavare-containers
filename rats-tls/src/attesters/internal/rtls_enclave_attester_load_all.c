@@ -43,7 +43,8 @@ rats_tls_err_t rtls_enclave_attester_load_all(void)
 	while ((rtls_readdir(dir, &ptr)) != 1) {
 		if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, ".."))
 			continue;
-		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)))
+		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX),
+			    PATTERN_SUFFIX, strlen(PATTERN_SUFFIX)))
 			continue;
 
 #ifdef OCCLUM

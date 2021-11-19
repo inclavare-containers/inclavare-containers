@@ -46,6 +46,7 @@ static inline void print_openssl_err(SSL *ssl, int ret)
 }
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-extern int X509_STORE_get_ex_new_index(long argl, void *argp, CRYPTO_EX_new *new_func, CRYPTO_EX_dup *dup_func, CRYPTO_EX_free *free_func);
+extern int X509_STORE_get_ex_new_index(long argl, void *argp, CRYPTO_EX_new *new_func,
+				       CRYPTO_EX_dup *dup_func, CRYPTO_EX_free *free_func);
 #endif
 #endif

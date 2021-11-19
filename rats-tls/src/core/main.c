@@ -25,10 +25,14 @@ rtls_core_context_t global_core_context;
 rats_tls_log_level_t global_log_level = RATS_TLS_LOG_LEVEL_DEFAULT;
 
 #ifdef SGX
+// clang-format off
 #define INSTANCE_NUM  8
 #define INSTANCE_NAME 32
-char enclave_instance_name[INSTANCE_NUM][INSTANCE_NAME] = {"nullcrypto", "nullattester", "nullverifier", "sgx_ecdsa", "sgx_ecdsa_qve",
-                                                        "sgx_la", "nulltls", "openssl" };
+// clang-format off
+char enclave_instance_name[INSTANCE_NUM][INSTANCE_NAME] = { "nullcrypto",    "nullattester",
+							    "nullverifier",  "sgx_ecdsa",
+							    "sgx_ecdsa_qve", "sgx_la",
+							    "nulltls",	     "openssl" };
 void librats_tls_init(void)
 #else
 void __attribute__((constructor)) librats_tls_init(void)

@@ -48,4 +48,4 @@ typedef struct {
 	tdx_report_body_t report_body;
 } __attribute__((__packed__)) tdx_quote_t;
 
-#endif	/* _TDX_ECDSA_H */
+#endif /* _TDX_ECDSA_H */

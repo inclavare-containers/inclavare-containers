@@ -98,8 +98,8 @@ static int sgx_create_report(sgx_report_t *report)
 
 #ifdef SGX
 int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
-			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			       bool debug_enclave, char *ip, int port)
+			    char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			    bool debug_enclave, char *ip, int port)
 {
 	uint32_t s_ip = inet_addr(ip);
 	uint16_t s_port = htons((uint16_t)port);
@@ -130,8 +130,8 @@ int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
 }
 #else /* For Occlum and host builds */
 int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
-			       char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			       bool debug_enclave, char *ip, int port)
+			    char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
+			    bool debug_enclave, char *ip, int port)
 {
 	rats_tls_conf_t conf;
 
@@ -236,8 +236,7 @@ int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
 		memcpy(buf, &app_report.body.mr_enclave, sizeof(sgx_measurement_t));
 		memcpy(buf + sizeof(sgx_measurement_t), &app_report.body.mr_signer,
 		       sizeof(sgx_measurement_t));
-		memcpy(buf + 2 * sizeof(sgx_measurement_t), RATS_TLS_HELLO,
-		       sizeof(RATS_TLS_HELLO));
+		memcpy(buf + 2 * sizeof(sgx_measurement_t), RATS_TLS_HELLO, sizeof(RATS_TLS_HELLO));
 
 		len = 2 * sizeof(sgx_measurement_t) + strlen(RATS_TLS_HELLO);
 	#endif
@@ -257,7 +256,6 @@ int rats_tls_server_startup(rats_tls_log_level_t log_level, char *attester_type,
 		RTLS_ERR("Failed to cleanup %#x\n", ret);
 
 	return ret;
-
 
 err:
 	/* Ignore the error code of cleanup in order to return the prepositional error */
@@ -369,8 +367,8 @@ int main(int argc, char **argv)
 		}
 	} while (opt != -1);
 
-        global_log_level = log_level;
+	global_log_level = log_level;
 
 	return rats_tls_server_startup(log_level, attester_type, verifier_type, tls_type,
-					  crypto_type, mutual, debug_enclave, ip, port);
+				       crypto_type, mutual, debug_enclave, ip, port);
 }
