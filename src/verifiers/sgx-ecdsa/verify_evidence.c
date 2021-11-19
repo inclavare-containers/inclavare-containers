@@ -105,7 +105,7 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	case SGX_QL_QV_RESULT_SW_HARDENING_NEEDED:
 	case SGX_QL_QV_RESULT_CONFIG_AND_SW_HARDENING_NEEDED:
 		RTLS_WARN("verification completed with Non-terminal result: %x\n",
-			   quote_verification_result);
+			  quote_verification_result);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)quote_verification_result);
 		break;
 	case SGX_QL_QV_RESULT_INVALID_SIGNATURE:
@@ -113,7 +113,7 @@ enclave_verifier_err_t ecdsa_verify_evidence(__attribute__((unused)) enclave_ver
 	case SGX_QL_QV_RESULT_UNSPECIFIED:
 	default:
 		RTLS_WARN("verification completed with Terminal result: %x\n",
-			   quote_verification_result);
+			  quote_verification_result);
 		err = SGX_ECDSA_VERIFIER_ERR_CODE((int)quote_verification_result);
 		break;
 	}

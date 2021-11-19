@@ -9,8 +9,7 @@
 
 #include "sgx_la.h"
 
-enclave_attester_err_t sgx_la_attester_init(enclave_attester_ctx_t *ctx,
-					    rats_tls_cert_algo_t algo)
+enclave_attester_err_t sgx_la_attester_init(enclave_attester_ctx_t *ctx, rats_tls_cert_algo_t algo)
 {
 	RTLS_DEBUG("ctx %p, algo %d\n", ctx, algo);
 

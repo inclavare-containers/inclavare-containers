@@ -45,7 +45,8 @@ rats_tls_err_t rtls_tls_wrapper_load_all(void)
 		if (!strcmp(ptr->d_name, ".") || !strcmp(ptr->d_name, "..")) {
 			continue;
 		}
-		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX), PATTERN_SUFFIX, strlen(PATTERN_SUFFIX))) {
+		if (strncmp(ptr->d_name + strlen(ptr->d_name) - strlen(PATTERN_SUFFIX),
+			    PATTERN_SUFFIX, strlen(PATTERN_SUFFIX))) {
 			continue;
 		}
 

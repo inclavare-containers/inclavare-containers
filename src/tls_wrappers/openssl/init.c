@@ -36,8 +36,7 @@ tls_wrapper_err_t openssl_tls_init(tls_wrapper_ctx_t *ctx)
 #else
 		ssl_ctx->sctx = SSL_CTX_new(TLS_server_method());
 #endif
-	}
-	else {
+	} else {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 		ssl_ctx->sctx = SSL_CTX_new(TLSv1_client_method());
 #else

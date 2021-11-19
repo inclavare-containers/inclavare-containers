@@ -12,8 +12,8 @@ crypto_wrapper_err_t openssl_pre_init(void);
 crypto_wrapper_err_t openssl_init(crypto_wrapper_ctx_t *ctx);
 crypto_wrapper_err_t openssl_gen_privkey(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
 					 uint8_t *privkey_buf, unsigned int *privkey_len);
-crypto_wrapper_err_t openssl_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx,
-					     rats_tls_cert_algo_t algo, uint8_t *hash);
+crypto_wrapper_err_t openssl_gen_pubkey_hash(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
+					     uint8_t *hash);
 crypto_wrapper_err_t openssl_gen_cert(crypto_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
 				      rats_tls_cert_info_t *cert_info);
 crypto_wrapper_err_t openssl_cleanup(crypto_wrapper_ctx_t *ctx);

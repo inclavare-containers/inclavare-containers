@@ -12,8 +12,7 @@ extern tls_wrapper_err_t nulltls_pre_init(void);
 extern tls_wrapper_err_t nulltls_init(tls_wrapper_ctx_t *);
 extern tls_wrapper_err_t nulltls_use_privkey(tls_wrapper_ctx_t *ctx, rats_tls_cert_algo_t algo,
 					     void *privkey_buf, size_t privkey_len);
-extern tls_wrapper_err_t nulltls_use_cert(tls_wrapper_ctx_t *ctx,
-					  rats_tls_cert_info_t *cert_info);
+extern tls_wrapper_err_t nulltls_use_cert(tls_wrapper_ctx_t *ctx, rats_tls_cert_info_t *cert_info);
 extern tls_wrapper_err_t nulltls_negotiate(tls_wrapper_ctx_t *, int fd);
 extern tls_wrapper_err_t nulltls_transmit(tls_wrapper_ctx_t *, void *, size_t *);
 extern tls_wrapper_err_t nulltls_receive(tls_wrapper_ctx_t *, void *, size_t *);
