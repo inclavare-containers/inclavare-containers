@@ -119,11 +119,12 @@ bool is_sgx2_supported(void)
 }
 
 /* return true means in td guest */
-bool is_in_tdguest(void)
+bool is_tdguest_supported(void)
 {
-	int cpu_info[4] = { 0, 0, 0, 0 };
+	uint32_t sig[4] = { 0, 0, 0, 0 };
 
-	__cpuidex(cpu_info, TDX_CPUID, 0);
+	__cpuidex(sig, TDX_CPUID, 0);
 
-	return !((cpu_info[1] & (!(TDX_STRING_HIGH))) && (cpu_info[3] & (!(TDX_STRING_LOW))));
+	/* "IntelTDX    " */
+	return (sig[1] == 0x65746e49) && (sig[3] == 0x5844546c) && (sig[2] == 0x20202020);
 }
