@@ -1,5 +1,7 @@
 # Root directory of the project (absolute path).
 ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+EPM_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+EPM_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
 
 # Base path used to install.
 DESTDIR ?= /usr/local
@@ -56,11 +58,11 @@ bin/epm:
 binaries: clean $(BINARIES) ## build binaries
 
 clean: ## clean up binaries
-	@echo "$@"
 	@rm -f $(BINARIES)
+	@rm -f dist/rpm/epm.spec
 
 package:
-	$(MAKE) -C dist package
+	$(MAKE) -C dist package EPM_VERSION="$(EPM_VERSION)" EPM_MAINTAINER="$(EPM_MAINTAINER)"
 
 install: ## install binaries
 	@echo "$@ $(BINARIES)"
