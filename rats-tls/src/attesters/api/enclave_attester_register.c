@@ -9,6 +9,7 @@
 #include <rats-tls/err.h>
 #include <rats-tls/log.h>
 #include "internal/attester.h"
+#include "internal/cpu.h"
 
 enclave_attester_err_t enclave_attester_register(const enclave_attester_opts_t *opts)
 {
@@ -16,6 +17,16 @@ enclave_attester_err_t enclave_attester_register(const enclave_attester_opts_t *
 		return -ENCLAVE_ATTESTER_ERR_INVALID;
 
 	RTLS_DEBUG("registering the enclave attester '%s' ...\n", opts->name);
+
+	if (opts->flags & ENCLAVE_ATTESTER_OPTS_FLAGS_TDX_GUEST) {
+		if (!is_tdguest_supported()) {
+			// clang-format off
+			RTLS_DEBUG("failed to register the attester '%s' due to lack of TDX Guest capability\n",
+				   opts->type);
+			// clang-format on
+			return -ENCLAVE_ATTESTER_ERR_CPU_UNSUPPORTED;
+		}
+	}
 
 	enclave_attester_opts_t *new_opts = (enclave_attester_opts_t *)malloc(sizeof(*new_opts));
 	if (!new_opts)
