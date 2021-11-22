@@ -7,36 +7,37 @@ include(ExternalProject)
 include(FindSGXSSL)
 
 # Patch
-set(_patch_script "${CMAKE_CURRENT_SOURCE_DIR}/patch_script.sh")
+set(SGX_SSL_PATCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external/sgx-ssl")
+set(_patch_script "${SGX_SSL_PATCH_DIR}/patch_script.sh")
 file(WRITE "${_patch_script}"
 "#!/bin/sh
 cd ${INTEL_SGXSSL_SRC}/
 if [ ! -e  Linux/sgx/libsgx_usgxssl/uunistd.cpp ]; then
-        patch -p1 < ${CMAKE_CURRENT_SOURCE_DIR}/patch/0001-add-ssl-library-enclave-support.patch;
+        patch -p1 < ${SGX_SSL_PATCH_DIR}/patch/0001-add-ssl-library-enclave-support.patch;
 fi;
 ")
 
-set(_patch_cmake "${CMAKE_CURRENT_SOURCE_DIR}/patch.cmake")
+set(_patch_cmake "${SGX_SSL_PATCH_DIR}/patch.cmake")
 file(WRITE "${_patch_cmake}"
-        "execute_process(COMMAND sh ${_patch_script} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})"
+        "execute_process(COMMAND sh ${_patch_script} WORKING_DIRECTORY ${SGX_SSL_PATCH_DIR})"
 )
 
 # Configure
-set(_configure_script "${CMAKE_CURRENT_SOURCE_DIR}/download_script.sh")
+set(_configure_script "${SGX_SSL_PATCH_DIR}/download_script.sh")
 file(WRITE "${_configure_script}"
 "#!/bin/sh
 if [ ! -e ${OPENSSL_DIR}/openssl-1.1.1*.tar.gz ]; then
-       wget --no-check-certificate https://www.openssl.org/source/openssl-1.1.1k.tar.gz -P ${OPENSSL_DIR};
+        wget --no-check-certificate https://www.openssl.org/source/openssl-1.1.1k.tar.gz -P ${OPENSSL_DIR};
 fi;
 ")
 
-set(_configure_cmake "${CMAKE_CURRENT_SOURCE_DIR}/configure.cmake")
+set(_configure_cmake "${SGX_SSL_PATCH_DIR}/configure.cmake")
 file(WRITE "${_configure_cmake}"
-        "execute_process(COMMAND sh ${_configure_script} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})"
+	"execute_process(COMMAND sh ${_configure_script} WORKING_DIRECTORY ${SGX_SSL_PATCH_DIR})"
 )
 
 # Make
-set(_make_script "${CMAKE_CURRENT_SOURCE_DIR}/intel_sgxssl_make.sh")
+set(_make_script "${SGX_SSL_PATCH_DIR}/intel_sgxssl_make.sh")
 if(SGX)
     file(WRITE "${_make_script}"
 "#!/bin/sh
@@ -47,13 +48,13 @@ fi;
 ")
 endif()
 
-set(_make_cmake "${CMAKE_CURRENT_SOURCE_DIR}/make.cmake")
+set(_make_cmake "${SGX_SSL_PATCH_DIR}/make.cmake")
 file(WRITE "${_make_cmake}"
-"execute_process(COMMAND sh ${_make_script} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})"
+        "execute_process(COMMAND sh ${_make_script} WORKING_DIRECTORY ${SGX_SSL_PATCH_DIR})"
 )
 
 # Install
-set(_install_script "${CMAKE_CURRENT_SOURCE_DIR}/sgxssl_install.sh")
+set(_install_script "${SGX_SSL_PATCH_DIR}/sgxssl_install.sh")
 if(SGX)
     file(WRITE "${_install_script}"
 "#!/bin/sh
@@ -68,9 +69,9 @@ cd -
 ")
 endif()
 
-set(_install_cmake "${CMAKE_CURRENT_SOURCE_DIR}/install.cmake")
+set(_install_cmake "${SGX_SSL_PATCH_DIR}/install.cmake")
 file(WRITE "${_install_cmake}"
-        "execute_process(COMMAND sh ${_install_script} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})"
+        "execute_process(COMMAND sh ${_install_script} WORKING_DIRECTORY ${SGX_SSL_PATCH_DIR})"
 )
 
 SET_DIRECTORY_PROPERTIES(PROPERTIES CLEAN_NO_CUSTOM 1)
