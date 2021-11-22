@@ -7,6 +7,11 @@ DEBUG ?= 0
 EXTRA_FLAGS ?=
 APP := shelter
 
+# Root directory of the project (absolute path).
+ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+SHELTER_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+SHELTER_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
+
 #ifdef DEBUG 	
 #	@echo $CURRENTDIR
 #	@echo $TOPDIR
@@ -73,7 +78,7 @@ uninstall:
 	$(MAKE) -C $(TOPDIR)/enclave-tls uninstall
 
 package:
-	$(MAKE) -C dist package
+	$(MAKE) -C dist package SHELTER_VERSION="$(SHELTER_VERSION)" SHELTER_MAINTAINER="$(SHELTER_MAINTAINER)"
 
 clean:
 	rm -f *.o shelter
@@ -81,5 +86,6 @@ clean:
 	$(MAKE) -C remoteattestation clean
 	$(MAKE) -C utils clean
 	$(MAKE) -C $(TOPDIR)/enclave-tls clean
+	@rm -f dist/rpm/shelter.spec dist/deb/debian/changelog
 
 .PHONY: clean install uninstall package
