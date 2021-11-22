@@ -138,19 +138,19 @@ async fn main() {
     };
     let tls_type = match matches.is_present("tls") {
         true => matches.value_of("tls").unwrap().to_string(),
-        false => "openssl".to_string(),
+        false => "".to_string(),
     };
     let crypto = match matches.is_present("crypto") {
         true => matches.value_of("crypto").unwrap().to_string(),
-        false => "openssl".to_string(),
+        false => "".to_string(),
     };
     let attester = match matches.is_present("attester") {
         true => matches.value_of("attester").unwrap().to_string(),
-        false => "nullattester".to_string(),
+        false => "".to_string(),
     };
     let verifier = match matches.is_present("verifier") {
         true => matches.value_of("verifier").unwrap().to_string(),
-        false => "sgx_ecdsa".to_string(),
+        false => "".to_string(),
     };
 
     let mutual = matches.is_present("mutual");
