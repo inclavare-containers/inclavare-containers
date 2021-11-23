@@ -1,5 +1,10 @@
 GO := go
 
+# Root directory of the project (absolute path).
+ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+RUNE_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+RUNE_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
+
 PREFIX := $(DESTDIR)/usr/local
 BINDIR := $(PREFIX)/bin
 
@@ -61,6 +66,7 @@ clean:
 	rm -f rune rune-*
 	rm -f contrib/cmd/recvtty/recvtty
 	make -C libenclave/internal/runtime/pal/skeleton clean
+	rm -f dist/rpm/rune.spec
 
 uninstall:
 	rm -f $(BINDIR)/rune
@@ -77,7 +83,7 @@ verify-dependencies: vendor
 		&& echo "all vendor files are up to date."
 
 package:
-	$(MAKE) -C dist package
+	$(MAKE) -C dist package RUNE_VERSION="$(RUNE_VERSION)" RUNE_MAINTAINER="$(RUNE_MAINTAINER)"
 
 .PHONY: rune all recvtty static lint install install-bash \
 	clean uninstall vendor verify-dependencies skeleton package
