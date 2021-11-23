@@ -24,7 +24,7 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000
 	github.com/kr/pretty v0.2.1 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.0.1 // indirect
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 	github.com/pkg/errors v0.9.1
