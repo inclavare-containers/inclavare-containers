@@ -8,7 +8,7 @@
 %undefine _missing_build_ids_terminate_build
 
 Name: epm
-Version: 0.6.3
+Version: %{EPM_VERSION}
 Release: %{centos_base_release}%{?dist}
 Summary: epm for Inclavare Containers(runE)
 Group: Development/Tools
