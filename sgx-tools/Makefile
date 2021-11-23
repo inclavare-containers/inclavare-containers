@@ -3,6 +3,11 @@ EXTRA_FLAGS ?=
 EXTRA_LDFLAGS ?=
 DESTDIR ?=
 
+# Root directory of the project (absolute path).
+ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+SGX_TOOLS_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+SGX_TOOLS_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
+
 APP := sgx-tools
 .DEFAULT: $(APP)
 .PHONY: clean test lint install uninstall
@@ -17,6 +22,7 @@ $(APP): $(SOURCES)
 
 clean:
 	@rm -f $(APP) test/*.token
+	@rm -f dist/rpm/sgx-tools.spec dist/deb/debian/changelog
 
 test: $(APP)
 	./$(APP) --verbose gen-token --signature test/hello-world.sig
@@ -36,4 +42,4 @@ uninstall:
 	@rm -f $(BINDIR)/$(APP)
 
 package:
-	$(MAKE) -C dist package
+	$(MAKE) -C dist package SGX_TOOLS_VERSION="$(SGX_TOOLS_VERSION)" SGX_TOOLS_MAINTAINER="$(SGX_TOOLS_MAINTAINER)"
