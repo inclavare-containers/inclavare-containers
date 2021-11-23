@@ -66,7 +66,7 @@ clean:
 	rm -f rune rune-*
 	rm -f contrib/cmd/recvtty/recvtty
 	make -C libenclave/internal/runtime/pal/skeleton clean
-	rm -f dist/rpm/rune.spec
+	rm -f dist/rpm/rune.spec dist/deb/debian/changelog
 
 uninstall:
 	rm -f $(BINDIR)/rune

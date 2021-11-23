@@ -24,12 +24,14 @@ rpm: rpm/rune.spec release-tarball
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of rune located in $(PROJECT_DIR)"	
 
-deb:
+deb: deb/debian/changelog
 	@cd deb && ./build.sh
 	@echo "the debs of rune located in $(PROJECT_DIR)"
 
-package: rpm/rune.spec.in
+package: rpm/rune.spec.in deb/debian/changelog.in
 ifeq (/etc/debian_version, $(wildcard /etc/debian_version))
+	date=`date "+%a, %d %b %Y %H:%M:%S"` && \
+	sed "1i\rune ($(RUNE_VERSION)-1) unstable; urgency=low\n\n  * Update to version $(RUNE_VERSION).\n\n -- $(RUNE_MAINTAINER)  $$date +0000\n" deb/debian/changelog.in > deb/debian/changelog;
 	make deb
 else ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
 	sed 's/Version: %{RUNE_VERSION}/Version: $(RUNE_VERSION)/' rpm/rune.spec.in > rpm/rune.spec && egrep -q '^\* .+ - $(RUNE_VERSION)' rpm/rune.spec || { \

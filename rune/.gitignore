@@ -4,3 +4,4 @@ vendor/pkg
 contrib/cmd/recvtty/recvtty
 liberpal-skeleton*.so
 dist/rpm/rune.spec
+dist/deb/debian/changelog
