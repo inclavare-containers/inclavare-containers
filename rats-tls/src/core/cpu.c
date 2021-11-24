@@ -9,9 +9,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/sysmacros.h>
+#ifndef SGX
+	#include <sys/stat.h>
+	#include <sys/sysmacros.h>
+#else
+	#include "rtls_t.h"
+#endif
 
+#ifndef SGX
 static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 {
 #if defined(__x86_64__)
@@ -40,7 +45,7 @@ static bool is_sgx_device(const char *dev)
 	struct stat st;
 
 	if (!stat(dev, &st)) {
-		if ((st.st_mode & S_IFCHR) && (major(st.st_rdev) == 10))
+		if ((st.st_mode & S_IFCHR) && (major(st.st_rdev) == SGX_DEVICE_MAJOR_NUM))
 			return true;
 	}
 
@@ -67,7 +72,47 @@ static bool is_in_tree_kernel_driver(void)
 {
 	return is_sgx_device("/dev/sgx_enclave");
 }
+#else
+static inline void __cpuidex(int a[4], int b, int c)
+{
+	a[0] = b;
+	a[2] = c;
+	ocall_cpuid(&a[0], &a[1], &a[2], &a[3]);
+}
 
+static bool is_legacy_oot_kernel_driver(void)
+{
+	bool retval;
+
+	ocall_is_sgx_dev(&retval, "/dev/isgx");
+
+	return retval;
+}
+
+/* Prior to DCAP 1.10 release, the DCAP OOT driver uses this legacy
+ * name.
+ */
+static bool is_dcap_1_9_oot_kernel_driver(void)
+{
+	bool retval;
+
+	ocall_is_sgx_dev(&retval, "/dev/sgx/enclave");
+
+	return retval;
+}
+
+/* Since DCAP 1.10 release, the DCAP OOT driver uses the same name
+ * as in-tree driver.
+ */
+static bool is_in_tree_kernel_driver(void)
+{
+	bool retval;
+
+	ocall_is_sgx_dev(&retval, "/dev/sgx_enclave");
+
+	return retval;
+}
+#endif
 /* return true means in sgx1 enabled */
 static bool __is_sgx1_supported(void)
 {
@@ -78,7 +123,6 @@ static bool __is_sgx1_supported(void)
 	return !!(cpu_info[0] & SGX1_STRING);
 }
 
-/* return true means in sgx2 enabled */
 static bool __is_sgx2_supported(void)
 {
 	int cpu_info[4] = { 0, 0, 0, 0 };
@@ -94,8 +138,8 @@ bool is_sgx1_supported(void)
 		return false;
 
 	/* SGX2 using ECDSA attestation is not compatible with SGX1
-	 * which uses EPID attestation.
-	 */
+         * which uses EPID attestation.
+         */
 	if (is_sgx2_supported())
 		return false;
 

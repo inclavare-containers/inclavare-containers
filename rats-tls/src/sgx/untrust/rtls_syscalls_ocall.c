@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
@@ -13,7 +14,10 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include "rtls_syscalls.h"
+#include "cpu.h"
 
 void ocall_exit(void)
 {
@@ -151,4 +155,32 @@ void ocall_low_res_time(int *time)
 
 	gettimeofday(&tv, NULL);
 	*time = (int)tv.tv_sec;
+}
+
+void ocall_cpuid(int *eax, int *ebx, int *ecx, int *edx)
+{
+#if defined(__x86_64__)
+	__asm__ volatile("cpuid"
+			 : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+			 : "0"(*eax), "1"(*ebx), "2"(*ecx), "3"(*edx)
+			 : "memory");
+#else
+	/* on 32bit, ebx can NOT be used as PIC code */
+	__asm__ volatile("xchgl %%ebx, %1; cpuid; xchgl %%ebx, %1"
+			 : "=a"(*eax), "=r"(*ebx), "=c"(*ecx), "=d"(*edx)
+			 : "0"(*eax), "1"(*ebx), "2"(*ecx), "3"(*edx)
+			 : "memory");
+#endif
+}
+
+void ocall_is_sgx_dev(bool *retval, const char *dev)
+{
+	struct stat st;
+
+	if (stat(dev, &st)) {
+		*retval = false;
+		return;
+	}
+
+	*retval = S_ISCHR(st.st_mode) && (major(st.st_rdev) == SGX_DEVICE_MAJOR_NUM);
 }
