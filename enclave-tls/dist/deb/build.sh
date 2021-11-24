@@ -5,7 +5,7 @@ DEBBUILD_DIR=$(mktemp -u /tmp/debbuild.XXXX)
 SCRIPT_DIR=$(pwd)
 PACKAGE=enclave-tls
 PROJECT=inclavare-containers
-VERSION=$(cd ../../..; cat ./VERSION)
+VERSION=$(cd ../..; cat ./VERSION)
 RELEASE_TARBALL=$DEBBUILD_DIR/v$VERSION.tar.gz
 RELEASE_TARBALL_URL=https://github.com/alibaba/inclavare-containers/archive/v$VERSION.tar.gz
 TARBALL_NAME=$PACKAGE\_$VERSION.orig.tar.gz
@@ -33,6 +33,6 @@ fi
 # build_deb_package
 cp -rf  $SCRIPT_DIR/debian $DEB_BUILD_FOLDER
 cd $DEB_BUILD_FOLDER
-DEB_CFLAGS_SET="-std=gnu11 -fPIC" DEB_CXXFLAGS_SET="-std=c++11 -fPIC" DEB_LDFLAGS_SET="-fPIC" dpkg-buildpackage -us -uc
+DEB_CFLAGS_SET="-std=gnu11 -fPIC" DEB_CXXFLAGS_SET="-std=c++11 -fPIC" DEB_LDFLAGS_SET="-fPIC -L/usr/lib/x86_64-linux-gnu" dpkg-buildpackage -us -uc
 cp $DEBBUILD_DIR/*.*deb $PROJECT_DIR
 rm -rf $DEBBUILD_DIR
