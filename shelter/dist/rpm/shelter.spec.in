@@ -5,7 +5,7 @@
 %global BIN_DIR /usr/local/bin
 
 Name: shelter
-Version: 0.6.2
+Version: %{SHELTER_VERSION}
 Release: %{centos_base_release}%{?dist}
 Summary: shelter is designed as a remote attestation tool for customer to verify if their workloads are loaded in a specified intel authorized sgx enclaved.
 
