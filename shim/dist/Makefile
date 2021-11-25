@@ -24,12 +24,14 @@ rpm: rpm/shim-rune.spec release-tarball
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of shim-rune located in $(PROJECT_DIR)"
 
-deb:
+deb: deb/debian/changelog
 	@cd deb && ./build.sh
 	@echo "the debs of shim-rune located in $(PROJECT_DIR)"
 
-package: rpm/shim-rune.spec.in
+package: rpm/shim-rune.spec.in deb/debian/changelog.in
 ifeq (/etc/debian_version, $(wildcard /etc/debian_version))
+	date=`date "+%a, %d %b %Y %H:%M:%S"` && \
+	sed "1i\shim-rune ($(SHIM_VERSION)-1) unstable; urgency=low\n\n  * Update to version $(SHIM_VERSION).\n\n -- $(SHIM_MAINTAINER)  $$date +0000\n" deb/debian/changelog.in > deb/debian/changelog;
 	make deb
 else ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
 	sed 's/Version: %{SHIM_VERSION}/Version: $(SHIM_VERSION)/' rpm/shim-rune.spec.in > rpm/shim-rune.spec && egrep -q '^\* .+ - $(SHIM_VERSION)' rpm/shim-rune.spec || { \
