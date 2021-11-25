@@ -25,11 +25,11 @@ cat << EOF >/etc/yum.repos.d/inclavare-containers.repo
 [inclavare-containers]
 name=inclavare-containers
 enabled=1
-baseurl=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/
+baseurl=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/
 gpgcheck=1
 repo_gpgcheck=1
-gpgkey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
-gpgcakey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+gpgkey=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
+gpgcakey=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
 EOF
 ```
 
@@ -40,15 +40,15 @@ EOF
 sudo apt-get install -y gnupg wget
 
 # add the repository to your sources
-echo 'deb [arch=amd64] https://mirrors.openanolis.org/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list
+echo 'deb [arch=amd64] https://mirrors.openanolis.cn/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list
 
 # add the key to the list of trusted keys used by the apt to authenticate packages
-wget -qO - https://mirrors.openanolis.org/inclavare-containers/deb-repo/DEB-GPG-KEY.key  | sudo apt-key add -
+wget -qO - https://mirrors.openanolis.cn/inclavare-containers/deb-repo/DEB-GPG-KEY.key  | sudo apt-key add -
 
 # set a higher priority to epm to avoid conflicts with another epm package which reside in `mirrors.cloud.aliyuncs.com`
 cat << EOF >/etc/apt/preferences.d/inclavare-containers
 Package: epm
-Pin: origin mirrors.openanolis.org
+Pin: origin mirrors.openanolis.cn
 Pin-Priority: 1000
 EOF
 

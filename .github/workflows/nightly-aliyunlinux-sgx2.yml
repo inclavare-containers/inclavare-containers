@@ -43,11 +43,11 @@ jobs:
           [inclavare-containers]
           name=inclavare-containers
           enabled=1
-          baseurl=https://mirrors.openanolis.org/inclavare-containers/alinux2-repo/
+          baseurl=https://mirrors.openanolis.cn/inclavare-containers/alinux2-repo/
           gpgcheck=1
           repo_gpgcheck=1
-          gpgkey=https://mirrors.openanolis.org/inclavare-containers/alinux2-repo/RPM-GPG-KEY-rpm-sign
-          gpgcakey=https://mirrors.openanolis.org/inclavare-containers/alinux2-repo/RPM-GPG-KEY-rpm-sign-ca
+          gpgkey=https://mirrors.openanolis.cn/inclavare-containers/alinux2-repo/RPM-GPG-KEY-rpm-sign
+          gpgcakey=https://mirrors.openanolis.cn/inclavare-containers/alinux2-repo/RPM-GPG-KEY-rpm-sign-ca
           EOF
           sudo yum install -y gcc gcc-c++ \
             libsgx-ae-le libsgx-ae-pce libsgx-ae-qe3 libsgx-ae-qve \

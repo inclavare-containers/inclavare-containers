@@ -35,11 +35,11 @@ This user guide provides the steps to run Occlum with Docker and OCI Runtime `ru
     [inclavare-containers]
     name=inclavare-containers
     enabled=1
-    baseurl=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/
+    baseurl=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/
     gpgcheck=1
     repo_gpgcheck=1
-    gpgkey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
-    gpgcakey=https://mirrors.openanolis.org/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
+    gpgkey=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
+    gpgcakey=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
     EOF
     ```
 
@@ -51,12 +51,12 @@ This user guide provides the steps to run Occlum with Docker and OCI Runtime `ru
   - For Ubuntu 18.04-server:
     1. Add the repository to your sources.
     ```shell
-    echo 'deb [arch=amd64] https://mirrors.openanolis.org/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list
+    echo 'deb [arch=amd64] https://mirrors.openanolis.cn/inclavare-containers/deb-repo bionic main' | tee /etc/apt/sources.list.d/inclavare-containers.list
     ```
 
     2. Add the key to the list of trusted keys used by the apt to authenticate packages.
     ```shell
-    wget -qO - https://mirrors.openanolis.org/inclavare-containers/deb-repo/DEB-GPG-KEY.key | apt-key add -
+    wget -qO - https://mirrors.openanolis.cn/inclavare-containers/deb-repo/DEB-GPG-KEY.key | apt-key add -
     ```
 
     3. Update the apt and install the packages.
