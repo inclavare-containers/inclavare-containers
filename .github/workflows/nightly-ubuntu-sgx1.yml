@@ -52,7 +52,7 @@ jobs:
 
       # We usually update rune.spec to the latest version before release. Therefore we get the latest version according to rune.spec.
       - name: Get version
-        run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        run: echo "RUNE_VERSION=$(cat VERSION)" >> $GITHUB_ENV;
           echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
       - name: Install Intel SGX stack

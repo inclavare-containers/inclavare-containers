@@ -11,7 +11,7 @@ jobs:
 
     - name: Get version
       run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
-        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(cat VERSION)" >> $GITHUB_ENV;
 
     - name: Create ubuntu container
       run: docker rm -f wamr || true;

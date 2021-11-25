@@ -30,7 +30,7 @@ jobs:
 
     - name: Prepare work
       run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
-        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV; 
+        echo "RUNE_VERSION=$(cat VERSION)" >> $GITHUB_ENV;
 
     - name: Create container
       run: |

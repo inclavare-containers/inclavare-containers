@@ -16,7 +16,7 @@ jobs:
 
     - name: Get version
       run: |
-        echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(cat VERSION)" >> $GITHUB_ENV;
         echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
     - name: Create centos container
