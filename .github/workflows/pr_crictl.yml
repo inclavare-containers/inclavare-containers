@@ -18,7 +18,7 @@ jobs:
         ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
     - name: Prepare work
-      run: echo "RUNE_VERSION=$(grep 'Version:' rune/dist/rpm/rune.spec | awk '{print $2}')" >> $GITHUB_ENV;
+      run: echo "RUNE_VERSION=$(cat VERSION)" >> $GITHUB_ENV;
         echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV
 
     - name: Create container
