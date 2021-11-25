@@ -2,6 +2,11 @@ SGX_SDK ?= /opt/intel/sgxsdk
 SGX_MODE ?= HW
 SGX_ARCH ?= x64
 
+# Root directory of the project (absolute path).
+ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+INCLAVARED_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+INCLAVARED_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
+
 PROJDIR := $(shell readlink -f ..)
 TOP_DIR := .
 include $(TOP_DIR)/buildenv.mk
@@ -156,9 +161,10 @@ uninstall:
 	@rm -f $(BINDIR)/inclavared
 
 package:
-	$(MAKE) -C dist package
+	$(MAKE) -C dist package INCLAVARED_VERSION="$(INCLAVARED_VERSION)" INCLAVARED_MAINTAINER="$(INCLAVARED_MAINTAINER)"
 
 clean:
 	@rm -f $(App_Name) $(RustEnclave_Name) $(Signed_RustEnclave_Name) enclave/*_t.* app/*_u.* lib/*.a
 	@cd enclave && cargo clean && rm -f Cargo.lock
 	@cd app && cargo clean && rm -f Cargo.lock
+	@rm -f dist/rpm/inclavared.spec dist/deb/debian/changelog

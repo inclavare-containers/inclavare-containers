@@ -5,7 +5,7 @@
 %global BIN_DIR /usr/local/bin
 
 Name: inclavared
-Version: 0.6.3
+Version: %{INCLAVARED_VERSION}
 Release: %{centos_base_release}%{?dist}
 Summary: inclavared is a coordinator which creates a m-TLS(Mutal Transport Layer Security) connection between stub enclave and other enclaves with remote attestation.
 

@@ -2,6 +2,8 @@ rust-sgx
 
 bin/inclavared
 bin/enclave.signed.so
+dist/rpm/inclavared.spec
+dist/deb/debian/changelog
 
 lib/libEnclave_u.a
 lib/libenclave.a
