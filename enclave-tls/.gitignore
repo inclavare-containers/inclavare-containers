@@ -6,3 +6,5 @@
 .vscode/
 src/lib/.build/
 build/
+dist/rpm/enclave_tls.spec
+dist/deb/debian/changelog
