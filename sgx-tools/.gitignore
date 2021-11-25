@@ -1,3 +1,5 @@
 sgx-tools
 *.token
 *.bin
+dist/rpm/sgx-tools.spec
+dist/deb/debian/changelog
