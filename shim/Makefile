@@ -58,7 +58,7 @@ binaries: clean $(BINARIES) ## build binaries
 
 clean: ## clean up binaries
 	@rm -f $(BINARIES)
-	@rm -f dist/rpm/shim-rune.spec
+	@rm -f dist/rpm/shim-rune.spec dist/deb/debian/changelog
 
 package:
 	$(MAKE) -C dist package SHIM_VERSION="$(SHIM_VERSION)" SHIM_MAINTAINER="$(SHIM_MAINTAINER)"
