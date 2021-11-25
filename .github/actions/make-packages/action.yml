@@ -16,7 +16,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-  # FIXME: Don't run make package to build shelter, inclavared and enclave-tls due to bug
   - id: make-packages
     run: |
       docker exec ${{ inputs.container-id }} bash -c 'cd /root && source /etc/profile;
@@ -24,22 +23,31 @@ runs:
           tar zcf v${{ inputs.version }}.tar.gz inclavare-containers-${{ inputs.version }};
           mkdir -p /root/inclavare-containers/${{ inputs.os }};
           cd inclavare-containers-${{ inputs.version }};
-          sed -i 's/shelter//g' Makefile;
           sed -i 's/inclavared//g' Makefile;
-          sed -i 's/enclave-tls//g' Makefile'
+          echo rune shim epm sgx-tools enclave-tls shelter inclavared | xargs -n 1 cp -v VERSION'
 
       if [ '${{ inputs.os }}' = 'ubuntu18.04' ]; then
-        docker exec ${{ inputs.container-id }} bash -c "cd inclavare-containers-${{ inputs.version }};
-          find ./ -path '*deb/build.sh' | xargs -I files sed -i '17 d' files;
-          find ./ -path '*deb/build.sh' | xargs -I files sed -i '17icp /root/v*.tar.gz \$DEBBUILD_DIR' files;
+        docker exec ${{ inputs.container-id }} bash -c 'trap "error_handler $?" ERR;
+          error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
+          cd inclavare-containers-${{ inputs.version }};
+          find ./ -path "*deb/build.sh" | xargs -I files sed -i "17 d" files;
+          find ./ -path "*deb/build.sh" | xargs -I files sed -i "17icp /root/v*.tar.gz \$DEBBUILD_DIR" files;
           make package -j${{ inputs.cpu_num }};
-          mv *.deb /root/inclavare-containers/${{ inputs.os }}"
+          mv *.deb /root/inclavare-containers/${{ inputs.os }}'
       else
-        docker exec ${{ inputs.container-id }} bash -c "cd inclavare-containers-${{ inputs.version }};
+        if [ '${{ inputs.os }}' = 'alinux2' ]; then
+          docker exec ${{ inputs.container-id }} bash -c 'ln -sv /opt/alibaba/teesdk/intel/sgxsdk /opt/intel/sgxsdk;
+            ls -l /opt/intel/sgxsdk'
+        fi
+        docker exec ${{ inputs.container-id }} bash -c 'trap "error_handler $?" ERR;
+          error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
+          cd inclavare-containers-${{ inputs.version }};
           mkdir -p /root/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS};
-          cp -f /root/v$RUNE_VERSION.tar.gz /root/rpmbuild/SOURCES;
-          find ./ -path '*dist/Makefile' | xargs -I files sed -i '16 d' files;
+          cp -f /root/v${{ inputs.version }}.tar.gz /root/rpmbuild/SOURCES;
+          find ./ -path "*dist/Makefile" | xargs -I files sed -i "/wget/d" files;
+          find ./ -path "*dist/Makefile" | xargs -I files sed -i "/rm -rf/d" files;
+          source /etc/profile && echo $SGX_SDK;
           make package RPMBUILD_DIR=/root/rpmbuild -j${{ inputs.cpu_num }};
-          mv *.rpm /root/inclavare-containers/${{ inputs.os }}"
+          mv *.rpm /root/inclavare-containers/${{ inputs.os }}'
       fi
     shell: bash
