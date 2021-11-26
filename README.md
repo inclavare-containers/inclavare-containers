@@ -82,7 +82,7 @@ Please refer to [Inclavare Containers Roadmap](ROADMAP.md) for the details. This
 
 It's recommended to use [Inclavare Containers development docker image](https://hub.docker.com/repository/docker/inclavarecontainers/dev) to build Inclavare Containers from scratch.
 
-Note that the environment of launching Inclavare Containers development docker image must be capable of hardware TEE and install the corresponding software stack, e.g, Intel SGX and [Intel SGX SDK & PSW for Linux](https://download.01.org/intel-sgx/latest/linux-latest/docs/Intel_SGX_Installation_Guide_Linux_2.13.3_Open_Source.pdf).
+Note that the environment of launching Inclavare Containers development docker image must be capable of hardware TEE and install the corresponding software stack, e.g, Intel SGX and [Intel SGX SDK & PSW for Linux](https://download.01.org/intel-sgx/sgx-linux/2.14/docs/Intel_SGX_SW_Installation_Guide_for_Linux.pdf).
 
 The exact command to run the docker image requires to be specified explicitly according to the type of SGX device driver.
 

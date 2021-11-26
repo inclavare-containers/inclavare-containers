@@ -142,7 +142,7 @@ jobs:
           sleep 20 && systemctl stop dnf-makecache.timer;
           cd /root/inclavare-containers/${{ matrix.tag }};
           yum -y install yum-utils wget iptables protobuf-c;
-          wget -c https://download.01.org/intel-sgx/sgx-linux/2.13/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
+          wget -c https://download.01.org/intel-sgx/sgx-linux/2.14/distro/centos8.2-server/sgx_rpm_local_repo.tgz;
           tar xzf sgx_rpm_local_repo.tgz;
           yum-config-manager --add-repo sgx_rpm_local_repo;
           yum makecache;
