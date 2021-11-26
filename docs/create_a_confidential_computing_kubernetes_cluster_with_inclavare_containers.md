@@ -58,7 +58,7 @@ sudo apt-get update
 
 ### 2. Install Linux SGX software stack
 The Linux SGX software stack is comprised of Intel SGX driver, Intel SGX SDK, and Intel SGX PSW. 
-Please follow [Intel SGX Installation Guide Linux 2.13](https://download.01.org/intel-sgx/sgx-linux/2.13/docs/Intel_SGX_Installation_Guide_Linux_2.13_Open_Source.pdf) to install SGX driver, SDK and PSW, the recommended version is 2.13.
+Please follow [Intel SGX Installation Guide Linux 2.14](https://download.01.org/intel-sgx/sgx-linux/2.14/docs/Intel_SGX_SW_Installation_Guide_for_Linux.pdf) to install SGX driver, SDK and PSW, the recommended version is 2.14.
                                                                              
 ### 3. Install Occlum software stack
 [Occlum](https://github.com/occlum/occlum) is the only enclave runtime supported by shim-rune currently. 

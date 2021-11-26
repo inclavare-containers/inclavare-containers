@@ -8,7 +8,7 @@
 
 Additionally, `rune` by default enables seccomp support as [runc](https://github.com/opencontainers/runc#building) so you need to install libseccomp on your platform.
 
-Besides, `rune` depends on [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives). Please download and install the `libsgx-dcap-quote-verify-devel` rpm (centos) or `libsgx-dcap-quote-verify-dev` deb (ubuntu) from [website](https://download.01.org/intel-sgx/sgx-linux/2.13.3/).
+Besides, `rune` depends on [SGX DCAP](https://github.com/intel/SGXDataCenterAttestationPrimitives). Please download and install the `libsgx-dcap-quote-verify-devel` rpm (centos) or `libsgx-dcap-quote-verify-dev` deb (ubuntu) from [website](https://download.01.org/intel-sgx/sgx-linux/2.14/).
 
 ```bash
 # create $WORKSPACE folder
