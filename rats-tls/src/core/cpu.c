@@ -9,14 +9,17 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+// clang-format off
 #ifndef SGX
-	#include <sys/stat.h>
-	#include <sys/sysmacros.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 #else
-	#include "rtls_t.h"
+#include "rtls_t.h"
 #endif
+// clang-format on
 
 #ifndef SGX
+// clang-format off
 static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 {
 #if defined(__x86_64__)
@@ -32,6 +35,7 @@ static inline void cpuid(int *eax, int *ebx, int *ecx, int *edx)
 		     : "memory");
 #endif
 }
+// clang-format on
 
 static inline void __cpuidex(int a[4], int b, int c)
 {
@@ -113,6 +117,7 @@ static bool is_in_tree_kernel_driver(void)
 	return retval;
 }
 #endif
+
 /* return true means in sgx1 enabled */
 static bool __is_sgx1_supported(void)
 {
