@@ -1,3 +1,9 @@
+# 2021-11-30 v0.6.4
+- Implement TDX (ECDSA-based attestation) in RATS-TLS
+- Compatible with OpenSSL 1.0.x in RATS-TLS
+- Update SGX software stack to 2.14
+- Fix CVE vulnerabilities
+
 # 2021-08-31 v0.6.3
 - Add four experimental components including RATS-TLS, Verdictd, Verdict, and RBI
 - Fix CVE vulnerabilities of rune and shim-rune
