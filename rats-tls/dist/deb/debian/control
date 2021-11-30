@@ -2,7 +2,7 @@ Source: rats-tls
 Section: devel
 Priority: extra
 Maintainer: shirong <shirong@linux.alibaba.com>
-Build-Depends: debhelper (>=9), git, make, autoconf, libtool, gcc, g++, libsgx-dcap-quote-verify-dev, libsgx-dcap-ql-dev, libsgx-uae-service
+Build-Depends: debhelper (>=9), cmake, git, make, autoconf, libtool, gcc, g++, libsgx-dcap-quote-verify-dev, libsgx-dcap-ql-dev, libsgx-uae-service
 Standards-Version: 3.9.8
 Homepage: https://github.com/alibaba/inclavare-containers
 

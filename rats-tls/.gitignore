@@ -9,3 +9,5 @@ build/
 src/external/sgx-ssl/intel-sgx-ssl
 src/external/sgx-ssl/*.cmake
 src/external/sgx-ssl/*.sh
+dist/rpm/rats_tls.spec
+dist/deb/debian/changelog
