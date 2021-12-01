@@ -89,14 +89,13 @@ jobs:
         cp -r $GITHUB_WORKSPACE inclavare-containers-$RUNE_VERSION
         tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION
         cd inclavare-containers-$RUNE_VERSION
-        echo "$RUNE_VERSION" > VERSION
-        find ./ -path "*dist/Makefile" | xargs -I files sed -i '16 d' files
+        sed -i '/stable_components := rune/c\stable_components := rune shim epm sgx-tools' Makefile
+        echo rune shim epm sgx-tools | xargs -n 1 cp -v VERSION
+        find ./ -path "*dist/Makefile" | xargs -I files sed -i "/wget/d" files
+        find ./ -path "*dist/Makefile" | xargs -I files sed -i "/rm -rf/d" files
         mkdir -p $WORK_DIR/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
         cp $WORK_DIR/v$RUNE_VERSION.tar.gz $WORK_DIR/rpmbuild/SOURCES/
         source /etc/profile
-        sed -i 's/shelter//g' Makefile
-        sed -i 's/inclavared//g' Makefile
-        sed -i 's/enclave-tls//g' Makefile
         make package RPMBUILD_DIR=$WORK_DIR/rpmbuild RELEASE_TARBALL_FILE=$WORK_DIR/rpmbuild/SOURCES/v$RUNE_VERSION.tar.gz RELEASE_TARBALL_EXIST=y -j${CPU_NUM}
         rpm -ivh rune-$RUNE_VERSION*.rpm
         rpm -ivh shim-rune-$RUNE_VERSION*.rpm
