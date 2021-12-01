@@ -28,7 +28,7 @@ jobs:
           rm -fr $WORK_DIR
           mkdir -p $WORK_DIR
           pushd $WORK_DIR
-          sudo apt-get install software-properties-common
+          sudo apt-get install -y software-properties-common
           sudo add-apt-repository ppa:git-core/ppa -y
           sudo apt-get update
           sudo apt-get install -y git
@@ -107,12 +107,10 @@ jobs:
           cp -r $GITHUB_WORKSPACE inclavare-containers-$RUNE_VERSION
           tar zcf v$RUNE_VERSION.tar.gz inclavare-containers-$RUNE_VERSION
           cd inclavare-containers-$RUNE_VERSION
-          echo "$RUNE_VERSION" > VERSION
+          sed -i '/stable_components := rune/c\stable_components := rune shim epm sgx-tools' Makefile;
+          echo rune shim epm sgx-tools | xargs -n 1 cp -v VERSION;
           find ./ -path "*deb/build.sh" | xargs -I files sed -i '17 d' files;
           find ./ -path "*deb/build.sh" | xargs -I files sed -i "17icp $WORK_DIR/v*.tar.gz \$DEBBUILD_DIR" files;
-          sed -i 's/shelter//g' Makefile
-          sed -i 's/inclavared//g' Makefile
-          sed -i 's/enclave-tls//g' Makefile
           make package -j${CPU_NUM};
           dpkg -i rune_$RUNE_VERSION-1_amd64.deb;
           dpkg -i shim-rune_$RUNE_VERSION-1_amd64.deb
