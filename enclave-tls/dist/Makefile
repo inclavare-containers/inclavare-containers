@@ -31,7 +31,7 @@ deb: deb/debian/changelog
 package: rpm/enclave_tls.spec.in deb/debian/changelog.in
 ifeq (/etc/debian_version, $(wildcard /etc/debian_version))
 	date=`date "+%a, %d %b %Y %H:%M:%S"` && \
-	sed "1i\enclave_tls ($(ENCLAVE_TLS_VERSION)-1) unstable; urgency=low\n\n  * Update to version $(ENCLAVE_TLS_VERSION).\n\n -- $(ENCLAVE_TLS_MAINTAINER)  $$date +0000\n" deb/debian/changelog.in > deb/debian/changelog;
+	sed "1i\enclave-tls ($(ENCLAVE_TLS_VERSION)-1) unstable; urgency=low\n\n  * Update to version $(ENCLAVE_TLS_VERSION).\n\n -- $(ENCLAVE_TLS_MAINTAINER)  $$date +0000\n" deb/debian/changelog.in > deb/debian/changelog;
 	make deb
 else ifeq (/etc/redhat-release, $(wildcard /etc/redhat-release))
 	sed 's/Version: %{ENCLAVE_TLS_VERSION}/Version: $(ENCLAVE_TLS_VERSION)/' rpm/enclave_tls.spec.in > rpm/enclave_tls.spec && egrep -q '^\* .+ - $(ENCLAVE_TLS_VERSION)' rpm/enclave_tls.spec || { \
