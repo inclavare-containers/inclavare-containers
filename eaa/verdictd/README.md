@@ -1,30 +1,30 @@
-# Verdictd
 
-## Introduction
+# Introduction
 
-Verdictd is a server(as RATS shelterd) which creates an m-TLS(Mutal Transport Layer Security) connection with Attestation Agent via remote attestation (aka "[RA-TLS](https://raw.githubusercontent.com/cloud-security-research/sgx-ra-tls/master/whitepaper.pdf)").
+Verdictd is a remote attestation implementation comprising of a set of building blocks that utilize Intel/AMD Security features to discover, attest, and enable critical foundation security and confidential computing use-cases. 
+It relies on [RATS-TLS](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls) to apply the remote attestation fundamentals and standard specifications to maintain a platform data collection service and an efficient verification engine to perform comprehensive trust evaluations. 
+These trust evaluations can be used to govern different trust and security policies applied to any given workload.
+
+Verdictd creates an m-TLS(Mutal Transport Layer Security) connection with [Attestation Agent](https://github.com/confidential-containers/attestation-agent) via remote attestation.
 Mainly functions:
-- Handle "decryption" and "get KEK" requests from Attestation Agent, and response with corresponding results.
-- Launch wrap/unwrap gRPC service which can be used by ocicrypto [containers/ocicrypto](https://github.com/containers/ocicrypt).
+- Implemented verdictd's protocol which includes "decryption" and "get KEK" requests.
+- Implemented a ocicrypto [containers/ocicrypto](https://github.com/containers/ocicrypt) compatible gRPC service.
+- Implemented a grpc service which can be used to config OPA's policy files.
 
-## Design
+# Design
 
-TODO
+Please refer [design doc](https://github.com/alibaba/inclavare-containers/tree/master/eaa/verdictd/docs/design) to view the design of verdictd.
 
-## Installation
+# Build Source Code
 
-TODO
-
-## Build Source Code
-
-### Requirements
+## Requirements
 
 * rust-lang
 * golang
 
-### Setup Environment
+## Setup Environment
 
-Install OPA tool, refer [Download OPA](https://www.openpolicyagent.org/docs/latest/#1-download-opa)
+Please refer [Download OPA](https://www.openpolicyagent.org/docs/latest/#1-download-opa) to install OPA tool.
 ```bash
 curl -L -o opa https://openpolicyagent.org/downloads/v0.30.1/opa_linux_amd64_static
 chmod 755 ./opa
@@ -43,9 +43,7 @@ yum install -y clang-libs clang-devel
 apt-get install llvm-dev libclang-dev clang
 ```
 
-### Based On [Rats-tls](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls)
-
-#### Build
+## Build & Install
 
 ```bash
 cd ${ROOT_DIR}/verdictd/
@@ -53,27 +51,61 @@ make
 make install
 ```
 
-#### Run
+# Run
 
-verdictd relies on rats-tls to listen on tcp socket, the default sockaddr is `127.0.0.1:1234`.
+Verdictd relies on rats-tls to listen on tcp socket, the default sockaddr is `127.0.0.1:1234`.
 User can use `--listen` option to specify a listen address.
 ```bash
-./bin/verdictd --listen 127.0.0.1:1111
+verdictd --listen 127.0.0.1:1111
 ```
-User can use `--attester`, `--verifier`, `--tls`, `--crypto` and `--mutual` options to specific rats-tls uses instances's type. See details: [Rats-tls](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls)
+User can use `--attester`, `--verifier`, `--tls`, `--crypto` and `--mutual` options to specific rats-tls uses instances's type. See details: [RATS-TLS](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls)
 
-User can use `--gRPC` option to specify grpc server's listen address.
+User can use `--gRPC` option to specify grpc server's listen address which supports key provider protocol.
 ```bash
-./bin/verdictd --gRPC [::1]:10000
+verdictd --gRPC [::1]:10000
 ```
 
 User can use `--config` option to specify configuration server's listen address.
 ```bash
-./bin/verdictd --config [::1]:10001
+verdictd --config [::1]:10001
 ```
 
-##### Default
+## Default
+
 These options all exist default values. If user execute `./bin/verdictd` directly, it will execute with following configurations.
 ```bash
-./bin/verdictd --listen 127.0.0.1:1234 --tls openssl --crypto openssl --attester nullattester --verifier sgx_ecdsa --gRPC [::1]:50000 --config [::1]:60000
+verdictd --listen 127.0.0.1:1234 --gRPC [::1]:50000 --config [::1]:60000
+```
+
+# Generate encrypted container image
+
+Verdictd supports key provider protocol's `WrapKey` request by the address designated by `--gRPC` option. 
+So user can use Verdictd and skopeo to generate encrypted container image with the following steps.
+```
+# Generate the key provider configuration file
+cat <<- EOF >/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf
+{
+        "key-providers": {
+                "attestation-agent": {
+                    "grpc": "127.0.0.1:50001"
+
+                }
+        }
+}
+EOF
+
+# Generate a encryption key
+cat <<- EOF >/opt/verdictd/keys/84688df7-2c0c-40fa-956b-29d8e74d16c0
+1234567890123456789012345678901
+EOF
+
+# Launch Verdictd
+verdictd --gRPC 127.0.0.1:50001
+
+skopeo --insecure-policy copy docker://docker.io/library/alpine:latest oci:alpine
+
+export OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf
+
+# generate encrypted image
+skopeo copy --insecure-policy --encryption-key provider:attestation-agent:84688df7-2c0c-40fa-956b-29d8e74d16c0 oci:alpine oci:alpine-encrypted
 ```
