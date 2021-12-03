@@ -1,4 +1,4 @@
-name: Run eaa
+name: Run verdictd
 
 # Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
 on:
@@ -14,7 +14,7 @@ env:
   ENCRYPTED_IMAGE: alpine-encrypted-cicd
 
 jobs:
-  eaa:
+  verdictd:
     # Openssl 1.1 default installation path in alinux2 is different with ubunut and centos and it is nonstandard path, it will cause encalve-tls building error.
     # It is not a general soltuion to adapt openssl 1.1 default installation path in alinux2 to fix building issue.
     # A long term solution for compatible with openssl 1.0 in alinux2, ubunut, centos is under going.
@@ -54,11 +54,11 @@ jobs:
         registry = \"https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git\"
         EOF"
 
-    - name: Build and install eaa
+    - name: Build and install verdictd
       run: docker exec $inclavare_dev bash -c 'cd /root && source /root/.bashrc;
         cp -r inclavare-containers inclavare-containers-${{ env.RUNE_VERSION }};
         mkdir -p /root/inclavare-containers/${{ matrix.tag }};
-        cd inclavare-containers-${{ env.RUNE_VERSION }}/eaa;
+        cd inclavare-containers-${{ env.RUNE_VERSION }}/verdictd;
         make install;
         cp -rf ${{ env.RATS_TLS_ROOTDIR }} ${{ env.VERDICTD_BINDIR }} ${{ env.OPA_LIBDIR }} ${{ env.VERDICT_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}'
 
@@ -127,7 +127,7 @@ jobs:
         docker exec $inclavare_test bash -c "cat <<- EOF >/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf
         {
             \"key-providers\": {
-                \"eaa\": {
+                \"attestation-agent\": {
                     \"grpc\": \"127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}\"
                 }
             }
@@ -144,7 +144,7 @@ jobs:
       with:
         timeout_minutes: 120
         max_attempts: 500
-        command: docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:eaa:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}'
+        command: docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:attestation-agent:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}'
         on_retry_command: echo '******************[RETRY]******************'
 
     - name: generate policy file
