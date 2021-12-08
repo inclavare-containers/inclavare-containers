@@ -1,13 +1,10 @@
 # github.com/bits-and-blooms/bitset v1.2.0
 github.com/bits-and-blooms/bitset
-# github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5
-## explicit
 # github.com/checkpoint-restore/go-criu/v5 v5.0.0
 ## explicit
 github.com/checkpoint-restore/go-criu/v5
 github.com/checkpoint-restore/go-criu/v5/rpc
 # github.com/cilium/ebpf v0.6.2
-## explicit
 github.com/cilium/ebpf
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/internal
@@ -51,7 +48,7 @@ github.com/moby/sys/mountinfo
 # github.com/mrunalp/fileutils v0.5.0
 ## explicit
 github.com/mrunalp/fileutils
-# github.com/opencontainers/runc v1.0.1
+# github.com/opencontainers/runc v1.0.3
 ## explicit
 github.com/opencontainers/runc/libcontainer
 github.com/opencontainers/runc/libcontainer/apparmor
@@ -106,7 +103,6 @@ github.com/shurcooL/sanitized_anchor_name
 ## explicit
 github.com/sirupsen/logrus
 # github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
-## explicit
 github.com/syndtr/gocapability/capability
 # github.com/urfave/cli v1.22.1
 ## explicit
