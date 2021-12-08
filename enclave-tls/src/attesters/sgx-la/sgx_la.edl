@@ -1,5 +1,0 @@
-enclave {
-	trusted {
-		 public void sgx_la_attester_dummy(void);
-	};
-};
