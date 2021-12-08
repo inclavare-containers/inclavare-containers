@@ -8,7 +8,7 @@ Opa_SRC_Files := opa_engine.go
 App_Rust_Flags := --release
 
 App_Rust_Path := $(TOP_DIR)/target/release
-Opa_Lib_Path := $(CUR_DIR)/verdictd/src/policy_engine/opa
+Opa_Lib_Path := $(CUR_DIR)/src/policy_engine/opa
 Eaa_Name := eaa
 Verdict_Name := verdict
 Verdictd_Name := verdictd
