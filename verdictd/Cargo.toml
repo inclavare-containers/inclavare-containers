@@ -12,6 +12,10 @@ edition = "2018"
 name = "verdict"
 path = "cmd/verdict/src/main.rs"
 
+[[bin]]
+name = "tdxmeasure"
+path = "cmd/tdxmeasure/src/main.rs"
+
 [dependencies]
 parking_lot = "0.10.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -30,6 +34,7 @@ base64 = "0.13.0"
 log = "0.4.14"
 env_logger = "0.8.3"
 aes-gcm = "0.9.2"
+eventlog-rs = { path = "../eventlog-rs" }
 
 [build-dependencies]
 tonic-build = "0.5"

@@ -1,0 +1,19 @@
+[package]
+name = "eventlog-rs"
+version = "0.1.0"
+edition = "2018"
+authors = ["Zhou Liang <liang.a.zhou@linux.alibaba.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "tdxmeasure"
+path = "cmd/tdxmeasure/src/main.rs"
+
+[dependencies]
+log = "0.4.14"
+env_logger = "0.8.3"
+lazy_static = "1.4.0"
+byteorder = "1"
+sha2 = "0.10"
+anyhow = "1.0"
