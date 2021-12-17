@@ -19,7 +19,7 @@ extern enclave_verifier_err_t sgx_ecdsa_verifier_cleanup(enclave_verifier_ctx_t 
 
 static enclave_verifier_opts_t sgx_ecdsa_qve_opts = {
 	.api_version = ENCLAVE_VERIFIER_API_VERSION_DEFAULT,
-	.flags = ENCLAVE_VERIFIER_OPTS_FLAGS_SGX2_ENCLAVE,
+	.flags = ENCLAVE_VERIFIER_OPTS_FLAGS_DEFAULT,
 	.name = "sgx_ecdsa_qve",
 	.type = "sgx_ecdsa",
 	.priority = 53,
