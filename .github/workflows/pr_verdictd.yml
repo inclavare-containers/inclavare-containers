@@ -133,6 +133,11 @@ jobs:
             }
         }
         EOF"
+        
+    - name: Install OPA environment
+      run: |
+        docker exec $inclavare_test bash -c 'curl -L -o opa https://openpolicyagent.org/downloads/v0.30.1/opa_linux_amd64_static'
+        docker exec $inclavare_test bash -c 'chmod 755 ./opa && mv opa /usr/local/bin/opa'
 
     - name: Launch all Services
       run: |
@@ -147,35 +152,35 @@ jobs:
         command: docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:attestation-agent:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}'
         on_retry_command: echo '******************[RETRY]******************'
 
-    - name: generate policy file
+    - name: generate OPA files
       run: |
-        docker exec $inclavare_test bash -c "cat <<- EOF >./reference
+        docker exec $inclavare_test bash -c "cat <<- EOF >./sgxData_local
         {
-            \"mrEnclave\" : [
-                \"2343545\",
-                \"5465767\"
-            ],
-            \"mrSigner\" : [
-                \"1122\",
-                \"5566\"
-            ],
-            \"productId\" : {
-                \">=\": 0
-            },
-            \"svn\" : {
-                \">=\": 0
-            }
+            \"mrEnclave\" : [],
+            \"mrSigner\" : [],
+            \"productId\" : 2,
+            \"svn\" : 1
+        }
+        EOF"
+        docker exec $inclavare_test bash -c "cat <<- EOF >./input
+        {
+            \"mrEnclave\" : "1234",
+            \"mrSigner\" : "1234",
+            \"productId\" : 5,
+            \"svn\" : 5
         }
         EOF"
 
     - name: Test Verdict
       run: |
-        docker exec $inclavare_test bash -c 'curl -L -o opa https://openpolicyagent.org/downloads/v0.30.2/opa_linux_amd64_static && chmod 755 ./opa && mv ./opa /usr/local/bin/'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_policy attestation.rego ./reference'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy attestation.rego'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_raw_policy attestation_export.rego ./attestation.rego'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy attestation_export.rego'
-        docker exec $inclavare_test bash -c 'cmp -s ./attestation.rego ./attestation_export.rego || exit -1'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy sgxPolicy.rego'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_reference sgxData ./sgxData_local'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_reference sgxData'
+        docker exec $inclavare_test bash -c 'cmp -s ./sgxData_local ./sgxData || exit -1'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_remote sgxPolicy.rego sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_local ./sgxPolicy.rego ./sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_localpolicy ./sgxPolicy.rego sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_localreference sgxPolicy.rego ./sgxData ./input'
 
     - name: Clean up the github workspace
       if: ${{ always() }}

@@ -7,6 +7,7 @@ Currently, `Verdict` is a binary package written in Rust and also a CLT. Mainly 
 * Pass the reference value to "verdictd" to complete the policy generation.
 * Send the prepared policy file directly to "verdictd".
 * Export the "verdictd" policy file to the local.
+* Provide OPA policy and reference files' testing options.
 
 ## Usage
 
@@ -22,17 +23,40 @@ verdict [OPTIONS]
 # It doesn't make sense to use this parameter alone.
 -c, --config <CONFIG_ADDR> 
 
-# Generate a policy file named <POLICY_NAME>, according to the contents in <FILE_REFERENCE>.
-# The content of the <FILE_REFERENCE> must be in json format.
--s, --set_policy <POLICY_NAME> <FILE_REFERENCE> [-c, --config <CONFIG_ADDR>]
-
-# Write the contents of <FILE> into the policy file named <POLICY_NAME>.
-# The content of the <FILE> conforms to the OPA rego grammar rules.
--r, --set_raw_policy <POLICY_NAME> <FILE> [-c, --config <CONFIG_ADDR>]
+# Generate an OPA policy file named <POLICY_NAME>, according to the contents in <POLICY_PATH>.
+--set_policy <POLICY_NAME> <POLICY_PATH> [-c, --config <CONFIG_ADDR>]
 
 # Export the contents of the policy file named <POLICY_NAME>.
 # The export file is in the current directory by default and can be specified by <PATH>.
--e, --export_policy <POLICY_NAME> [-p, --path <PATH>] [-c, --config <CONFIG_ADDR>]
+--export_policy <POLICY_NAME> [-p, --path <PATH>] [-c, --config <CONFIG_ADDR>]
+
+# Generate an OPA data file named <REFERENCE_NAME>, according to the contents in <REFERENCE_PATH>.
+--set_reference <REFERENCE_NAME> <REFERENCE_PATH> [-c, --config <CONFIG_ADDR>]
+
+# Export the contents of the OPA data file named <REFERENCE_NAME>.
+# The export file is in the current directory by default and can be specified by <PATH>.
+--export_reference <REFERENCE_NAME> [-p, --path <PATH>] [-c, --config <CONFIG_ADDR>]
+
+# Test OPA's remote policy and remote reference with INPUT_PATH content
+# POLICY_NAME: the tested policy file's name
+# REFERENCE_NAME: the tested reference file's name
+# INPUT_PATH: input data
+--test_remote <POLICY_NAME> <REFERENCE_NAME> <INPUT_PATH> [-c, --config <CONFIG_ADDR>]
+
+# Test OPA with local policy and local reference
+# POLICY_FILE: the path of policy file
+# REFERENCE_PATH: the path of reference file
+--test_local <POLICY_PATH> <REFERENCE_PATH> <INPUT_PATH> [-c, --config <CONFIG_ADDR>]
+
+# Test OPA's local policy and remote reference with INPUT_PATH content
+# POLICY_FILE: the path of policy file
+# REFERENCE_NAME: the tested reference file's name
+--test_localpolicy <POLICY_PATH> <REFERENCE_NAME> [-c, --config <CONFIG_ADDR>]
+
+# Test OPA's remote policy and local reference with INPUT_PATH content
+# POLICY_NAME: the tested policy file's name
+# REFERENCE_PATH: the path of reference file
+--test_localdata <POLICY_NAME> <REFERENCE_PATH> [-c, --config <CONFIG_ADDR>]
 
 # Prints help information.
 -h, --help

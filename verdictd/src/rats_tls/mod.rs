@@ -164,14 +164,14 @@ impl RatsTls {
         let mr_signer =
             base64::encode(unsafe { std::slice::from_raw_parts(ev.mr_signer, 32).to_vec() });
 
-        let message = serde_json::json!({
+        let input = serde_json::json!({
             "mrEnclave": mr_enclave,
             "mrSigner": mr_signer,
             "productId": ev.product_id,
             "svn": ev.security_version
         });
 
-        make_decision("attestation.rego", &message.to_string())
+        make_decision(OPA_POLICY_SGX, OPA_DATA_SGX, &input.to_string())
             .map_err(|e| format!("make_decision error: {}", e))
             .and_then(|res| {
                 serde_json::from_str(&res).map_err(|_| "Json unmashall failed".to_string())

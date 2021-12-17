@@ -5,12 +5,14 @@ use configureProvider::{CreateKeyRequest, CreateKeyResponse};
 use configureProvider::{GetKeyRequest, GetKeyResponse};
 use configureProvider::{DeleteKeyRequest, DeleteKeyResponse};
 
-use configureProvider::{SetPolicyRequest, SetPolicyResponse};
-use configureProvider::{SetRawPolicyRequest, SetRawPolicyResponse};
-use configureProvider::{ExportPolicyRequest, ExportPolicyResponse};
+use configureProvider::{SetOpaPolicyRequest, SetOpaPolicyResponse};
+use configureProvider::{ExportOpaPolicyRequest, ExportOpaPolicyResponse};
+use configureProvider::{SetOpaReferenceRequest, SetOpaReferenceResponse};
+use configureProvider::{ExportOpaReferenceRequest, ExportOpaReferenceResponse};
+use configureProvider::{TestOpaRequest, TestOpaResponse};
 
 use crate::key_manager::directory_key_manager;
-use crate::policy_engine;
+use crate::policy_engine::opa;
 use rand::*;
 use tonic::{transport::Server, Request, Response, Status};
 use uuid::Uuid;
@@ -79,73 +81,40 @@ impl ConfigureProviderService for configProviderService {
     
     async fn delete_key(
         &self,
-        request: Request<DeleteKeyRequest>,
+        _request: Request<DeleteKeyRequest>,
     ) -> Result<Response<DeleteKeyResponse>, Status> {
         let res = DeleteKeyResponse {
             status: "Not implemented".as_bytes().to_vec(),
         };
         Ok(Response::new(res))   
-    } 
-
-    async fn set_policy(
-        &self,
-        request: Request<SetPolicyRequest>,
-    ) -> Result<Response<SetPolicyResponse>, Status> {
-        let empty = "".to_string();
-        let request: SetPolicyRequest = request.into_inner();
-        let policyname = std::str::from_utf8(&request.policyname)
-            .unwrap_or_else(|_| {
-                error!("parse policyname failed");
-                &empty
-            });
-        let references = std::str::from_utf8(&request.references)
-            .unwrap_or_else(|_| {
-                error!("parse references failed");
-                &empty
-            });
-            
-        let res = policy_engine::opa::opa_engine::set_reference(policyname, references)
-            .and_then(|_| {
-                let res = SetPolicyResponse {
-                    status: "OK".as_bytes().to_vec(),
-                };
-                Ok(res)
-            })
-            .unwrap_or_else(|e| {
-                SetPolicyResponse {
-                    status: e.into_bytes(),
-                }
-            });
-
-        Ok(Response::new(res))
     }   
     
-    async fn set_raw_policy(
+    async fn set_opa_policy(
         &self,
-        request: Request<SetRawPolicyRequest>,
-    ) -> Result<Response<SetRawPolicyResponse>, Status> {
+        request: Request<SetOpaPolicyRequest>,
+    ) -> Result<Response<SetOpaPolicyResponse>, Status> {
         let empty = "".to_string();
-        let request: SetRawPolicyRequest = request.into_inner();
-        let policyname = std::str::from_utf8(&request.policyname)
+        let request: SetOpaPolicyRequest = request.into_inner();
+        let name = std::str::from_utf8(&request.name)
             .unwrap_or_else(|_| {
                 error!("parse policyname failed");
                 &empty
             });
-        let policycontent = std::str::from_utf8(&request.policycontent)
+        let content = std::str::from_utf8(&request.content)
             .unwrap_or_else(|_| {
                 error!("parse policycontent failed");
                 &empty
             });
 
-        let res = policy_engine::opa::opa_engine::set_raw_policy(policyname, policycontent)
+        let res = opa::opa_engine::set_raw_policy(name, content)
             .and_then(|_| {
-                let res = SetRawPolicyResponse {
+                let res = SetOpaPolicyResponse {
                     status: "OK".as_bytes().to_vec(),
                 };
                 Ok(res)
             })
             .unwrap_or_else(|e| {
-                SetRawPolicyResponse {
+                SetOpaPolicyResponse {
                     status: e.into_bytes(),
                 }
             });            
@@ -153,33 +122,198 @@ impl ConfigureProviderService for configProviderService {
         Ok(Response::new(res))
     }     
 
-    async fn export_policy(
+    async fn export_opa_policy(
         &self,
-        request: Request<ExportPolicyRequest>,
-    ) -> Result<Response<ExportPolicyResponse>, Status> {
-        let policyname = String::from_utf8(request.into_inner().policyname)
+        request: Request<ExportOpaPolicyRequest>,
+    ) -> Result<Response<ExportOpaPolicyResponse>, Status> {
+        let name = String::from_utf8(request.into_inner().name)
             .unwrap_or_else(|_| {
                 error!("parse policyname failed");
                 "".to_string()
             });
 
-        let res = policy_engine::opa::opa_engine::export_policy(&policyname)
+        let res = opa::opa_engine::export(&name)
             .and_then(|content| {
-                let res = ExportPolicyResponse {
+                let res = ExportOpaPolicyResponse {
                     status: "OK".as_bytes().to_vec(),
-                    policycontent: content.into_bytes(),
+                    content: content.into_bytes(),
                 };
                 Ok(res)
             })
             .unwrap_or_else(|e| {
-                ExportPolicyResponse {
+                ExportOpaPolicyResponse {
                     status: e.into_bytes(),
-                    policycontent: "".as_bytes().to_vec(),
+                    content: "".as_bytes().to_vec(),
                 }
             });   
 
         Ok(Response::new(res))
-    }       
+    }
+
+    async fn set_opa_reference(
+        &self,
+        request: Request<SetOpaReferenceRequest>,
+    ) -> Result<Response<SetOpaReferenceResponse>, Status> {
+        let empty = "".to_string();
+        let request: SetOpaReferenceRequest = request.into_inner();
+        let name = std::str::from_utf8(&request.name)
+            .unwrap_or_else(|_| {
+                error!("parse SetOpaReferenceRequest failed");
+                &empty
+            });
+        let content = std::str::from_utf8(&request.content)
+            .unwrap_or_else(|_| {
+                error!("parse content failed");
+                &empty
+            });
+        
+        info!("content: {}", content);
+            
+        let res = opa::opa_engine::set_reference(name, content)
+            .and_then(|_| {
+                let res = SetOpaReferenceResponse {
+                    status: "OK".as_bytes().to_vec(),
+                };
+                Ok(res)
+            })
+            .unwrap_or_else(|e| {
+                SetOpaReferenceResponse {
+                    status: e.into_bytes(),
+                }
+            });
+
+        Ok(Response::new(res))
+    } 
+
+    async fn export_opa_reference(
+        &self,
+        request: Request<ExportOpaReferenceRequest>,
+    ) -> Result<Response<ExportOpaReferenceResponse>, Status> {
+        let name = String::from_utf8(request.into_inner().name)
+            .unwrap_or_else(|_| {
+                error!("parse ExportDataRequest failed");
+                "".to_string()
+            });
+
+        let res = opa::opa_engine::export(&name)
+            .and_then(|content| {
+                let res = ExportOpaReferenceResponse {
+                    status: "OK".as_bytes().to_vec(),
+                    content: content.into_bytes(),
+                };
+                Ok(res)
+            })
+            .unwrap_or_else(|e| {
+                ExportOpaReferenceResponse {
+                    status: e.into_bytes(),
+                    content: "".as_bytes().to_vec(),
+                }
+            });   
+
+        Ok(Response::new(res))
+    }
+
+    async fn test_opa(
+        &self,
+        request: Request<TestOpaRequest>,
+    ) -> Result<Response<TestOpaResponse>, Status> {
+        let request: TestOpaRequest = request.into_inner();
+        let mut policyname = "".to_string();
+        let mut policycontent = "".to_string();
+        let mut referencename = "".to_string();
+        let mut referencecontent = "".to_string();
+
+        if request.policylocal == true {
+            policycontent = String::from_utf8(request.policycontent)
+                .unwrap_or_else(|_| {
+                    error!("parse policycontent failed");
+                    "".to_string()
+                });
+            if policycontent == "".to_string() {
+                let res = TestOpaResponse {
+                    status: "parse policycontent failed".as_bytes().to_vec()
+                };
+                return Ok(Response::new(res))
+            }
+        } else {
+            policyname = String::from_utf8(request.policyname)
+            .unwrap_or_else(|_| {
+                error!("parse policyname failed");
+                "".to_string()
+            });
+            if policyname == "".to_string() {
+                let res = TestOpaResponse {
+                    status: "parse policyname failed".as_bytes().to_vec()
+                };
+                return Ok(Response::new(res))
+            }
+        }
+
+        if request.referencelocal == true {
+            referencecontent = String::from_utf8(request.referencecontent)
+            .unwrap_or_else(|_| {
+                error!("parse referencecontent failed");
+                "".to_string()
+            }); 
+            if referencecontent == "".to_string() {
+                let res = TestOpaResponse {
+                    status: "parse referencecontent failed".as_bytes().to_vec()
+                };
+                return Ok(Response::new(res))
+            }           
+        } else {
+            referencename = String::from_utf8(request.referencename)
+            .unwrap_or_else(|_| {
+                error!("parse referencename failed");
+                "".to_string()
+            });
+            if referencename == "".to_string() {
+                let res = TestOpaResponse {
+                    status: "parse referencename failed".as_bytes().to_vec()
+                };
+                return Ok(Response::new(res))
+            }  
+        }
+
+        let input = String::from_utf8(request.input)
+            .unwrap_or_else(|_| {
+                error!("parse input failed");
+                "".to_string()
+            });
+        if input == "".to_string() {
+            let res = TestOpaResponse {
+                status: "parse input failed".as_bytes().to_vec()
+            };
+            return Ok(Response::new(res))
+        }
+    
+        let msg = opa::opa_engine::make_decision_ext(
+            &policyname, 
+            &policycontent,
+            request.policylocal,
+            &referencename,
+            &referencecontent,
+            request.referencelocal,
+            &input)
+            .map_err(|e| format!("make_decision error: {}", e))
+            .and_then(|res| {
+                serde_json::from_str(&res).map_err(|_| res)
+            })
+            .and_then(|res: serde_json::Value| {
+                Ok(res.to_string())
+            });
+
+        let msg = match msg {
+                Ok(msg) => msg,
+                Err(e) => e
+            };
+        
+        let res = TestOpaResponse {
+            status: msg.as_bytes().to_vec()
+        };
+
+        Ok(Response::new(res))
+    }    
 }
 
 pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {

@@ -4,8 +4,8 @@
 #![allow(dead_code)]
 
 use clap::{App, Arg};
-use serde_json::json;
 use shadow_rs::shadow;
+use policy_engine::*;
 
 mod attestation_agent;
 mod configure_provider;
@@ -20,36 +20,6 @@ extern crate log;
 
 shadow!(build);
 
-const POLICY_PATH: &str = "/opt/verdictd/opa/policy/";
-
-fn set_default_policy() -> Result<(), String> {
-    if !std::path::Path::new(&POLICY_PATH.to_string()).exists() {
-        std::fs::create_dir_all(POLICY_PATH)
-            .map_err(|_| format!("create {:?} failed", POLICY_PATH))?;
-    }
-
-    if !std::path::Path::new(&(POLICY_PATH.to_string() + "attestation.rego")).exists() {
-        info!("attestation.rego isn't exist");
-        let reference = json!({
-            "mrEnclave": [
-                "123",
-                "456",
-                "789",
-            ],
-            "productId": {
-                ">=": 1
-            },
-            "svn": {
-                ">=": 1
-            },
-        });
-        policy_engine::opa::opa_engine::set_reference("attestation.rego", &reference.to_string())
-            .map_err(|e| format!("Set attestation.rego policy failed with error {:?}", e))?;
-    }
-
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() {
     env_logger::builder().filter(None, log::LevelFilter::Info).init();
@@ -62,7 +32,7 @@ async fn main() {
     );
     info!("Verdictd info: {}", version);
 
-    match set_default_policy() {
+    match opa::opa_engine::default() {
         Ok(_) => {}
         Err(e) => {
             error!("{}", e);
