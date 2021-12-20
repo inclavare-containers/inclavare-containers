@@ -15,13 +15,13 @@ require (
 	github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000
 	github.com/moby/sys/mountinfo v0.4.1
 	github.com/mrunalp/fileutils v0.5.0
-	github.com/opencontainers/runc v1.0.1
+	github.com/opencontainers/runc v1.0.3
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 	github.com/opencontainers/selinux v1.8.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
+	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	// NOTE: urfave/cli must be <= v1.22.1 due to a regression: https://github.com/urfave/cli/issues/1092
 	github.com/urfave/cli v1.22.1
 	github.com/vishvananda/netlink v1.1.0
