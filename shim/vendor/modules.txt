@@ -26,7 +26,9 @@ github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/internal/winapi
 github.com/Microsoft/hcsshim/osversion
-# github.com/cilium/ebpf v0.5.0
+# github.com/bits-and-blooms/bitset v1.2.0
+github.com/bits-and-blooms/bitset
+# github.com/cilium/ebpf v0.6.2
 github.com/cilium/ebpf
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/internal
@@ -187,11 +189,11 @@ github.com/opencontainers/go-digest
 github.com/opencontainers/image-spec/identity
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v1.0.1 => github.com/opencontainers/runc v1.0.0-rc95
+# github.com/opencontainers/runc v1.0.3
 github.com/opencontainers/runc/libcontainer/user
 # github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 github.com/opencontainers/runtime-spec/specs-go
-# github.com/opencontainers/selinux v1.8.0
+# github.com/opencontainers/selinux v1.8.2
 github.com/opencontainers/selinux/go-selinux
 github.com/opencontainers/selinux/go-selinux/label
 github.com/opencontainers/selinux/pkg/pwalk
@@ -211,8 +213,6 @@ github.com/stretchr/testify/assert
 github.com/syndtr/gocapability/capability
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
-# github.com/willf/bitset v1.1.11
-github.com/willf/bitset
 # go.opencensus.io v0.23.0
 go.opencensus.io
 go.opencensus.io/internal
