@@ -25,7 +25,7 @@ require (
 	github.com/inclavare-containers/epm v0.0.0-00010101000000-000000000000
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/opencontainers/runc v1.0.1 // indirect
+	github.com/opencontainers/runc v1.0.3 // indirect
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.2.0 // indirect
@@ -46,6 +46,5 @@ replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
 	github.com/inclavare-containers/epm => ../epm
 	github.com/inclavare-containers/rune => ../rune
-	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
 
 )
