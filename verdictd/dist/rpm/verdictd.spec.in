@@ -1,0 +1,60 @@
+%define centos_base_release 1
+%define _debugsource_template %{nil}
+%define verdict verdict
+
+%global PROJECT inclavare-containers
+%global BIN_DIR /usr/local/bin
+
+Name: verdictd
+Version: %{VERDICTD_VERSION}
+Release: %{centos_base_release}%{?dist}
+Summary: verdictd is the Key Broker Service (KBS) of Enclave Attestation Architecture.
+
+Group: Development/Tools
+License: Apache License 2.0
+URL: https://github.com/alibaba/%{PROJECT}
+Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
+
+BuildRequires: git
+BuildRequires: cmake
+BuildRequires: make
+BuildRequires: autoconf
+BuildRequires: libtool
+BuildRequires: gcc
+BuildRequires: gcc-c++
+BuildRequires: libsgx-dcap-quote-verify-devel
+BuildRequires: libsgx-dcap-ql-devel
+BuildRequires: libsgx-uae-service
+ExclusiveArch: x86_64
+
+%description
+verdictd is the Key Broker Service (KBS) of Enclave Attestation Architecture.
+
+%prep
+%setup -q -n %{PROJECT}-%{version}
+
+%build
+if ! [ -x "$(command -v rustc)" ]; then
+  echo 'Error: Rust is not installed. Please type the "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $HOME/.cargo/env" command to install Rust firstly'
+  exit 1
+fi
+
+if ! [ -x "$(command -v cargo)" ]; then
+   echo 'Error: Cargo is not installed. Please type the "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $HOME/.cargo/env" command to install Cargo firstly'
+   exit 1
+fi
+
+pushd %{name}
+make
+popd
+
+%install
+install -d -p %{buildroot}%{BIN_DIR}
+install -p -m 755 %{name}/target/release/%{name} %{buildroot}%{BIN_DIR}
+install -p -m 755 %{name}/target/release/%{verdict} %{buildroot}%{BIN_DIR}
+
+%files
+%{BIN_DIR}/%{name}
+%{BIN_DIR}/%{verdict}
+
+%changelog
