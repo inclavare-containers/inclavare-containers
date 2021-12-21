@@ -23,35 +23,58 @@ message DeleteKeyResponse {
     bytes status = 1;
 }
 
-message SetPolicyRequest {
-    bytes policyname = 1;
-    bytes references = 2;
+message SetOpaPolicyRequest {
+    bytes name = 1;
+    bytes content = 2;
 }
-message SetPolicyResponse {
+message SetOpaPolicyResponse {
     bytes status = 1;
 }
 
-message SetRawPolicyRequest {
-    bytes policyname = 1;
-    bytes policycontent = 2;
+message SetOpaReferenceRequest {
+    bytes name = 1;
+    bytes content = 2;
 }
-message SetRawPolicyResponse {
+message SetOpaReferenceResponse {
     bytes status = 1;
 }
 
-message ExportPolicyRequest {
-    bytes policyname = 1;
+message ExportOpaPolicyRequest {
+    bytes name = 1;
 }
-message ExportPolicyResponse {
+message ExportOpaPolicyResponse {
     bytes status = 1;
+    bytes content = 2;
+}
+
+message ExportOpaReferenceRequest {
+    bytes name = 1;
+}
+message ExportOpaReferenceResponse {
+    bytes status = 1;
+    bytes content = 2;
+}
+
+message TestOpaRequest {
+    bytes policyname = 1;
     bytes policycontent = 2;
+    bool policylocal = 3;
+    bytes referencename = 4;
+    bytes referencecontent = 5;
+    bool referencelocal = 6;
+    bytes input = 7;
+}
+message TestOpaResponse {
+    bytes status = 1;
 }
 
 service ConfigureProviderService {
     rpc CreateKey(CreateKeyRequest) returns (CreateKeyResponse) {};
     rpc GetKey(GetKeyRequest) returns (GetKeyResponse) {};
     rpc DeleteKey(DeleteKeyRequest) returns (DeleteKeyResponse) {};
-    rpc SetPolicy(SetPolicyRequest) returns (SetPolicyResponse) {};
-    rpc setRawPolicy(SetRawPolicyRequest) returns (SetRawPolicyResponse) {};
-    rpc exportPolicy(ExportPolicyRequest) returns (ExportPolicyResponse) {};
+    rpc SetOpaPolicy(SetOpaPolicyRequest) returns (SetOpaPolicyResponse) {};
+    rpc exportOpaPolicy(ExportOpaPolicyRequest) returns (ExportOpaPolicyResponse) {};
+    rpc setOpaReference(SetOpaReferenceRequest) returns (SetOpaReferenceResponse) {};
+    rpc exportOpaReference(ExportOpaReferenceRequest) returns (ExportOpaReferenceResponse) {};
+    rpc TestOpa(TestOpaRequest) returns (TestOpaResponse) {};
 }
