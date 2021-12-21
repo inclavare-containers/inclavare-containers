@@ -1,16 +1,10 @@
 use clap::{App, Arg};
-use serde_json::Value;
-use std::fs::File;
-use std::io::prelude::*;
 
-use configureProvider::configure_provider_service_client::ConfigureProviderServiceClient;
-use configureProvider::{ExportPolicyRequest, ExportPolicyResponse};
-use configureProvider::{SetPolicyRequest, SetPolicyResponse};
-use configureProvider::{SetRawPolicyRequest, SetRawPolicyResponse};
-
-pub mod configureProvider {
+pub mod configure_provider {
     tonic::include_proto!("configureprovider");
 }
+
+mod opa;
 
 #[macro_use]
 extern crate log;
@@ -24,25 +18,14 @@ async fn main() {
         .author("Inclavare-Containers Team")
         .arg(
             Arg::with_name("set_policy")
-                .short("s")
                 .long("set_policy")
                 .value_name("POLICY_NAME")
-                .value_name("FILE_REFERENCE")
-                .help("Generate a policy file named <POLICY_NAME>, according to the contents in <FILE_REFERENCE>.")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("set_raw_policy")
-                .short("r")
-                .long("set_raw_policy")
-                .value_name("POLICY_NAME")
-                .value_name("FILE")
-                .help("Write the contents of <FILE> into the policy file named <POLICY_NAME>.")
+                .value_name("POLICY_PATH")
+                .help("Generate a policy file named <POLICY_NAME>, according to the contents in <POLICY_PATH>.")
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("export_policy")
-                .short("e")
                 .long("export_policy")
                 .value_name("POLICY_NAME")
                 .help("Export the contents of the policy file named <POLICY_NAME>.")
@@ -53,8 +36,22 @@ async fn main() {
                 .long("path")
                 .short("p")
                 .value_name("PATH")
-                .requires("export_policy")
                 .help("Specify the path of the export file, must be used with '-e'.")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("set_reference")
+                .long("set_reference")
+                .value_name("REFERENCE_NAME")
+                .value_name("REFERENCE_PATH")
+                .help("Generate a reference file named <REFERENCE_NAME>, according to the contents in <REFERENCE_PATH>.")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("export_reference")
+                .long("export_reference")
+                .value_name("REFERENCE_NAME")
+                .help("export OPA reference file named <REFERENCE_NAME>")
                 .takes_value(true),
         )
         .arg(
@@ -65,6 +62,42 @@ async fn main() {
                 .help("Specify the config address.")
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("test_remote")
+                .long("test_remote")
+                .value_name("POLICY_NAME")
+                .value_name("REFERENCE_NAME")
+                .value_name("INPUT_PATH")
+                .help("test OPA's remote policy and remote reference")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("test_local")
+                .long("test_local")
+                .value_name("POLICY_PATH")
+                .value_name("REFERENCE_PATH")
+                .value_name("INPUT_PATH")
+                .help("test OPA's local policy and local reference")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("test_localpolicy")
+                .long("test_localpolicy")
+                .value_name("POLICY_PATH")
+                .value_name("REFERENCE_NAME")
+                .value_name("INPUT_PATH")
+                .help("test OPA's local policy and remote reference")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("test_localreference")
+                .long("test_localreference")
+                .value_name("POLICY_NAME")
+                .value_name("REFERENCE_PATH")
+                .value_name("INPUT_PATH")
+                .help("test OPA's remote policy and local reference")
+                .takes_value(true),
+        )
         .get_matches();
 
     let config_addr = if matches.is_present("config") {
@@ -72,104 +105,57 @@ async fn main() {
     } else {
         "[::1]:60000".to_string()
     };
-    info!("Listen configuration server addr: {}", config_addr);
-
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", config_addr))
-        .await
-        .unwrap();
+    info!("Connect to Verdictd with addr: {}", config_addr);
 
     // set_policy
     if matches.is_present("set_policy") {
-        let vals: Vec<&str> = matches.values_of("set_policy").unwrap().collect();
-
-        let response: SetPolicyResponse = client
-            .set_policy(set_policy(vals))
-            .await
-            .unwrap()
-            .into_inner();
-        info!(
-            "SetPolicy status is: {:?}",
-            String::from_utf8(response.status).unwrap()
-        );
-    }
-
-    // set_raw_policy
-    if matches.is_present("set_raw_policy") {
-        let vals: Vec<&str> = matches.values_of("set_raw_policy").unwrap().collect();
-
-        let response: SetRawPolicyResponse = client
-            .set_raw_policy(set_raw_policy(vals))
-            .await
-            .unwrap()
-            .into_inner();
-        info!(
-            "SetRawPolicy status is: {:?}",
-            String::from_utf8(response.status).unwrap()
-        );
+        opa::set_policy_cmd(matches.values_of("set_policy").unwrap().collect(), &config_addr).await;
     }
 
     // export_policy
     if matches.is_present("export_policy") {
-        let policyname = matches.value_of("export_policy").unwrap();
-
-        let request = ExportPolicyRequest {
-            policyname: policyname.as_bytes().to_vec(),
-        };
-
-        let response: ExportPolicyResponse =
-            client.export_policy(request).await.unwrap().into_inner();
-        let policy = String::from_utf8(response.policycontent).unwrap();
-
-        info!(
-            "export_policy status is: {:?}",
-            String::from_utf8(response.status).unwrap()
-        );
-        info!("policy: {} content is:\n{}", policyname, policy);
-
         let mut path: String = if matches.is_present("path") {
             matches.value_of("path").unwrap().to_string()
         } else {
             "./".to_string()
         };
-
         if !path.ends_with("/") {
             path = format!("{}/", path);
         }
-
-        File::create(path + policyname)
-            .expect("Failed to create the file.")
-            .write_all(policy.as_bytes())
-            .expect("Faied to write the policy content into the file.");
+        opa::export_policy_cmd(matches.value_of("export_policy").unwrap(), path, &config_addr).await;
     }
-}
 
-fn set_policy(vals: Vec<&str>) -> SetPolicyRequest {
-    let mut reference = String::new();
-
-    File::open(vals[1])
-        .expect(&format!("Failed to open the file named {}.", vals[1]))
-        .read_to_string(&mut reference)
-        .expect(&format!("Failed to read from the file named {}.", vals[1]));
-
-    let reference: Value =
-        serde_json::from_str(&reference).expect("File content is not in json format.");
-
-    SetPolicyRequest {
-        policyname: vals[0].as_bytes().to_vec(),
-        references: reference.to_string().into_bytes(),
+    // set data
+    if matches.is_present("set_reference") {
+        opa::set_reference_cmd(matches.values_of("set_reference").unwrap().collect(), &config_addr).await;
     }
-}
 
-fn set_raw_policy(vals: Vec<&str>) -> SetRawPolicyRequest {
-    let mut policy = String::new();
+    // export Data
+    if matches.is_present("export_reference") {
+        let mut path: String = if matches.is_present("path") {
+            matches.value_of("path").unwrap().to_string()
+        } else {
+            "./".to_string()
+        };
+        if !path.ends_with("/") {
+            path = format!("{}/", path);
+        }
+        opa::export_reference_cmd(matches.value_of("export_reference").unwrap(), path, &config_addr).await;
+    }
 
-    File::open(vals[1])
-        .expect(&format!("Failed to open the file named {}.", vals[1]))
-        .read_to_string(&mut policy)
-        .expect(&format!("Failed to read from the file named {}.", vals[1]));
+    if matches.is_present("test_remote") {
+        opa::test_remote_cmd(matches.values_of("test_remote").unwrap().collect(), &config_addr).await;
+    }
 
-    SetRawPolicyRequest {
-        policyname: vals[0].as_bytes().to_vec(),
-        policycontent: policy.to_string().into_bytes(),
+    if matches.is_present("test_local") {
+        opa::test_local_cmd(matches.values_of("test_local").unwrap().collect(), &config_addr).await;
+    }
+
+    if matches.is_present("test_localpolicy") {
+        opa::test_localpolicy_cmd(matches.values_of("test_localpolicy").unwrap().collect(), &config_addr).await;
+    }
+
+    if matches.is_present("test_localreference") {
+        opa::test_localreference_cmd(matches.values_of("test_localreference").unwrap().collect(), &config_addr).await;
     }
 }
