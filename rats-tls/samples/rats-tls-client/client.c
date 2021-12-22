@@ -53,7 +53,7 @@ static sgx_enclave_id_t load_enclave(bool debug_enclave)
 
 int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 			    char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			    bool debug_enclave, char *ip, int port)
+			    bool debug_enclave, char *ip, int port, bool verdictd)
 {
 	uint32_t s_ip = inet_addr(ip);
 	uint16_t s_port = htons((uint16_t)port);
@@ -72,7 +72,7 @@ int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 	int sgx_status = ecall_rtls_client_startup((sgx_enclave_id_t)enclave_id, &ret,
 						   (sgx_enclave_id_t)enclave_id, log_level,
 						   attester_type, verifier_type, tls_type,
-						   crypto_type, flags, s_ip, s_port);
+						   crypto_type, flags, s_ip, s_port, verdictd);
 	if (sgx_status != SGX_SUCCESS || ret)
 		RTLS_ERR("failed to startup client: sgx status %#x return %#x\n", sgx_status, ret);
 
@@ -83,7 +83,7 @@ int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 #ifndef SGX
 int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 			    char *verifier_type, char *tls_type, char *crypto_type, bool mutual,
-			    bool debug_enclave, char *ip, int port)
+			    bool debug_enclave, char *ip, int port, bool verdictd)
 {
 	rats_tls_conf_t conf;
 
@@ -143,7 +143,12 @@ int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 		goto err;
 	}
 
-	const char *msg = "Hello and welcome to RATS-TLS!\n";
+	const char *msg;
+	if (verdictd)
+		msg = "{ \"command\": \"echo\", \"data\": \"Hello and welcome to RATS-TLS!\\n\" }";
+	else
+		msg = "Hello and welcome to RATS-TLS!\n";
+
 	size_t len = strlen(msg);
 	ret = rats_tls_transmit(handle, (void *)msg, &len);
 	if (ret != RATS_TLS_ERR_NONE || len != strlen(msg)) {
@@ -188,6 +193,9 @@ int rats_tls_client_startup(rats_tls_log_level_t log_level, char *attester_type,
 		printf("Server: %s\n", buf);
 	}
 
+	if (verdictd)
+		msg = "Hello and welcome to RATS-TLS!\n";
+
 	/* Sanity check whether the response is expected */
 	if (strcmp(msg, buf)) {
 		RTLS_ERR("Invalid response retrieved from rats-tls server\n");
@@ -230,6 +238,7 @@ int main(int argc, char **argv)
 		{ "ip", required_argument, NULL, 'i' },
 		{ "port", required_argument, NULL, 'p' },
 		{ "debug-enclave", no_argument, NULL, 'D' },
+		{ "verdictd", no_argument, NULL, 'E' },
 		{ "help", no_argument, NULL, 'h' },
 		{ 0, 0, 0, 0 }
 	};
@@ -244,6 +253,7 @@ int main(int argc, char **argv)
 	char *srv_ip = DEFAULT_IP;
 	int port = DEFAULT_PORT;
 	bool debug_enclave = false;
+	bool verdictd = false;
 	int opt;
 
 	do {
@@ -287,6 +297,9 @@ int main(int argc, char **argv)
 		case 'D':
 			debug_enclave = true;
 			break;
+		case 'E':
+			verdictd = true;
+			break;
 		case -1:
 			break;
 		case 'h':
@@ -302,6 +315,7 @@ int main(int argc, char **argv)
 			     "        --ip/-i               set the listening ip address\n"
 			     "        --port/-p             set the listening tcp port\n"
 			     "        --debug-enclave/-D    set to enable enclave debugging\n"
+			     "        --verdictd/-E         set to connect verdictd based on EAA protocol\n"
 			     "        --help/-h             show the usage\n");
 			exit(1);
 		default:
@@ -312,5 +326,5 @@ int main(int argc, char **argv)
 	global_log_level = log_level;
 
 	return rats_tls_client_startup(log_level, attester_type, verifier_type, tls_type,
-				       crypto_type, mutual, debug_enclave, srv_ip, port);
+				       crypto_type, mutual, debug_enclave, srv_ip, port, verdictd);
 }

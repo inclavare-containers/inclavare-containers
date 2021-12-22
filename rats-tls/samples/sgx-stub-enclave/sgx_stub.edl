@@ -24,6 +24,7 @@ enclave {
                                 [in, string] char *crypto_type,
                                 unsigned long flags,
                                 uint32_t s_ip,
-                                uint16_t s_port);
+                                uint16_t s_port,
+                                bool verdictd);
         };
 };
