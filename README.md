@@ -106,6 +106,7 @@ OPTIONS:
    --ip/-i               set the listening ip address
    --port/-p             set the listening tcp port
    --product-enclave/-P  set to enable product enclave
+   --verdictd/-E         set to connect verdictd based on EAA protocol
 ```
 
 You can set command line parameters to specify different configurations.
