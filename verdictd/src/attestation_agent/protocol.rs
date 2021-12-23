@@ -2,6 +2,7 @@ use base64;
 use crate::crypto::aes256_gcm;
 use crate::key_manager;
 use serde_json::Value;
+use crate::attestation_agent::rats_tls;
 
 fn handle_version() -> Result<String, String> {
     let mut response = serde_json::Map::new();
@@ -81,6 +82,15 @@ fn handle_getKek(request: &Value) -> Result<String, String> {
     Ok(Value::Object(response).to_string())
 }
 
+fn handle_echo(request: &Value) -> Result<String, String> {
+    let data = match request["data"].as_str() {
+        Some(data) => data,
+        None => return Err("Echo parameters error".to_string()),
+    };
+
+    Ok(data.to_owned())
+}
+
 fn error_message(e: String) -> Result<String, ()> {
     let msg = serde_json::json!({
         "status": "Fail",
@@ -91,28 +101,40 @@ fn error_message(e: String) -> Result<String, ()> {
     Ok(msg)
 }
 
-pub fn handle_aa_request(request: &[u8]) -> Result<String, String> {
+pub fn handle(request: &[u8]) -> Result<(String, u8), String> {
     let parsed_request: Value = match serde_json::from_slice(request) {
         Ok(r) => r,
-        Err(_) => return Err("parse request failed".to_string()),
+        Err(_) => return Err("Parse request failed".to_string()),
     };
-    info!("request: {:?}", parsed_request);
+    info!("Request: {:?}", parsed_request);
 
     let response = match parsed_request["command"].as_str().unwrap() {
-        "version" => handle_version(),
+        "version" => {
+            let response = handle_version().unwrap();
+            Ok((response, rats_tls::ACTION_NONE))
+        },
         "Decrypt" => {
-            Ok(handle_decrypt(&parsed_request)
+            let response = handle_decrypt(&parsed_request)
                 .unwrap_or_else(|e| {
                     error_message(e).unwrap()
-                }))
+                });
+            Ok((response, rats_tls::ACTION_NONE))
         },
         "Get KEK" => {
-            Ok(handle_getKek(&parsed_request)
+            let response = handle_getKek(&parsed_request)
                 .unwrap_or_else(|e| {
                     error_message(e).unwrap()
-                }))
+                });
+            Ok((response, rats_tls::ACTION_NONE))
         },
-        _ => Err("command error".to_string()),
+        "echo" => {
+            let response = handle_echo(&parsed_request)
+                .unwrap_or_else(|e| {
+                    e
+                });
+            Ok((response, rats_tls::ACTION_DISCONNECT))
+        },
+        _ => Err("Command error".to_string()),
     };
 
     response

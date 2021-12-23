@@ -4,6 +4,9 @@ use std::net::TcpListener;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::{sync::Arc, u64};
 
+pub const ACTION_NONE: u8 = 0;
+pub const ACTION_DISCONNECT: u8 = 1;
+
 fn handle_client(
     sockfd: RawFd,
     tls_type: &Option<String>,
@@ -28,14 +31,18 @@ fn handle_client(
         let mut buffer = [0u8; 4096];
 
         let n = tls.receive(&mut buffer)
-            .map_err(|e| format!("tls receive failed with error: {:?}", e))?;
+            .map_err(|e| format!("tls client disconnect, code: {:?}", e))?;
 
-        let response = protocol::handle_aa_request(&buffer[..n])
-            .map_err(|e| format!("sockfd:{} handle_aa_request err: {}", sockfd, e))?;
+        let (response, action) = protocol::handle(&buffer[..n])
+            .map_err(|e| format!("handle request err: {} sockfd:{}", e, sockfd))?;
         info!("response: {}", response);
 
         tls.transmit(response.as_bytes())
-            .map_err(|e| format!("tls transmit error {:?}", e))?;
+            .map_err(|e| format!("tls transmit error: {:?}", e))?;
+
+        if action == ACTION_DISCONNECT {
+            return Ok(());
+        }
     }
 }
 
@@ -62,10 +69,6 @@ pub fn server(
         let attester = attester.clone();
         let verifier = verifier.clone();
         std::thread::spawn(move || {
-            info!(
-                "##### Task executes on thread: {:?} #####",
-                std::thread::current().id()
-            );
             match handle_client(
                 socket.as_raw_fd(),
                 &tls_type,
@@ -76,7 +79,7 @@ pub fn server(
                 0,
             ) {
                 Ok(_) => {},
-                Err(e) => error!("handle_client error: {}", e),
+                Err(e) => error!("{}", e),
             }
         });
     }
