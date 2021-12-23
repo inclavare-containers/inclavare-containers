@@ -38,7 +38,8 @@ runs:
         if [ '${{ inputs.os }}' = 'alinux2' ]; then
           docker exec ${{ inputs.container-id }} bash -c 'ln -sv /opt/alibaba/teesdk/intel/sgxsdk /opt/intel/sgxsdk;
             ls -l /opt/intel/sgxsdk;
-            sed -i 's/cmake/cmake3/g' inclavare-containers-${{ inputs.version }}/verdictd/dist/rpm/verdictd.spec.in'
+            sed -i 's/cmake/cmake3/g' inclavare-containers-${{ inputs.version }}/verdictd/dist/rpm/verdictd.spec.in;
+            sed -i 's/cmake/cmake3/g' inclavare-containers-${{ inputs.version }}/rats-tls/dist/rpm/rats_tls.spec.in'
         fi
         docker exec ${{ inputs.container-id }} bash -c 'trap "error_handler $?" ERR;
           error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
