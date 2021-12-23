@@ -15,15 +15,12 @@ env:
 
 jobs:
   verdictd:
-    # Openssl 1.1 default installation path in alinux2 is different with ubunut and centos and it is nonstandard path, it will cause encalve-tls building error.
-    # It is not a general soltuion to adapt openssl 1.1 default installation path in alinux2 to fix building issue.
-    # A long term solution for compatible with openssl 1.0 in alinux2, ubunut, centos is under going.
-    # Disable cicd test on alinux2 is a short term workaround. Once overall solution for openssl 1.0 is ready, test based on alinux2 will be enabled.
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
     runs-on: ${{ matrix.sgx }}
     strategy:
       matrix:
         sgx: [[self-hosted, SGX2, commit]]
-        tag: [ubuntu18.04]
+        tag: [ubuntu18.04, centos8.2]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -53,22 +50,32 @@ jobs:
         [source.tuna]
         registry = \"https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git\"
         EOF"
-
-    - name: Build and install verdictd
-      run: docker exec $inclavare_dev bash -c 'cd /root && source /root/.bashrc;
-        cp -r inclavare-containers inclavare-containers-${{ env.RUNE_VERSION }};
-        mkdir -p /root/inclavare-containers/${{ matrix.tag }};
-        cd inclavare-containers-${{ env.RUNE_VERSION }}/verdictd;
-        make install;
-        cp -rf ${{ env.RATS_TLS_ROOTDIR }} ${{ env.VERDICTD_BINDIR }} ${{ env.OPA_LIBDIR }} ${{ env.VERDICT_BINDIR }} /root/inclavare-containers/${{ matrix.tag }}'
+        
+    - uses: ./.github/actions/make-packages
+      with:
+        container-id: ${{ env.inclavare_dev }}
+        os: ${{ matrix.tag }}
+        version: ${{ env.RUNE_VERSION }}
+        cpu_num: ${{ env.CPU_NUM }}
 
     - name: Kill the dev container
       run: docker stop $inclavare_dev
       
     - name: Create runtime testing container
       run: |
-        inclavare_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavarecontainers/dev-eaa:0.6.2-ubuntu18.04);
+        inclavare_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v /dev/sgx_enclave:/dev/sgx/enclave -v /dev/sgx_provision:/dev/sgx/provision -v $GITHUB_WORKSPACE:/root/inclavare-containers -v /var/run/aesmd:/var/run/aesmd inclavarecontainers/dev:${{ env.RUNE_VERSION }}-${{ matrix.tag }});
         echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
+
+    - name: Install runtime packages
+      if: always()
+      run : |
+        if [ '${{ matrix.tag }}' = 'ubuntu18.04' ]; then
+          docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+            dpkg -i rats*.deb verdictd*.deb'
+        else
+          docker exec $inclavare_test bash -c 'cd /root/inclavare-containers/${{ matrix.tag }};
+            rpm -ivh rats*.rpm verdictd*.rpm'
+        fi
         
     - id: random-port-generator1
       uses: ./.github/actions/generate-random-port
@@ -78,12 +85,6 @@ jobs:
 
     - id: random-port-generator3
       uses: ./.github/actions/generate-random-port      
-
-    - name: install rats-tls & verdictd & verdict
-      run: docker exec $inclavare_test bash -c 'mv /root/inclavare-containers/${{ matrix.tag }}/rats-tls /usr/local/lib/;
-        mv /root/inclavare-containers/${{ matrix.tag }}/libopa.so /usr/local/lib/;
-        mv /root/inclavare-containers/${{ matrix.tag }}/verdictd /usr/local/bin/;
-        mv /root/inclavare-containers/${{ matrix.tag }}/verdict /usr/local/bin/'
 
     - name: install sample image
       uses: nick-invision/retry@v2

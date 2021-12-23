@@ -1,9 +1,11 @@
 %define centos_base_release 1
 %define _debugsource_template %{nil}
 %define verdict verdict
+%define opa libopa.so
 
 %global PROJECT inclavare-containers
 %global BIN_DIR /usr/local/bin
+%global LIB_DIR /usr/local/lib
 
 Name: verdictd
 Version: %{VERDICTD_VERSION}
@@ -52,9 +54,12 @@ popd
 install -d -p %{buildroot}%{BIN_DIR}
 install -p -m 755 %{name}/target/release/%{name} %{buildroot}%{BIN_DIR}
 install -p -m 755 %{name}/target/release/%{verdict} %{buildroot}%{BIN_DIR}
+install -d -p %{buildroot}%{LIB_DIR}
+install -p -m 755 %{name}/src/policy_engine/opa/%{opa} %{buildroot}%{LIB_DIR}
 
 %files
 %{BIN_DIR}/%{name}
 %{BIN_DIR}/%{verdict}
+%{LIB_DIR}/%{opa}
 
 %changelog
