@@ -2,6 +2,11 @@ PROJDIR := $(shell readlink -f ..)
 TOP_DIR := .
 CUR_DIR := $(shell pwd)
 
+# Root directory of the project (absolute path).
+ROOTDIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+VERDICTD_VERSION := $(shell cat $(ROOTDIR)/VERSION)
+VERDICTD_MAINTAINER := $(shell head -1 $(ROOTDIR)/MAINTAINERS)
+
 ######## APP Settings ########
 
 Opa_SRC_Files := opa_engine.go
@@ -45,7 +50,11 @@ uninstall:
 	@rm -f $(BINDIR)/$(Verdictd_Name)
 	@rm -f $(LIBDIR)/$(Opa_Name)
 
+package:
+	$(MAKE) -C dist package VERDICTD_VERSION="$(VERDICTD_VERSION)" VERDICTD_MAINTAINER="$(VERDICTD_MAINTAINER)"
+
 clean:
 	@rm -rf $(Opa_Lib_Path)/libopa.*
 	cargo clean && rm -f Cargo.lock
 	cd $(PROJDIR)/rats-tls && make -C build clean
+	@rm -f dist/rpm/verdictd.spec dist/deb/debian/changelog

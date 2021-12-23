@@ -24,7 +24,7 @@ runs:
           mkdir -p /root/inclavare-containers/${{ inputs.os }};
           cd inclavare-containers-${{ inputs.version }};
           sed -i 's/inclavared//g' Makefile;
-          echo rune shim epm sgx-tools enclave-tls shelter inclavared | xargs -n 1 cp -v VERSION'
+          echo rune shim epm sgx-tools enclave-tls shelter inclavared verdictd | xargs -n 1 cp -v VERSION'
 
       if [ '${{ inputs.os }}' = 'ubuntu18.04' ]; then
         docker exec ${{ inputs.container-id }} bash -c 'trap "error_handler $?" ERR;
@@ -37,7 +37,8 @@ runs:
       else
         if [ '${{ inputs.os }}' = 'alinux2' ]; then
           docker exec ${{ inputs.container-id }} bash -c 'ln -sv /opt/alibaba/teesdk/intel/sgxsdk /opt/intel/sgxsdk;
-            ls -l /opt/intel/sgxsdk'
+            ls -l /opt/intel/sgxsdk;
+            sed -i 's/cmake/cmake3/g' inclavare-containers-${{ inputs.version }}/verdictd/dist/rpm/verdictd.spec.in'
         fi
         docker exec ${{ inputs.container-id }} bash -c 'trap "error_handler $?" ERR;
           error_handler() { local err=$?; printf "Cleaning up with exit code $err ...\n"; exit $err; };
@@ -47,6 +48,7 @@ runs:
           find ./ -path "*dist/Makefile" | xargs -I files sed -i "/wget/d" files;
           find ./ -path "*dist/Makefile" | xargs -I files sed -i "/rm -rf/d" files;
           source /etc/profile && echo $SGX_SDK;
+          export GOPROXY=https://proxy.golang.org,direct;
           make package RPMBUILD_DIR=/root/rpmbuild -j${{ inputs.cpu_num }};
           mv *.rpm /root/inclavare-containers/${{ inputs.os }}'
       fi
