@@ -97,6 +97,11 @@ RUN apt-get update -y && apt-get install -y \
 # install the packages need by skopeo
 RUN apt-get install -y libdevmapper-dev libgpgme-dev
 
+# install OPA go dependencies
+RUN go get github.com/open-policy-agent/opa@v0.30.2
+RUN curl -L -o opa https://openpolicyagent.org/downloads/v0.30.2/opa_linux_amd64_static
+RUN chmod 755 ./opa && mv opa /usr/local/bin/
+
 # copy binary and configure files
 COPY --from=eaa /opt/cni                             /opt/cni
 COPY --from=eaa /etc/containerd                      /etc/containerd

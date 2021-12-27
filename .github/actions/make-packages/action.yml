@@ -49,7 +49,6 @@ runs:
           find ./ -path "*dist/Makefile" | xargs -I files sed -i "/wget/d" files;
           find ./ -path "*dist/Makefile" | xargs -I files sed -i "/rm -rf/d" files;
           source /etc/profile && echo $SGX_SDK;
-          export GOPROXY=https://proxy.golang.org,direct;
           make package RPMBUILD_DIR=/root/rpmbuild -j${{ inputs.cpu_num }};
           mv *.rpm /root/inclavare-containers/${{ inputs.os }}'
       fi
