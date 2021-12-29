@@ -21,4 +21,8 @@ set(SOURCES cleanup.c
 
 # Generate library
 add_trusted_library(${PROJECT_NAME} SRCS ${SOURCES})
+
+# Install library
+install(TARGETS ${PROJECT_NAME}
+	DESTINATION ${RATS_TLS_INSTALL_LIBV_PATH})
 endif()

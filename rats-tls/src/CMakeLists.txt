@@ -89,12 +89,14 @@ else()
     add_library(${RTLS_LIB} SHARED ${SOURCES})
     target_link_libraries(${RTLS_LIB} ${RATS_TLS_LDFLAGS})
     set_target_properties(${RTLS_LIB} PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
-    # Install lib
-    install(TARGETS ${RTLS_LIB}
-        DESTINATION ${RATS_TLS_INSTALL_LIB_PATH})
+endif()
 
-    # Install header
-    set(RTLS_INCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/api.h
+# Install lib
+install(TARGETS ${RTLS_LIB}
+    DESTINATION ${RATS_TLS_INSTALL_LIB_PATH})
+
+# Install header
+set(RTLS_INCLUDE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/api.h
                        ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/cert.h
                        ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/crypto_wrapper.h
                        ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/attester.h
@@ -104,7 +106,6 @@ else()
                        ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/sgx.h
                        ${CMAKE_CURRENT_SOURCE_DIR}/include/rats-tls/tls_wrapper.h
                        )
-    install(DIRECTORY DESTINATION ${RATS_TLS_INSTALL_INCLUDE_PATH}/rats-tls)
-    install(FILES ${RTLS_INCLUDE_FILES}
-	DESTINATION ${RATS_TLS_INSTALL_INCLUDE_PATH}/rats-tls)
-endif()
+install(DIRECTORY DESTINATION ${RATS_TLS_INSTALL_INCLUDE_PATH}/rats-tls)
+install(FILES ${RTLS_INCLUDE_FILES}
+DESTINATION ${RATS_TLS_INSTALL_INCLUDE_PATH}/rats-tls)
