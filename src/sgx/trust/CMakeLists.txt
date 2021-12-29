@@ -18,3 +18,7 @@ add_trusted_library(${PROJECT_NAME}
                     EDL ${RTLS_EDL}
                     EDL_SEARCH_PATHS ${EDL_SEARCH_PATHS}
 		    )
+
+# Install library
+install(TARGETS ${PROJECT_NAME}
+	DESTINATION ${RATS_TLS_INSTALL_LIB_PATH})
