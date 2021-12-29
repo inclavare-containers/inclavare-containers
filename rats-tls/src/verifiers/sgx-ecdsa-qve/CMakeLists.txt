@@ -43,7 +43,8 @@ else()
     add_library(${PROJECT_NAME} SHARED ${SOURCES})
     target_link_libraries(${PROJECT_NAME} ${EXTRA_LINK_LIBRARY} ${RATS_TLS_LDFLAGS} ${RTLS_LIB})
     set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${VERSION} SOVERSION ${VERSION_MAJOR})
-    # Install library
-    install(TARGETS ${PROJECT_NAME}
-	    DESTINATION ${RATS_TLS_INSTALL_LIBV_PATH})
 endif()
+
+# Install library
+install(TARGETS ${PROJECT_NAME}
+	DESTINATION ${RATS_TLS_INSTALL_LIBV_PATH})

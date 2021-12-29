@@ -29,8 +29,6 @@ add_untrusted_library(${PROJECT_NAME} STATIC
                       EDL_SEARCH_PATHS ${EDL_SEARCH_PATHS}
                       )
 
-if(NOT SGX)
 # Install library
 install(TARGETS ${PROJECT_NAME}
 	DESTINATION ${RATS_TLS_INSTALL_LIB_PATH})
-endif()
