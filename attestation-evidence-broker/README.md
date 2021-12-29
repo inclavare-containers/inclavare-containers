@@ -53,3 +53,5 @@ Start AEB:
 ```shell
 aeb
 ```
+
+We have provided a sample guest application `attester` that communicates with AEB through VSOCK to query attestation evidence. Please refer to [this link](samples/README.md) for more information.
