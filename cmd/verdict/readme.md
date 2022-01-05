@@ -56,7 +56,7 @@ verdict [OPTIONS]
 # Test OPA's remote policy and local reference with INPUT_PATH content
 # POLICY_NAME: the tested policy file's name
 # REFERENCE_PATH: the path of reference file
---test_localdata <POLICY_NAME> <REFERENCE_PATH> [-c, --config <CONFIG_ADDR>]
+--test_localreference <POLICY_NAME> <REFERENCE_PATH> [-c, --config <CONFIG_ADDR>]
 
 # Prints help information.
 -h, --help
