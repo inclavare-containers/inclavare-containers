@@ -325,7 +325,7 @@ mrSigner_is_grant {
     input.mrSigner == data.mrSigner[_]
 }
 "#;
-        set_raw_policy(OPA_POLICY_SGX, &policy.to_string())
+        write(&(String::from(OPA_PATH) + OPA_POLICY_SGX), &policy.to_string())
             .map_err(|e| format!("Set {} failed with error {:?}", OPA_POLICY_SGX, e))?;
     }
 
@@ -334,8 +334,8 @@ mrSigner_is_grant {
         let sgx_data = r#"{
     "mrEnclave": [],
     "mrSigner": [],
-    "productId": 1,
-    "svn": 1
+    "productId": 0,
+    "svn": 0
 }"#;
 
         let lock = FILE_LOCK.write();
