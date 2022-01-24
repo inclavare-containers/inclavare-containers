@@ -19,7 +19,11 @@ ifneq ($(RELEASE_TARBALL_EXIST), y)
 endif
 
 rpm: rpm/rats_tls.spec release-tarball
-	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba rpm/rats_tls.spec
+	@cp rpm/rats-tls*-filelist $(RPMBUILD_DIR)/SOURCES
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba --define 'mode host' rpm/rats_tls.spec
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba --define 'mode occlum' rpm/rats_tls.spec
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba --define 'mode sgx' rpm/rats_tls.spec
+	@rpmbuild -D "_topdir $(RPMBUILD_DIR)" -ba --define 'mode tdx' rpm/rats_tls.spec
 	@cp $(RPMBUILD_DIR)/RPMS/x86_64/*.rpm $(PROJECT_DIR)
 	@rm -rf $(RPMBUILD_DIR)
 	@echo "the rpms of rats tls located in $(PROJECT_DIR)"
