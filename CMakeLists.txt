@@ -100,7 +100,6 @@ if(BUILD_SAMPLES)
 endif()
 
 # Uninstall target
-if(NOT SGX)
 if(NOT TARGET uninstall)
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CMakeUninstall.cmake.in"
@@ -109,5 +108,4 @@ if(NOT TARGET uninstall)
 
   add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-endif()
 endif()

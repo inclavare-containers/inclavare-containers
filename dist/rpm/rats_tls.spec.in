@@ -8,10 +8,6 @@
 
 %global PROJECT inclavare-containers
 
-%global RATS_TLS_BINDIR /usr/share/rats-tls/samples
-%global RATS_TLS_LIBDIR /usr/local/lib/rats-tls
-%global RATS_TLS_INCDIR /usr/local/include/rats-tls
-
 Name: rats-tls
 Version: %{RATS_TLS_VERSION}
 Release: %{centos_base_release}%{?dist}
@@ -34,11 +30,72 @@ BuildRequires: libsgx-dcap-ql-devel
 BuildRequires: libsgx-uae-service
 ExclusiveArch: x86_64
 
+%if %{mode} == host
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-occlum
+Conflicts: Name=rats-tls-sgx
+Conflicts: Name=rats-tls-tdx
+Conflicts: rats-tls-server
+Source10: rats-tls-filelist
+%endif
+
+%if %{mode} == occlum
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-host
+Conflicts: Name=rats-tls-sgx
+Conflicts: Name=rats-tls-tdx
+Conflicts: rats-tls-server
+Source10: rats-tls-filelist
+%endif
+
+%if %{mode} == sgx
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-host
+Conflicts: Name=rats-tls-occlum
+Conflicts: Name=rats-tls-tdx
+Conflicts: rats-tls-server
+Source10: rats-tls-sgx-filelist
+%endif
+
+%if %{mode} == tdx
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-host
+Conflicts: Name=rats-tls-sgx
+Conflicts: Name=rats-tls-occlum
+Conflicts: rats-tls-server
+Source10: rats-tls-filelist
+%endif
+
 %description
 rats-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.
 
+%package host
+Summary: host mode package for rats-tls
+
+%description host
+rats-tls-host is the "host" build mode package of rats-tls.
+
+%package occlum
+Summary: occlum mode package for rats-tls
+
+%description occlum
+rats-tls-occlum is the "occlum" build mode package of rats-tls.
+
+%package sgx
+Summary: sgx mode package for rats-tls
+
+%description sgx
+rats-tls-sgx is the "sgx" build mode package of rats-tls.
+
+%package tdx
+Summary: tdx mode package for rats-tls
+
+%description tdx
+rats-tls-tdx is the "tdx" build mode package of rats-tls.
+
 %prep
 %setup -q -n %{PROJECT}-%{version}
+
 
 %build
 if [ -z "$SGX_SDK" ]; then
@@ -51,8 +108,14 @@ if [ ! -d "$SGX_SDK" ]; then
         exit 1
 fi
 
+#If the mode is not specified, stop the build
+if [ -z %{mode} ]; then
+	echo 'Error: Please input variable "mode"'
+	exit 1
+fi
+
 pushd %{name}
-cmake -H. -Bbuild
+cmake -DRATS_TLS_BUILD_MODE=%{mode} -DBUILD_SAMPLES=on -H. -Bbuild
 popd
 
 %install
@@ -63,15 +126,7 @@ popd
 %postun
 rm -rf %{RATS_TLS_LIBDIR} %{RATS_TLS_INCDIR} $(dirname %{RATS_TLS_BINDIR})
 
-%files
-%{RATS_TLS_BINDIR}/rats-tls-server
-%{RATS_TLS_BINDIR}/rats-tls-client
-%{RATS_TLS_INCDIR}/rats-tls/*.h
-%{RATS_TLS_LIBDIR}/librats_tls.so*
-%{RATS_TLS_LIBDIR}/tls-wrappers/libtls_wrapper*.so*
-%{RATS_TLS_LIBDIR}/crypto-wrappers/libcrypto_wrapper*.so*
-%{RATS_TLS_LIBDIR}/attesters/libattester*.so*
-%{RATS_TLS_LIBDIR}/verifiers/libverifier*.so*
+%files %{mode} -f %{SOURCE10}
 
 %changelog
 * Wed Jun 30 2021 Liang Yang <liang3.yang@intel.com> - 0.6.2
