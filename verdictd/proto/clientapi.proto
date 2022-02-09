@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package configureprovider;
+package clientapi;
 
 message CreateKeyRequest {}
 message CreateKeyResponse {
@@ -68,13 +68,81 @@ message TestOpaResponse {
     bytes status = 1;
 }
 
-service ConfigureProviderService {
+message ListGpgKeysRequest {}
+message ListGpgKeysResponse {
+    bytes keys = 1;
+}
+
+message ImportGpgKeyRequest {
+    bytes key = 1;
+}
+message ImportGpgKeyResponse {
+    bytes status = 1;
+}
+
+message DeleteGpgKeyRequest {
+    bytes keyid = 1;
+}
+message DeleteGpgKeyResponse {
+    bytes status = 1;
+}
+
+message ExportGpgKeyringRequest {}
+message ExportGpgKeyringResponse {
+    bytes status = 1;
+    bytes content = 2;
+}
+
+message ExportImageSigstoreRequest {}
+message ExportImageSigstoreResponse {
+    bytes status = 1;
+    bytes content = 2;
+}
+
+message SetImageSigstoreRequest {
+    bytes content = 1;
+}
+message SetImageSigstoreResponse {
+    bytes status = 1;
+}
+
+message ExportImagePolicyRequest {}
+message ExportImagePolicyResponse {
+    bytes status = 1;
+    bytes content = 2;
+}
+
+message SetImagePolicyRequest {
+    bytes content = 1;
+}
+message SetImagePolicyResponse {
+    bytes status = 1;
+}
+
+service KeyManagerService {
     rpc CreateKey(CreateKeyRequest) returns (CreateKeyResponse) {};
     rpc GetKey(GetKeyRequest) returns (GetKeyResponse) {};
     rpc DeleteKey(DeleteKeyRequest) returns (DeleteKeyResponse) {};
+}
+
+service OpaService {
     rpc SetOpaPolicy(SetOpaPolicyRequest) returns (SetOpaPolicyResponse) {};
     rpc exportOpaPolicy(ExportOpaPolicyRequest) returns (ExportOpaPolicyResponse) {};
     rpc setOpaReference(SetOpaReferenceRequest) returns (SetOpaReferenceResponse) {};
     rpc exportOpaReference(ExportOpaReferenceRequest) returns (ExportOpaReferenceResponse) {};
     rpc TestOpa(TestOpaRequest) returns (TestOpaResponse) {};
+}
+
+service GpgService {
+    rpc listGpgKeys(ListGpgKeysRequest) returns (ListGpgKeysResponse) {};
+    rpc importGpgKey(ImportGpgKeyRequest) returns (ImportGpgKeyResponse) {};
+    rpc deleteGpgKey(DeleteGpgKeyRequest) returns (DeleteGpgKeyResponse) {};
+    rpc exportGpgKeyring(ExportGpgKeyringRequest) returns (ExportGpgKeyringResponse) {};  
+}
+
+service ImageService {
+    rpc exportImageSigstore(ExportImageSigstoreRequest) returns (ExportImageSigstoreResponse) {};
+    rpc setImageSigstore(SetImageSigstoreRequest) returns (SetImageSigstoreResponse) {};
+    rpc exportImagePolicy(ExportImagePolicyRequest) returns (ExportImagePolicyResponse) {};
+    rpc setImagePolicy(SetImagePolicyRequest) returns (SetImagePolicyResponse) {};
 }
