@@ -1,3 +1,6 @@
 [submodule "inclavare-containers.io"]
 	path = inclavare-containers.io
 	url = https://github.com/inclavare-containers/inclavare-containers.io.git
+[submodule "inclavared"]
+	path = inclavared
+	url = https://github.com/inclavare-containers/inclavared.git
