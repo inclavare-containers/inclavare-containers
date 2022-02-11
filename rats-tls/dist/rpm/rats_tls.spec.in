@@ -1,0 +1,145 @@
+%define centos_base_release 1
+%define _debugsource_template %{nil}
+
+%global RATS_TLS_BINDIR /usr/share/rats-tls/samples
+
+%global _find_debuginfo_dwz_opts %{nil}
+%global _dwz_low_mem_die_limit 0
+%undefine _missing_build_ids_terminate_build
+%define _unpackaged_files_terminate_build 0
+
+%global PROJECT inclavare-containers
+
+Name: rats-tls
+Version: %{RATS_TLS_VERSION}
+Release: %{centos_base_release}%{?dist}
+Summary: rats-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.
+
+Group: Development/Tools
+License: Apache License 2.0
+URL: https://github.com/alibaba/%{PROJECT}
+Source0: https://github.com/alibaba/%{PROJECT}/archive/v%{version}.tar.gz
+
+BuildRequires: git
+BuildRequires: cmake
+BuildRequires: make
+BuildRequires: autoconf
+BuildRequires: libtool
+BuildRequires: gcc
+BuildRequires: gcc-c++
+BuildRequires: libsgx-dcap-quote-verify-devel
+BuildRequires: libsgx-dcap-ql-devel
+BuildRequires: libsgx-uae-service
+ExclusiveArch: x86_64
+
+%if %{mode} == host
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-occlum
+Conflicts: Name=rats-tls-sgx
+Conflicts: Name=rats-tls-tdx
+Conflicts: rats-tls-server
+Source10: rats-tls-filelist
+%endif
+
+%if %{mode} == occlum
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-host
+Conflicts: Name=rats-tls-sgx
+Conflicts: Name=rats-tls-tdx
+Conflicts: rats-tls-server
+Source10: rats-tls-filelist
+%endif
+
+%if %{mode} == sgx
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-host
+Conflicts: Name=rats-tls-occlum
+Conflicts: Name=rats-tls-tdx
+Conflicts: rats-tls-server
+Source10: rats-tls-sgx-filelist
+%define __enclave_tls_install_post \
+    cp %{_builddir}/%{PROJECT}-%{version}/%{name}/build/samples/sgx-stub-enclave/sgx_stub_enclave.signed.so %{?buildroot}%{RATS_TLS_BINDIR} %{nil}
+%define __spec_install_post \
+    %{?__debug_package:%{__debug_install_post}}\
+    %{__arch_install_post}\
+    %{__os_install_post}\
+    %{__enclave_tls_install_post}
+%endif
+
+%if %{mode} == tdx
+Conflicts: rats-tls-client
+Conflicts: Name=rats-tls-host
+Conflicts: Name=rats-tls-sgx
+Conflicts: Name=rats-tls-occlum
+Conflicts: rats-tls-server
+Source10: rats-tls-filelist
+%endif
+
+%description
+rats-tls is a protocol to establish secure and trusted channel by integrating enclave attestation with transport layer security.
+
+%package host
+Summary: host mode package for rats-tls
+
+%description host
+rats-tls-host is the "host" build mode package of rats-tls.
+
+%package occlum
+Summary: occlum mode package for rats-tls
+
+%description occlum
+rats-tls-occlum is the "occlum" build mode package of rats-tls.
+
+%package sgx
+Summary: sgx mode package for rats-tls
+
+%description sgx
+rats-tls-sgx is the "sgx" build mode package of rats-tls.
+
+%package tdx
+Summary: tdx mode package for rats-tls
+
+%description tdx
+rats-tls-tdx is the "tdx" build mode package of rats-tls.
+
+%prep
+%setup -q -n %{PROJECT}-%{version}
+
+
+%build
+if [ -z "$SGX_SDK" ]; then
+        SGX_SDK="/opt/intel/sgxsdk"
+fi
+
+# If the SGX SDK is not prepared well in build environment, stop the build
+if [ ! -d "$SGX_SDK" ]; then
+        echo 'Error: The SGX_SDK environment variable value is not correct'
+        exit 1
+fi
+
+#If the mode is not specified, stop the build
+if [ -z %{mode} ]; then
+	echo 'Error: Please input variable "mode"'
+	exit 1
+fi
+
+pushd %{name}
+cmake -DRATS_TLS_BUILD_MODE=%{mode} -DBUILD_SAMPLES=on -H. -Bbuild
+popd
+
+%install
+pushd %{name}
+make -C build DESTDIR=%{?buildroot} install
+popd
+
+%postun
+rm -rf %{RATS_TLS_LIBDIR} %{RATS_TLS_INCDIR} $(dirname %{RATS_TLS_BINDIR})
+
+%files %{mode} -f %{SOURCE10}
+
+%changelog
+* Wed Jun 30 2021 Liang Yang <liang3.yang@intel.com> - 0.6.2
+- Update to version 0.6.2.
+
+* Thu Apr 22 2021 Shirong Hao <shirong@linux.alibaba.com> - 0.6.1
+- Package init.

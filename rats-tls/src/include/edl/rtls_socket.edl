@@ -1,0 +1,35 @@
+enclave {
+	include "rtls_socket.h"
+
+	from "sgx_dummy.edl" import *;
+
+	untrusted {
+		int64_t ocall_socket(int domain,
+                                     int type,
+                                     int protocol)
+			propagate_errno;
+		int ocall_setsockopt(int64_t sockfd,
+                                     int level,
+                                     int optname,
+                                     [in, size=optlen] const void *optval,
+                                     uint32_t optlen)
+			propagate_errno;
+		int ocall_bind(int64_t sockfd,
+                               [in, size=addrlen] const struct rtls_sockaddr_in *addr,
+                               uint32_t addrlen)
+			propagate_errno;
+		int ocall_listen(int64_t sockfd, int backlog)
+			propagate_errno;
+		int64_t ocall_accept(int64_t sockfd,
+                                     [out, size=addrlen_in] struct rtls_sockaddr_in *addr,
+                                     uint32_t addrlen_in,
+                                     [out] uint32_t *addrlen_out)
+			propagate_errno;
+		int ocall_connect(int64_t sockfd,
+                                  [in, size=addrlen] const struct rtls_sockaddr_in *addr,
+                                  uint32_t addrlen)
+			propagate_errno;
+		int ocall_close(int64_t sockfd)
+			propagate_errno;
+	};
+};

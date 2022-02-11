@@ -1,0 +1,807 @@
+From e15c26464a50895846977c9c8246e53247a476f0 Mon Sep 17 00:00:00 2001
+From: Liang Yang <liang3.yang@intel.com>
+Date: Fri, 3 Sep 2021 11:57:31 +0800
+Subject: [PATCH] add ssl library enclave support
+
+Signed-off-by: Liang Yang <liang3.yang@intel.com>
+---
+ Linux/Makefile                        |   1 +
+ Linux/build_openssl.sh                |   9 +-
+ Linux/package/include/sgx_tsgxssl.edl |  16 +-
+ Linux/package/include/tsgxsslio.h     |   9 +-
+ Linux/sgx/Makefile                    |   2 +
+ Linux/sgx/buildenv.mk                 |   2 +
+ Linux/sgx/libsgx_tsgxssl/tcommon.h    |   1 +
+ Linux/sgx/libsgx_tsgxssl/tstdio.cpp   | 218 +++++++++++++++++++++++++-
+ Linux/sgx/libsgx_tsgxssl/tstdlib.cpp  |  49 +++---
+ Linux/sgx/libsgx_tsgxssl/tunistd.cpp  | 117 ++++++--------
+ Linux/sgx/libsgx_usgxssl/ustdio.cpp   |  69 ++++++++
+ Linux/sgx/libsgx_usgxssl/ustdlib.cpp  |  32 ++++
+ Linux/sgx/libsgx_usgxssl/uunistd.cpp  |  14 ++
+ openssl_source/bypass_to_sgxssl.h     |  11 +-
+ 14 files changed, 439 insertions(+), 111 deletions(-)
+ create mode 100644 Linux/sgx/libsgx_usgxssl/ustdio.cpp
+ create mode 100644 Linux/sgx/libsgx_usgxssl/ustdlib.cpp
+ create mode 100644 Linux/sgx/libsgx_usgxssl/uunistd.cpp
+
+diff --git a/Linux/Makefile b/Linux/Makefile
+index 9524f45..304ce24 100644
+--- a/Linux/Makefile
++++ b/Linux/Makefile
+@@ -55,6 +55,7 @@ sgxssl_no_mitigation:
+ clean:
+ 	$(MAKE) -C sgx/ clean
+ 	rm -rf $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_INC)/openssl/
++	rm -rf $(PACKAGE_LIB)/$(OPENSSL_SSL_LIB)
+ 	rm -rf $(PACKAGE_LIB)/cve_2020_0551_load
+ 	rm -rf $(PACKAGE_LIB)/cve_2020_0551_cf
+ 
+diff --git a/Linux/build_openssl.sh b/Linux/build_openssl.sh
+index fdfffd5..e295c5f 100755
+--- a/Linux/build_openssl.sh
++++ b/Linux/build_openssl.sh
+@@ -69,8 +69,10 @@ sed -i '/OPENSSL_die("assertion failed/d' $OPENSSL_VERSION/include/openssl/crypt
+ fi
+ 
+ OUTPUT_LIB=libsgx_tsgxssl_crypto.a
++OUTPUT_SSLLIB=libsgx_tsgxssl_ssl.a
+ if [[ "$*" == *"debug"* ]] ; then
+-	OUTPUT_LIB=libsgx_tsgxssl_cryptod.a
++        OUTPUT_LIB=libsgx_tsgxssl_cryptod.a
++        OUTPUT_SSLLIB=libsgx_tsgxssl_ssld.a
+     ADDITIONAL_CONF="-g "
+ fi
+ 
+@@ -136,7 +138,7 @@ cp sgx_config.conf $OPENSSL_VERSION/ || exit 1
+ cp x86_64-xlate.pl $OPENSSL_VERSION/crypto/perlasm/ || exit 1
+ 
+ cd $SGXSSL_ROOT/../openssl_source/$OPENSSL_VERSION || exit 1
+-perl Configure --config=sgx_config.conf sgx-linux-x86_64 --with-rand-seed=none $ADDITIONAL_CONF $SPACE_OPT $MITIGATION_FLAGS no-idea no-mdc2 no-rc5 no-rc4 no-bf no-ec2m no-camellia no-cast no-srp no-hw no-dso no-shared no-ssl3 no-md2 no-md4 no-ui-console no-stdio no-afalgeng -D_FORTIFY_SOURCE=2 -DGETPID_IS_MEANINGLESS -include$SGXSSL_ROOT/../openssl_source/bypass_to_sgxssl.h --prefix=$OPENSSL_INSTALL_DIR || exit 1
++perl Configure --config=sgx_config.conf sgx-linux-x86_64 --with-rand-seed=none $ADDITIONAL_CONF $SPACE_OPT $MITIGATION_FLAGS no-idea no-mdc2 no-rc5 no-rc4 no-bf no-ec2m no-camellia no-cast no-srp no-hw no-dso no-shared no-ssl3 no-md2 no-md4 no-ui no-stdio no-afalgeng -D_FORTIFY_SOURCE=2 -DGETPID_IS_MEANINGLESS -include$SGXSSL_ROOT/../openssl_source/bypass_to_sgxssl.h -include$SGXSSL_ROOT/../Linux/package/include/tsgxsslio.h --prefix=$OPENSSL_INSTALL_DIR || exit 1
+ 
+ make build_all_generated || exit 1
+ 
+@@ -158,8 +160,9 @@ then
+     cp $SGXSSL_ROOT/../openssl_source/Linux/x86_64cpuid.s       ./crypto/x86_64cpuid.s
+ fi
+ 
+-make libcrypto.a || exit 1
++make libcrypto.a libssl.a || exit 1
+ cp libcrypto.a $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
++cp libssl.a $SGXSSL_ROOT/package/lib64/$OUTPUT_SSLLIB || exit 1
+ objcopy --rename-section .init=Q6A8dc14f40efc4288a03b32cba4e $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
+ cp include/openssl/* $SGXSSL_ROOT/package/include/openssl/ || exit 1
+ cp include/crypto/* $SGXSSL_ROOT/package/include/crypto/ || exit 1
+diff --git a/Linux/package/include/sgx_tsgxssl.edl b/Linux/package/include/sgx_tsgxssl.edl
+index cbc4888..ffcb5b2 100644
+--- a/Linux/package/include/sgx_tsgxssl.edl
++++ b/Linux/package/include/sgx_tsgxssl.edl
+@@ -36,7 +36,21 @@ enclave {
+     from "sgx_tstdc.edl" import *;
+     
+     untrusted {
+-    	 void u_sgxssl_ftime([out, size=timeb_len] void * timeptr, uint32_t timeb_len);
++            void u_sgxssl_ftime([out, size=timeb_len] void * timeptr, uint32_t timeb_len);
++            int ocall_sgxssl_read(int fd, [out, size = buf_len] void *buf, size_t buf_len);
++            int ocall_sgxssl_write(int fd, [in, size = buf_len] const void *buf, size_t buf_len);
++            int ocall_sgxssl_getenv([in, size = name_len] const char *name, size_t name_len, [out, size = buf_len] void *buf, int buf_len, [out] int *need_len);
++            uint64_t ocall_sgxssl_fopen([in, size = filename_len] const char *filename, size_t filename_len, [in, size = mode_len] const char *mode, size_t mode_len);
++            int ocall_sgxssl_fclose(uint64_t fp);
++            int ocall_sgxssl_ferror(uint64_t fp);
++            int ocall_sgxssl_feof(uint64_t fp);
++            int ocall_sgxssl_fflush(uint64_t fp);
++            long ocall_sgxssl_ftell(uint64_t fp);
++            int ocall_sgxssl_fseek(uint64_t fp, long offset, int origin);
++            size_t ocall_sgxssl_fread([out, size = total_size] void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp);
++            size_t ocall_sgxssl_fwrite([in, size = total_size] const void *buf, size_t total_size, size_t element_size, size_t cnt, uint64_t fp);
++            int ocall_sgxssl_fgets([out, size = max_cnt] char *str, int max_cnt, uint64_t fp);
++            int ocall_sgxssl_fputs([in, size = total_size] const char *str, size_t total_size, uint64_t fp);
+     };
+ 
+     trusted {
+diff --git a/Linux/package/include/tsgxsslio.h b/Linux/package/include/tsgxsslio.h
+index a200a17..6a38de1 100644
+--- a/Linux/package/include/tsgxsslio.h
++++ b/Linux/package/include/tsgxsslio.h
+@@ -32,6 +32,13 @@
+ #ifndef _TSGXSSL_IO_H_
+ #define _TSGXSSL_IO_H_
+ 
+-typedef void FILE;
++#include <stdio.h>
++
++#undef stdout
++#define stdout  ((void*)1)
++#undef  stderr
++#define stderr  ((void*)2)
++
++typedef struct _IO_FILE FILE;
+ 
+ #endif // _TSGXSSL_IO_H_
+diff --git a/Linux/sgx/Makefile b/Linux/sgx/Makefile
+index 2cfed73..74ac77f 100644
+--- a/Linux/sgx/Makefile
++++ b/Linux/sgx/Makefile
+@@ -61,9 +61,11 @@ endif
+ 
+ ifneq ($(MITIGATION-CVE-2020-0551),)
+ 	$(RM) -r $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/$(TRUSTED_LIB)
++	$(RM) -r $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/$(OPENSSL_SSL_LIB)
+ 	$(RM) -r $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/$(OPENSSL_LIB)
+ 	mkdir -p $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)
+ 	mv $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/
++	mv $(PACKAGE_LIB)/$(OPENSSL_SSL_LIB) $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/
+ 	mv $(PACKAGE_LIB)/$(TRUSTED_LIB) $(PACKAGE_LIB)$(MITIGATION_LIB_PATH)/
+ endif
+ 
+diff --git a/Linux/sgx/buildenv.mk b/Linux/sgx/buildenv.mk
+index cd8818e..7cd794c 100644
+--- a/Linux/sgx/buildenv.mk
++++ b/Linux/sgx/buildenv.mk
+@@ -73,11 +73,13 @@ endif
+ ifeq ($(DEBUG), 1)
+ 	OBJDIR := debug
+ 	OPENSSL_LIB := libsgx_tsgxssl_cryptod.a
++	OPENSSL_SSL_LIB := libsgx_tsgxssl_ssld.a
+ 	TRUSTED_LIB := libsgx_tsgxssld.a
+ 	UNTRUSTED_LIB := libsgx_usgxssld.a
+ else
+ 	OBJDIR := release
+ 	OPENSSL_LIB := libsgx_tsgxssl_crypto.a
++	OPENSSL_SSL_LIB := libsgx_tsgxssl_ssl.a
+ 	TRUSTED_LIB := libsgx_tsgxssl.a
+ 	UNTRUSTED_LIB := libsgx_usgxssl.a
+ endif
+diff --git a/Linux/sgx/libsgx_tsgxssl/tcommon.h b/Linux/sgx/libsgx_tsgxssl/tcommon.h
+index f8d9379..5b6136c 100644
+--- a/Linux/sgx/libsgx_tsgxssl/tcommon.h
++++ b/Linux/sgx/libsgx_tsgxssl/tcommon.h
+@@ -40,6 +40,7 @@
+ #include "tdefines.h"
+ #include "tSgxSSL_api.h"
+ 
++#define SGX_SSL_SUCCESS 0
+ 
+ //#define DO_SGX_LOG
+ #define DO_SGX_WARN
+diff --git a/Linux/sgx/libsgx_tsgxssl/tstdio.cpp b/Linux/sgx/libsgx_tsgxssl/tstdio.cpp
+index 800a9a7..17f9bf6 100644
+--- a/Linux/sgx/libsgx_tsgxssl/tstdio.cpp
++++ b/Linux/sgx/libsgx_tsgxssl/tstdio.cpp
+@@ -30,9 +30,11 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include "tcommon.h"
+ #include "sgx_tsgxssl_t.h"
+ #include "tSgxSSL_api.h"
++#include "tsgxsslio.h"
+ 
+ extern PRINT_TO_STDOUT_STDERR_CB s_print_cb;
+ 
+@@ -48,8 +50,222 @@ int sgx_print(const char *format, ...)
+ 
+ 		return res;
+ 	}
+-	
++
+ 	return 0;
+ }
+ 
++int print_with_cb(void *fp, const char *fmt, __va_list vl)
++{
++	int res = -1;
++	int stream = -1;
++
++	if (fp == NULL || s_print_cb == NULL)
++		return -1;
++
++	if (fp == stdout)
++		stream = STREAM_STDOUT;
++	else if (fp == stderr)
++		stream = STREAM_STDERR;
++	else
++		return res;
++
++	res = s_print_cb((Stream_t)stream, fmt, vl);
++
++	return res;
++}
++
++void *sgxssl_fopen(const char *filename, const char *mode)
++{
++	uint64_t ret = 0;
++	int res;
++
++	if (filename == NULL || mode == NULL)
++		return NULL;
++
++	res = ocall_sgxssl_fopen(&ret, filename, strlen(filename) + 1, mode, strlen(mode) + 1);
++	if (res != SGX_SSL_SUCCESS)
++		return NULL;
++
++	return (void *)ret;
++}
++
++int sgxssl_fclose(void *fp)
++{
++	int ret = -1;
++	int res;
++
++	if (fp == NULL)
++		return -1;
++
++	res = ocall_sgxssl_fclose(&ret, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return -1;
++
++	return ret;
++}
++
++int sgxssl_ferror(void *fp)
++{
++	int ret = -1;
++	int res;
++
++	if (fp == NULL)
++		return -1;
++
++	res = ocall_sgxssl_ferror(&ret, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return -1;
++
++	return ret;
++}
++
++int sgxssl_feof(void *fp)
++{
++	int ret = 0;
++	int res;
++
++	if (fp == NULL)
++		return 0;
++
++	res = ocall_sgxssl_feof(&ret, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return 0;
++
++	return ret;
++}
++
++int sgxssl_fflush(void *fp)
++{
++	int ret = -1;
++	int res;
++
++	if (fp == NULL)
++		return -1;
++
++	res = ocall_sgxssl_fflush(&ret, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return -1;
++
++	return ret;
++}
++
++long sgxssl_ftell(void *fp)
++{
++	long ret = -1;
++	int res;
++
++	if (fp == NULL)
++		return -1;
++
++	res = ocall_sgxssl_ftell(&ret, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return -1;
++
++	return ret;
++}
++
++int sgxssl_fseek(void *fp, long offset, int origin)
++{
++	int ret = -1;
++	int res;
++
++	if (fp == NULL)
++		return -1;
++
++	res = ocall_sgxssl_fseek(&ret, (uint64_t)fp, offset, origin);
++	if (res != SGX_SSL_SUCCESS)
++		return -1;
++
++	return ret;
++}
++
++int sgxssl_fprintf(void *fp, const char *format, ...)
++{
++	if (s_print_cb != NULL) {
++		va_list vl;
++		va_start(vl, format);
++		int res = print_with_cb(fp, format, vl);
++		va_end(vl);
++
++		return res;
++	}
++
++	return -1;
++}
++
++int sgxssl_vfprintf(void *fp, const char *format, va_list vl)
++{
++	if (s_print_cb != NULL) {
++		int res = print_with_cb(fp, format, vl);
++		return res;
++	}
++
++	return -1;
++}
++
++size_t sgxssl_fread(void *dest, size_t element_size, size_t cnt, void *fp)
++{
++	size_t ret = 0;
++	int res;
++
++	if (fp == NULL || dest == NULL || element_size == 0 || cnt == 0)
++		return 0;
++
++	if (element_size > (SIZE_MAX - 1) / cnt + 1)
++		return 0;
++
++	res = ocall_sgxssl_fread(&ret, dest, element_size * cnt, element_size, cnt, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return 0;
++
++	return ret;
++}
++
++size_t sgxssl_fwrite(const void *src, size_t element_size, size_t cnt, void *fp)
++{
++	size_t ret = 0;
++	int res;
++
++	if (fp == NULL || src == NULL || element_size == 0 || cnt == 0)
++		return 0;
++
++	if (element_size > (SIZE_MAX - 1) / cnt + 1)
++		return 0;
++
++	res = ocall_sgxssl_fwrite(&ret, src, element_size * cnt, element_size, cnt, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS)
++		return 0;
++
++	return ret;
++}
++
++char *sgxssl_fgets(char *dest, int max_cnt, void *fp)
++{
++	int ret = -1;
++	int res;
++
++	if (fp == NULL || dest == NULL || max_cnt <= 0)
++		return NULL;
++
++	res = ocall_sgxssl_fgets(&ret, dest, max_cnt, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS || ret < 0)
++		return NULL;
++
++	return dest;
++}
++
++int sgxssl_fputs(const char *src, void *fp)
++{
++	int ret = -1;
++	int res;
++
++	if (fp == NULL || src == NULL)
++		return -1;
++
++	res = ocall_sgxssl_fputs(&ret, src, strlen(src) + 1, (uint64_t)fp);
++	if (res != SGX_SSL_SUCCESS || ret < 0)
++		return -1;
++
++	return ret;
++}
+ }
+diff --git a/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp b/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp
+index 81851a7..243e630 100644
+--- a/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp
++++ b/Linux/sgx/libsgx_tsgxssl/tstdlib.cpp
+@@ -57,39 +57,26 @@ SGX_ACCESS_VERSION(tssl, 1);
+ 
+ extern "C" {
+ 
++#define MAX_ENV_BUF_LEN 4096
++static __thread char env_buf[MAX_ENV_BUF_LEN];
++
+ char *sgxssl_getenv(const char *name)
+ {
+-	FSTART;
+-
+-	if (name == NULL ) {
+-		FEND;
+-		return NULL;
+-	}
+-
+-	if (!strcmp(name, "OPENSSL_CONF" )) {
+-		FEND;
+-		return NULL;
+-	}
+-
+-	if (!strcmp(name, "OPENSSL_ENGINES" )) {
+-		FEND;
+-		return (char *) PATH_DEV_NULL;
+-	}
+-
+-	if (!strcmp(name, "OPENSSL_ALLOW_PROXY_CERTS" )) {
+-		FEND;
+-		return NULL;
+-	}
+-	
+-	if (!strcmp(name, "OPENSSL_ia32cap" )) {
+-		FEND;
+-		return NULL;
+-	}
+-
+-	SGX_UNREACHABLE_CODE(SET_ERRNO);
+-
+-	FEND;
+-	return NULL;
++        int ret = 0;
++        int res;
++        int buf_len = 0;
++
++        if (env_buf == NULL || MAX_ENV_BUF_LEN <= 0) {
++                return NULL;
++        }
++
++        memset(env_buf, 0, MAX_ENV_BUF_LEN);
++        res = ocall_sgxssl_getenv(&ret, name, strlen(name), env_buf, MAX_ENV_BUF_LEN, &buf_len);
++        if (res != SGX_SSL_SUCCESS || ret <= 0 || ret != buf_len) {
++                return NULL;
++        }
++
++        return env_buf;
+ }
+ 
+ }
+diff --git a/Linux/sgx/libsgx_tsgxssl/tunistd.cpp b/Linux/sgx/libsgx_tsgxssl/tunistd.cpp
+index 7bdfa07..3a21c5a 100644
+--- a/Linux/sgx/libsgx_tsgxssl/tunistd.cpp
++++ b/Linux/sgx/libsgx_tsgxssl/tunistd.cpp
+@@ -32,110 +32,94 @@
+ #include "sgx_tsgxssl_t.h"
+ #include "tcommon.h"
+ 
+-#define FAKE_PIPE_READ_FD	0xFAFAFAFALL
+-#define FAKE_PIPE_WRITE_FD	0xFBFBFBFBLL
++#define FAKE_PIPE_READ_FD      0xFAFAFAFALL
++#define FAKE_PIPE_WRITE_FD     0xFBFBFBFBLL
+ 
+-#define ENCLAVE_PAGE_SIZE	0x1000	// 4096 B
++#define ENCLAVE_PAGE_SIZE      0x1000  // 4096 B
+ 
+ extern "C" {
+ 
+ int sgxssl_pipe (int pipefd[2])
+ {
+-	FSTART;
++       FSTART;
+ 
+-	// The function is used only by the engines/e_dasync.c (dummy async engine).
+-	// Adding fake implementation only to be able to distinguish pipe read/write from socket read/write
+-	pipefd[0] = FAKE_PIPE_READ_FD;
+-	pipefd[1] = FAKE_PIPE_WRITE_FD;
++       // The function is used only by the engines/e_dasync.c (dummy async engine).
++       // Adding fake implementation only to be able to distinguish pipe read/write from socket read/write
++       pipefd[0] = FAKE_PIPE_READ_FD;
++       pipefd[1] = FAKE_PIPE_WRITE_FD;
+ 
+-	FEND;
++       FEND;
+ 
+-	// On error, -1 is returned, and errno is set appropriately
+-	return 0;
++       // On error, -1 is returned, and errno is set appropriately
++       return 0;
+ }
+ 
+ size_t sgxssl_write (int fd, const void *buf, size_t n)
+ {
+-	FSTART;
++    int ret = 0;
++    int res;
+ 
+-	if (fd == FAKE_PIPE_WRITE_FD) {
+-		// With pipes the function is used only by the engines/e_dasync.c (dummy async engine).
+-		SGX_UNSUPPORTED_FUNCTION(SET_ERRNO);
++    if (fd == FAKE_PIPE_WRITE_FD)
++        return -1;
+ 
+-		FEND;
+-		// On error, -1 is returned, and errno is set appropriately
+-		return -1;
+-	}
+-
+-	// In addition, the function is used by bss_sock.c as writesocket function.
+-	// It is unreachable under the assumption that TLS support is not required.
+-	// Otherwise should be implemented as OCALL.
+-	SGX_UNREACHABLE_CODE(SET_ERRNO);
+-	FEND;
+-
+-	return -1;
++    res = ocall_sgxssl_write(&ret, fd, buf, n);
++    if (res != SGX_SSL_SUCCESS)
++        return -1;
+ 
++    return ret;
+ }
+ 
+ size_t sgxssl_read(int fd, void *buf, size_t count)
+ {
+-	FSTART;
++    int ret = 0;
++    int res;
+ 
+-	if (fd == FAKE_PIPE_READ_FD) {
+-		// With pipes the function is used only by the engines/e_dasync.c (dummy async engine).
+-		SGX_UNSUPPORTED_FUNCTION(SET_ERRNO);
++    if (fd == FAKE_PIPE_READ_FD)
++        return -1;
+ 
+-		FEND;
+-		// On error, -1 is returned, and errno is set appropriately
+-		return -1;
+-	}
++    res = ocall_sgxssl_read(&ret, fd, buf, count);
++    if (res != SGX_SSL_SUCCESS)
++        return -1;
+ 
+-	// In addition, the function is used by bss_sock.c as readsocket function.
+-	// It is unreachable under the assumption that TLS support is not required.
+-	// Otherwise should be implemented as OCALL.
+-	SGX_UNREACHABLE_CODE(SET_ERRNO);
+-	FEND;
+-
+-	return -1;
++    return ret;
+ }
+ 
+-// TODO
+ int sgxssl_close(int fd)
+ {
+-	FSTART;
++       FSTART;
+ 
+-	if (fd == FAKE_PIPE_READ_FD ||
+-		fd == FAKE_PIPE_WRITE_FD) {
+-		// With pipes the function is used only by the engines/e_dasync.c (dummy async engine).
+-		SGX_UNSUPPORTED_FUNCTION(SET_ERRNO);
++       if (fd == FAKE_PIPE_READ_FD ||
++               fd == FAKE_PIPE_WRITE_FD) {
++               // With pipes the function is used only by the engines/e_dasync.c (dummy async engine).
++               SGX_UNSUPPORTED_FUNCTION(SET_ERRNO);
+ 
+-		FEND;
+-		// On error, -1 is returned, and errno is set appropriately
+-		return -1;
+-	}
++               FEND;
++               // On error, -1 is returned, and errno is set appropriately
++               return -1;
++       }
+ 
+-	// In addition, the function is used by b_sock2.c as closesocket function.
+-	// It is unreachable under the assumption that TLS support is not required.
+-	// Otherwise should be implemented as OCALL.
+-	SGX_UNREACHABLE_CODE(SET_ERRNO);
+-	FEND;
++       // In addition, the function is used by b_sock2.c as closesocket function.
++       // It is unreachable under the assumption that TLS support is not required.
++       // Otherwise should be implemented as OCALL.
++       SGX_UNREACHABLE_CODE(SET_ERRNO);
++       FEND;
+ 
+-	return -1;
++       return -1;
+ }
+ 
+ long sgxssl_sysconf(int name)
+ {
+-	FSTART;
++       FSTART;
+ 
+-	// Used by mem_sec.c
+-	if (name == _SC_PAGESIZE) {
+-		return ENCLAVE_PAGE_SIZE;
+-	}
++       // Used by mem_sec.c
++       if (name == _SC_PAGESIZE) {
++               return ENCLAVE_PAGE_SIZE;
++       }
+ 
+-	SGX_UNREACHABLE_CODE(SET_ERRNO);
+-	FEND;
++       SGX_UNREACHABLE_CODE(SET_ERRNO);
++       FEND;
+ 
+-	return -1;
++       return -1;
+ }
+ 
+ //Process ID is used as RNG entropy, SGXSSL use sgx_get_rand() hence this function is redundant.
+@@ -198,5 +182,4 @@ void *sgxssl_opendir(const char *name)
+     return NULL;
+ }
+ 
+-
+ } // extern "C"
+diff --git a/Linux/sgx/libsgx_usgxssl/ustdio.cpp b/Linux/sgx/libsgx_usgxssl/ustdio.cpp
+new file mode 100644
+index 0000000..fa085e7
+--- /dev/null
++++ b/Linux/sgx/libsgx_usgxssl/ustdio.cpp
+@@ -0,0 +1,69 @@
++#include <stdio.h>
++#include <stdint.h>
++#include <string.h>
++
++extern "C" {
++
++uint64_t ocall_sgxssl_fopen(const char *filename, size_t filename_len, const char *mode,
++			    size_t mode_len)
++{
++	FILE *file_host = fopen(filename, mode);
++	return (uint64_t)file_host;
++}
++
++int ocall_sgxssl_fclose(uint64_t fp)
++{
++	return fclose((FILE *)fp);
++}
++
++int ocall_sgxssl_ferror(uint64_t fp)
++{
++	return ferror((FILE *)fp);
++}
++
++int ocall_sgxssl_feof(uint64_t fp)
++{
++	return feof((FILE *)fp);
++}
++
++int ocall_sgxssl_fflush(uint64_t fp)
++{
++	return fflush((FILE *)fp);
++}
++
++int ocall_sgxssl_ftell(uint64_t fp)
++{
++	return ftell((FILE *)fp);
++}
++
++int ocall_sgxssl_fseek(uint64_t fp, long offset, int origin)
++{
++	return fseek((FILE *)fp, offset, origin);
++}
++
++size_t ocall_sgxssl_fread(void *buf, size_t total_size, size_t element_size, size_t cnt,
++			  uint64_t fp)
++{
++	return fread(buf, element_size, cnt, (FILE *)fp);
++}
++
++size_t ocall_sgxssl_fwrite(const void *buf, size_t total_size, size_t element_size, size_t cnt,
++			   uint64_t fp)
++{
++	return fwrite(buf, element_size, cnt, (FILE *)fp);
++}
++
++int ocall_sgxssl_fgets(char *str, int max_cnt, uint64_t fp)
++{
++	if (fgets(str, max_cnt, (FILE *)fp) != NULL) {
++		return 0;
++	} else {
++		return -1;
++	}
++}
++
++int ocall_sgxssl_fputs(const char *str, size_t total_size, uint64_t fp)
++{
++	return fputs(str, (FILE *)fp);
++}
++}
+diff --git a/Linux/sgx/libsgx_usgxssl/ustdlib.cpp b/Linux/sgx/libsgx_usgxssl/ustdlib.cpp
+new file mode 100644
+index 0000000..6a07ba9
+--- /dev/null
++++ b/Linux/sgx/libsgx_usgxssl/ustdlib.cpp
+@@ -0,0 +1,32 @@
++#include <stdlib.h>
++#include <string.h>
++
++extern "C" {
++
++int ocall_sgxssl_getenv(const char *name, int name_len, void *buf, int buf_len, int *need_len)
++{
++	char *get_buf = NULL;
++
++	if (name == NULL || need_len == NULL || buf_len <= 0) {
++		return -1;
++	}
++
++	get_buf = getenv(name);
++	if (get_buf == NULL) {
++		*need_len = 0;
++		return 0;
++	}
++
++	*need_len = strlen(get_buf) + 1;
++	if (*need_len > buf_len) {
++		return 0;
++	}
++
++	if (buf == NULL) {
++		return -1;
++	}
++	memcpy(buf, get_buf, *need_len);
++
++	return (*need_len);
++}
++}
+diff --git a/Linux/sgx/libsgx_usgxssl/uunistd.cpp b/Linux/sgx/libsgx_usgxssl/uunistd.cpp
+new file mode 100644
+index 0000000..5bc55aa
+--- /dev/null
++++ b/Linux/sgx/libsgx_usgxssl/uunistd.cpp
+@@ -0,0 +1,14 @@
++#include <unistd.h>
++
++extern "C" {
++
++int ocall_sgxssl_read(int fd, void *buf, size_t buf_len)
++{
++	return read(fd, buf, buf_len);
++}
++
++int ocall_sgxssl_write(int fd, const void *buf, size_t buf_len)
++{
++	return write(fd, buf, buf_len);
++}
++}
+diff --git a/openssl_source/bypass_to_sgxssl.h b/openssl_source/bypass_to_sgxssl.h
+index 6ff3fc2..8c2638e 100644
+--- a/openssl_source/bypass_to_sgxssl.h
++++ b/openssl_source/bypass_to_sgxssl.h
+@@ -181,23 +181,20 @@
+ #define mlock sgxssl_mlock
+ #define madvise sgxssl_madvise
+ 
+-/*
+-#define fopen64 sgxssl_fopen64
+ #define fopen sgxssl_fopen
+-#define wfopen sgxssl_wfopen
+ #define fclose sgxssl_fclose
+ #define ferror sgxssl_ferror
+ #define feof sgxssl_feof
+ #define fflush sgxssl_fflush
+ #define ftell sgxssl_ftell
+ #define fseek sgxssl_fseek
+-#define fread sgxssl_fread
+ #define fwrite sgxssl_fwrite
+-#define fgets sgxssl_fgets
+ #define fputs sgxssl_fputs
+-#define fileno sgxssl_fileno
+ #define __fprintf_chk sgxssl_fprintf
+-*/
++
++#define __vfprintf_chk sgxssl_vfprintf
++#define __fread_alias sgxssl_fread
++#define __fgets_alias sgxssl_fgets
+ 
+ #if defined(SGXSDK_INT_VERSION) && (SGXSDK_INT_VERSION > 18)
+ 	#define _longjmp longjmp
+-- 
+2.27.0
+

@@ -1,0 +1,5 @@
+add_subdirectory(rats-tls-client)
+add_subdirectory(rats-tls-server)
+if(SGX)
+    add_subdirectory(sgx-stub-enclave)
+endif()

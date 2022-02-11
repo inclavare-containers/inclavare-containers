@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+BUILD_ROOT := $(CURDIR)/debian/rats-tls
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+
+override_dh_strip:
+	dh_strip --exclude=rats-tls-server --exclude=rats-tls-client --exclude=librats_tls.so* --exclude=libtls_wrapper*.so* --exclude=libcrypto_wrapper*.so* --exclude=libattester*.so* --exclude=libverifier*.so*
+
+override_dh_auto_build:
+	cd rats-tls && cmake -H. -Bbuild
+
+override_dh_auto_install:
+	cd rats-tls && make -C build DESTDIR=$(BUILD_ROOT) install
+
+override_dh_usrlocal:
