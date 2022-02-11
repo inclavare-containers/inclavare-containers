@@ -1,0 +1,4 @@
+setuptools_rust>=0.12.1
+cffi>=1.14.6
+in-toto==1.0.1
+pathlib==1.0.1
