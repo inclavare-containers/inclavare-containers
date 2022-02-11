@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Preparations
         # Touch all .pb.go to prevent from calling protobuf compiler
