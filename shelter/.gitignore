@@ -1,5 +1,0 @@
-*.o
-*.a
-/shelter
-dist/rpm/shelter.spec
-dist/deb/debian/changelog
