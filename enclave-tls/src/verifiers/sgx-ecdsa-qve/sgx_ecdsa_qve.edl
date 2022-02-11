@@ -1,9 +1,0 @@
-enclave {
-        include "sgx_report.h"
-
-        from "sgx_dcap_tvl.edl" import *;
-
-        trusted {
-		public sgx_status_t ecall_get_target_info([out] sgx_target_info_t* target_info);
-        };
-};

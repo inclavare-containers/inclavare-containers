@@ -1,5 +1,0 @@
-enclave {
-	trusted {
-		public void sgx_ecdsa_verifier_dummy();
-	};
-};

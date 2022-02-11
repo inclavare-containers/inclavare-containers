@@ -7,3 +7,6 @@
 [submodule "shelter"]
 	path = shelter
 	url = https://github.com/inclavare-containers/shelter.git
+[submodule "enclave-tls"]
+	path = enclave-tls
+	url = https://github.com/inclavare-containers/enclave-tls.git
