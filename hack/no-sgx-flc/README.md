@@ -16,6 +16,7 @@ If you still intend to use [legacy SGX out-of-tree Linux Driver (isgx)](https://
   * Apply [this patch](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/SGX-DCAP-1.36-Linux-Driver-Support-SGX1-machine-even-without-FLC-s.patch) to [SGX DCAP Linux Driver (1.36)](https://github.com/intel/SGXDataCenterAttestationPrimitives/tree/DCAP_1.9/driver/linux).
   * Apply [this patch](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/linux-kernel-5.11-x86-sgx-Support-the-machines-without-FLC-support.patch) to Linux Kernel 5.11.
   * Apply [this patch](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/linux-kernel-5.12-rc2-x86-sgx-Support-the-machines-without-FLC-support.patch) to Linux Kernel 5.12-rc2.
+  * Apply [this patch](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/linux-kernel-5.13-x86-sgx-Support-the-machines-without-FLC-support.patch) to Linux Kernel 5.13.
 
 - Apply [this patch](https://github.com/alibaba/inclavare-containers/blob/master/hack/no-sgx-flc/Linux-SGX-PSW-2.13-Support-SGX1-machine-with-SGX-in-tree-driver.patch) to [Intel SGX SDK (>=2.13)](https://github.com/intel/linux-sgx/tree/sgx_2.13) or higher.
 - Build and install Intel SGX SDK and PSW from scratch.
