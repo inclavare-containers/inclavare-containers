@@ -1,0 +1,35 @@
+name: Basic Compilation Check
+
+on: pull_request
+
+jobs:
+  basic_complication_check:
+    # Run all steps in the compilation testing containers
+    strategy:
+      matrix:
+        tag: [ubuntu18.04, centos8.2, alinux2]
+
+    container: runetest/compilation-testing:${{ matrix.tag }}
+
+    # Use GitHub-hosted runner Ubuntu 18.04
+    runs-on: ubuntu-18.04
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ github.workspace }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Preparations
+        run:
+          echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+
+      - name: Compile "verdictd"
+        run:
+          source /root/.bashrc && make -j${CPU_NUM} && make install && make clean
+        env:
+          HOME: /root
+          GOPROXY: "https://goproxy.cn,direct"
