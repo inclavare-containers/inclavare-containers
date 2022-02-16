@@ -79,9 +79,6 @@ jobs:
     - id: random-port-generator2
       uses: ./.github/actions/generate-random-port
 
-    - id: random-port-generator3
-      uses: ./.github/actions/generate-random-port
-
     - name: install sample image
       uses: nick-invision/retry@v2
       with:
@@ -131,9 +128,53 @@ jobs:
         }
         EOF"
 
+        docker exec $inclavare_test bash -c "cat <<- EOF >/root/gpg_public_key
+        -----BEGIN PGP PUBLIC KEY BLOCK-----
+        
+        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
+        3Rpbshl5e57vTBRxbqg+4ag=
+        =WUm6
+        -----END PGP PUBLIC KEY BLOCK-----
+        EOF"
+
     - name: Launch all Services
       run: |
-        docker exec $inclavare_test bash -c 'verdictd --listen 127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }} --gRPC 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --config 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'verdictd --listen 127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }} --client-api 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}' &
         docker exec $inclavare_test bash -c 'containerd' &
 
     - name: Test generate encrypted container image
@@ -162,16 +203,25 @@ jobs:
             \"svn\" : 5
         }
         EOF"
+
     - name: Test Verdict
       run: |
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy sgxPolicy.rego'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_reference sgxData ./sgxData_local'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_reference sgxData'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --export-opa-policy sgxPolicy.rego'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --set-opa-reference sgxData ./sgxData_local'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --export-opa-reference sgxData'
         docker exec $inclavare_test bash -c 'cmp -s ./sgxData_local ./sgxData || exit -1'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_remote sgxPolicy.rego sgxData ./input'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_local ./sgxPolicy.rego ./sgxData ./input'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_localpolicy ./sgxPolicy.rego sgxData ./input'
-        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_localreference sgxPolicy.rego ./sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --test-opa-remote sgxPolicy.rego sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --test-opa-local ./sgxPolicy.rego ./sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --test-opa-local-policy ./sgxPolicy.rego sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --test-opa-local-reference sgxPolicy.rego ./sgxData ./input'
+        
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --import-gpg-key /root/gpg_public_key'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --list-gpg-keys'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --delete-gpg-key cicd121@126.com'
+        
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --export-image-sigstore'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --export-image-policy'
+
     - name: Clean up the github workspace
       if: ${{ always() }}
       run:
