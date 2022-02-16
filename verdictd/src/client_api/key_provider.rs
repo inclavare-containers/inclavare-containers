@@ -1,26 +1,27 @@
-use crate::crypto::aes256_gcm;
-use crate::key_manager::directory_key_manager;
-use crate::key_provider::annotation;
-use crate::key_provider::messages::*;
-use keyProvider::key_provider_service_server::{KeyProviderService, KeyProviderServiceServer};
-use keyProvider::{KeyProviderKeyWrapProtocolInput, KeyProviderKeyWrapProtocolOutput};
 use rand::*;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::{Request, Response, Status};
 use uuid::Uuid;
 use base64;
+use crate::crypto::aes256_gcm;
+use crate::resources::directory_key_manager;
+use crate::client_api::annotation;
+use crate::client_api::messages::*;
+
+use keyProvider::key_provider_service_server::KeyProviderService;
+use keyProvider::{KeyProviderKeyWrapProtocolInput, KeyProviderKeyWrapProtocolOutput};
 
 pub mod keyProvider {
     tonic::include_proto!("keyprovider");
 }
 
 #[derive(Debug, Default)]
-pub struct keyProviderSrv {}
+pub struct keyProviderService {}
 
 const IV_LEN : usize = 12;
 const KEY_LEN : usize = 32;
 
 #[tonic::async_trait]
-impl KeyProviderService for keyProviderSrv {
+impl KeyProviderService for keyProviderService {
     async fn wrap_key(
         &self,
         request: Request<KeyProviderKeyWrapProtocolInput>,
@@ -169,16 +170,4 @@ impl KeyProviderService for keyProviderSrv {
 
         Ok(Response::new(reply))
     }
-}
-
-pub async fn server(addr: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let addr = addr.parse()?;
-    let service = keyProviderSrv::default();
-
-    Server::builder()
-        .add_service(KeyProviderServiceServer::new(service))
-        .serve(addr)
-        .await?;
-
-    Ok(())
 }

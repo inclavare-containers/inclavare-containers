@@ -2,12 +2,12 @@ use serde_json::Value;
 use std::fs;
 use std::io::prelude::*;
 
-use crate::configure_provider::configure_provider_service_client::ConfigureProviderServiceClient;
-use crate::configure_provider::{SetOpaPolicyRequest, SetOpaPolicyResponse};
-use crate::configure_provider::{ExportOpaPolicyRequest, ExportOpaPolicyResponse};
-use crate::configure_provider::{SetOpaReferenceRequest, SetOpaReferenceResponse};
-use crate::configure_provider::{ExportOpaReferenceRequest, ExportOpaReferenceResponse};
-use crate::configure_provider::{TestOpaRequest, TestOpaResponse};
+use crate::client_api::opa_service_client::OpaServiceClient;
+use crate::client_api::{SetOpaPolicyRequest, SetOpaPolicyResponse};
+use crate::client_api::{ExportOpaPolicyRequest, ExportOpaPolicyResponse};
+use crate::client_api::{SetOpaReferenceRequest, SetOpaReferenceResponse};
+use crate::client_api::{ExportOpaReferenceRequest, ExportOpaReferenceResponse};
+use crate::client_api::{TestOpaRequest, TestOpaResponse};
 
 pub async fn set_policy_cmd(vals: Vec<&str>, addr: &str) {
     let mut content = String::new();
@@ -22,7 +22,7 @@ pub async fn set_policy_cmd(vals: Vec<&str>, addr: &str) {
         content: content.to_string().into_bytes(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -42,7 +42,7 @@ pub async fn export_policy_cmd(name: &str, path: String, addr: &str) {
         name: name.as_bytes().to_vec(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -81,7 +81,7 @@ pub async fn set_reference_cmd(vals: Vec<&str>, addr: &str) {
         content: data.into_bytes(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -101,7 +101,7 @@ pub async fn export_reference_cmd(name: &str, path: String, addr: &str) {
         name: name.as_bytes().to_vec(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -148,7 +148,7 @@ pub async fn test_remote_cmd(vals: Vec<&str>, addr: &str) {
         input: input.to_string().into_bytes(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -196,7 +196,7 @@ pub async fn test_local_cmd(vals: Vec<&str>, addr: &str) {
         input: input.to_string().into_bytes(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -239,7 +239,7 @@ pub async fn test_localpolicy_cmd(vals: Vec<&str>, addr: &str) {
         input: input.to_string().into_bytes(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 
@@ -283,7 +283,7 @@ pub async fn test_localreference_cmd(vals: Vec<&str>, addr: &str) {
         input: input.to_string().into_bytes(),
     };
 
-    let mut client = ConfigureProviderServiceClient::connect(format!("http://{}", addr))
+    let mut client = OpaServiceClient::connect(format!("http://{}", addr))
     .await
     .unwrap();
 

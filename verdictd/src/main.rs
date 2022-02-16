@@ -6,13 +6,13 @@
 use clap::{App, Arg};
 use shadow_rs::shadow;
 use policy_engine::*;
+use resources::*;
 
 mod attestation_agent;
-mod configure_provider;
+mod client_api;
 mod crypto;
 mod rats_tls;
-mod key_manager;
-mod key_provider;
+mod resources;
 mod policy_engine;
 
 #[macro_use]
@@ -35,7 +35,23 @@ async fn main() {
     match opa::opa_engine::default() {
         Ok(_) => {}
         Err(e) => {
-            error!("{}", e);
+            error!("opa: {}", e);
+            return;
+        }
+    }
+
+    match gpg::default() {
+        Ok(_) => {}
+        Err(e) => {
+            error!("gpg: {}", e);
+            return;
+        }
+    }
+
+    match image::default() {
+        Ok(_) => {}
+        Err(e) => {
+            error!("image: {}", e);
             return;
         }
     }
@@ -87,17 +103,10 @@ async fn main() {
                 .help("Work in mutual mode"),
         )
         .arg(
-            Arg::with_name("gRPC")
-                .long("gRPC")
-                .value_name("gRPC_addr")
-                .help("Specify the gRPC listen addr")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("config")
-                .long("config")
-                .value_name("config_addr")
-                .help("Specify the config listen addr")
+            Arg::with_name("client_api")
+                .long("client-api")
+                .value_name("client_api")
+                .help("Specify the client API's listen addr")
                 .takes_value(true),
         )        
         .get_matches();
@@ -131,21 +140,15 @@ async fn main() {
         );
     });
 
-    // Launch wrap/unwrap gRPC server
-    let gRPC_addr = match matches.is_present("gRPC") {
-        true => matches.value_of("gRPC").unwrap().to_string(),
-        false => "[::1]:50000".to_string(),
-    };
-    info!("Listen gRPC server addr: {}", gRPC_addr);
-    let key_provider_server = key_provider::key_provider_grpc::server(&gRPC_addr);
-
-     // Launch configuration gRPC server
-     let config_addr = match matches.is_present("config") {
-        true => matches.value_of("config").unwrap().to_string(),
+     // Launch client API gRPC server
+     let client_api = match matches.is_present("client_api") {
+        true => matches.value_of("client_api").unwrap().to_string(),
         false => "[::1]:60000".to_string(),
     };
-    info!("Listen configuration server addr: {}", config_addr);
-    let config_provider_server = configure_provider::provider::server(&config_addr);
-
-    let (_first, _second) = tokio::join!(key_provider_server, config_provider_server);
+    info!("Listen client API server addr: {}", client_api);
+    let client_api_server = client_api::api::server(&client_api);
+    match client_api_server.await {
+        Ok(_) => info!("Success"),
+        Err(e) => info!("Launch client API service failed with: {}", e.to_string()),
+    }
 }

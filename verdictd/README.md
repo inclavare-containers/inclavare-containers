@@ -60,26 +60,21 @@ verdictd --listen 127.0.0.1:1111
 ```
 User can use `--attester`, `--verifier`, `--tls`, `--crypto` and `--mutual` options to specific rats-tls uses instances's type. See details: [RATS-TLS](https://github.com/alibaba/inclavare-containers/tree/master/rats-tls)
 
-User can use `--gRPC` option to specify grpc server's listen address which supports key provider protocol.
+User can use `--client-api` option to specify client-api server's listen address.
 ```bash
-verdictd --gRPC [::1]:10000
-```
-
-User can use `--config` option to specify configuration server's listen address.
-```bash
-verdictd --config [::1]:10001
+verdictd --client-api [::1]:10001
 ```
 
 ## Default
 
 These options all exist default values. If user execute `./bin/verdictd` directly, it will execute with following configurations.
 ```bash
-verdictd --listen 127.0.0.1:1234 --gRPC [::1]:50000 --config [::1]:60000
+verdictd --listen 127.0.0.1:1234 --client-api [::1]:60000
 ```
 
 # Generate encrypted container image
 
-Verdictd supports key provider protocol's `WrapKey` request by the address designated by `--gRPC` option. 
+Verdictd supports key provider protocol's `WrapKey` request by the address designated by `--client-api` option. 
 So user can use Verdictd and skopeo to generate encrypted container image with the following steps.
 ```
 # Generate the key provider configuration file
@@ -100,7 +95,7 @@ cat <<- EOF >/opt/verdictd/keys/84688df7-2c0c-40fa-956b-29d8e74d16c0
 EOF
 
 # Launch Verdictd
-verdictd --gRPC 127.0.0.1:50001
+verdictd --client-api 127.0.0.1:50001
 
 skopeo --insecure-policy copy docker://docker.io/library/alpine:latest oci:alpine
 
