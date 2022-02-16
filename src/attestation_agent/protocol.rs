@@ -1,6 +1,6 @@
 use base64;
 use crate::crypto::aes256_gcm;
-use crate::key_manager;
+use crate::resources;
 use serde_json::Value;
 use crate::attestation_agent::rats_tls;
 
@@ -31,7 +31,7 @@ fn handle_decrypt(request: &Value) -> Result<String, String> {
             return Err("parameters error".to_string());
         }
 
-        match key_manager::directory_key_manager::get_key(&String::from(
+        match resources::directory_key_manager::get_key(&String::from(
             blob["kid"].as_str().unwrap(),
         ))
         .map_err(|_| format!("kid: {}'s key not found", blob["kid"].to_string()))
@@ -66,7 +66,7 @@ fn handle_getKek(request: &Value) -> Result<String, String> {
 
     for index in 0..blobs.len() {
         let kid = blobs[index].as_str().unwrap();
-        match key_manager::directory_key_manager::get_key(&String::from(kid))
+        match resources::directory_key_manager::get_key(&String::from(kid))
             .map_err(|_| format!("kid: {}'s key not found", kid))
             .and_then(|key| Ok(key))
         {
