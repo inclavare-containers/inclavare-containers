@@ -1,0 +1,182 @@
+name: Run verdictd
+
+# Controls when the action will run. Triggers the workflow on pull request labeled testing-before-checkin.
+on:
+  pull_request_target:
+    types: labeled
+
+env:
+  VERDICTD_BINDIR: /usr/local/bin/verdictd
+  VERDICT_BINDIR: /usr/local/bin/verdict
+  OPA_LIBDIR: /usr/local/lib/libopa.so
+  RATS_TLS_ROOTDIR: /usr/local/lib/rats-tls
+  UUID: 84688df7-2c0c-40fa-956b-39d8e74d16c1
+  ENCRYPTED_IMAGE: alpine-encrypted-cicd
+
+jobs:
+  verdictd:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'testing-before-checkin') }}
+    runs-on: ${{ matrix.sgx }}
+    strategy:
+      matrix:
+        sgx: [[self-hosted, SGX2, commit]]
+        tag: [ubuntu18.04, centos8.2]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+    - name: Prepare work
+      run: echo "CPU_NUM=$(nproc --all)" >> $GITHUB_ENV;
+        echo "RUNE_VERSION=$(cat VERSION)" >> $GITHUB_ENV;
+
+    - name: Create inclavare development container
+      run: |
+        docker pull inclavarecontainers/dev:${{ env.RUNE_VERSION }}-${{ matrix.tag }};
+        docker tag inclavarecontainers/dev:${{ env.RUNE_VERSION }}-${{ matrix.tag }} inclavare-dev:${{ matrix.tag }};
+        inclavare_dev=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v $GITHUB_WORKSPACE:/root/verdictd inclavare-dev:${{ matrix.tag }});
+        echo "inclavare_dev=$inclavare_dev" >> $GITHUB_ENV
+
+    - name: Config proxy
+      run: |
+        docker exec $inclavare_dev bash -c 'git config --global http.proxy socks5://localhost:5432'
+        docker exec $inclavare_dev bash -c 'git config --global https.proxy socks5://localhost:5432'
+        docker exec $inclavare_dev bash -c 'export GOPROXY=https://goproxy.io,direct'
+        docker exec $inclavare_dev bash -c "cat <<- EOF >/root/.cargo/config
+        [source.crates-io]
+        registry = \"https://github.com/rust-lang/crates.io-index\"
+        replace-with = 'tuna'
+        
+        [source.tuna]
+        registry = \"https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git\"
+        EOF"
+        
+    - name: Build and install verdictd
+      run: docker exec $inclavare_dev bash -c 'cd /root && source /root/.bashrc;
+        cp -r verdictd verdictd-${{ env.RUNE_VERSION }};
+        mkdir -p /root/verdictd/${{ matrix.tag }};
+        cd verdictd-${{ env.RUNE_VERSION }};
+        make install;
+        cp -rf ${{ env.RATS_TLS_ROOTDIR }} ${{ env.VERDICTD_BINDIR }} ${{ env.OPA_LIBDIR }} ${{ env.VERDICT_BINDIR }} /root/verdictd/${{ matrix.tag }}'
+
+    - name: Kill the dev container
+      run: docker stop $inclavare_dev
+
+    - name: Create runtime testing container
+      run: |
+        inclavare_test=$(docker run -itd --privileged --rm --net host -e http_proxy=http://127.0.0.1:8118 -e https_proxy=http://127.0.0.1:8118 -v $GITHUB_WORKSPACE:/root/verdictd inclavarecontainers/dev:${{ env.RUNE_VERSION }}-${{ matrix.tag }});
+        echo "inclavare_test=$inclavare_test" >> $GITHUB_ENV
+
+    - name: install rats-tls & verdictd
+      run: docker exec $inclavare_test bash -c 'mv /root/verdictd/${{ matrix.tag }}/rats-tls /usr/local/lib/;
+        mv /root/verdictd/${{ matrix.tag }}/libopa.so /usr/local/lib/;
+        mv /root/verdictd/${{ matrix.tag }}/verdictd /usr/local/bin/;
+        mv /root/verdictd/${{ matrix.tag }}/verdict /usr/local/bin/'
+
+    - id: random-port-generator1
+      uses: ./.github/actions/generate-random-port
+ 
+    - id: random-port-generator2
+      uses: ./.github/actions/generate-random-port
+
+    - id: random-port-generator3
+      uses: ./.github/actions/generate-random-port
+
+    - name: install sample image
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 120
+        max_attempts: 3
+        command: docker exec $inclavare_test bash -c 'mkdir /root/images && cd /root/images;
+          skopeo --insecure-policy copy docker://docker.io/library/alpine:latest oci:alpine'
+        on_retry_command: echo '******************[RETRY]******************'
+
+    - name: install configuration files
+      run: |
+        docker exec $inclavare_test bash -c 'mkdir /opt/verdictd/ && mkdir /opt/verdictd/keys/'
+        docker exec $inclavare_test bash -c "cat <<- EOF >/opt/verdictd/keys/${{ env.UUID }}
+        1111111111111111111111111111111
+        EOF"
+        
+        docker exec $inclavare_test bash -c "cat <<- EOF >/root/images/pod.yaml
+        metadata:
+          attempt: 1
+          name: my-podsandbox
+          namespace: default
+          uid: hdishd83djaidwnduwk28bcsb
+        log_directory: /tmp/eaa_test
+        linux:
+          namespaces:
+            options: {}
+        EOF"
+        
+        docker exec $inclavare_test bash -c "cat <<- EOF >/root/images/container.yaml
+        metadata:
+          name: alpine.enc
+        image:
+          image: ${{ secrets.TEST_DOCKER_USERNAME }}/${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}:latest
+        command:
+        - top
+        log_path: busybox.0.log
+        EOF"
+        
+        docker exec $inclavare_test bash -c 'rm -fr /etc/containerd/ocicrypt/ocicrypt_keyprovider.conf'
+        docker exec $inclavare_test bash -c "cat <<- EOF >/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf
+        {
+            \"key-providers\": {
+                \"attestation-agent\": {
+                    \"grpc\": \"127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }}\"
+                }
+            }
+        }
+        EOF"
+
+    - name: Launch all Services
+      run: |
+        docker exec $inclavare_test bash -c 'verdictd --listen 127.0.0.1:${{ steps.random-port-generator2.outputs.random-port }} --gRPC 127.0.0.1:${{ steps.random-port-generator1.outputs.random-port }} --config 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }}' &
+        docker exec $inclavare_test bash -c 'containerd' &
+
+    - name: Test generate encrypted container image
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 120
+        max_attempts: 500
+        command: docker exec $inclavare_test bash -c 'cd /root/images/ && OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf skopeo copy --insecure-policy --encryption-key provider:attestation-agent:${{ env.UUID }} oci:alpine oci:${{ env.ENCRYPTED_IMAGE }}-${{ matrix.tag }}'
+        on_retry_command: echo '******************[RETRY]******************'
+
+    - name: generate OPA files
+      run: |
+        docker exec $inclavare_test bash -c "cat <<- EOF >./sgxData_local
+        {
+            \"mrEnclave\" : [],
+            \"mrSigner\" : [],
+            \"productId\" : 2,
+            \"svn\" : 1
+        }
+        EOF"
+        docker exec $inclavare_test bash -c "cat <<- EOF >./input
+        {
+            \"mrEnclave\" : "1234",
+            \"mrSigner\" : "1234",
+            \"productId\" : 5,
+            \"svn\" : 5
+        }
+        EOF"
+    - name: Test Verdict
+      run: |
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_policy sgxPolicy.rego'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --set_reference sgxData ./sgxData_local'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --export_reference sgxData'
+        docker exec $inclavare_test bash -c 'cmp -s ./sgxData_local ./sgxData || exit -1'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_remote sgxPolicy.rego sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_local ./sgxPolicy.rego ./sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_localpolicy ./sgxPolicy.rego sgxData ./input'
+        docker exec $inclavare_test bash -c 'verdict -c 127.0.0.1:${{ steps.random-port-generator3.outputs.random-port }} --test_localreference sgxPolicy.rego ./sgxData ./input'
+    - name: Clean up the github workspace
+      if: ${{ always() }}
+      run:
+        docker restart $inclavare_test;
+        docker exec $inclavare_test bash -c 'rm -rf /root/inclavare-containers/${{ matrix.tag }}'
+
+    - name: Kill the test container
+      run: docker stop $inclavare_test

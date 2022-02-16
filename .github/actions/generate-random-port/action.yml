@@ -1,0 +1,12 @@
+name: 'generate_port'
+description: 'generate_port'
+outputs:
+  random-port:
+    description: "Random port"
+    value: ${{ steps.random-port-generator.outputs.random-port }}
+runs:
+  using: "composite"
+  steps:
+  - id: random-port-generator
+    run: echo "::set-output name=random-port::$(bash ${{ github.action_path }}/generate_port.sh)"
+    shell: bash
