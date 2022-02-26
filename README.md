@@ -19,6 +19,10 @@ Inclavare Containers has the following salient features:
 
 Please refer to [Terminology](docs/design/terminology.md) for more technical expressions used in Inclavare Containers.
 
+![cncf](docs/images/cncf.png)
+
+Inclavare Containers is a [sandbox project](https://www.cncf.io/projects/inclavare-containers/) of the [Cloud Native Computing Foundation (CNCF)](https://www.cncf.io/). If you are an organization that wants to help shape the evolution of technologies that are container-packaged, dynamically-scheduled and microservices-oriented, consider joining the CNCF.
+
 # Audience
 
 Inclavare Containers is helping to keep tenants' confidential data secure so they feel confident that their data is not being exposed to CSP or their own insiders, and they can easily move their trusted applications to the cloud.
