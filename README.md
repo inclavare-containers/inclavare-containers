@@ -1,10 +1,8 @@
-![inclavare-containers](docs/image/logo.png)
+![inclavare-containers](docs/images/logo.png)
 
 [![Nightly Ubuntu SGX1](https://github.com/alibaba/inclavare-containers/workflows/Nightly%20Ubuntu%20SGX1/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions?query=workflow%3A%22Nightly+Ubuntu+SGX1%22)
 [![Nightly CentOS SGX1](https://github.com/alibaba/inclavare-containers/workflows/Nightly%20CentOS%20SGX1/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions?query=workflow%3A%22Nightly+CentOS+SGX1%22)
 [![Nightly Alibaba Cloud Linux2 SGX2](https://github.com/alibaba/inclavare-containers/actions/workflows/nightly-aliyunlinux-sgx2.yml/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions/workflows/nightly-aliyunlinux-sgx2.yml)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5219/badge)](https://bestpractices.coreinfrastructure.org/projects/5219)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falibaba%2Finclavare-containers?ref=badge_shield)
 
 Inclavare, pronounced as `[ˈinklɑveə]`, is the Latin etymology of the word `enclave`, which means to isolate the user's sensitive workload from the untrusted and uncontrollable infrastructure in order to meet the protection requirement for the data in use.
 
