@@ -43,7 +43,7 @@ require (
 )
 
 replace (
-	github.com/docker/distribution => github.com/docker/distribution v2.7.1-0.20190205005809-0d3efadf0154+incompatible
+	github.com/docker/distribution => github.com/docker/distribution v0.0.0-20220207154021-dcf66392d606
 	github.com/inclavare-containers/epm => ../epm
 	github.com/inclavare-containers/rune => ../rune
 
