@@ -30,7 +30,7 @@
 ## Dependency
 
 - golang 1.14 or above.
-- libsgx-dcap-quote-verify-devel (CentOS) / libsgx-dcap-quote-verify-dev (Ubuntu) from [official Intel SGX DCAP release page](https://01.org/intel-software-guard-extensions/downloads).
+- libsgx-dcap-quote-verify-dev (Ubuntu) from [official Intel SGX DCAP release page](https://01.org/intel-software-guard-extensions/downloads).
 - libsgx-aesm-quote-ex-plugin from [official Intel SGX Linux release page](https://01.org/intel-software-guard-extensions/downloads).
 
 ## Build

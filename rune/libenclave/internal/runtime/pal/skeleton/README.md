@@ -24,16 +24,9 @@ Outline as follows:
 
 - Ensure that you have one of the following required operating systems:
 
-  - CentOS 8.2
   - Ubuntu 18.04-server
 
 - Please follow [Intel SGX Installation Guide](https://download.01.org/intel-sgx/sgx-linux/2.11/docs/Intel_SGX_Installation_Guide_Linux_2.11_Open_Source.pdf) to install Intel SGX driver, Intel SGX SDK & PSW for Linux.
-
-  - For CentOS 8.2, UAE service libraries are needed but may not installed if SGX PSW installer is used. Please manually install it:
-
-    ```shell
-    rpm -i libsgx-uae-service-2.11.100.2-1.el8.x86_64.rpm
-    ```
 
 ## Build and install the PAL of skeleton enclave runtime
 
@@ -43,24 +36,12 @@ Please follow the command to build skeleton from the latested source code on you
 
 - protobuf-c
 
-  - For CentOS 8:
-
-    ```shell
-    sudo dnf --enablerepo=PowerTools install -y protobuf-c-compiler protobuf-c-devel
-    ```
-
   - For source code build:
     Please refer to [this step](https://github.com/protobuf-c/protobuf-c#building) to install it on your platform. Note that `protobuf-c` must be 1.3 or higher.
 
 - Binutils
 
   `Binutils` is a collection of tools for handling binary files. Please install it with the command:
-
-    - For CentOS 8:
-
-    ```shell
-    yum install -y binutils-devel
-    ```
 
     - For Ubuntu 18.04
 
@@ -83,7 +64,7 @@ Type the following commands to create a Dockerfile:
 ```shell
 cd "${path_to_inclavare_containers}/rune/libenclave/internal/runtime/pal/skeleton"
 cat >Dockerfile <<EOF
-FROM centos:8.2.2004
+FROM ubuntu:18.04
 
 RUN mkdir -p /run/rune
 WORKDIR /run/rune
@@ -121,7 +102,7 @@ Add the `rune` OCI runtime configuration in dockerd config file, e.g, `/etc/dock
 ```
 
 then restart dockerd on your system.
-> e.g. `sudo systemctl restart docker` for CentOS, or `sudo service docker restart` for Ubuntu
+> e.g. `sudo service docker restart` for Ubuntu
 
 You can check whether `rune` is correctly picked as supported OCI runtime or not with
 

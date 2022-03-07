@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         sgx: [[self-hosted, SGX2, commit]]
-        tag: [ubuntu18.04, centos8.2]
+        tag: [ubuntu18.04]
     steps:
     - uses: actions/checkout@v2
       with:

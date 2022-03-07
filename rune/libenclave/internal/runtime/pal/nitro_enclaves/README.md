@@ -44,7 +44,7 @@ Add the `rune` OCI runtime configuration in dockerd config file, e.g, `/etc/dock
 ```
 
 then restart dockerd on your system.
-> e.g. `sudo systemctl restart docker` for CentOS, or `sudo service docker restart` for Ubuntu
+> e.g. `sudo service docker restart` for Ubuntu
 
 You can check whether `rune` is correctly picked as supported OCI runtime or not with
 ```shell

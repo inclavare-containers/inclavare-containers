@@ -6,7 +6,6 @@ This page shows how to create a single control-plane Kubernetes and install the 
 - A machine with Intel SGX hardware support.
 - Make sure you have one of the following operating systems:
    - Ubuntu 18.04 server 64bits
-   - CentOS 8.2 64bits
    
 ## Objectives
 
@@ -17,21 +16,6 @@ This page shows how to create a single control-plane Kubernetes and install the 
 ## Instructions
 
 ### 1. Add inclavare-containers repository
-
-- On CentOS
-
-```bash
-cat << EOF >/etc/yum.repos.d/inclavare-containers.repo
-[inclavare-containers]
-name=inclavare-containers
-enabled=1
-baseurl=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/
-gpgcheck=1
-repo_gpgcheck=1
-gpgkey=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign
-gpgcakey=https://mirrors.openanolis.cn/inclavare-containers/rpm-repo/RPM-GPG-KEY-rpm-sign-ca
-EOF
-```
 
 - On Ubuntu
 
@@ -71,22 +55,12 @@ Please follow [Intel SGX Installation Guide Linux 2.14](https://download.01.org/
 - Step 2. Install package libsgx-uae-service
     
     `libsgx-uae-service` package is required by occlum, install libsgx-uae-service use the following command:
-    - On CentOS
-    ```bash
-    sudo yum install libsgx-uae-service
-    ```
-  
     - On Ubuntu
     ```
     sudo apt-get install libsgx-uae-service
     ```
     
 - Step 3. Install occlum
-   - On CentOS
-    ```bash
-    sudo yum install occlum
-    ```
-
    - On Ubuntu
     ```bash
     sudo apt-get install occlum
@@ -96,11 +70,6 @@ Please follow [Intel SGX Installation Guide Linux 2.14](https://download.01.org/
 `rune` is a CLI tools for spawning and running containers according to the OCI specification. The codebase of the `rune` is a fork of [runc](https://github.com/opencontainers/runc), so `rune` can be used as `runc` if enclave is not configured or available. The difference between them is `rune` can run a so-called enclave which is referred to as protected execution environment, preventing the untrusted entity from accessing the sensitive and confidential assets in use in containers.<br />
 <br />
 Install rune use the following commands:
-
-- On CentOS
-```bash
-sudo yum install rune
-```
 
 - On Ubuntu
 ```bash
@@ -112,11 +81,6 @@ sudo apt-get install rune
 <br />
 Install epm use the following commands:
 
-- On CentOS
-```bash
-sudo yum install epm
-```
-
 - On Ubuntu
 ```bash
 sudo apt-get install epm
@@ -125,11 +89,6 @@ sudo apt-get install epm
 
 ### 6. Install shim-rune
 `shim-rune` resides in between `containerd` and `rune`, conducting enclave signing and management beyond the normal `shim` basis. `shim-rune` and `rune` can compose a basic enclave containerization stack for the cloud-native ecosystem.
-
-- On CentOS
-    ```bash
-    sudo yum install shim-rune
-    ```
 
 - On Ubuntu
     ```bash
@@ -212,18 +171,6 @@ containerd is an industry-standard container runtime with an emphasis on simplic
     ```
 
 - Step 2. Configure the kubernets package repository for downloading kubelet, kubeadm and kubelet
-   - On CentOS
-    ```bash
-    cat << EOF >/etc/yum.repos.d/kubernetes.repo
-    [kubernetes]
-    name=Kubernetes
-    baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
-    enabled=1
-    gpgcheck=1
-    repo_gpgcheck=1
-    gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
-    EOF
-    ```
 
    - On Ubuntu
     ```bash
@@ -237,16 +184,6 @@ containerd is an industry-standard container runtime with an emphasis on simplic
 
     Set SELinux in permissive mode and install kubelet, kubeadm and kubectl of version v1.16.9, you can choose other versions you like, but it is recommend that you use the versions greater than or equal to v1.16.
 
-   - On CentOS
-    ```bash
-    sudo setenforce 0
-    sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-    kubernetes_version=1.16.9
-    sudo yum install -y --setopt=obsoletes=0 kubelet-${kubernetes_version} \
-     kubeadm-${kubernetes_version} kubectl-${kubernetes_version} \
-     --disableexcludes=kubernetes
-    ```
-
    - On Ubuntu
     ```bash
     sudo setenforce 0
@@ -256,26 +193,9 @@ containerd is an industry-standard container runtime with an emphasis on simplic
      kubeadm=${kubernetes_version}-00 kubectl=${kubernetes_version}-00 
     ```
 
-
 - Step 4. Configure the kubelet configuration file
 
     Configure the kubelet configuration file `10-kubeadm.conf`, specify the runtime to containerd by arguments `--container-runtime=remote` and `--container-runtime-endpoint`.
-
-   - On CentOS
-    ```bash
-    cat << EOF >/usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
-    # Note: This dropin only works with kubeadm and kubelet v1.11+
-    [Service]
-    Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
-    Environment="KUBELET_CONFIG_ARGS=--config=/var/lib/kubelet/config.yaml"
-    Environment="KUBELET_SYSTEM_PODS_ARGS=--max-pods 64 --pod-manifest-path=/etc/kubernetes/manifests"
-    Environment="KUBELET_NETWORK_ARGS=--network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin"
-    Environment="KUBELET_DNS_ARGS=--pod-infra-container-image=registry.cn-hangzhou.aliyuncs.com/acs/pause-amd64:3.0 --cluster-domain=cluster.local --cloud-provider=external"
-    Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --container-runtime-endpoint=/run/containerd/containerd.sock"
-    ExecStart=
-    ExecStart=/usr/bin/kubelet \$KUBELET_KUBECONFIG_ARGS \$KUBELET_CONFIG_ARGS \$KUBELET_SYSTEM_PODS_ARGS \$KUBELET_NETWORK_ARGS \$KUBELET_DNS_ARGS \$KUBELET_EXTRA_ARGS
-    EOF
-    ```
 
    - On Ubuntu
     ```bash
