@@ -8,7 +8,7 @@ jobs:
     # Run all steps in the compilation testing containers
     strategy:
       matrix:
-        os: [ubuntu18.04, centos8.2, alinux2]
+        os: [ubuntu18.04, alinux2]
 
     # GitHub Actions doesn't have CentOS VM provided
     runs-on: ubuntu-18.04

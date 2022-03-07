@@ -1,7 +1,6 @@
 ![inclavare-containers](docs/images/logo.png)
 
 [![Nightly Ubuntu SGX1](https://github.com/alibaba/inclavare-containers/workflows/Nightly%20Ubuntu%20SGX1/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions?query=workflow%3A%22Nightly+Ubuntu+SGX1%22)
-[![Nightly CentOS SGX1](https://github.com/alibaba/inclavare-containers/workflows/Nightly%20CentOS%20SGX1/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions?query=workflow%3A%22Nightly+CentOS+SGX1%22)
 [![Nightly Alibaba Cloud Linux2 SGX2](https://github.com/alibaba/inclavare-containers/actions/workflows/nightly-aliyunlinux-sgx2.yml/badge.svg?branch=master)](https://github.com/alibaba/inclavare-containers/actions/workflows/nightly-aliyunlinux-sgx2.yml)
 
 Inclavare, pronounced as `[ˈinklɑveə]`, is the Latin etymology of the word `enclave`, which means to isolate the user's sensitive workload from the untrusted and uncontrollable infrastructure in order to meet the protection requirement for the data in use.
@@ -106,7 +105,7 @@ docker run -it -v /var/run/aesmd:/var/run/aesmd \
 
 where:
 - `$version` denotes the version of Inclavare Containers in use.
-- `$os` denotes the OS type of development docker image, which may be ubuntu18.04, centos8.2 or alinux2.
+- `$os` denotes the OS type of development docker image, which may be ubuntu18.04 or alinux2.
 
 Please be aware of running the commands listed below in the development container launched by Inclavare Containers development docker image.
 
@@ -137,12 +136,6 @@ sudo make install
 `{rune,shim-rune,epm,sgx-tools,shelter,inclavared}` will be installed to `/usr/local/bin/{rune,containerd-shim-rune-v2,epm,sgx-tools,shelter,inclavared}` on your system. Enclave-TLS SDK will be installed to `/opt/enclave-tls`. `{enclave-tls-server,enclave-tls-client}` will be installed to `/usr/share/enclave-tls/samples`.
 
 If you don't want to build and install Inclavare Containers from latest source code. We also provide RPM/DEB repository to help you install Inclavare Containers quickly. Please see the [steps about how to configure repository](https://github.com/alibaba/inclavare-containers/blob/master/docs/create_a_confidential_computing_kubernetes_cluster_with_inclavare_containers.md#1-add-inclavare-containers-repository) firstly. Then you can run the following command to install Inclavare Containers on your system.
-
-- On CentOS 8.2
-
-```shell
-sudo yum install rune shim-rune epm sgx-tools enclave-tls shelter inclavared
-```
 
 - On Ubuntu 18.04 server
 

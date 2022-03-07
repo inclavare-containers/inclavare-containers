@@ -28,29 +28,6 @@ cp liberpal-skeleton-v3.so /usr/lib
 
 Type the following commands to create a Dockerfile:
 
-#### On CentOS 8.2
-
-```Shell
-cp /opt/enclave-tls/bin/sgx_stub_enclave.signed.so ./
-cp /etc/sgx_default_qcnl.conf ./
-cp /usr/lib64/libsgx_pce.signed.so ./
-cp /usr/lib64/libsgx_qe3.signed.so ./
-
-cat >Dockerfile <<EOF
-FROM centos:8.2.2004
-
-WORKDIR /
-
-COPY sgx_stub_enclave.signed.so /
-
-COPY sgx_default_qcnl.conf /etc/
-
-COPY libsgx_pce.signed.so /usr/lib64
-COPY libsgx_qe3.signed.so /usr/lib64
-
-EOF
-```
-
 #### On Ubuntu 18.04
 
 ```Shell
@@ -83,13 +60,13 @@ docker build . -t skeleton-enclave
 
 Type the following commands to create a Dockerfile:
 
-#### On CentOS 8.2
+#### On Ubuntu 18.04
 
 ```Shell
 cp /opt/enclave-tls/bin/sgx_stub_enclave.signed.so ./
 
 cat >Dockerfile <<EOF
-FROM centos:8.2.2004
+FROM ubuntu:18.04
 
 WORKDIR /
 
