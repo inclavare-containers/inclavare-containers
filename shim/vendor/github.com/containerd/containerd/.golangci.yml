@@ -6,13 +6,17 @@ linters:
     - unconvert
     - gofmt
     - goimports
-    - golint
+    - revive
     - ineffassign
     - vet
     - unused
     - misspell
   disable:
     - errcheck
+
+issues:
+  include:
+    - EXC0002
 
 run:
   timeout: 3m
