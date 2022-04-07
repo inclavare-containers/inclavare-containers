@@ -180,7 +180,7 @@ func forwardSignal(rt *runtime.EnclaveRuntimeWrapper, notifySignal <-chan os.Sig
 				return
 			case sig := <-notifySignal:
 				n := int(sig.(syscall.Signal))
-				err := rt.KillPayload(n, -1)
+				err := rt.KillPayload(-1, n)
 				if err != nil {
 					logrus.Debugf("failed to kill enclave runtime with signal %d", n)
 				}
