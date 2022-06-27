@@ -1,18 +1,4 @@
 log_level = "info" # "debug" "info" "warn" "error"
-sgx_tool_sign = "/opt/intel/sgxsdk/bin/x64/sgx_sign"
 
 [containerd]
     socket = "/run/containerd/containerd.sock"
-# The epm section is optional.
-# If the epm serivce is deployed, you can configure a appropriate unix socket address in "epm.socket" field,
-# otherwise just delete the epm section.
-[epm]
-    socket = "/var/run/epm/epm.sock"
-[enclave_runtime]
-    # The signature_method represents the signature method for enclave.
-    # It can be "server" or "client", the default value is "server"
-    signature_method = "server"
-    [enclave_runtime.occlum]
-        enclave_runtime_path = "/opt/occlum/build/lib/libocclum-pal.so"
-        enclave_libos_path = "/opt/occlum/build/lib/libocclum-libos.so"
-    [enclave_runtime.graphene]

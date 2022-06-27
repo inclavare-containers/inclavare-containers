@@ -1,21 +1,3 @@
-// +build linux
-
-/*
-   Copyright The containerd Authors.
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
 package v2
 
 import (
@@ -377,24 +359,8 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		return nil, err
 	}
 
-	_, carrierKind, err := getCarrierKind(r.Bundle)
-	if err != nil {
-		return nil, err
-	}
-
-	timeStart = time.Now()
-	carr, err := s.carrierMain(r)
-	logrus.Debugf("Create: carrierMain time cost: %d", (time.Now().Sub(timeStart))/time.Second)
-	defer func() {
-		carr.Cleanup(err)
-	}()
-	if err != nil {
-		return nil, err
-	}
-	logrus.Infof("Carrier: %v", carr.Name())
-
 	data, _ := json.Marshal(r)
-	logrus.Infof("CreateTaskRequest: %s, Carrier: %v", string(data), carrierKind)
+	logrus.Infof("CreateTaskRequest: %s", string(data))
 
 	timeStart = time.Now()
 	container, err := runc.NewContainer(ctx, s.platform, r)
@@ -402,28 +368,6 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 		logrus.Errorf("rune Create NewContainer error: %++v", err)
 		return nil, err
 	}
-	//FIXME debug
-	/*if carrierKind == "occlum" {
-		if err != nil {
-			logrus.Errorf("rune Create NewContainer error: %++v", err)
-			if _, err := os.Stat(r.Bundle); err == nil {
-				path := "/tmp/rune-container-test/runc-rootfs"
-				os.RemoveAll(path)
-				os.MkdirAll(path, 0644)
-				args := []string{
-					"-r", r.Bundle, path,
-				}
-				if b, err := exec.Command("cp", args...).CombinedOutput(); err != nil {
-					logrus.Errorf("failed to copy bundles. error:%s, %v", string(b), err)
-				}
-				logrus.Infof("copy runc bundle %s to %s", r.Bundle, path)
-				time.Sleep(time.Minute)
-			} else {
-				logrus.Infof("bundle dir is not exist.", r.Bundle)
-			}
-			return nil, err
-		}
-	}*/
 
 	logrus.Debugf("Create: create container time cost: %d", (time.Now().Sub(timeStart))/time.Second)
 	logrus.Infof("rune.NewContainer success: %s", r.ID)
