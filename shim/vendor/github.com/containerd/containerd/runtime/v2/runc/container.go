@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 /*
@@ -21,7 +22,7 @@ package runc
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -37,7 +38,6 @@ import (
 	"github.com/containerd/containerd/runtime/v2/runc/options"
 	"github.com/containerd/containerd/runtime/v2/task"
 	"github.com/containerd/typeurl"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -45,7 +45,7 @@ import (
 func NewContainer(ctx context.Context, platform stdio.Platform, r *task.CreateTaskRequest) (_ *Container, retErr error) {
 	ns, err := namespaces.NamespaceRequired(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "create namespace")
+		return nil, fmt.Errorf("create namespace: %w", err)
 	}
 
 	var opts options.Options
@@ -110,7 +110,7 @@ func NewContainer(ctx context.Context, platform stdio.Platform, r *task.CreateTa
 			Options: rm.Options,
 		}
 		if err := m.Mount(rootfs); err != nil {
-			return nil, errors.Wrapf(err, "failed to mount rootfs component %v", m)
+			return nil, fmt.Errorf("failed to mount rootfs component %v: %w", m, err)
 		}
 	}
 
@@ -174,7 +174,7 @@ func ReadOptions(path string) (*options.Options, error) {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -191,12 +191,12 @@ func WriteOptions(path string, opts options.Options) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filepath.Join(path, optionsFilename), data, 0600)
+	return os.WriteFile(filepath.Join(path, optionsFilename), data, 0600)
 }
 
 // ReadRuntime reads the runtime information from the path
 func ReadRuntime(path string) (string, error) {
-	data, err := ioutil.ReadFile(filepath.Join(path, "runtime"))
+	data, err := os.ReadFile(filepath.Join(path, "runtime"))
 	if err != nil {
 		return "", err
 	}
@@ -205,7 +205,7 @@ func ReadRuntime(path string) (string, error) {
 
 // WriteRuntime writes the runtime information into the path
 func WriteRuntime(path, runtime string) error {
-	return ioutil.WriteFile(filepath.Join(path, "runtime"), []byte(runtime), 0600)
+	return os.WriteFile(filepath.Join(path, "runtime"), []byte(runtime), 0600)
 }
 
 func newInit(ctx context.Context, path, workDir, namespace string, platform stdio.Platform,
@@ -300,13 +300,13 @@ func (c *Container) Process(id string) (process.Process, error) {
 	defer c.mu.Unlock()
 	if id == "" {
 		if c.process == nil {
-			return nil, errors.Wrapf(errdefs.ErrFailedPrecondition, "container must be created")
+			return nil, fmt.Errorf("container must be created: %w", errdefs.ErrFailedPrecondition)
 		}
 		return c.process, nil
 	}
 	p, ok := c.processes[id]
 	if !ok {
-		return nil, errors.Wrapf(errdefs.ErrNotFound, "process does not exist %s", id)
+		return nil, fmt.Errorf("process does not exist %s: %w", id, errdefs.ErrNotFound)
 	}
 	return p, nil
 }
@@ -453,7 +453,7 @@ func (c *Container) CloseIO(ctx context.Context, r *task.CloseIORequest) error {
 	}
 	if stdin := p.Stdin(); stdin != nil {
 		if err := stdin.Close(); err != nil {
-			return errors.Wrap(err, "close stdin")
+			return fmt.Errorf("close stdin: %w", err)
 		}
 	}
 	return nil

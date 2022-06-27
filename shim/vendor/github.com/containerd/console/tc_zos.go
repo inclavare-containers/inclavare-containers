@@ -14,17 +14,13 @@
    limitations under the License.
 */
 
-package sys
+package console
 
 import (
-	_ "unsafe" // required for go:linkname.
+	"golang.org/x/sys/unix"
 )
 
-//go:linkname beforeFork syscall.runtime_BeforeFork
-func beforeFork()
-
-//go:linkname afterFork syscall.runtime_AfterFork
-func afterFork()
-
-//go:linkname afterForkInChild syscall.runtime_AfterForkInChild
-func afterForkInChild()
+const (
+	cmdTcGet = unix.TCGETS
+	cmdTcSet = unix.TCSETS
+)
