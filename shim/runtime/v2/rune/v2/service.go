@@ -3,7 +3,8 @@ package v2
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -193,19 +194,19 @@ func (s *service) StartShim(ctx context.Context, opts shim.StartOpts) (_ string,
 		// grouping functionality where the new process should be run with the same
 		// shim as an existing container
 		if !shim.SocketEaddrinuse(err) {
-			return "", errors.Wrap(err, "create new shim socket")
+			return "", fmt.Errorf("create new shim socket: %w", err)
 		}
 		if shim.CanConnect(address) {
 			if err := shim.WriteAddress("address", address); err != nil {
-				return "", errors.Wrap(err, "write existing socket for shim")
+				return "", fmt.Errorf("write existing socket for shim: %w", err)
 			}
 			return address, nil
 		}
 		if err := shim.RemoveSocket(address); err != nil {
-			return "", errors.Wrap(err, "remove pre-existing socket")
+			return "", fmt.Errorf("remove pre-existing socket: %w", err)
 		}
 		if socket, err = shim.NewSocket(address); err != nil {
-			return "", errors.Wrap(err, "try create new shim socket 2x")
+			return "", fmt.Errorf("try create new shim socket 2x: %w", err)
 		}
 	}
 	defer func() {
@@ -238,7 +239,7 @@ func (s *service) StartShim(ctx context.Context, opts shim.StartOpts) (_ string,
 	}()
 	// make sure to wait after start
 	go cmd.Wait()
-	if data, err := ioutil.ReadAll(os.Stdin); err == nil {
+	if data, err := io.ReadAll(os.Stdin); err == nil {
 		if len(data) > 0 {
 			var any ptypes.Any
 			if err := proto.Unmarshal(data, &any); err != nil {
@@ -251,25 +252,22 @@ func (s *service) StartShim(ctx context.Context, opts shim.StartOpts) (_ string,
 			if opts, ok := v.(*options.Options); ok {
 				if opts.ShimCgroup != "" {
 					if cgroups.Mode() == cgroups.Unified {
-						if err := cgroupsv2.VerifyGroupPath(opts.ShimCgroup); err != nil {
-							return "", errors.Wrapf(err, "failed to verify cgroup path %q", opts.ShimCgroup)
-						}
 						cg, err := cgroupsv2.LoadManager("/sys/fs/cgroup", opts.ShimCgroup)
 						if err != nil {
-							return "", errors.Wrapf(err, "failed to load cgroup %s", opts.ShimCgroup)
+							return "", fmt.Errorf("failed to load cgroup %s: %w", opts.ShimCgroup, err)
 						}
 						if err := cg.AddProc(uint64(cmd.Process.Pid)); err != nil {
-							return "", errors.Wrapf(err, "failed to join cgroup %s", opts.ShimCgroup)
+							return "", fmt.Errorf("failed to join cgroup %s: %w", opts.ShimCgroup, err)
 						}
 					} else {
 						cg, err := cgroups.Load(cgroups.V1, cgroups.StaticPath(opts.ShimCgroup))
 						if err != nil {
-							return "", errors.Wrapf(err, "failed to load cgroup %s", opts.ShimCgroup)
+							return "", fmt.Errorf("failed to load cgroup %s: %w", opts.ShimCgroup, err)
 						}
 						if err := cg.Add(cgroups.Process{
 							Pid: cmd.Process.Pid,
 						}); err != nil {
-							return "", errors.Wrapf(err, "failed to join cgroup %s", opts.ShimCgroup)
+							return "", fmt.Errorf("failed to join cgroup %s: %w", opts.ShimCgroup, err)
 						}
 					}
 				}
@@ -277,7 +275,7 @@ func (s *service) StartShim(ctx context.Context, opts shim.StartOpts) (_ string,
 		}
 	}
 	if err := shim.AdjustOOMScore(cmd.Process.Pid); err != nil {
-		return "", errors.Wrap(err, "failed to adjust OOM score for shim")
+		return "", fmt.Errorf("failed to adjust OOM score for shim: %w", err)
 	}
 	return address, nil
 }
@@ -652,7 +650,7 @@ func (s *service) Pids(ctx context.Context, r *taskAPI.PidsRequest) (*taskAPI.Pi
 				}
 				a, err := typeurl.MarshalAny(d)
 				if err != nil {
-					return nil, errors.Wrapf(err, "failed to marshal process %d info", pid)
+					return nil, fmt.Errorf("failed to marshal process %d info: %w", pid, err)
 				}
 				pInfo.Info = a
 				break
