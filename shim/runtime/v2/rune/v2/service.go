@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -494,6 +495,43 @@ func (s *service) Start(ctx context.Context, r *taskAPI.StartRequest) (*taskAPI.
 			Pid:         uint32(p.Pid()),
 		})
 	}
+
+	if strings.EqualFold(s.puaseID, r.ID) {
+		agentContainer, err := s.getContainer(s.agentID)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = agentContainer.Start(ctx, r)
+		if err != nil {
+			s.eventSendMu.Unlock()
+			return nil, errdefs.ToGRPC(err)
+		}
+
+		switch cg := agentContainer.Cgroup().(type) {
+		case cgroups.Cgroup:
+			if err := s.ep.Add(agentContainer.ID, cg); err != nil {
+				logrus.WithError(err).Error("add cg to OOM monitor")
+			}
+		case *cgroupsv2.Manager:
+			allControllers, err := cg.RootControllers()
+			if err != nil {
+				logrus.WithError(err).Error("failed to get root controllers")
+			} else {
+				if err := cg.ToggleControllers(allControllers, cgroupsv2.Enable); err != nil {
+					if userns.RunningInUserNS() {
+						logrus.WithError(err).Debugf("failed to enable controllers (%v)", allControllers)
+					} else {
+						logrus.WithError(err).Errorf("failed to enable controllers (%v)", allControllers)
+					}
+				}
+			}
+			if err := s.ep.Add(agentContainer.ID, cg); err != nil {
+				logrus.WithError(err).Error("add cg to OOM monitor")
+			}
+		}
+	}
+
 	s.eventSendMu.Unlock()
 	return &taskAPI.StartResponse{
 		Pid: uint32(p.Pid()),
