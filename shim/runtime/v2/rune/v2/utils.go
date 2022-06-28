@@ -10,12 +10,14 @@ import (
 
 	shim_config "github.com/inclavare-containers/shim/config"
 	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
+	"strings"
 )
 
 var (
 	logLevel              string
 	agentContainerRootDir string
 	agentContainerPath    string
+	AgentUrl              string
 )
 
 func parseConfig() error {
@@ -29,6 +31,7 @@ func parseConfig() error {
 	logLevel = cfg.LogLevel
 	agentContainerPath = cfg.Containerd.AgentContainerInstance
 	agentContainerRootDir = cfg.Containerd.AgentContainerRootDir
+	AgentUrl = cfg.Containerd.AgentUrl
 
 	return nil
 }
@@ -91,4 +94,18 @@ func generateID() string {
 	rand.Read(b)
 
 	return hex.EncodeToString(b)
+}
+
+func getContainerID(image string) (string, error) {
+	var cid string
+	v := strings.Split(image, "/")
+
+	if len(v[len(v)-1]) <= 0 {
+		return "", fmt.Errorf("Invalid image name %s", image)
+	}
+
+	// ':' have special meaning for umoci during upack
+	cid = strings.Replace(v[len(v)-1], ":", "_", -1)
+
+	return cid, nil
 }

@@ -55,6 +55,12 @@ func create(ctx context.Context, s *service, r *taskAPI.CreateTaskRequest) (*run
 			s.agentID = ar.ID
 			s.puaseID = r.ID
 			s.containers[ar.ID] = agentContainer
+			s.agent = &Agent{
+				ID:       agentContainer.ID,
+				Bundle:   agentContainer.Bundle,
+				URL:      AgentUrl,
+				keepConn: false,
+			}
 		}
 	}
 

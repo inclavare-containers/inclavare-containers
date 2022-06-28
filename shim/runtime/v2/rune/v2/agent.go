@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	types "github.com/containerd/containerd/api/types"
@@ -16,10 +18,167 @@ import (
 	taskAPI "github.com/containerd/containerd/runtime/v2/task"
 	"github.com/containerd/continuity/fs"
 	runcC "github.com/containerd/go-runc"
+	"github.com/gogo/protobuf/proto"
 	shim_config "github.com/inclavare-containers/shim/config"
+	agentClient "github.com/inclavare-containers/shim/runtime/v2/rune/agent/client"
+	grpc "github.com/inclavare-containers/shim/runtime/v2/rune/agent/grpc"
 	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
+	"github.com/inclavare-containers/shim/runtime/v2/rune/image"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	grpcStatus "google.golang.org/grpc/status"
 )
+
+const (
+	grpcPullImageRequest = "grpc.PullImageRequest"
+)
+
+var (
+	defaultRequestTimeout = 60 * time.Second
+)
+
+type Agent struct {
+	// ID of the container
+	ID string
+	// Bundle path
+	Bundle string
+
+	// lock protects the client pointer
+	sync.Mutex
+
+	reqHandlers map[string]reqFunc
+	URL         string
+	dialTimout  uint32
+	keepConn    bool
+	dead        bool
+	client      *agentClient.AgentClient
+}
+
+func (c *Agent) Logger() *logrus.Entry {
+	return logrus.WithField("source", "agent_enclave_container")
+}
+
+func (c *Agent) connect(ctx context.Context) error {
+	if c.dead {
+		return errors.New("Dead agent")
+	}
+	// lockless quick pass
+	if c.client != nil {
+		return nil
+	}
+
+	// This is for the first connection only, to prevent race
+	c.Lock()
+	defer c.Unlock()
+	if c.client != nil {
+		return nil
+	}
+
+	c.Logger().WithField("url", c.URL).Info("New client")
+	client, err := agentClient.NewAgentClient(ctx, c.URL, c.dialTimout)
+	if err != nil {
+		c.dead = true
+		return err
+	}
+
+	c.installReqFunc(client)
+	c.client = client
+
+	return nil
+}
+
+func (c *Agent) disconnect(ctx context.Context) error {
+	c.Lock()
+	defer c.Unlock()
+
+	if c.client == nil {
+		return nil
+	}
+
+	if err := c.client.Close(); err != nil && grpcStatus.Convert(err).Code() != codes.Canceled {
+		return err
+	}
+
+	c.client = nil
+	c.reqHandlers = nil
+
+	return nil
+}
+
+type reqFunc func(context.Context, interface{}) (interface{}, error)
+
+func (c *Agent) installReqFunc(client *agentClient.AgentClient) {
+	c.reqHandlers = make(map[string]reqFunc)
+	c.reqHandlers[grpcPullImageRequest] = func(ctx context.Context, req interface{}) (interface{}, error) {
+		return c.client.ImageServiceClient.PullImage(ctx, req.(*grpc.PullImageRequest))
+	}
+}
+
+func (c *Agent) sendReq(spanCtx context.Context, request interface{}) (interface{}, error) {
+	if err := c.connect(spanCtx); err != nil {
+		return nil, err
+	}
+
+	if !c.keepConn {
+		defer c.disconnect(spanCtx)
+	}
+
+	msgName := proto.MessageName(request.(proto.Message))
+
+	c.Lock()
+
+	if c.reqHandlers == nil {
+		return nil, errors.New("Client has already disconnected")
+	}
+
+	handler := c.reqHandlers[msgName]
+	if msgName == "" || handler == nil {
+		return nil, errors.New("Invalid request type")
+	}
+
+	c.Unlock()
+
+	message := request.(proto.Message)
+	ctx, cancel := context.WithTimeout(spanCtx, defaultRequestTimeout)
+	if cancel != nil {
+		defer cancel()
+	}
+	c.Logger().WithField("name", msgName).WithField("req", message.String()).Trace("sending request")
+
+	return handler(ctx, request)
+}
+
+func (c *Agent) PullImage(ctx context.Context, req *image.PullImageReq) (*image.PullImageResp, error) {
+	cid, err := getContainerID(req.Image)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create dir for store unionfs image (based on sefs)
+	sefsDir := filepath.Join(c.Bundle, "rootfs/images/", cid, "sefs")
+	lowerDir := filepath.Join(sefsDir, "lower")
+	upperDir := filepath.Join(sefsDir, "upper")
+	for _, dir := range []string{lowerDir, upperDir} {
+		if err := os.MkdirAll(dir, 0711); err != nil && !os.IsExist(err) {
+			return nil, err
+		}
+	}
+
+	r := &grpc.PullImageRequest{
+		Image:       req.Image,
+		ContainerId: cid,
+	}
+	resp, err := c.sendReq(ctx, r)
+	if err != nil {
+		c.Logger().Errorf("agent enclave container pull image err. %v", err)
+		return nil, err
+	}
+	response := resp.(*grpc.PullImageResponse)
+	return &image.PullImageResp{
+		ImageRef: response.ImageRef,
+	}, nil
+}
 
 func createAgentContainer(ctx context.Context, s *service, r *taskAPI.CreateTaskRequest) (*runc.Container, error) {
 	dir := filepath.Join(agentContainerRootDir, r.ID)
