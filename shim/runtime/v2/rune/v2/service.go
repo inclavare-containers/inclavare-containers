@@ -551,6 +551,24 @@ func (s *service) Delete(ctx context.Context, r *taskAPI.DeleteRequest) (*taskAP
 	if err != nil {
 		return nil, errdefs.ToGRPC(err)
 	}
+
+	if strings.EqualFold(s.puaseID, r.ID) {
+		shimLog.WithField("container", s.agentID).Debug("Delete agent enclave container")
+		agentContainer, err := s.getContainer(s.agentID)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = agentContainer.Delete(ctx, r)
+		if err != nil {
+			return nil, errdefs.ToGRPC(err)
+		}
+
+		s.mu.Lock()
+		delete(s.containers, s.agentID)
+		s.mu.Unlock()
+	}
+
 	// if we deleted an init task, send the task delete event
 	if r.ExecID == "" {
 		s.mu.Lock()
