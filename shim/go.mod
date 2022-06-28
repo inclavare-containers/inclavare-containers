@@ -5,15 +5,18 @@ go 1.13
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/containerd/cgroups v1.0.3
-	github.com/containerd/containerd v1.5.10
+	github.com/containerd/containerd v1.6.1
+	github.com/containerd/continuity v0.2.2
 	github.com/containerd/go-runc v1.0.0
 	github.com/containerd/typeurl v1.0.2
+	github.com/cri-o/cri-o v1.0.0-rc2.0.20170928185954-3394b3b2d6af
 	github.com/gogo/protobuf v1.3.2
+	github.com/kata-containers/kata-containers/src/runtime v0.0.0-20220421031749-83979ece18b9
 	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
+	golang.org/x/sys v0.0.0-20220204135822-1c1b9b1eba6a
 	gotest.tools/v3 v3.1.0 // indirect
 
 )

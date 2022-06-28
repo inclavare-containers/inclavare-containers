@@ -130,6 +130,11 @@ type service struct {
 	containers map[string]*runc.Container
 	config     map[string]*containerConfiguration
 
+	// id for pause container
+	puaseID string
+	// id for agent enclave container
+	agentID string
+
 	shimAddress string
 	cancel      func()
 }
@@ -375,7 +380,7 @@ func (s *service) Create(ctx context.Context, r *taskAPI.CreateTaskRequest) (_ *
 	logrus.Infof("CreateTaskRequest: %s", string(data))
 
 	timeStart = time.Now()
-	container, err := runc.NewContainer(ctx, s.platform, r)
+	container, err := create(ctx, s, r)
 	if err != nil {
 		logrus.Errorf("rune Create NewContainer error: %++v", err)
 		return nil, err

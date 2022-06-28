@@ -1,7 +1,9 @@
 package config
 
 type Containerd struct {
-	Socket string `toml:"socket"`
+	Socket                 string `toml:"socket"`
+	AgentContainerInstance string `toml:"agent_container_instance"`
+	AgentContainerRootDir  string `toml:"agent_container_root_dir"`
 }
 
 type Config struct {
