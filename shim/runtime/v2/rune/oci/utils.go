@@ -60,3 +60,12 @@ func SandboxNamespace(spec specs.Spec) (string, error) {
 
 	return sandboxNamespaceTypeVal, nil
 }
+
+func GetImage(spec specs.Spec) (string, error) {
+	image, ok := spec.Annotations[ctrAnnotations.ImageName]
+	if !ok {
+		return "", fmt.Errorf("unknown image name in annotation")
+	}
+
+	return image, nil
+}

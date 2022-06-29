@@ -18,6 +18,7 @@ var (
 	agentContainerRootDir string
 	agentContainerPath    string
 	AgentUrl              string
+	bootContainerPath     string
 )
 
 func parseConfig() error {
@@ -32,6 +33,7 @@ func parseConfig() error {
 	agentContainerPath = cfg.Containerd.AgentContainerInstance
 	agentContainerRootDir = cfg.Containerd.AgentContainerRootDir
 	AgentUrl = cfg.Containerd.AgentUrl
+	bootContainerPath = cfg.Containerd.BootContainerInstance
 
 	return nil
 }
