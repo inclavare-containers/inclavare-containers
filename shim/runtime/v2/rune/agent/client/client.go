@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcStatus "google.golang.org/grpc/status"
 
+	agentgrpc "github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/agent/grpc"
 	"github.com/containerd/ttrpc"
-	agentgrpc "github.com/inclavare-containers/shim/runtime/v2/rune/agent/grpc"
 )
 
 var defaultDialTimeout = 30 * time.Second

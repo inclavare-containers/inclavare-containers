@@ -1,6 +1,6 @@
 package constants
 
 const (
-	ConfigurationPath = "/etc/inclavare-containers/config.toml"
+	ConfigurationPath = "/etc/enclave-cc/config.toml"
 	RuneOCIRuntime    = "rune"
 )

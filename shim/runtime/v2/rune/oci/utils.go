@@ -3,9 +3,9 @@ package oci
 import (
 	"fmt"
 
+	"github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/types"
 	ctrAnnotations "github.com/containerd/containerd/pkg/cri/annotations"
 	crioAnnotations "github.com/cri-o/cri-o/pkg/annotations"
-	"github.com/inclavare-containers/shim/runtime/v2/rune/types"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 )
 

@@ -1,4 +1,4 @@
-module github.com/inclavare-containers/shim
+module github.com/confidential-containers/enclave-cc/shim
 
 go 1.13
 

@@ -3,8 +3,8 @@
 package main
 
 import (
+	"github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/v2"
 	"github.com/containerd/containerd/runtime/v2/shim"
-	"github.com/inclavare-containers/shim/runtime/v2/rune/v2"
 )
 
 func main() {

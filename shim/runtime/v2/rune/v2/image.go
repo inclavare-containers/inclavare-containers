@@ -3,11 +3,11 @@ package v2
 import (
 	"context"
 
+	"github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/image"
 	"github.com/containerd/containerd/plugin"
 	"github.com/containerd/containerd/runtime/v2/shim"
 	"github.com/containerd/containerd/runtime/v2/task"
 	"github.com/containerd/ttrpc"
-	"github.com/inclavare-containers/shim/runtime/v2/rune/image"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	shim_config "github.com/inclavare-containers/shim/config"
-	"github.com/inclavare-containers/shim/runtime/v2/rune/constants"
+	shim_config "github.com/confidential-containers/enclave-cc/shim/config"
+	"github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/constants"
 	"strings"
 )
 

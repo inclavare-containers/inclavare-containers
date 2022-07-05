@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/oci"
+	shim_types "github.com/confidential-containers/enclave-cc/shim/runtime/v2/rune/types"
 	"github.com/containerd/containerd/api/types"
 	"github.com/containerd/containerd/runtime/v2/runc"
 	taskAPI "github.com/containerd/containerd/runtime/v2/task"
-	"github.com/inclavare-containers/shim/runtime/v2/rune/oci"
-	shim_types "github.com/inclavare-containers/shim/runtime/v2/rune/types"
 	"github.com/kata-containers/kata-containers/src/runtime/virtcontainers/pkg/compatoci"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
