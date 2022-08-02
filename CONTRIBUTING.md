@@ -38,6 +38,7 @@ Before submitting a PR, we suggest you could take a look at the PR rules here.
 - [Workspace Preparation](#workspace-preparation)
 - [Branch Definition](#branch-definition)
 - [Format C Codes](#format-c-codes)
+- [Format CMake Codes](#format-cmake-codes)
 - [Commit Rules](#commit-rules)
 - [PR Description](#pr-description)
 - [CI/CD Development](#cicd-development)
@@ -110,6 +111,39 @@ typedef enum {
 ```
 
 Please refer to [this page](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) for the details about the options of `clang-format`.
+
+### Format CMake Codes
+
+Inclavare Containers project uses `cmake-format` to format CMake codes.
+
+1. Install `cmake-format`.
+
+```shell
+sudo pip install cmakelang
+```
+or
+```shell
+pip install --user cmakelang
+```
+
+2. Format CMake code style using the following command:
+
+```shell
+cmake-format -i CMakeLists.txt
+```
+
+`cmake-format` might generate unexpected results sometimes due to its limitation. To avoid the problem, you need to temporarily disable formatting with [special comments](https://cmake-format.readthedocs.io/en/latest/format-features.html?#disable-formatting-locally), e.g, forbidding formatting the following codes:
+
+```cmake
+# cmake-format: off
+add_library(a b.c
+           c.c
+           d.c
+           e.c)
+# cmake-format: on
+```
+
+Please refer to [this page](https://github.com/cheshirekow/cmake_format) for the details about `cmake-format`.
 
 ### Commit Rules
 
