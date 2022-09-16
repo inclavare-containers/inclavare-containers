@@ -27,7 +27,7 @@ set(_configure_script "${SGX_SSL_PATCH_DIR}/download_script.sh")
 file(WRITE "${_configure_script}"
 "#!/bin/sh
 if [ ! -e ${OPENSSL_DIR}/openssl-1.1.1*.tar.gz ]; then
-        wget --no-check-certificate https://www.openssl.org/source/openssl-1.1.1k.tar.gz -P ${OPENSSL_DIR};
+        wget --no-check-certificate https://www.openssl.org/source/openssl-1.1.1q.tar.gz -P ${OPENSSL_DIR};
 fi;
 ")
 
