@@ -1,8 +1,0 @@
-/usr/share/rats-tls/samples/rats-tls-server
-/usr/share/rats-tls/samples/rats-tls-client
-/usr/local/include/rats-tls/rats-tls/*.h
-/usr/local/lib/rats-tls/librats_tls.so*
-/usr/local/lib/rats-tls/tls-wrappers/libtls_wrapper*.so*
-/usr/local/lib/rats-tls/crypto-wrappers/libcrypto_wrapper*.so*
-/usr/local/lib/rats-tls/attesters/libattester*.so*
-/usr/local/lib/rats-tls/verifiers/libverifier*.so*
