@@ -10,3 +10,9 @@
 [submodule "enclave-tls"]
 	path = enclave-tls
 	url = https://github.com/inclavare-containers/enclave-tls.git
+[submodule "verdictd"]
+	path = verdictd
+	url = https://github.com/inclavare-containers/verdictd.git
+[submodule "rats-tls"]
+	path = rats-tls
+	url = https://github.com/inclavare-containers/rats-tls.git
