@@ -3,9 +3,7 @@ module github.com/inclavare-containers/rune
 go 1.14
 
 require (
-	github.com/checkpoint-restore/go-criu v0.0.0-20191125063657-fcdcd07065c5 // indirect
 	github.com/checkpoint-restore/go-criu/v5 v5.0.0
-	github.com/cilium/ebpf v0.6.2 // indirect
 	github.com/containerd/console v1.0.2
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/cyphar/filepath-securejoin v0.2.3
@@ -21,12 +19,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	// NOTE: urfave/cli must be <= v1.22.1 due to a regression: https://github.com/urfave/cli/issues/1092
 	github.com/urfave/cli v1.22.1
 	github.com/vishvananda/netlink v1.1.0
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
-	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
+	golang.org/x/sys v0.1.0
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.27.1
 )
