@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -111,6 +112,17 @@ func setCapabilities(s *Spec) {
 	if s.Process.Capabilities == nil {
 		s.Process.Capabilities = &specs.LinuxCapabilities{}
 	}
+}
+
+// ensureAdditionalGids ensures that the primary GID is also included in the additional GID list.
+func ensureAdditionalGids(s *Spec) {
+	setProcess(s)
+	for _, f := range s.Process.User.AdditionalGids {
+		if f == s.Process.User.GID {
+			return
+		}
+	}
+	s.Process.User.AdditionalGids = append([]uint32{s.Process.User.GID}, s.Process.User.AdditionalGids...)
 }
 
 // WithDefaultSpec returns a SpecOpts that will populate the spec with default
@@ -518,10 +530,13 @@ func WithNamespacedCgroup() SpecOpts {
 
 // WithUser sets the user to be used within the container.
 // It accepts a valid user string in OCI Image Spec v1.0.0:
-//   user, uid, user:group, uid:gid, uid:group, user:gid
+//
+//	user, uid, user:group, uid:gid, uid:group, user:gid
 func WithUser(userstr string) SpecOpts {
 	return func(ctx context.Context, client Client, c *containers.Container, s *Spec) error {
+		defer ensureAdditionalGids(s)
 		setProcess(s)
+		s.Process.User.AdditionalGids = nil
 		parts := strings.Split(userstr, ":")
 		switch len(parts) {
 		case 1:
@@ -602,7 +617,9 @@ func WithUser(userstr string) SpecOpts {
 // WithUIDGID allows the UID and GID for the Process to be set
 func WithUIDGID(uid, gid uint32) SpecOpts {
 	return func(_ context.Context, _ Client, _ *containers.Container, s *Spec) error {
+		defer ensureAdditionalGids(s)
 		setProcess(s)
+		s.Process.User.AdditionalGids = nil
 		s.Process.User.UID = uid
 		s.Process.User.GID = gid
 		return nil
@@ -615,12 +632,11 @@ func WithUIDGID(uid, gid uint32) SpecOpts {
 // additionally sets the gid to 0, and does not return an error.
 func WithUserID(uid uint32) SpecOpts {
 	return func(ctx context.Context, client Client, c *containers.Container, s *Spec) (err error) {
+		defer ensureAdditionalGids(s)
 		setProcess(s)
-		if c.Snapshotter == "" && c.SnapshotKey == "" {
-			if !isRootfsAbs(s.Root.Path) {
-				return errors.Errorf("rootfs absolute path is required")
-			}
-			user, err := UserFromPath(s.Root.Path, func(u user.User) bool {
+		s.Process.User.AdditionalGids = nil
+		setUser := func(root string) error {
+			user, err := UserFromPath(root, func(u user.User) bool {
 				return u.Uid == int(uid)
 			})
 			if err != nil {
@@ -632,7 +648,12 @@ func WithUserID(uid uint32) SpecOpts {
 			}
 			s.Process.User.UID, s.Process.User.GID = uint32(user.Uid), uint32(user.Gid)
 			return nil
-
+		}
+		if c.Snapshotter == "" && c.SnapshotKey == "" {
+			if !isRootfsAbs(s.Root.Path) {
+				return errors.New("rootfs absolute path is required")
+			}
+			return setUser(s.Root.Path)
 		}
 		if c.Snapshotter == "" {
 			return errors.Errorf("no snapshotter set for container")
@@ -647,20 +668,7 @@ func WithUserID(uid uint32) SpecOpts {
 		}
 
 		mounts = tryReadonlyMounts(mounts)
-		return mount.WithTempMount(ctx, mounts, func(root string) error {
-			user, err := UserFromPath(root, func(u user.User) bool {
-				return u.Uid == int(uid)
-			})
-			if err != nil {
-				if os.IsNotExist(err) || err == ErrNoUsersFound {
-					s.Process.User.UID, s.Process.User.GID = uid, 0
-					return nil
-				}
-				return err
-			}
-			s.Process.User.UID, s.Process.User.GID = uint32(user.Uid), uint32(user.Gid)
-			return nil
-		})
+		return mount.WithTempMount(ctx, mounts, setUser)
 	}
 }
 
@@ -670,13 +678,12 @@ func WithUserID(uid uint32) SpecOpts {
 // it returns error.
 func WithUsername(username string) SpecOpts {
 	return func(ctx context.Context, client Client, c *containers.Container, s *Spec) (err error) {
+		defer ensureAdditionalGids(s)
 		setProcess(s)
+		s.Process.User.AdditionalGids = nil
 		if s.Linux != nil {
-			if c.Snapshotter == "" && c.SnapshotKey == "" {
-				if !isRootfsAbs(s.Root.Path) {
-					return errors.Errorf("rootfs absolute path is required")
-				}
-				user, err := UserFromPath(s.Root.Path, func(u user.User) bool {
+			setUser := func(root string) error {
+				user, err := UserFromPath(root, func(u user.User) bool {
 					return u.Name == username
 				})
 				if err != nil {
@@ -684,6 +691,12 @@ func WithUsername(username string) SpecOpts {
 				}
 				s.Process.User.UID, s.Process.User.GID = uint32(user.Uid), uint32(user.Gid)
 				return nil
+			}
+			if c.Snapshotter == "" && c.SnapshotKey == "" {
+				if !isRootfsAbs(s.Root.Path) {
+					return errors.New("rootfs absolute path is required")
+				}
+				return setUser(s.Root.Path)
 			}
 			if c.Snapshotter == "" {
 				return errors.Errorf("no snapshotter set for container")
@@ -698,16 +711,7 @@ func WithUsername(username string) SpecOpts {
 			}
 
 			mounts = tryReadonlyMounts(mounts)
-			return mount.WithTempMount(ctx, mounts, func(root string) error {
-				user, err := UserFromPath(root, func(u user.User) bool {
-					return u.Name == username
-				})
-				if err != nil {
-					return err
-				}
-				s.Process.User.UID, s.Process.User.GID = uint32(user.Uid), uint32(user.Gid)
-				return nil
-			})
+			return mount.WithTempMount(ctx, mounts, setUser)
 		} else if s.Windows != nil {
 			s.Process.User.Username = username
 		} else {
@@ -718,7 +722,7 @@ func WithUsername(username string) SpecOpts {
 }
 
 // WithAdditionalGIDs sets the OCI spec's additionalGids array to any additional groups listed
-// for a particular user in the /etc/groups file of the image's root filesystem
+// for a particular user in the /etc/group file of the image's root filesystem
 // The passed in user can be either a uid or a username.
 func WithAdditionalGIDs(userstr string) SpecOpts {
 	return func(ctx context.Context, client Client, c *containers.Container, s *Spec) (err error) {
@@ -727,7 +731,9 @@ func WithAdditionalGIDs(userstr string) SpecOpts {
 			return nil
 		}
 		setProcess(s)
+		s.Process.User.AdditionalGids = nil
 		setAdditionalGids := func(root string) error {
+			defer ensureAdditionalGids(s)
 			var username string
 			uid, err := strconv.Atoi(userstr)
 			if err == nil {
@@ -788,6 +794,68 @@ func WithAdditionalGIDs(userstr string) SpecOpts {
 	}
 }
 
+// WithAppendAdditionalGroups append additional groups within the container.
+// The passed in groups can be either a gid or a groupname.
+func WithAppendAdditionalGroups(groups ...string) SpecOpts {
+	return func(ctx context.Context, client Client, c *containers.Container, s *Spec) (err error) {
+		// For LCOW or on Darwin additional GID's are not supported
+		if s.Windows != nil || runtime.GOOS == "darwin" {
+			return nil
+		}
+		setProcess(s)
+		setAdditionalGids := func(root string) error {
+			defer ensureAdditionalGids(s)
+			gpath, err := fs.RootPath(root, "/etc/group")
+			if err != nil {
+				return err
+			}
+			ugroups, err := user.ParseGroupFile(gpath)
+			if err != nil {
+				return err
+			}
+			groupMap := make(map[string]user.Group)
+			for _, group := range ugroups {
+				groupMap[group.Name] = group
+			}
+			var gids []uint32
+			for _, group := range groups {
+				gid, err := strconv.ParseUint(group, 10, 32)
+				if err == nil {
+					gids = append(gids, uint32(gid))
+				} else {
+					g, ok := groupMap[group]
+					if !ok {
+						return fmt.Errorf("unable to find group %s", group)
+					}
+					gids = append(gids, uint32(g.Gid))
+				}
+			}
+			s.Process.User.AdditionalGids = append(s.Process.User.AdditionalGids, gids...)
+			return nil
+		}
+		if c.Snapshotter == "" && c.SnapshotKey == "" {
+			if !filepath.IsAbs(s.Root.Path) {
+				return errors.New("rootfs absolute path is required")
+			}
+			return setAdditionalGids(s.Root.Path)
+		}
+		if c.Snapshotter == "" {
+			return errors.New("no snapshotter set for container")
+		}
+		if c.SnapshotKey == "" {
+			return errors.New("rootfs snapshot not created for container")
+		}
+		snapshotter := client.SnapshotService(c.Snapshotter)
+		mounts, err := snapshotter.Mounts(ctx, c.SnapshotKey)
+		if err != nil {
+			return err
+		}
+
+		mounts = tryReadonlyMounts(mounts)
+		return mount.WithTempMount(ctx, mounts, setAdditionalGids)
+	}
+}
+
 // WithCapabilities sets Linux capabilities on the process
 func WithCapabilities(caps []string) SpecOpts {
 	return func(_ context.Context, _ Client, _ *containers.Container, s *Spec) error {
@@ -796,7 +864,6 @@ func WithCapabilities(caps []string) SpecOpts {
 		s.Process.Capabilities.Bounding = caps
 		s.Process.Capabilities.Effective = caps
 		s.Process.Capabilities.Permitted = caps
-		s.Process.Capabilities.Inheritable = caps
 
 		return nil
 	}
@@ -831,7 +898,6 @@ func WithAddedCapabilities(caps []string) SpecOpts {
 				&s.Process.Capabilities.Bounding,
 				&s.Process.Capabilities.Effective,
 				&s.Process.Capabilities.Permitted,
-				&s.Process.Capabilities.Inheritable,
 			} {
 				if !capsContain(*cl, c) {
 					*cl = append(*cl, c)
@@ -851,7 +917,6 @@ func WithDroppedCapabilities(caps []string) SpecOpts {
 				&s.Process.Capabilities.Bounding,
 				&s.Process.Capabilities.Effective,
 				&s.Process.Capabilities.Permitted,
-				&s.Process.Capabilities.Inheritable,
 			} {
 				removeCap(cl, c)
 			}
@@ -866,7 +931,7 @@ func WithDroppedCapabilities(caps []string) SpecOpts {
 func WithAmbientCapabilities(caps []string) SpecOpts {
 	return func(_ context.Context, _ Client, _ *containers.Container, s *Spec) error {
 		setCapabilities(s)
-
+		s.Process.Capabilities.Inheritable = caps
 		s.Process.Capabilities.Ambient = caps
 		return nil
 	}
@@ -895,7 +960,7 @@ func UserFromPath(root string, filter func(user.User) bool) (user.User, error) {
 // ErrNoGroupsFound can be returned from GIDFromPath
 var ErrNoGroupsFound = errors.New("no groups found")
 
-// GIDFromPath inspects the GID using /etc/passwd in the specified rootfs.
+// GIDFromPath inspects the GID using /etc/group in the specified rootfs.
 // filter can be nil.
 func GIDFromPath(root string, filter func(user.Group) bool) (gid uint32, err error) {
 	gpath, err := fs.RootPath(root, "/etc/group")
@@ -1109,17 +1174,10 @@ func WithDefaultUnixDevices(_ context.Context, _ Client, _ *containers.Container
 			Allow:  true,
 		},
 		{
+			// "dev/ptmx"
 			Type:   "c",
 			Major:  intptr(5),
 			Minor:  intptr(2),
-			Access: rwm,
-			Allow:  true,
-		},
-		{
-			// tuntap
-			Type:   "c",
-			Major:  intptr(10),
-			Minor:  intptr(200),
 			Access: rwm,
 			Allow:  true,
 		},
