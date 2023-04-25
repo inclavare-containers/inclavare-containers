@@ -1,0 +1,97 @@
+From 9bfff04ea80f77e355f4f67af28f46ae5d2a03e5 Mon Sep 17 00:00:00 2001
+From: Shirong Hao <shirong@linux.alibaba.com>
+Date: Thu, 23 Dec 2021 14:54:55 +0800
+Subject: [PATCH 3/3] crypto: ccp: Implement SEV_GET_REPORT ioctl command
+
+The SEV_GET_REPORT command can be used by host program with guest
+firmware handle to import an attestation report.
+The command is defined in SEV spec section 6.8.
+
+Signed-off-by: Shirong Hao <shirong@linux.alibaba.com>
+---
+ drivers/crypto/ccp/sev-dev.c | 19 ++++++++++++++++++-
+ include/uapi/linux/psp-sev.h | 17 +++++++++++++++++
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/crypto/ccp/sev-dev.c b/drivers/crypto/ccp/sev-dev.c
+index 2ed8df322f6b..50fa9906d931 100644
+--- a/drivers/crypto/ccp/sev-dev.c
++++ b/drivers/crypto/ccp/sev-dev.c
+@@ -413,7 +413,10 @@ int sev_do_get_report(void __user *report, struct kvm_sev_attestation_report *in
+ 	}
+ cmd:
+ 	data.handle = handle;
+-	ret = sev_issue_cmd_external_user(filep, SEV_CMD_ATTESTATION_REPORT, &data, error);
++	if (!filep)
++		ret = __sev_do_cmd_locked(SEV_CMD_ATTESTATION_REPORT, &data, error);
++	else
++		ret = sev_issue_cmd_external_user(filep, SEV_CMD_ATTESTATION_REPORT, &data, error);
+ 
+ 	/*
+ 	 * If we query the session length, FW responded with expected data.
+@@ -439,6 +442,17 @@ int sev_do_get_report(void __user *report, struct kvm_sev_attestation_report *in
+ }
+ EXPORT_SYMBOL_GPL(sev_do_get_report);
+ 
++static int sev_ioctl_do_get_report(struct sev_issue_cmd *argp)
++{
++	void __user *report = (void __user *)(uintptr_t)argp->data;
++	struct sev_user_data_attestation_report input;
++
++	if (copy_from_user(&input, (void __user *)argp->data, sizeof(input)))
++		return -EFAULT;
++
++	return sev_do_get_report(report, (struct kvm_sev_attestation_report *)&input, NULL, input.handle, &argp->error);
++}
++
+ static int sev_ioctl_do_pek_pdh_gen(int cmd, struct sev_issue_cmd *argp, bool writable)
+ {
+ 	struct sev_device *sev = psp_master->sev_data;
+@@ -925,6 +939,9 @@ static long sev_ioctl(struct file *file, unsigned int ioctl, unsigned long arg)
+ 	case SEV_GET_ID2:
+ 		ret = sev_ioctl_do_get_id2(&input);
+ 		break;
++	case SEV_GET_REPORT:
++		ret = sev_ioctl_do_get_report(&input);
++		break;
+ 	default:
+ 		ret = -EINVAL;
+ 		goto out;
+diff --git a/include/uapi/linux/psp-sev.h b/include/uapi/linux/psp-sev.h
+index 91b4c63d5cbf..293e0a2d786b 100644
+--- a/include/uapi/linux/psp-sev.h
++++ b/include/uapi/linux/psp-sev.h
+@@ -28,6 +28,7 @@ enum {
+ 	SEV_PEK_CERT_IMPORT,
+ 	SEV_GET_ID,	/* This command is deprecated, use SEV_GET_ID2 */
+ 	SEV_GET_ID2,
++	SEV_GET_REPORT,
+ 
+ 	SEV_MAX,
+ };
+@@ -147,6 +148,22 @@ struct sev_user_data_get_id2 {
+ 	__u32 length;				/* In/Out */
+ } __packed;
+ 
++/**
++ * struct sev_user_data_attestation_report - ATTESTATION command parameters
++ *
++ * @mnonce: mnonce to compute HMAC
++ * @uaddr: physical address containing the attestation report
++ * @len: length of attestation report
++ * @handle: handle of the VM to process
++ */
++
++struct sev_user_data_attestation_report {
++       __u8 mnonce[16];                        /* In */
++       __u64 uaddr;                            /* In */
++       __u32 len;                              /* In/Out */
++       __u32 handle;                           /* In */
++};
++
+ /**
+  * struct sev_issue_cmd - SEV ioctl parameters
+  *
+-- 
+2.27.0
+
