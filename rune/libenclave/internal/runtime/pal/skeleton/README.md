@@ -127,7 +127,7 @@ docker run -it --rm --runtime=rune \
 where:
 - @ENCLAVE\_TYPE: specify the type of enclave hardware to use, such as `intelSgx`.
 - @ENCLAVE\_PATH: specify the path to enclave runtime to launch.
-- @ENCLAVE\_ARGS: specify the specific arguments to enclave runtime, seperated by the comma.
+- @ENCLAVE\_ARGS: specify the specific arguments to enclave runtime, separated by the comma.
 
 ---
 
@@ -178,7 +178,7 @@ In order to run the skeleton bundle with `rune`, you need to configure enclave r
 where:
 - @enclave.type: specify the type of enclave hardware to use, such as intelSgx.
 - @enclave.runtime.path: specify the path to enclave runtime to launch.
-- @enclave.runtime.args: specify the specific arguments to enclave runtime, seperated by the comma.
+- @enclave.runtime.args: specify the specific arguments to enclave runtime, separated by the comma.
 - @enclave.runtime.loglevel: specify the log level of the enclave runtime, such as "trace", "debug", "info", "warning", "error", "fatal", "panic", "off".
 
 ## Run skeleton OCI bundle
