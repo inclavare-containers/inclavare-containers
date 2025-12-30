@@ -89,7 +89,7 @@ In order to run the nitro enclave bundle with `rune`, you need to configure encl
 where:
 - @enclave.type: specify the type of enclave hardware to use, such as intelSgx.
 - @enclave.runtime.path: specify the path to enclave runtime to launch.
-- @enclave.runtime.args: specify the specific arguments to enclave runtime, seperated by the comma.
+- @enclave.runtime.args: specify the specific arguments to enclave runtime, separated by the comma.
 
 ## Run nitro enclave
 
